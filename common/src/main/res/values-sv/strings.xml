@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Generic Strings -->
+    <string name="settings">Inställningar</string>
+    <string name="general">Allmänt</string>
+
+    <!-- Preference keys: do not translate -->
+
+
+    <!-- This is an android system preference key to get the whole preference screen. It\'s being used
+         to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+    <!-- Show if the user has ignored the pairing permission card in dev console  -->
+    <string name="pref_key_title_ignore_permission_microphone">Behörighetskort för Proximity</string>
+    <string name="pref_key_summary_ignore_pairing_permission">Indikerar om användaren har avfärdat behörighetskortet för Proximity</string>
+    <string name="pref_key_title_has_explained_phone_state_permission">Förklaring av telefonstatustillstånd</string>
+    <string name="pref_key_summary_has_explained_phone_state_permission">Konfigureras när användaren har slutfört det första samtalet</string>
+
+    <string name="generic_image_filename">image.jpg</string>
+    <string name="now">Nu</string>
+
+    <!-- Phrase describing a time duration using seconds  -->
+    <plurals name="duration_seconds">
+        <item quantity="one">1 sekund</item>
+        <item quantity="other">%d sekunder</item>
+    </plurals>
+    <!-- Phrase describing a time duration using minutes  -->
+    <plurals name="duration_minutes">
+        <item quantity="one">1 minut</item>
+        <item quantity="other">%d minuter</item>
+    </plurals>
+    <!-- Phrase describing a time duration using hours  -->
+    <plurals name="duration_hours">
+        <item quantity="one">1 timme</item>
+        <item quantity="other">%d timmar</item>
+    </plurals>
+
+    <string name="and">och</string>
+    <string name="more_no_number">till</string>
+    <string name="empty_space">&lt;Utrymmet är tomt&gt;</string>
+    <string name="more" tools:ignore="PluralsCandidate">%d till</string>
+    <string name="your_pmr">Ditt personliga mötesrum</string>
+    <string name="other_pmr">%ss personliga mötesrum</string>
+
+    <string name="call_banner_answered" tools:ignore="StringFormatCount">Du var i ett samtal.</string>
+    <string name="call_banner_x_declined">%1$s var inte tillgänglig.</string>
+    <string name="call_banner_you_declined">Du var inte tillgänglig.</string>
+    <string name="call_banner_x_timeout">Det gör inget. Du avbröt samtalet.</string>
+    <string name="call_banner_you_timeout">Du missade ett samtal.</string>
+    <string name="call_banner_syncup" tools:ignore="StringFormatCount">Du deltar i ett möte.</string>
+    <string name="call_banner_missed_syncup" tools:ignore="StringFormatCount">Det här mötet har avslutats.</string>
+    <string name="call_banner_x_unvailable_syncup">Det gör inget. %1$s avbröt mötet.</string>
+    <string name="call_banner_you_unvailable_syncup">Det gör inget. Du avbröt mötet.</string>
+
+    <string name="error_sending_message">Kunde inte skicka meddelandet.</string>
+    <string name="error_message_canceled">Avbrutet meddelande</string>
+    <string name="error_sending_sticker">Kunde inte skicka märket.</string>
+    <string name="error_new_conversation">Kunde inte skapa utrymmet.</string>
+    <string name="error_org_invite">Du har ännu inte möjlighet att bjuda in användare utanför din organisation till Spark. Öppna ett supportärende för att åtgärda detta.</string>
+    <string name="error_leave_conversation">Kunde inte lämna utrymmet.</string>
+    <string name="error_remove_participant">Kunde inte ta bort mötesdeltagaren från utrymmet.</string>
+    <string name="uploading_space_avatar">Laddar upp utrymmesbild</string>
+    <string name="error_setting_space_avatar">Kunde inte ställa in utrymmesbild.</string>
+    <string name="error_cropping_space_avatar">Kunde inte beskära utrymmesbild</string>
+    <string name="file_too_large">Bilden är för stor, välj en annan</string>
+
+    <string name="max_participants_warning_text">Du kan inte ringa till ett Spark-utrymme med fler än %d personer.</string>
+    <string name="max_participants_warning_free_text">Du kan inte ringa till ett Spark-utrymme med fler än %d personer när du har ett gratiskonto.</string>
+    <string name="max_participants_add_guest_warning_text" tools:ignore="PluralsCandidate">Du kan inte lägga till fler än %d personer i ett möte.</string>
+    <string name="max_participants_add_guest_warning_free_text" tools:ignore="PluralsCandidate">Du kan inte lägga till fler än %d personer i ett möte. För att fler mötesdeltagare ska kunna delta måste du uppgradera till ett betalpaket.</string>
+    <string name="max_roster_size_warning_text">Kan inte delta i mötet eftersom maximalt antal tillåtna personer (%d) redan deltar.</string>
+    <string name="meeting_locked_warning_text">Du kan inte delta i mötet eftersom utrymmet är låst.</string>
+    <string name="meeting_locked_while_terminating_previous_meeting">Avslutar föregående möte, försök igen.</string>
+
+    <string name="call_error_joining">Kunde inte delta i samtalet</string>
+    <string name="call_error_joining_conflict">Du kan inte delta i ett pågående Spark-samtal från en annan enhet.</string>
+    <string name="call_error_user_not_onboarded">Väntande inbjudan. Samtal kan inte genomföras förrän %s har svarat på din inbjudan. Försök igen när de deltar i utrymmet.</string>
+    <string name="call_error_joining_high_volume">Samtal i Spark är för närvarande inte tillgängliga. Försök igen senare.</string>
+    <string name="call_error_is_inactive">Samtalet är inte längre aktivt.</string>
+
+    <string name="camera_unavailable">Spark har problem med att använda kameran. Starta om Spark och försök igen.</string>
+    <string name="video_disabled_due_to_network_conditions">Din videoström har stängts av på grund av dålig nätverksanslutning. </string>
+    <string name="poor_network_quality">Dålig nätverksanslutning</string>
+    <string name="call_put_on_hold">Samtal har parkerats</string>
+    <string name="call_resumed">Samtal har återupptagits</string>
+
+    <string name="call_other_person_invited_others">Aviserar andra</string>
+    <string name="call_other_person_invited_x">Aviserar %s</string>
+    <string name="call_other_person_declined">Andra personen avvisade</string>
+    <string name="call_other_person_busy">Den andra personen är upptagen</string>
+    <string name="call_participant_left">Mötesdeltagare lämnade</string>
+    <string name="call_participant_joined">Ansluter</string>
+    <string name="call_participant_cancelled">Mötesdeltagare avbröt</string>
+    <string name="call_participant_expelled">Moderatorn har tagit bort dig från mötet</string>
+    <string name="name_was_unavailable">%s var inte tillgänglig</string>
+
+    <string name="error_file_not_found">Den valda filen kunde inte hittas i arkivet.</string>
+
+    <!-- Search Modifiers -->
+    <string name="search_hint_for_modifier">Ange namnet på en person</string>
+    <string name="search_hint_with_modifier">Ange namnet på en person</string>
+    <string name="search_hint_in_modifier">Ange namnet på ett utrymme</string>
+    <string name="search_modifier_list_header">Välj ett alternativ för att avgränsa din sökning</string>
+    <string name="search_modifier_option_from_keyword"><b>från:</b></string>
+    <string name="search_modifier_option_from">Visa <b>meddelanden</b> och <b>filer</b> från en <b>person</b></string>
+    <string name="search_modifier_option_in_keyword"><b>i:</b></string>
+    <string name="search_modifier_option_in">Visa <b>meddelanden</b> och <b>filer</b> i ett visst <b>utrymme</b></string>
+
+    <!-- Presence Status Messages -->
+    <string name="do_not_disturb">Stör inte</string>
+    <string name="presence_status_active">Aktiv</string>
+    <string name="presence_status_earlier">Aktiv tidigare idag</string>
+    <string name="presence_status_yesterday">Aktiv igår</string>
+    <string name="presence_status_active_day">Aktiv %s</string>
+    <string name="presence_status_active_on">Aktiv den %s</string>
+    <string name="dnd_time_set_until">Stör inte förrän %s</string>
+    <plurals name="presence_status_inactive_minutes">
+        <item quantity="one">Aktiv för %d minut sedan</item>
+        <item quantity="other">Aktiv för %d minuter sedan</item>
+    </plurals>
+    <string name="presence_status_pending">Inväntar aktivering</string>
+    <string name="presence_status_ooo">Frånvarande</string>
+    <string name="presence_status_ooo_until">Ej på kontoret till %s</string>
+
+    <plurals name="presence_status_inactive_hours">
+        <item quantity="one">Aktiv för %d timme sedan</item>
+        <item quantity="other">Aktiv för %d timmar sedan</item>
+    </plurals>
+    <string name="tomorrow">i morgon</string>
+
+    <!-- Contacts Integration -->
+    <string name="contact_invite_to_spark">Bjud in %s till Spark</string>
+    <string name="contact_view_space">Utrymme med %s</string>
+
+    <string name="room_retention_policy_indefinite">obegränsat</string>
+    <string name="room_retention_policy_one_year">i ett år</string>
+    <string name="room_retention_policy_for_days">i %d dagar</string>
+
+    <!-- Day Markers -->
+    <string name="day_marker_today">Idag</string>
+    <string name="day_marker_yesterday">Igår</string>
+
+</resources>

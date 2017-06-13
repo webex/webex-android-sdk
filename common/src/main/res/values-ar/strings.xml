@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Generic Strings -->
+    <string name="settings">إعدادات</string>
+    <string name="general">عام</string>
+
+    <!-- Preference keys: do not translate -->
+    
+    <!-- User level default Custom notifications -->
+
+    
+    <!-- Always on proximity -->
+    
+    <!-- This is an android system preference key to get the whole preference screen. It's being used
+         to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+    
+
+    <!-- Show if the user has ignored the pairing permission card in dev console  -->
+    <string name="pref_key_title_ignore_permission_microphone">بطاقة إذن التقارب</string>
+    <string name="pref_key_summary_ignore_pairing_permission">تشير إلى ما إذا كان المستخدم رفض بطاقة إذن التقارب أم لا</string>
+    <string name="pref_key_title_has_explained_phone_state_permission">إذن حالة الهاتف المشروحة</string>
+    <string name="pref_key_summary_has_explained_phone_state_permission">الإعداد بعد أن يقوم المستخدم بإكمال اول مكالمة له</string>
+
+    <string name="generic_image_filename">image.jpg</string>
+    <string name="now">الآن</string>
+
+    <!-- Phrase describing a time duration using seconds  -->
+    <plurals name="duration_seconds">
+        <item quantity="one">1 ثانية</item>
+        <item quantity="other">%d ثوانٍ</item>
+    </plurals>
+    <!-- Phrase describing a time duration using minutes  -->
+    <plurals name="duration_minutes">
+        <item quantity="one">1 دقيقة</item>
+        <item quantity="other">%d من الدقائق</item>
+    </plurals>
+    <!-- Phrase describing a time duration using hours  -->
+    <plurals name="duration_hours">
+        <item quantity="one">ساعة واحدة</item>
+        <item quantity="other">%d من الساعات</item>
+    </plurals>
+
+    <string name="and"> و </string>
+    <string name="more_no_number">أكثر</string>
+    <string name="empty_room">&lt;الغرفة فارغة&gt;</string>
+    <string name="more" tools:ignore="PluralsCandidate">%d أكثر</string>
+    <string name="your_pmr">غرفة الاجتماعات الشخصية الخاصة بك</string>
+    <string name="other_pmr">غرفة الاجتماعات الشخصية الخاصة بـ %s</string>
+
+    <string name="call_banner_answered" tools:ignore="StringFormatCount">كانت لديك مكالمة.</string>
+    <string name="call_banner_x_declined">%1$s لم يكن متوفرًا.</string>
+    <string name="call_banner_you_declined">لم تكن متوفرًا.</string>
+    <string name="call_banner_x_timeout">لا عليك. لقد قمت بإلغاء المكالمة.</string>
+    <string name="call_banner_you_timeout">لديك مكالمة فائتة.</string>
+    <string name="call_banner_syncup" tools:ignore="StringFormatCount">لقد انضممت إلى اجتماع.</string>
+    <string name="call_banner_missed_syncup" tools:ignore="StringFormatCount">انتهى هذا الاجتماع.</string>
+    <string name="call_banner_x_unvailable_syncup">لا عليك. لقد قام %1$s بإلغاء الاجتماع.</string>
+    <string name="call_banner_you_unvailable_syncup">لا عليك. لقد قمت بإلغاء الاجتماع.</string>
+
+    <string name="error_sending_message">يتعذر إرسال الرسالة.</string>
+    <string name="error_message_canceled">تم إلغاء الرسالة</string>
+    <string name="error_sending_sticker">يتعذر إرسال الملصق.</string>
+    <string name="error_new_conversation">يتعذر إنشاء الغرفة.</string>
+    <string name="error_org_invite">لم يتم تمكينك حتى الآن لدعوة مستخدمين من خارج مؤسستك إلى Spark. لحل ذلك، يرجى فتح تذكرة دعم.</string>
+    <string name="error_leave_conversation">تتعذر مغادرة الغرفة.</string>
+    <string name="error_remove_participant">تتعذر إزالة مشارك من الغرفة.</string>
+    <string name="uploading_room_avatar">تحميل صورة الغرفة</string>
+    <string name="error_setting_room_avatar">فشل تعيين صورة للغرفة.</string>
+    <string name="error_cropping_room_avatar">فشل اقتصاص صورة الغرفة</string>
+    <string name="file_too_large">الصورة كبيرة للغاية، فاختر غيرها</string>
+
+    <string name="max_participants_warning_text">لا يمكنك الاتصال بغرفة Spark Room بأكثر من %d من الأشخاص.</string>
+    <string name="max_participants_warning_free_text">لا يمكنك الاتصال بغرفة Spark Room بأكثر من %d من الأشخاص باستخدام حساب مجاني.</string>
+    <string name="max_participants_add_guest_warning_text" tools:ignore="PluralsCandidate">لا يمكنك إضافة أكثر من %d من الأشخاص إلى المكالمة.</string>
+    <string name="max_participants_add_guest_warning_free_text" tools:ignore="PluralsCandidate">لا يمكنك إضافة أكثر من %d من الأشخاص إلى مكالمة. للسماح بانضمام المزيد من المشاركين، قم بالترقية إلى حزمة مدفوعة.</string>
+    <string name="max_roster_size_warning_text">لا يمكن الانضمام إلى المكالمة حيث انضم إليها الحد الأقصى من الأشخاص (%d) بالفعل.</string>
+    <string name="meeting_locked_warning_text">لا يمكنك الانضمام إلى المكالمة حيث إن الغرفة مغلقة.</string>
+
+    <string name="call_error_joining">خطأ أثناء الانضمام إلى المكالمة</string>
+    <string name="call_error_joining_conflict">لا يمكنك الانضمام إلى مكالمة Spark مستمرة من جهاز آخر.</string>
+    <string name="call_error_user_not_onboarded">الدعوة قيد التقدم. لا يمكن إتمام المكالمات حتى يستجيب %s لدعوتك. أعد المحاولة عند انضمامه إلى الغرفة.</string>
+    <string name="call_error_joining_high_volume">Spark Calling غير متاح حاليًا. يرجى إعادة المحاولة فيما بعد.</string>
+    <string name="call_error_is_inactive">المكالمة لم تعد نشطة.</string>
+
+    <string name="camera_unavailable">يعاني Spark من مشكلة في استخدام الكاميرا. الرجاء إعادة تشغيل Spark وإعادة المحاولة.</string>
+    <string name="video_disabled_due_to_network_conditions">تم إيقاف تشغيل الفيديو لديك بسبب ضعف اتصال الشبكة. </string>
+    <string name="poor_network_quality">اتصال الشبكة ضعيف.</string>
+    <string name="call_put_on_hold">تم وضع المكالمة قيد التعليق</string>
+    <string name="call_resumed">تم استئناف المكالمة</string>
+
+    <string name="call_other_person_invited_others">إخطار الآخرين</string>
+    <string name="call_other_person_invited_x">إخطار %s</string>
+    <string name="call_other_person_declined">رفض الشخص الآخر</string>
+    <string name="call_other_person_busy">الشخص الآخر مشغول</string>
+    <string name="call_participant_left">غادر المشارك</string>
+    <string name="call_participant_joined">جارٍ الاتصال</string>
+    <string name="call_participant_cancelled">قام المشارك بالإلغاء</string>
+    <string name="name_was_unavailable">%s لم يكن متوفرًا</string>
+
+    <string name="error_file_not_found">لم يتم العثور على الملف المحدد في وحدة التخزين.</string>
+
+    <!-- Search Modifiers -->
+    <string name="search_hint_for_modifier">أدخل اسم الشخص</string>
+    <string name="search_hint_with_modifier">أدخل اسم الشخص</string>
+    <string name="search_hint_in_modifier">أدخل اسم الغرفة</string>
+    <string name="search_modifier_list_header">حدد معدلاً لتضييق نطاق بحثك</string>
+    <string name="search_modifier_option_from_keyword"><b>من:</b></string>
+    <string name="search_modifier_option_from">إظهار <b>رسائل</b> و<b>ملفات</b> من <b>شخص</b></string>
+    <string name="search_modifier_option_in_keyword"><b>في:</b></string>
+    <string name="search_modifier_option_in">إظهار <b>رسائل</b> و<b>ملفات</b> في <b>غرفة معينة</b></string>
+
+    <!-- Presence Status Messages -->
+    <string name="quiet_time">وقت الهدوء</string>
+    <string name="presence_status_active">نشط</string>
+    <string name="presence_status_earlier">نشطة في وقت سابق اليوم</string>
+    <string name="presence_status_yesterday">نشطة أمس</string>
+    <string name="presence_status_active_day">نشط %s</string>
+    <string name="presence_status_active_on">نشطة على %s</string>
+    <string name="quiet_time_set_until">وقت الهدوء حتى %s</string>
+    <plurals name="presence_status_inactive_minutes">
+        <item quantity="one">نشطة منذ %d دقيقة</item>
+        <item quantity="other">نشطة منذ %d دقائق</item>
+    </plurals>
+    <string name="presence_status_pending">تعليق التنشيط</string>
+    <string name="presence_status_ooo_until">بعيد عن المكتب حتى %s</string>
+
+    <plurals name="presence_status_inactive_hours">
+        <item quantity="one">نشطة منذ %d ساعة</item>
+        <item quantity="other">نشطة منذ %d ساعات</item>
+    </plurals>
+
+    <!-- Contacts Integration -->
+    <string name="contact_invite_to_spark">دعوة %s إلى Spark</string>
+    <string name="contact_view_room">غرفة لفردين مع %s</string>
+
+</resources>

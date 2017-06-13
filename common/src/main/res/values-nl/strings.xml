@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Generic Strings -->
+    <string name="settings">Instellingen</string>
+    <string name="general">Algemeen</string>
+
+    <!-- Preference keys: do not translate -->
+
+
+    <!-- This is an android system preference key to get the whole preference screen. It\'s being used
+         to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+    <!-- Show if the user has ignored the pairing permission card in dev console  -->
+    <string name="pref_key_title_ignore_permission_microphone">Proximity-toestemmingskaart</string>
+    <string name="pref_key_summary_ignore_pairing_permission">Geeft aan of de gebruiker de Proximity-toestemmingskaart heeft genegeerd</string>
+    <string name="pref_key_title_has_explained_phone_state_permission">Toestemming voor de telefoonstatus uitgelegd</string>
+    <string name="pref_key_summary_has_explained_phone_state_permission">Instellen nadat de gebruiker het eerste gesprek heeft afgerond</string>
+
+    <string name="generic_image_filename">image.jpg</string>
+    <string name="now">Nu</string>
+
+    <!-- Phrase describing a time duration using seconds  -->
+    <plurals name="duration_seconds">
+        <item quantity="one">1 seconde</item>
+        <item quantity="other">%d seconden</item>
+    </plurals>
+    <!-- Phrase describing a time duration using minutes  -->
+    <plurals name="duration_minutes">
+        <item quantity="one">1 minuut</item>
+        <item quantity="other">%d minuten</item>
+    </plurals>
+    <!-- Phrase describing a time duration using hours  -->
+    <plurals name="duration_hours">
+        <item quantity="one">1 uur</item>
+        <item quantity="other">%d uur</item>
+    </plurals>
+
+    <string name="and">en</string>
+    <string name="more_no_number">meer</string>
+    <string name="empty_space">&lt;Ruimte is leeg&gt;</string>
+    <string name="more" tools:ignore="PluralsCandidate">%d meer</string>
+    <string name="your_pmr">Uw persoonlijke vergaderruimte</string>
+    <string name="other_pmr">Persoonlijke vergaderruimte van %s</string>
+
+    <string name="call_banner_answered" tools:ignore="StringFormatCount">U had een gesprek.</string>
+    <string name="call_banner_x_declined">%1$s was niet beschikbaar.</string>
+    <string name="call_banner_you_declined">U was niet beschikbaar.</string>
+    <string name="call_banner_x_timeout">U hebt het gesprek geannuleerd.</string>
+    <string name="call_banner_you_timeout">U hebt een gesprek gemist.</string>
+    <string name="call_banner_syncup" tools:ignore="StringFormatCount">U nam deel aan een vergadering.</string>
+    <string name="call_banner_missed_syncup" tools:ignore="StringFormatCount">De vergadering is beëindigd.</string>
+    <string name="call_banner_x_unvailable_syncup">%1$s heeft de vergadering geannuleerd.</string>
+    <string name="call_banner_you_unvailable_syncup">U hebt de vergadering geannuleerd.</string>
+
+    <string name="error_sending_message">Het bericht kan niet worden verzonden.</string>
+    <string name="error_message_canceled">Bericht geannuleerd</string>
+    <string name="error_sending_sticker">De sticker kan niet worden verzonden.</string>
+    <string name="error_new_conversation">De ruimte kan niet worden gemaakt.</string>
+    <string name="error_org_invite">U kunt nog geen gebruikers buiten uw organisatie uitnodigen voor Spark. Open een ondersteuningsticket om dit probleem op te lossen.</string>
+    <string name="error_leave_conversation">U kunt de ruimte niet verlaten.</string>
+    <string name="error_remove_participant">Kan deelnemer niet uit de ruimte verwijderen.</string>
+    <string name="uploading_space_avatar">Ruimteafbeelding uploaden</string>
+    <string name="error_setting_space_avatar">Ruimteafbeelding instellen mislukt.</string>
+    <string name="error_cropping_space_avatar">Ruimteafbeelding bijsnijden mislukt</string>
+    <string name="file_too_large">Afbeelding is de groot. Kies een andere afbeelding.</string>
+
+    <string name="max_participants_warning_text">U kunt geen Spark-ruimte bellen met meer dan %d personen.</string>
+    <string name="max_participants_warning_free_text">U kunt geen Spark-ruimte bellen met meer dan %d personen met een gratis account.</string>
+    <string name="max_participants_add_guest_warning_text" tools:ignore="PluralsCandidate">Er kunnen niet meer dan %d personen worden toegevoegd aan een vergadering.</string>
+    <string name="max_participants_add_guest_warning_free_text" tools:ignore="PluralsCandidate">Er kunnen niet meer dan %d personen worden toegevoegd aan een vergadering. Als u meer personen wilt laten deelnemen, kunt u upgraden naar een betaald pakket.</string>
+    <string name="max_roster_size_warning_text">Kan niet aan de vergadering deelnemen, omdat het maximale aantal personen (%d) al deelneemt.</string>
+    <string name="meeting_locked_warning_text">U kunt niet deelnemen aan de vergadering, omdat de ruimte is vergrendeld.</string>
+    <string name="meeting_locked_while_terminating_previous_meeting">De vorige vergadering wordt beëindigd, probeer het opnieuw.</string>
+
+    <string name="call_error_joining">Er is een fout opgetreden bij het deelnemen aan het gesprek</string>
+    <string name="call_error_joining_conflict">U kunt niet vanaf een ander apparaat deelnemen aan een Spark-gesprek dat al bezig is.</string>
+    <string name="call_error_user_not_onboarded">De uitnodiging staat nog open. U kunt pas gesprekken voeren als %s op uw uitnodiging reageert. Probeer het opnieuw wanneer hij/zij aan de ruimte deelneemt.</string>
+    <string name="call_error_joining_high_volume">Spark-bellen is momenteel niet beschikbaar. Probeer het later opnieuw.</string>
+    <string name="call_error_is_inactive">Gesprek is niet meer actief.</string>
+
+    <string name="camera_unavailable">Er is een probleem met het gebruik van de camera. Start Spark opnieuw en probeer het nogmaals.</string>
+    <string name="video_disabled_due_to_network_conditions">Uw video is uitgeschakeld vanwege een slechte netwerkverbinding. </string>
+    <string name="poor_network_quality">Slechte netwerkverbinding.</string>
+    <string name="call_put_on_hold">Gesprek in de wachtrij gezet</string>
+    <string name="call_resumed">Gesprek hervat</string>
+
+    <string name="call_other_person_invited_others">Anderen op de hoogte brengen</string>
+    <string name="call_other_person_invited_x">%s wordt op de hoogte gebracht</string>
+    <string name="call_other_person_declined">Andere persoon heeft afgewezen</string>
+    <string name="call_other_person_busy">Andere persoon bezet</string>
+    <string name="call_participant_left">Deelnemer is vertrokken</string>
+    <string name="call_participant_joined">Verbinding maken</string>
+    <string name="call_participant_cancelled">Deelnemer heeft geannuleerd</string>
+    <string name="call_participant_expelled">De moderator heeft u uit de vergadering verwijderd.</string>
+    <string name="name_was_unavailable">%s was niet beschikbaar</string>
+
+    <string name="error_file_not_found">Het geselecteerde bestand werd niet gevonden in uw opslagruimte.</string>
+
+    <!-- Search Modifiers -->
+    <string name="search_hint_for_modifier">Voer de naam van een persoon in</string>
+    <string name="search_hint_with_modifier">Voer de naam van een persoon in</string>
+    <string name="search_hint_in_modifier">Voer de naam van een ruimte in</string>
+    <string name="search_modifier_list_header">Selecteer een zoekoperator om uw zoekopdracht te verfijnen</string>
+    <string name="search_modifier_option_from_keyword"><b>van:</b></string>
+    <string name="search_modifier_option_from">Berichten <b>en</b> bestanden <b>van een</b> persoon <b>weergeven</b></string>
+    <string name="search_modifier_option_in_keyword"><b>in:</b></string>
+    <string name="search_modifier_option_in"><b>Berichten</b> en <b>bestanden</b> in een bepaalde <b>ruimte weergeven</b></string>
+
+    <!-- Presence Status Messages -->
+    <string name="do_not_disturb">Niet storen</string>
+    <string name="presence_status_active">Actief</string>
+    <string name="presence_status_earlier">Actief eerder vandaag</string>
+    <string name="presence_status_yesterday">Actief gisteren</string>
+    <string name="presence_status_active_day">Actief %s</string>
+    <string name="presence_status_active_on">Actief op %s</string>
+    <string name="dnd_time_set_until">Niet storen tot %s</string>
+    <plurals name="presence_status_inactive_minutes">
+        <item quantity="one">Actief %d minuten geleden</item>
+        <item quantity="other">%d minuten geleden actief</item>
+    </plurals>
+    <string name="presence_status_pending">In afwachting van activering</string>
+    <string name="presence_status_ooo">Niet aanwezig</string>
+    <string name="presence_status_ooo_until">Niet aanwezig tot %s</string>
+
+    <plurals name="presence_status_inactive_hours">
+        <item quantity="one">%d uur geleden actief</item>
+        <item quantity="other">%d uur geleden actief</item>
+    </plurals>
+    <string name="tomorrow">morgen</string>
+
+    <!-- Contacts Integration -->
+    <string name="contact_invite_to_spark">%s uitnodigen voor Spark</string>
+    <string name="contact_view_space">Ruimte met %s</string>
+
+    <string name="room_retention_policy_indefinite">onbepaalde tijd</string>
+    <string name="room_retention_policy_one_year">voor één jaar</string>
+    <string name="room_retention_policy_for_days">voor %d dagen</string>
+
+    <!-- Day Markers -->
+    <string name="day_marker_today">Vandaag</string>
+    <string name="day_marker_yesterday">Gisteren</string>
+
+</resources>

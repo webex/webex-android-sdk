@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Generic Strings -->
+    <string name="settings">Configuración</string>
+    <string name="general">General</string>
+
+    <!-- Preference keys: do not translate -->
+
+
+    <!-- This is an android system preference key to get the whole preference screen. It\'s being used
+         to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+    <!-- Show if the user has ignored the pairing permission card in dev console  -->
+    <string name="pref_key_title_ignore_permission_microphone">Tarjeta de permiso de proximidad</string>
+    <string name="pref_key_summary_ignore_pairing_permission">Indica si el usuario ha descartado la tarjeta de permiso de proximidad</string>
+    <string name="pref_key_title_has_explained_phone_state_permission">Permiso de estado del teléfono detallado</string>
+    <string name="pref_key_summary_has_explained_phone_state_permission">Establecer después de que el usuario ha completado la primera llamada</string>
+
+    <string name="generic_image_filename">image.jpg</string>
+    <string name="now">Ahora</string>
+
+    <!-- Phrase describing a time duration using seconds  -->
+    <plurals name="duration_seconds">
+        <item quantity="one">1 segundo</item>
+        <item quantity="other">%d segundos</item>
+    </plurals>
+    <!-- Phrase describing a time duration using minutes  -->
+    <plurals name="duration_minutes">
+        <item quantity="one">1 minuto</item>
+        <item quantity="other">%d minutos</item>
+    </plurals>
+    <!-- Phrase describing a time duration using hours  -->
+    <plurals name="duration_hours">
+        <item quantity="one">1 hora</item>
+        <item quantity="other">%d horas</item>
+    </plurals>
+
+    <string name="and">y</string>
+    <string name="more_no_number">más</string>
+    <string name="empty_space">&lt;El espacio está vacío&gt;</string>
+    <string name="more" tools:ignore="PluralsCandidate">%d más</string>
+    <string name="your_pmr">Su sala de reuniones personales</string>
+    <string name="other_pmr">Sala de reuniones personales de %s</string>
+
+    <string name="call_banner_answered" tools:ignore="StringFormatCount">Ha tenido una llamada.</string>
+    <string name="call_banner_x_declined">%1$s no estaba disponible.</string>
+    <string name="call_banner_you_declined">No estaba disponible.</string>
+    <string name="call_banner_x_timeout">No importa, ha cancelado la llamada.</string>
+    <string name="call_banner_you_timeout">Ha perdido una llamada.</string>
+    <string name="call_banner_syncup" tools:ignore="StringFormatCount">Se ha unido a una reunión.</string>
+    <string name="call_banner_missed_syncup" tools:ignore="StringFormatCount">La reunión ha terminado.</string>
+    <string name="call_banner_x_unvailable_syncup">No importa, %1$s ha cancelado la reunión.</string>
+    <string name="call_banner_you_unvailable_syncup">No importa, ha cancelado la reunión.</string>
+
+    <string name="error_sending_message">No se puede enviar el mensaje.</string>
+    <string name="error_message_canceled">Mensaje cancelado</string>
+    <string name="error_sending_sticker">No se puede enviar la pegatina.</string>
+    <string name="error_new_conversation">No se puede crear el espacio.</string>
+    <string name="error_org_invite">Aún no puede invitar a usuarios de fuera de su organización a Spark. Para resolverlo, abra un ticket de soporte.</string>
+    <string name="error_leave_conversation">No se puede salir del espacio.</string>
+    <string name="error_remove_participant">No se puede quitar al participante del espacio.</string>
+    <string name="uploading_space_avatar">Cargando imagen del espacio</string>
+    <string name="error_setting_space_avatar">Error al configurar la imagen del espacio.</string>
+    <string name="error_cropping_space_avatar">Error al recortar la imagen del espacio</string>
+    <string name="file_too_large">La imagen es demasiado grande, seleccione otra</string>
+
+    <string name="max_participants_warning_text">No se puede llamar a un espacio de Spark con más de %d personas.</string>
+    <string name="max_participants_warning_free_text">No se puede llamar a un espacio de Spark con más de %d personas con cuentas gratuitas.</string>
+    <string name="max_participants_add_guest_warning_text" tools:ignore="PluralsCandidate">No se pueden añadir más de %d personas a una reunión.</string>
+    <string name="max_participants_add_guest_warning_free_text" tools:ignore="PluralsCandidate">No se pueden añadir más de %d personas a una reunión. Para que puedan unirse más participantes, actualice a un paquete de pago.</string>
+    <string name="max_roster_size_warning_text">No puede unirse a la reunión. Ya se ha unido el número máximo de personas (%d).</string>
+    <string name="meeting_locked_warning_text">No puede unirse a la reunión. El espacio está bloqueado.</string>
+    <string name="meeting_locked_while_terminating_previous_meeting">Finalizando la reunión anterior, vuelva a intentarlo.</string>
+
+    <string name="call_error_joining">Error al unirse a la llamada</string>
+    <string name="call_error_joining_conflict">No se puede unir a una llamada de Spark en curso desde otro dispositivo.</string>
+    <string name="call_error_user_not_onboarded">Invitación en curso. Las llamadas no se pueden realizar hasta que %s no responda a su invitación. Inténtelo de nuevo cuando se una al espacio.</string>
+    <string name="call_error_joining_high_volume">El sistema de llamadas de Spark no está disponible en este momento. Vuelva a intentarlo más tarde.</string>
+    <string name="call_error_is_inactive">La llamada ya no está activa.</string>
+
+    <string name="camera_unavailable">Spark tiene problemas para usar la cámara. Reinicie Spark e inténtelo de nuevo.</string>
+    <string name="video_disabled_due_to_network_conditions">El vídeo se ha desactivado debido a una conexión de red limitada. </string>
+    <string name="poor_network_quality">Conexión de red limitada</string>
+    <string name="call_put_on_hold">Llamada puesta en espera</string>
+    <string name="call_resumed">Llamada reanudada</string>
+
+    <string name="call_other_person_invited_others">Notificando a los demás</string>
+    <string name="call_other_person_invited_x">Notificando a %s</string>
+    <string name="call_other_person_declined">La otra persona ha rechazado</string>
+    <string name="call_other_person_busy">La otra persona está ocupada</string>
+    <string name="call_participant_left">El participante ha salido</string>
+    <string name="call_participant_joined">Conectando</string>
+    <string name="call_participant_cancelled">El participante ha cancelado</string>
+    <string name="call_participant_expelled">El moderador le ha quitado de la reunión</string>
+    <string name="name_was_unavailable">%s no estaba disponible</string>
+
+    <string name="error_file_not_found">El archivo seleccionado no se ha encontrado en el almacenamiento.</string>
+
+    <!-- Search Modifiers -->
+    <string name="search_hint_for_modifier">Introduzca un nombre para la persona</string>
+    <string name="search_hint_with_modifier">Introduzca un nombre para la persona</string>
+    <string name="search_hint_in_modifier">Introduzca un nombre para el espacio</string>
+    <string name="search_modifier_list_header">Seleccione un modificador para restringir su búsqueda</string>
+    <string name="search_modifier_option_from_keyword"><b>de:</b></string>
+    <string name="search_modifier_option_from">Mostrar <b>mensajes</b> y <b>archivos</b> de una <b>persona</b></string>
+    <string name="search_modifier_option_in_keyword"><b>en:</b></string>
+    <string name="search_modifier_option_in">Mostrar <b>mensajes</b> y <b>archivos</b> en un <b>espacio determinado</b></string>
+
+    <!-- Presence Status Messages -->
+    <string name="do_not_disturb">No molestar</string>
+    <string name="presence_status_active">Activo</string>
+    <string name="presence_status_earlier">Ha estado activo hoy</string>
+    <string name="presence_status_yesterday">Activo ayer</string>
+    <string name="presence_status_active_day">Activo: %s</string>
+    <string name="presence_status_active_on">Activo en %s</string>
+    <string name="dnd_time_set_until">No molestar hasta %s</string>
+    <plurals name="presence_status_inactive_minutes">
+        <item quantity="one">Activo hace %d minuto</item>
+        <item quantity="other">Activo hace %d minutos</item>
+    </plurals>
+    <string name="presence_status_pending">Pendiente de activación</string>
+    <string name="presence_status_ooo">Fuera de la oficina</string>
+    <string name="presence_status_ooo_until">Fuera de la oficina hasta %s</string>
+
+    <plurals name="presence_status_inactive_hours">
+        <item quantity="one">Activo hace %d hora</item>
+        <item quantity="other">Activo hace %d horas</item>
+    </plurals>
+    <string name="tomorrow">mañana</string>
+
+    <!-- Contacts Integration -->
+    <string name="contact_invite_to_spark">Invitar a %s a Spark</string>
+    <string name="contact_view_space">Espacio con %s</string>
+
+    <string name="room_retention_policy_indefinite">indefinidamente</string>
+    <string name="room_retention_policy_one_year">durante un año</string>
+    <string name="room_retention_policy_for_days">durante %d días</string>
+
+    <!-- Day Markers -->
+    <string name="day_marker_today">Hoy</string>
+    <string name="day_marker_yesterday">Ayer</string>
+
+</resources>

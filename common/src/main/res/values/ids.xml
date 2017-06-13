@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="id" name="spaceball_scene_chat" />
+    <item type="id" name="spaceball_scene_call" />
+    <item type="id" name="spaceball_scene_whiteboard" />
+    <item type="id" name="spaceball_scene_people" />
+    <item type="id" name="spaceball_scene_files" />
+    <item type="id" name="spaceball_scene_sparkurls"/>
+    <item type="id" name="spaceball_scene_info" />
+</resources>

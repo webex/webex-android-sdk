@@ -1,0 +1,140 @@
+//apply plugin: 'com.android.application'
+
+//by sdk
+apply plugin: 'com.android.library'
+
+apply plugin: 'me.tatarka.retrolambda'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+    defaultConfig {
+        //BY SDK
+        //applicationId "com.cisco.wx2.sdk.video"
+        minSdkVersion 16
+        targetSdkVersion 25
+        versionCode 1
+        versionName "0.1"
+        //testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.ciscospark.SparkTestRunner"
+
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+        }
+
+    }
+
+    productFlavors {
+        dev {
+        }
+        //disabled by lm, for speedup dev compile speed
+        /*
+        prod {
+        }
+        lollipop {
+            minSdkVersion 21 // faster compilation with MultiDex
+        }
+        */
+    }
+
+    dexOptions {
+        preDexLibraries = false
+        javaMaxHeapSize "4g"
+
+        //lm
+        dexInProcess false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi-v7a'
+            universalApk false
+        }
+    }
+}
+
+configurations {
+    devDebugCompile
+    prodDebugCompile
+    prodReleaseCompile
+    lollipopDebugCompile
+    devDebugMemoryLeakCompile
+    lollipopDebugMemoryLeakCompile
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    devDebugCompile project(path: ':common', configuration: 'prodDebug')
+    prodDebugCompile project(path: ':common', configuration: 'prodDebug')
+    prodReleaseCompile project(path: ':common', configuration: 'prodRelease')
+    lollipopDebugCompile project(path: ':common', configuration: 'lollipopDebug')
+    devDebugMemoryLeakCompile project(path: ':common', configuration: 'prodDebug')
+    lollipopDebugMemoryLeakCompile project(path: ':common', configuration: 'lollipopDebug')
+
+    compile 'com.android.support:multidex:1.0.1'
+
+
+    //compile 'com.jakewharton:butterknife-compiler:8.4.0'
+
+    //compile 'com.jakewharton:butterknife:7.0.1'
+
+    //compile 'com.google.code.gson:gson:2.7'
+
+
+    //compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    //compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+
+    //compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
+
+
+
+    compile libs.gson
+
+    compile libs.retrofit
+    compile libs.retrofit_gsonconverter
+
+
+
+
+    //compile libs.okhttp
+    //compile libs.okhttp_logging
+
+    compile 'com.squareup.okhttp3:mockwebserver:3.7.0'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.7.0'
+
+    compile libs.websocket
+
+
+
+
+
+    compile libs.dagger
+    provided libs.daggercompiler
+
+    compile libs.eventbus
+
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:25.1.1'
+    compile 'com.android.support:design:25.1.1'
+    testCompile 'junit:junit:4.12'
+    compile project(path: ':common')
+    compile project(path: ':common')
+}

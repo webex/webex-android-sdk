@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Generic Strings -->
+    <string name="settings">設定</string>
+    <string name="general">一般</string>
+
+    <!-- Preference keys: do not translate -->
+
+
+    <!-- This is an android system preference key to get the whole preference screen. It\'s being used
+         to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+    <!-- Show if the user has ignored the pairing permission card in dev console  -->
+    <string name="pref_key_title_ignore_permission_microphone">Proximity 權限卡</string>
+    <string name="pref_key_summary_ignore_pairing_permission">表示使用者是否已解除 Proximity 權限卡</string>
+    <string name="pref_key_title_has_explained_phone_state_permission">說明的電話狀態權限</string>
+    <string name="pref_key_summary_has_explained_phone_state_permission">在使用者完成第一個通話之後設定</string>
+
+    <string name="generic_image_filename">image.jpg</string>
+    <string name="now">現在</string>
+
+    <!-- Phrase describing a time duration using seconds  -->
+    <plurals name="duration_seconds">
+        <item quantity="one">1 秒</item>
+        <item quantity="other">%d 秒</item>
+    </plurals>
+    <!-- Phrase describing a time duration using minutes  -->
+    <plurals name="duration_minutes">
+        <item quantity="one">1 分鐘</item>
+        <item quantity="other">%d 分鐘</item>
+    </plurals>
+    <!-- Phrase describing a time duration using hours  -->
+    <plurals name="duration_hours">
+        <item quantity="one">1 小時</item>
+        <item quantity="other">%d 小時</item>
+    </plurals>
+
+    <string name="and">及</string>
+    <string name="more_no_number">另  個</string>
+    <string name="empty_space">&lt;空間是空的&gt;</string>
+    <string name="more" tools:ignore="PluralsCandidate">另 %d 個</string>
+    <string name="your_pmr">您的個人會議室</string>
+    <string name="other_pmr">%s的個人會議室</string>
+
+    <string name="call_banner_answered" tools:ignore="StringFormatCount">您有一次通話。</string>
+    <string name="call_banner_x_declined">%1$s無法連線。</string>
+    <string name="call_banner_you_declined">您無法連線。</string>
+    <string name="call_banner_x_timeout">沒關係。您已取消呼叫。</string>
+    <string name="call_banner_you_timeout">您有未接呼叫。</string>
+    <string name="call_banner_syncup" tools:ignore="StringFormatCount">您已加入會議。</string>
+    <string name="call_banner_missed_syncup" tools:ignore="StringFormatCount">會議已結束。</string>
+    <string name="call_banner_x_unvailable_syncup">沒關係。%1$s 已取消會議。</string>
+    <string name="call_banner_you_unvailable_syncup">沒關係。您已取消會議。</string>
+
+    <string name="error_sending_message">無法傳送訊息。</string>
+    <string name="error_message_canceled">已取消訊息</string>
+    <string name="error_sending_sticker">無法傳送貼紙。</string>
+    <string name="error_new_conversation">無法建立空間。</string>
+    <string name="error_org_invite">您尚無法將組織外部的使用者邀請至 Spark。若要解決此問題，請開啟支援報修單。</string>
+    <string name="error_leave_conversation">無法離開此空間。</string>
+    <string name="error_remove_participant">無法將參加者從此空間中移除。</string>
+    <string name="uploading_space_avatar">正在上傳空間影像</string>
+    <string name="error_setting_space_avatar">無法設定空間影像。</string>
+    <string name="error_cropping_space_avatar">無法裁剪空間影像</string>
+    <string name="file_too_large">影像太大，請選擇其他影像</string>
+
+    <string name="max_participants_warning_text">您無法呼叫人數超過 %d 的 Spark 空間。</string>
+    <string name="max_participants_warning_free_text">您無法使用免費帳戶來呼叫人數超過 %d 的 Spark 空間。</string>
+    <string name="max_participants_add_guest_warning_text" tools:ignore="PluralsCandidate">在會議中新增的人數不能超過 %d。</string>
+    <string name="max_participants_add_guest_warning_free_text" tools:ignore="PluralsCandidate">在會議中新增的人數不能超過 %d。若要允許更多參加者加入，請升級至付費套裝。</string>
+    <string name="max_roster_size_warning_text">無法加入會議，因為所加入的人數已達到上限 (%d)。</string>
+    <string name="meeting_locked_warning_text">您無法加入會議，因為空間已鎖定。</string>
+    <string name="meeting_locked_while_terminating_previous_meeting">正在結束先前會議，請再試一次。</string>
+
+    <string name="call_error_joining">加入通話時發生錯誤</string>
+    <string name="call_error_joining_conflict">您無法從其他裝置加入進行中的 Spark 通話。</string>
+    <string name="call_error_user_not_onboarded">正在邀請。無法完成通話，除非 %s 回應您的邀請。請在他們加入空間後再試一次。</string>
+    <string name="call_error_joining_high_volume">Spark 通話目前不可用。請稍後再試。</string>
+    <string name="call_error_is_inactive">通話不再有效。</string>
+
+    <string name="camera_unavailable">Spark 使用相機時發生問題。請重新啟動 Spark 並再試一次。</string>
+    <string name="video_disabled_due_to_network_conditions">您的視訊由於網路連線欠佳而關閉。 </string>
+    <string name="poor_network_quality">網路連線欠佳。</string>
+    <string name="call_put_on_hold">呼叫保留中</string>
+    <string name="call_resumed">呼叫已回復</string>
+
+    <string name="call_other_person_invited_others">通知其他人</string>
+    <string name="call_other_person_invited_x">正在通知 %s</string>
+    <string name="call_other_person_declined">其他人已拒絕</string>
+    <string name="call_other_person_busy">其他人員繁忙</string>
+    <string name="call_participant_left">參加者已離開</string>
+    <string name="call_participant_joined">正在連線</string>
+    <string name="call_participant_cancelled">參加者已取消</string>
+    <string name="call_participant_expelled">協調人已將您從會議中移除</string>
+    <string name="name_was_unavailable">無法連線 %s</string>
+
+    <string name="error_file_not_found">在儲存空間中找不到選取的檔案。</string>
+
+    <!-- Search Modifiers -->
+    <string name="search_hint_for_modifier">輸入人員姓名</string>
+    <string name="search_hint_with_modifier">輸入人員姓名</string>
+    <string name="search_hint_in_modifier">輸入空間名稱</string>
+    <string name="search_modifier_list_header">選取修飾元來縮小您的搜尋</string>
+    <string name="search_modifier_option_from_keyword"><b>寄件者：</b></string>
+    <string name="search_modifier_option_from">顯示<b>訊息</b>和<b>檔案</b>（來自 <b> 人員）</b></string>
+    <string name="search_modifier_option_in_keyword"><b>位於：</b></string>
+    <string name="search_modifier_option_in">顯示<b>訊息</b>和<b>檔案</b>（在給定<b>空間中）</b></string>
+
+    <!-- Presence Status Messages -->
+    <string name="do_not_disturb">請勿打擾</string>
+    <string name="presence_status_active">使用中</string>
+    <string name="presence_status_earlier">今天早先時候使用中</string>
+    <string name="presence_status_yesterday">昨天使用中</string>
+    <string name="presence_status_active_day">使用中 %s</string>
+    <string name="presence_status_active_on">%s 使用中</string>
+    <string name="dnd_time_set_until">%s 之前請勿打擾</string>
+    <plurals name="presence_status_inactive_minutes">
+        <item quantity="one">%d 分鐘前使用中</item>
+        <item quantity="other">%d 分鐘前使用中</item>
+    </plurals>
+    <string name="presence_status_pending">等待啟動</string>
+    <string name="presence_status_ooo">不在辦公室</string>
+    <string name="presence_status_ooo_until">不在辦公室直至 %s</string>
+
+    <plurals name="presence_status_inactive_hours">
+        <item quantity="one">%d 小時前使用中</item>
+        <item quantity="other">%d 小時前使用中</item>
+    </plurals>
+    <string name="tomorrow">明天</string>
+
+    <!-- Contacts Integration -->
+    <string name="contact_invite_to_spark">邀請 %s 加入 Spark</string>
+    <string name="contact_view_space">包含 %s 的空間</string>
+
+    <string name="room_retention_policy_indefinite">無限期</string>
+    <string name="room_retention_policy_one_year">一年</string>
+    <string name="room_retention_policy_for_days">%d 天</string>
+
+    <!-- Day Markers -->
+    <string name="day_marker_today">今天</string>
+    <string name="day_marker_yesterday">昨天</string>
+
+</resources>

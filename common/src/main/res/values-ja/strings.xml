@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Generic Strings -->
+    <string name="settings">設定</string>
+    <string name="general">一般</string>
+
+    <!-- Preference keys: do not translate -->
+
+
+    <!-- This is an android system preference key to get the whole preference screen. It\'s being used
+         to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+    <!-- Show if the user has ignored the pairing permission card in dev console  -->
+    <string name="pref_key_title_ignore_permission_microphone">Proximity 権限カード</string>
+    <string name="pref_key_summary_ignore_pairing_permission">ユーザーが Proximity 権限カードを却下したかどうか示しています</string>
+    <string name="pref_key_title_has_explained_phone_state_permission">電話の状況の権限を説明しました</string>
+    <string name="pref_key_summary_has_explained_phone_state_permission">ユーザーが最初のコールを完了した後で設定します</string>
+
+    <string name="generic_image_filename">image.jpg</string>
+    <string name="now">今すぐ</string>
+
+    <!-- Phrase describing a time duration using seconds  -->
+    <plurals name="duration_seconds">
+        <item quantity="one">1 秒</item>
+        <item quantity="other">%d 秒</item>
+    </plurals>
+    <!-- Phrase describing a time duration using minutes  -->
+    <plurals name="duration_minutes">
+        <item quantity="one">1 分</item>
+        <item quantity="other">%d 分</item>
+    </plurals>
+    <!-- Phrase describing a time duration using hours  -->
+    <plurals name="duration_hours">
+        <item quantity="one">1 時間</item>
+        <item quantity="other">%d 時間</item>
+    </plurals>
+
+    <string name="and">および</string>
+    <string name="more_no_number">その他</string>
+    <string name="empty_space">&lt;スペースは空です&gt;</string>
+    <string name="more" tools:ignore="PluralsCandidate">%d +</string>
+    <string name="your_pmr">あなたのパーソナル会議室</string>
+    <string name="other_pmr">%s のパーソナル会議室</string>
+
+    <string name="call_banner_answered" tools:ignore="StringFormatCount">通話がありました。</string>
+    <string name="call_banner_x_declined">%1$s は応答しませんでした。</string>
+    <string name="call_banner_you_declined">あなたは応答しませんでした。</string>
+    <string name="call_banner_x_timeout">通話をキャンセルしました。</string>
+    <string name="call_banner_you_timeout">不在着信がありました。</string>
+    <string name="call_banner_syncup" tools:ignore="StringFormatCount">ミーティングに参加しました。</string>
+    <string name="call_banner_missed_syncup" tools:ignore="StringFormatCount">ミーティングは終了しました。</string>
+    <string name="call_banner_x_unvailable_syncup">%1$s がミーティングをキャンセルしました。</string>
+    <string name="call_banner_you_unvailable_syncup">あなたはミーティングをキャンセルしました。</string>
+
+    <string name="error_sending_message">メッセージを送信できません。</string>
+    <string name="error_message_canceled">メッセージはキャンセルされました</string>
+    <string name="error_sending_sticker">スティッキーを送信できません。</string>
+    <string name="error_new_conversation">スペースを作成できません。</string>
+    <string name="error_org_invite">組織外のユーザーを Spark に招待することができません。この問題を解決するには、サポート チケットを開いてください。</string>
+    <string name="error_leave_conversation">スペースを作成できません。</string>
+    <string name="error_remove_participant">スペースから参加者を削除することができません。</string>
+    <string name="uploading_space_avatar">スペース画像をアップロード中</string>
+    <string name="error_setting_space_avatar">スペース画像の設定に失敗しました。</string>
+    <string name="error_cropping_space_avatar">スペース画像のトリミングに失敗しました</string>
+    <string name="file_too_large">画像が大きすぎます。別の画像を選択してください。</string>
+
+    <string name="max_participants_warning_text">ユーザーが %d 人以上いる Spark スペースに発信することはできません。</string>
+    <string name="max_participants_warning_free_text">無料アカウントのユーザーが %d 人以上いる Spark スペースに発信することはできません。</string>
+    <string name="max_participants_add_guest_warning_text" tools:ignore="PluralsCandidate">ミーティングに %d 人以上参加者を追加することはできません。</string>
+    <string name="max_participants_add_guest_warning_free_text" tools:ignore="PluralsCandidate">ミーティングに %d 人以上参加者を追加することはできません。参加者をさらに追加するには、有償版にアップグレードしてください。</string>
+    <string name="max_roster_size_warning_text">参加者が上限 (%d 名) に達しているため、ミーティングに参加できません。</string>
+    <string name="meeting_locked_warning_text">スペースはロックされているため、ミーティングに参加できません。</string>
+    <string name="meeting_locked_while_terminating_previous_meeting">前のミーティングを終了しています。もう一度試してください。</string>
+
+    <string name="call_error_joining">通話への参加時にエラーが発生しました</string>
+    <string name="call_error_joining_conflict">進行中の Spark 通話へは別のデバイスから参加できません。</string>
+    <string name="call_error_user_not_onboarded">招待の承認を待っています。%s が招待に応じるまで通話を完了できません。招待されたユーザーがスペースに参加してからもう一度試してください。</string>
+    <string name="call_error_joining_high_volume">現在 Spark コールを利用できません。後でもう一度試してください。</string>
+    <string name="call_error_is_inactive">この通話はアクティブでありません。</string>
+
+    <string name="camera_unavailable">Spark がカメラを使用できません。Spark を再起動してからもう一度試してください。</string>
+    <string name="video_disabled_due_to_network_conditions">ネットワーク接続が良好でないため、ビデオがオフになっています。 </string>
+    <string name="poor_network_quality">ネットワーク接続が不安定です。</string>
+    <string name="call_put_on_hold">通話を保留</string>
+    <string name="call_resumed">通話を再開</string>
+
+    <string name="call_other_person_invited_others">他のユーザーに通知中</string>
+    <string name="call_other_person_invited_x">%s に通知中</string>
+    <string name="call_other_person_declined">他のユーザーは拒否しました</string>
+    <string name="call_other_person_busy">他のユーザーは取り込み中です</string>
+    <string name="call_participant_left">参加者が退出しました</string>
+    <string name="call_participant_joined">接続中</string>
+    <string name="call_participant_cancelled">参加者がキャンセルしました</string>
+    <string name="call_participant_expelled">モデレーターが会議室からあなたを削除しました</string>
+    <string name="name_was_unavailable">%s は応答しませんでした</string>
+
+    <string name="error_file_not_found">選択されたファイルはストレージで見つかりませんでした。</string>
+
+    <!-- Search Modifiers -->
+    <string name="search_hint_for_modifier">ユーザーの名前を入力</string>
+    <string name="search_hint_with_modifier">ユーザーの名前を入力</string>
+    <string name="search_hint_in_modifier">スペースの名前を入力</string>
+    <string name="search_modifier_list_header">修飾子を選択して検索結果を絞り込みます</string>
+    <string name="search_modifier_option_from_keyword"><b>発信者:</b></string>
+    <string name="search_modifier_option_from"><b>メッセージ</b>と<b>ファイル</b>を表示 (発信者: <b>ユーザー)</b></string>
+    <string name="search_modifier_option_in_keyword"><b>場所:</b></string>
+    <string name="search_modifier_option_in"><b>メッセージ</b>と<b>ファイル</b> を表示 (場所: <b>スペース)</b></string>
+
+    <!-- Presence Status Messages -->
+    <string name="do_not_disturb">応答不可</string>
+    <string name="presence_status_active">アクティブ</string>
+    <string name="presence_status_earlier">今日早くにアクティブ</string>
+    <string name="presence_status_yesterday">昨日アクティブ</string>
+    <string name="presence_status_active_day">アクティブ %s</string>
+    <string name="presence_status_active_on">%s にアクティブ</string>
+    <string name="dnd_time_set_until">%s まで応答不可</string>
+    <plurals name="presence_status_inactive_minutes">
+        <item quantity="one">%d 分前にアクティブ</item>
+        <item quantity="other">%d 分前にアクティブ</item>
+    </plurals>
+    <string name="presence_status_pending">アクティベーション待ち</string>
+    <string name="presence_status_ooo">不在</string>
+    <string name="presence_status_ooo_until">%s まで不在</string>
+
+    <plurals name="presence_status_inactive_hours">
+        <item quantity="one">%d 時間前にアクティブ</item>
+        <item quantity="other">%d 時間前にアクティブ</item>
+    </plurals>
+    <string name="tomorrow">明日</string>
+
+    <!-- Contacts Integration -->
+    <string name="contact_invite_to_spark">%s を Spark に招待</string>
+    <string name="contact_view_space">%s とのスペース</string>
+
+    <string name="room_retention_policy_indefinite">永続的</string>
+    <string name="room_retention_policy_one_year">1 年間</string>
+    <string name="room_retention_policy_for_days">%d 日間</string>
+
+    <!-- Day Markers -->
+    <string name="day_marker_today">今日</string>
+    <string name="day_marker_yesterday">昨日</string>
+
+</resources>

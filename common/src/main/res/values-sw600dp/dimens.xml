@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="spaceball_button_item_width_height">120dip</dimen>
+</resources>

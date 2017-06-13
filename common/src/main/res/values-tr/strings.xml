@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Generic Strings -->
+    <string name="settings">Ayarlar</string>
+    <string name="general">Genel</string>
+
+    <!-- Preference keys: do not translate -->
+
+
+    <!-- This is an android system preference key to get the whole preference screen. It\'s being used
+         to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+    <!-- Show if the user has ignored the pairing permission card in dev console  -->
+    <string name="pref_key_title_ignore_permission_microphone">Yakınlık izin kartı</string>
+    <string name="pref_key_summary_ignore_pairing_permission">Kullanıcının, yakınlık izin kartını kapatıp kapatmadığını gösterir</string>
+    <string name="pref_key_title_has_explained_phone_state_permission">Açıklanan Telefon Durumu İzni</string>
+    <string name="pref_key_summary_has_explained_phone_state_permission">Kullanıcı ilk aramayı tamamladıktan sonra ayarlanır</string>
+
+    <string name="generic_image_filename">image.jpg</string>
+    <string name="now">Şimdi</string>
+
+    <!-- Phrase describing a time duration using seconds  -->
+    <plurals name="duration_seconds">
+        <item quantity="one">1 saniye</item>
+        <item quantity="other">%d saniye</item>
+    </plurals>
+    <!-- Phrase describing a time duration using minutes  -->
+    <plurals name="duration_minutes">
+        <item quantity="one">1 dakika</item>
+        <item quantity="other">%d dakika</item>
+    </plurals>
+    <!-- Phrase describing a time duration using hours  -->
+    <plurals name="duration_hours">
+        <item quantity="one">1 saat</item>
+        <item quantity="other">%d saat</item>
+    </plurals>
+
+    <string name="and">ve</string>
+    <string name="more_no_number">kişi daha</string>
+    <string name="empty_space">&lt;Alan Boş&gt;</string>
+    <string name="more" tools:ignore="PluralsCandidate">%d kişi daha</string>
+    <string name="your_pmr">Kişisel Toplantı Odanız</string>
+    <string name="other_pmr">%s Adlı Kişinin Kişisel Toplantı Odası</string>
+
+    <string name="call_banner_answered" tools:ignore="StringFormatCount">Size bir çağrı geldi.</string>
+    <string name="call_banner_x_declined">%1$s adlı kişiye ulaşılamadı.</string>
+    <string name="call_banner_you_declined">Size ulaşılamadı.</string>
+    <string name="call_banner_x_timeout">Önemli değil. Aramayı iptal ettiniz.</string>
+    <string name="call_banner_you_timeout">Bir çağrıyı yanıtlamadınız.</string>
+    <string name="call_banner_syncup" tools:ignore="StringFormatCount">Bir toplantıya katıldınız.</string>
+    <string name="call_banner_missed_syncup" tools:ignore="StringFormatCount">Toplantı sona erdi.</string>
+    <string name="call_banner_x_unvailable_syncup">Önemli değil. %1$s toplantıyı iptal etti.</string>
+    <string name="call_banner_you_unvailable_syncup">Önemli değil. Toplantıyı iptal ettiniz.</string>
+
+    <string name="error_sending_message">Mesaj gönderilemiyor.</string>
+    <string name="error_message_canceled">Mesaj iptal edildi</string>
+    <string name="error_sending_sticker">Yapışkan etiket gönderilemiyor.</string>
+    <string name="error_new_conversation">Alan oluşturulamaz.</string>
+    <string name="error_org_invite">Henüz kuruluşunuzun dışındaki kullanıcıları Spark\'a davet edemiyorsunuz. Bu sorunu gidermek için lütfen bir destek bileti açın.</string>
+    <string name="error_leave_conversation">Alandan ayrılamazsınız.</string>
+    <string name="error_remove_participant">Katılımcı alandan çıkarılamaz.</string>
+    <string name="uploading_space_avatar">Alan görüntüsü yükleniyor</string>
+    <string name="error_setting_space_avatar">Alan görüntüsü ayarlanamadı.</string>
+    <string name="error_cropping_space_avatar">Alan görüntüsü kırpılamadı</string>
+    <string name="file_too_large">Görüntü çok büyük, başkasını seçin</string>
+
+    <string name="max_participants_warning_text">En az %d kişinin bulunduğu bir Spark Alanını arayamazsınız.</string>
+    <string name="max_participants_warning_free_text">Ücretsiz hesaba sahip en az %d kişinin bulunduğu bir Spark Alanını arayamazsınız.</string>
+    <string name="max_participants_add_guest_warning_text" tools:ignore="PluralsCandidate">Toplantıya %d kişiden fazlasını ekleyemezsiniz.</string>
+    <string name="max_participants_add_guest_warning_free_text" tools:ignore="PluralsCandidate">Üzgünüz, toplantıya %d kişiden fazlasını ekleyemezsiniz. Daha fazla katılımcının katılmasını sağlamak için ücretli bir pakete yükseltin.</string>
+    <string name="max_roster_size_warning_text">Maksimum sayıda kişi (%d) zaten katıldığı için toplantıya katılınamıyor.</string>
+    <string name="meeting_locked_warning_text">Alan kilitli olduğu için toplantıya katılamıyorsunuz.</string>
+    <string name="meeting_locked_while_terminating_previous_meeting">Bir önceki toplantı sonlandırılıyor, lütfen tekrar deneyin.</string>
+
+    <string name="call_error_joining">Çağrıya katılırken hata</string>
+    <string name="call_error_joining_conflict">Devam eden bir Spark aramasına başka bir cihazdan katılamazsınız.</string>
+    <string name="call_error_user_not_onboarded">Davet Sürüyor. %s davetinizi yanıtlayana kadar çağrılar tamamlanamaz. Kişi odaya katıldığında tekrar deneyin.</string>
+    <string name="call_error_joining_high_volume">Spark Araması şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.</string>
+    <string name="call_error_is_inactive">Çağrı artık etkin değil.</string>
+
+    <string name="camera_unavailable">Spark\'ta kamera kullanımıyla ilgili bir sorun var. Lütfen Spark\'ı yeniden başlatıp tekrar deneyin.</string>
+    <string name="video_disabled_due_to_network_conditions">Düşük kaliteli ağ bağlantısı nedeniyle videonuz kapatıldı. </string>
+    <string name="poor_network_quality">Düşük Kaliteli Ağ Bağlantısı.</string>
+    <string name="call_put_on_hold">Çağrı Beklemeye Alındı</string>
+    <string name="call_resumed">Çağrı Devam Ettirildi</string>
+
+    <string name="call_other_person_invited_others">Diğerleri bilgilendiriliyor</string>
+    <string name="call_other_person_invited_x">%s bilgilendiriliyor</string>
+    <string name="call_other_person_declined">Diğer kişi reddetti</string>
+    <string name="call_other_person_busy">Diğer kişi meşgul</string>
+    <string name="call_participant_left">Katılımcı ayrıldı</string>
+    <string name="call_participant_joined">Bağlanıyor</string>
+    <string name="call_participant_cancelled">Katılımcı iptal etti</string>
+    <string name="call_participant_expelled">Moderatör sizi toplantıdan çıkardı</string>
+    <string name="name_was_unavailable">%s adlı kişiye ulaşılamadı</string>
+
+    <string name="error_file_not_found">Seçilen dosya depolama alanında bulunamadı.</string>
+
+    <!-- Search Modifiers -->
+    <string name="search_hint_for_modifier">Kişinin adını girin</string>
+    <string name="search_hint_with_modifier">Kişinin adını girin</string>
+    <string name="search_hint_in_modifier">Alanın adını girin</string>
+    <string name="search_modifier_list_header">Aramanızı daraltmak için bir niteleyici kullanın</string>
+    <string name="search_modifier_option_from_keyword"><b>gönderen:</b></string>
+    <string name="search_modifier_option_from">Bir <b>kişiden gelen </b>mesajları<b> ve </b>dosyaları<b> göster</b></string>
+    <string name="search_modifier_option_in_keyword"><b>yeri:</b></string>
+    <string name="search_modifier_option_in">Belirli bir <b>alandan</b> gelen <b>mesajları</b> ve dosyaları <b>göster</b></string>
+
+    <!-- Presence Status Messages -->
+    <string name="do_not_disturb">Rahatsız Etmeyin</string>
+    <string name="presence_status_active">Etkin:</string>
+    <string name="presence_status_earlier">Bugün içinde etkindi</string>
+    <string name="presence_status_yesterday">Dün etkindi</string>
+    <string name="presence_status_active_day">Etkin: %s</string>
+    <string name="presence_status_active_on">
+          %s tarihinde etkindi</string>
+    <string name="dnd_time_set_until">Şu saate kadar rahatsız etmeyin: %s</string>
+    <plurals name="presence_status_inactive_minutes">
+        <item quantity="one">
+          %d dakika önce etkindi</item>
+        <item quantity="other">%d dakika önce etkindi</item>
+    </plurals>
+    <string name="presence_status_pending">Etkinleştirmeyi Bekliyor</string>
+    <string name="presence_status_ooo">Ofis Dışında</string>
+    <string name="presence_status_ooo_until">
+          %s tarihine kadar Ofis Dışında</string>
+
+    <plurals name="presence_status_inactive_hours">
+        <item quantity="one">%d saat önce etkindi</item>
+        <item quantity="other">
+          %d saat önce etkindi</item>
+    </plurals>
+    <string name="tomorrow">yarın</string>
+
+    <!-- Contacts Integration -->
+    <string name="contact_invite_to_spark">
+          %s adlı kişiyi Spark\'a davet et</string>
+    <string name="contact_view_space">%s içeren alan</string>
+
+    <string name="room_retention_policy_indefinite">süresiz</string>
+    <string name="room_retention_policy_one_year">bir yıl boyunca</string>
+    <string name="room_retention_policy_for_days">
+          %d gün boyunca</string>
+
+    <!-- Day Markers -->
+    <string name="day_marker_today">Bugün</string>
+    <string name="day_marker_yesterday">Dün</string>
+
+</resources>
