@@ -23,8 +23,6 @@
 package com.ciscospark.auth;
 
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
-import com.cisco.spark.android.core.AuthenticatedUser;
-import com.cisco.spark.android.sync.ActorRecord;
 import com.google.gson.Gson;
 
 import retrofit2.Call;
