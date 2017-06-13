@@ -23,7 +23,6 @@
 package com.ciscospark.auth;
 
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
-import com.google.gson.Gson;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -48,11 +47,8 @@ public class OAuthStrategy implements AuthorizationStrategy {
     private String authCode;
     private String email;
 
-
     private Retrofit retrofit;
-    private Gson gson;
     private Call<OAuth2Tokens> call;
-
 
     /**
      * OAuth 2 authorize strategy.

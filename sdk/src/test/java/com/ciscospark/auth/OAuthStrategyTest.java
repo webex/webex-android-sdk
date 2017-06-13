@@ -26,8 +26,6 @@ import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 /**
  * Created on 13/06/2017.
  */

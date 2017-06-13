@@ -2,7 +2,6 @@ package com.ciscospark.core;
 
 
 import android.app.Application;
-import android.support.annotation.CallSuper;
 
 import com.cisco.spark.android.core.ApplicationDelegate;
 import com.cisco.spark.android.core.RootModule;
