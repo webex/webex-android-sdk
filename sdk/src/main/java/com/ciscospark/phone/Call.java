@@ -51,6 +51,10 @@ public class Call {
 
     }
 
+    public void setCallObserver(CallObserver observer) {
+
+    }
+
 
     public List<CallMembership> getMembership() {
         return null;
