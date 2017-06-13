@@ -67,15 +67,12 @@ public class Phone {
     public void register(RegisterListener listener) {
         OAuth2Tokens tokens = (OAuth2Tokens)access_token;
 
-        String email1 = "";
-        String name1 = "";
+        String email = "";
+        String name = "";
 
-        AuthenticatedUser authenticatedUser = new AuthenticatedUser(email1, new ActorRecord.ActorKey(email1), name1, tokens, "Unknown", null, 0, null);
-        Log.i(TAG, "->after new AuthenticatedUser");
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser(email, new ActorRecord.ActorKey(email), name, tokens, "Unknown", null, 0, null);
         apiTokenProvider.setAuthenticatedUser(authenticatedUser);
-        Log.i(TAG, "->after setAuthenticatedUser");
         new AuthenticatedUserTask(applicationController).execute();
-
     }
 
     public void deregister(DeregisterListener listener) {
