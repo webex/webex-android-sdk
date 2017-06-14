@@ -26,20 +26,28 @@ import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
+import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
+import com.cisco.spark.android.core.ApplicationDelegate;
 import com.cisco.spark.android.core.AuthenticatedUser;
+import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.sync.ActorRecord;
+import com.ciscospark.core.SparkApplication;
+import com.webex.wseclient.WseSurfaceView;
 
 import javax.inject.Inject;
 
 import de.greenrobot.event.EventBus;
 
 public class Phone {
+    
     private OAuth2AccessToken access_token;
     private static final String TAG = "Phone";
+
+    private ApplicationDelegate applicationDelegate;
 
     @Inject
     ApplicationController applicationController;
@@ -59,10 +67,37 @@ public class Phone {
     @Inject
     EventBus bus;
 
-    public Phone(OAuth2AccessToken token) {
+    WseSurfaceView mRemoteSurfaceView;
+
+    WseSurfaceView mLocalSurfaceView;
+
+    private CallContext callContext;
+
+    public Phone(){
+        Log.i(TAG, "Phone: ->start");
+        SparkApplication.getInstance().inject(this);
+        bus.register(this);
+
+        Log.i(TAG, "Phone: ->end");
+
+    }
+
+    public void close() {
+        Log.i(TAG, "close: ->");
+
+        if (bus.isRegistered(this)) {
+
+            bus.unregister(this);
+
+        }
+    }
+
+    protected void setToken(OAuth2AccessToken token) {
         Log.d(TAG, "constructure");
         this.access_token = token;
     }
+
+
 
     public void register(RegisterListener listener) {
         OAuth2Tokens tokens = (OAuth2Tokens)access_token;
@@ -93,6 +128,12 @@ public class Phone {
 
     public boolean isConnected() {
         return false;
+    }
+
+    public void onEventMainThread(DeviceRegistrationChangedEvent event) {
+
+        Log.i(TAG, "DeviceRegistrationChangedEvent: -> is received ");
+
     }
 
 }

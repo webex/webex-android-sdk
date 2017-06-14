@@ -48,7 +48,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
         this.state = "";
     }
 
-    OAuthWebViewStrategy(String clientId, String clientSecret, String redirectUri,
+    public OAuthWebViewStrategy(String clientId, String clientSecret, String redirectUri,
                          String scope, String email, WebView webView) {
         super();
         this.webView = webView;

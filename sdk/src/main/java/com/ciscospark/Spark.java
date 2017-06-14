@@ -20,25 +20,18 @@
 
 package com.ciscospark;
 
-import com.cisco.spark.android.authenticator.ApiTokenProvider;
+
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
-import com.cisco.spark.android.callcontrol.CallControlService;
-import com.cisco.spark.android.core.ApiClientProvider;
-import com.cisco.spark.android.core.ApplicationController;
-import com.cisco.spark.android.media.MediaEngine;
 import com.ciscospark.auth.AuthorizationStrategy;
 import com.ciscospark.auth.AuthorizeListener;
 import com.ciscospark.membership.MembershipClient;
 import com.ciscospark.message.MessageClient;
 import com.ciscospark.people.PeopleClient;
+import com.ciscospark.phone.Constant;
 import com.ciscospark.phone.Phone;
 import com.ciscospark.room.RoomClient;
 import com.ciscospark.team.TeamClient;
 import com.ciscospark.team.TeamMembershipClient;
-
-import javax.inject.Inject;
-
-import de.greenrobot.event.EventBus;
 
 /**
  * @author      Allen Xiao<xionxiao@cisco.com>
@@ -46,52 +39,50 @@ import de.greenrobot.event.EventBus;
  */
 public class Spark {
     private AuthorizationStrategy strategy;
-    private OAuth2AccessToken token;
+    private OAuth2AccessToken mToken;
 
-    @Inject
-    ApplicationController applicationController;
 
-    @Inject
-    ApiTokenProvider apiTokenProvider;
+    private Phone mPhone;
 
-    @Inject
-    ApiClientProvider apiClientProvider;
 
-    @Inject
-    CallControlService callControlService;
+    public Spark(){
 
-    @Inject
-    MediaEngine mediaEngine;
+        mPhone = new Phone();
 
-    @Inject
-    EventBus bus;
+    }
 
     /**
      * Get current sdk version
      * @return      major.minor.build-alpha/beta
      */
     public String version() {
-        return "0.1";
+
+        return Constant.Version;
     }
 
     public void init(AuthorizationStrategy strategy) {
+
         this.strategy = strategy;
     }
 
     public void authorize(AuthorizeListener listener) {
+
         strategy.authorize(listener);
     }
 
     public void deauthorize() {
+
         strategy.deauthorize();
     }
 
     public boolean isAuthorized() {
+
         return false;
     }
 
     public Phone phone() {
-        return null;
+
+        return this.mPhone;
     }
 
     public MessageClient messages() { return new MessageClient(); }
@@ -105,5 +96,19 @@ public class Spark {
     public TeamMembershipClient teamMembershipClient() { return new TeamMembershipClient(); }
 
     public RoomClient rooms() { return new RoomClient(); }
+
+
+    public void setToken(OAuth2AccessToken token){
+        this.mToken =token;
+    }
+
+
+    public OAuth2AccessToken getToken(){
+        return this.mToken;
+    }
+
+
+
+
 
 }
