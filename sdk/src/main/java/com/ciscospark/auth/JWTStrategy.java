@@ -33,13 +33,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 
+import static com.ciscospark.auth.Constant.JWT_BASE_URL;
+
 /**
  * @author      Allen Xiao<xionxiao@cisco.com>
  * @version     0.1
  */
 public class JWTStrategy implements AuthorizationStrategy {
-    private String authcode;
-    private JwtToken token;
+    private JwtToken token = null;
     Call<JwtToken> call;
 
     class JwtToken extends OAuth2AccessToken {
@@ -65,9 +66,8 @@ public class JWTStrategy implements AuthorizationStrategy {
 
 
     public JWTStrategy(String authcode) {
-        this.authcode = authcode;
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://api.ciscospark.com/v1/jwt/")
+                .baseUrl(JWT_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         AuthService service = retrofit.create(AuthService.class);
@@ -80,7 +80,7 @@ public class JWTStrategy implements AuthorizationStrategy {
             @Override
             public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
                 token = response.body();
-                listener.onSuccess(token);
+                listener.onSuccess();
             }
 
             @Override
@@ -93,7 +93,17 @@ public class JWTStrategy implements AuthorizationStrategy {
 
     @Override
     public void deauthorize() {
+        token = null;
+    }
 
+    @Override
+    public OAuth2AccessToken getAccessToken() {
+        return token;
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        return (token != null);
     }
 
     private interface AuthService {

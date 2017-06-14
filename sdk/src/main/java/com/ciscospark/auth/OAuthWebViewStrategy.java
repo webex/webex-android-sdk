@@ -38,15 +38,19 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+
 import java.math.BigInteger;
 import java.security.SecureRandom;
+
+import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
 
 
 /**
  * OAuth2 authorization strategy using android WebView.
  */
 public class OAuthWebViewStrategy implements AuthorizationStrategy {
-    String baseUrl = "https://api.ciscospark.com/v1/";
+    String baseUrl = OAUTH_BASE_URL;
     private WebView webView;
     private String clientId;
     private String clientSecret;
@@ -56,6 +60,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
     private String state;
     private String email;
     private AuthorizeListener listener;
+    private OAuthStrategy delegated_strategy = null;
     static final String TAG = "OAuthWebViewStrategy";
 
     @Override
@@ -63,12 +68,27 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
         this.listener = listener;
         String url = buildCodeGrantUrl(email);
         Log.d(TAG, "authorize" + url);
+        CookieManager.getInstance().removeAllCookie();
         webView.loadUrl(url);
     }
 
     @Override
     public void deauthorize() {
         this.state = "";
+        delegated_strategy.deauthorize();
+        delegated_strategy = null;
+    }
+
+    @Override
+    public OAuth2AccessToken getAccessToken() {
+        if (delegated_strategy != null)
+            return delegated_strategy.getAccessToken();
+        return null;
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        return delegated_strategy != null && delegated_strategy.isAuthorized();
     }
 
     /**
@@ -121,8 +141,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
         webSettings.setAllowFileAccess(false);
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
-        CookieManager.getInstance().setAcceptCookie(false);
-        webView.requestFocus(View.FOCUS_DOWN);
+        CookieManager.getInstance().setAcceptCookie(true);
     }
 
 
@@ -139,8 +158,8 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
                 webView.clearCache(true);
                 webView.loadUrl("about:blank");
 
-                OAuthStrategy strategy = new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, code);
-                strategy.authorize(listener);
+                delegated_strategy= new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, code);
+                delegated_strategy.authorize(listener);
 
                 return false;
             }

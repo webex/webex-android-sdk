@@ -22,6 +22,9 @@
 
 package com.ciscospark.auth;
 
+import android.util.Log;
+
+import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 
 import retrofit2.Call;
@@ -33,13 +36,15 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
 
+import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
+
 
 /**
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
 public class OAuthStrategy implements AuthorizationStrategy {
-    private String baseUrl = "https://api.ciscospark.com/v1/";
+    public static final String AUTHORIZATION_CODE = "authorization_code";
     private String clientId;
     private String clientScret;
     private String scope;
@@ -49,6 +54,7 @@ public class OAuthStrategy implements AuthorizationStrategy {
 
     private Retrofit retrofit;
     private Call<OAuth2Tokens> call;
+    private OAuth2Tokens token = null;
 
     /**
      * OAuth 2 authorize strategy.
@@ -72,12 +78,12 @@ public class OAuthStrategy implements AuthorizationStrategy {
         this.authCode = authCode;
 
         retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
+                .baseUrl(OAUTH_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         AuthService service = retrofit.create(AuthService.class);
         call = service.getToken(clientId, clientSecret,
-                redirectUri, "authorization_code", authCode);
+                redirectUri, AUTHORIZATION_CODE, authCode);
     }
 
     @Override
@@ -85,8 +91,11 @@ public class OAuthStrategy implements AuthorizationStrategy {
         call.enqueue(new Callback<OAuth2Tokens>() {
             @Override
             public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
-                OAuth2Tokens token = response.body();
-                listener.onSuccess(token);
+                token = response.body();
+                if (token != null)
+                    listener.onSuccess();
+                else
+                    listener.onFailed();
             }
 
             @Override
@@ -98,7 +107,17 @@ public class OAuthStrategy implements AuthorizationStrategy {
 
     @Override
     public void deauthorize() {
+        token = null;
+    }
 
+    @Override
+    public OAuth2AccessToken getAccessToken() {
+        return token;
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        return token != null;
     }
 
     private interface AuthService {

@@ -27,11 +27,6 @@ android {
 
     }
 
-    productFlavors {
-        dev {
-        }
-    }
-
     dexOptions {
         preDexLibraries = false
         javaMaxHeapSize "4g"
@@ -66,7 +61,7 @@ configurations {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
-    devDebugCompile project(path: ':common', configuration: 'prodDebug')
+    //devDebugCompile project(path: ':common', configuration: 'prodDebug')
     prodDebugCompile project(path: ':common', configuration: 'prodDebug')
     prodReleaseCompile project(path: ':common', configuration: 'prodRelease')
     lollipopDebugCompile project(path: ':common', configuration: 'lollipopDebug')
