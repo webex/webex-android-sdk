@@ -22,6 +22,8 @@
 
 package com.ciscospark.auth;
 
+import android.util.Log;
+
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.google.gson.annotations.SerializedName;
 
@@ -43,6 +45,7 @@ public class JWTStrategy implements AuthorizationStrategy {
     private String authcode;
     private JwtToken token;
     Call<JwtToken> call;
+    private static final String TAG = "JWTStrategy";
 
     class JwtToken extends OAuth2AccessToken {
         @SerializedName("expiresIn")
@@ -81,8 +84,9 @@ public class JWTStrategy implements AuthorizationStrategy {
         call.enqueue(new Callback<JwtToken>() {
             @Override
             public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
-                token = response.body();
-                listener.onSuccess(token);
+                Log.i(TAG, "onResponse:->1 ");
+                JWTStrategy.this.token = response.body();
+                listener.onSuccess();
             }
 
             @Override
@@ -96,6 +100,11 @@ public class JWTStrategy implements AuthorizationStrategy {
     @Override
     public void deauthorize() {
 
+    }
+
+    @Override
+    public OAuth2AccessToken getToken() {
+        return this.token;
     }
 
     private interface AuthService {

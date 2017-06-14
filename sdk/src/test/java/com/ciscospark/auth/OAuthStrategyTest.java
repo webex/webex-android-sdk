@@ -43,10 +43,10 @@ public class OAuthStrategyTest {
         OAuthStrategy oAuth = new OAuthStrategy(clientId, clientSec, redirect, scope, "", code);
         oAuth.authorize(new AuthorizeListener() {
             @Override
-            public void onSuccess(OAuth2AccessToken token) {
+            public void onSuccess() {
                 System.out.println("success");
-                System.out.println(token.toString());
-                System.out.println(token.getAccessToken());
+                System.out.println(oAuth.getToken().toString());
+                System.out.println(oAuth.getToken().getAccessToken());
             }
 
             @Override

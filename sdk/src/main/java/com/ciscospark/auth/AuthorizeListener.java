@@ -34,6 +34,6 @@ public interface AuthorizeListener {
      * @param token
      * TODO: should not use OAuth2AccessToken class from client SDK. Write own AccessToken class.
      */
-    void onSuccess(OAuth2AccessToken token);
+    void onSuccess();
     void onFailed();
 }

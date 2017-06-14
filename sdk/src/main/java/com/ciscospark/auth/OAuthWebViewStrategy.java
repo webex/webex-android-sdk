@@ -38,6 +38,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
@@ -59,6 +61,8 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
     private String email;
     private AuthorizeListener listener;
     static final String TAG = "OAuthWebViewStrategy";
+
+    private OAuth2AccessToken token;
 
     @Override
     public void authorize(AuthorizeListener listener) {
@@ -171,5 +175,10 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
                 Log.w(TAG, new Exception("SSLError unknown"));
         }
 
+    }
+
+    @Override
+    public OAuth2AccessToken getToken() {
+        return this.token;
     }
 }

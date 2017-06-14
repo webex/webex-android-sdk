@@ -40,10 +40,10 @@ public class JWTStrategyTest {
         JWTStrategy strategy = new JWTStrategy(auth_token);
         strategy.authorize(new AuthorizeListener() {
             @Override
-            public void onSuccess(OAuth2AccessToken token) {
-                System.out.println(token);
-                System.out.println(token.getAccessToken());
-                System.out.println("expires in: " + token.getExpiresIn());
+            public void onSuccess() {
+                System.out.println(strategy.getToken());
+                System.out.println(strategy.getToken().getAccessToken());
+                System.out.println("expires in: " + strategy.getToken().getExpiresIn());
             }
 
             @Override

@@ -100,13 +100,13 @@ public class Spark {
     public RoomClient rooms() { return new RoomClient(); }
 
 
-    public void setToken(OAuth2AccessToken token){
-        this.mToken =token;
+    public void setStrategy(AuthorizationStrategy strategy){
+        this.strategy = strategy;
     }
 
 
-    public OAuth2AccessToken getToken(){
-        return this.mToken;
+    public AuthorizationStrategy getStrategy(){
+        return this.strategy;
     }
 
 
