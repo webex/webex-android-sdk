@@ -37,6 +37,7 @@ import com.cisco.spark.android.core.AuthenticatedUser;
 import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.sync.ActorRecord;
+import com.ciscospark.Spark;
 import com.ciscospark.core.SparkApplication;
 import com.webex.wseclient.WseSurfaceView;
 
@@ -45,6 +46,8 @@ import javax.inject.Inject;
 import de.greenrobot.event.EventBus;
 
 public class Phone {
+    
+    private Spark mspark;
     
     private OAuth2AccessToken access_token;
     private static final String TAG = "Phone";
@@ -75,10 +78,15 @@ public class Phone {
 
     private CallContext callContext;
 
-    public Phone(){
+    //keep temp listener
+    private RegisterListener mListener;
+
+    public Phone(Spark spark){
         Log.i(TAG, "Phone: ->start");
         SparkApplication.getInstance().inject(this);
         bus.register(this);
+        
+        this.mspark = spark;
 
         Log.i(TAG, "Phone: ->end");
 
@@ -93,23 +101,40 @@ public class Phone {
 
         }
     }
-
-    protected void setToken(OAuth2AccessToken token) {
-        Log.d(TAG, "constructure");
-        this.access_token = token;
-    }
-
-
+    
+    
 
     public void register(RegisterListener listener) {
-        OAuth2Tokens tokens = (OAuth2Tokens)access_token;
+        
+        if(this.mspark.getStrategy().getToken() == null) {
 
-        String email = "";
-        String name = "";
+            Log.i(TAG, "register: -> no valid Token");
 
-        AuthenticatedUser authenticatedUser = new AuthenticatedUser(email, new ActorRecord.ActorKey(email), name, tokens, "Unknown", null, 0, null);
+            return;
+        
+        }
+
+        OAuth2Tokens tokens = new OAuth2Tokens();
+
+        tokens.update(this.mspark.getStrategy().getToken());
+
+
+        String email1 = "";
+        String name1 = "";
+
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser(email1, new ActorRecord.ActorKey(email1), name1, tokens, "Unknown", null, 0, null);
+
+        Log.i(TAG, "->after new AuthenticatedUser");
+
         apiTokenProvider.setAuthenticatedUser(authenticatedUser);
+
+        Log.i(TAG, "->after setAuthenticatedUser");
+
+        this.mListener = listener;
+
         new AuthenticatedUserTask(applicationController).execute();
+
+        Log.i(TAG, "After execute ");
     }
 
     public void deregister(DeregisterListener listener) {
@@ -134,7 +159,11 @@ public class Phone {
 
     public void onEventMainThread(DeviceRegistrationChangedEvent event) {
 
-        Log.i(TAG, "DeviceRegistrationChangedEvent: -> is received ");
+        Log.i(TAG, "DeviceRegistrationChangedEvent -> is received ");
+
+        this.mListener.onSuccess();
+
+        Log.i(TAG, "onEventMainThread: Registered:" + event.getDeviceRegistration().getId());
 
     }
 

@@ -49,7 +49,7 @@ public class Spark {
 
     public Spark(){
 
-        mPhone = new Phone();
+        mPhone = new Phone(this);
 
     }
 
