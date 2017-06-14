@@ -41,12 +41,14 @@ import android.webkit.WebViewClient;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
+import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
+
 
 /**
  * OAuth2 authorization strategy using android WebView.
  */
 public class OAuthWebViewStrategy implements AuthorizationStrategy {
-    String baseUrl = "https://api.ciscospark.com/v1/";
+    String baseUrl = OAUTH_BASE_URL;
     private WebView webView;
     private String clientId;
     private String clientSecret;

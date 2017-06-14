@@ -33,13 +33,15 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
 
+import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
+
 
 /**
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
 public class OAuthStrategy implements AuthorizationStrategy {
-    private String baseUrl = "https://api.ciscospark.com/v1/";
+    public static final String AUTHORIZATION_CODE = "authorization_code";
     private String clientId;
     private String clientScret;
     private String scope;
@@ -72,12 +74,12 @@ public class OAuthStrategy implements AuthorizationStrategy {
         this.authCode = authCode;
 
         retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
+                .baseUrl(OAUTH_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         AuthService service = retrofit.create(AuthService.class);
         call = service.getToken(clientId, clientSecret,
-                redirectUri, "authorization_code", authCode);
+                redirectUri, AUTHORIZATION_CODE, authCode);
     }
 
     @Override
