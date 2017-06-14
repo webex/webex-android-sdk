@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2016-2017 Cisco Systems Inc
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ciscospark.auth;
 
 
@@ -8,6 +30,7 @@ import android.net.http.SslError;
 import android.os.Build;
 import android.util.Log;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -48,7 +71,15 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
         this.state = "";
     }
 
-    OAuthWebViewStrategy(String clientId, String clientSecret, String redirectUri,
+    /**
+     * @param clientId
+     * @param clientSecret
+     * @param redirectUri
+     * @param scope
+     * @param email
+     * @param webView
+     */
+    public OAuthWebViewStrategy(String clientId, String clientSecret, String redirectUri,
                          String scope, String email, WebView webView) {
         super();
         this.webView = webView;
@@ -70,8 +101,9 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
                 .appendQueryParameter("client_id", clientId)
                 .appendQueryParameter("redirect_uri", redirectUri)
                 .appendQueryParameter("scope", scope)
-                .appendQueryParameter("state", state)
-                .appendQueryParameter("email", email);
+                .appendQueryParameter("state", state);
+        if (!email.isEmpty())
+                builder.appendQueryParameter("email", email);
         return builder.toString();
     }
 
@@ -89,6 +121,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
         webSettings.setAllowFileAccess(false);
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
+        CookieManager.getInstance().setAcceptCookie(false);
         webView.requestFocus(View.FOCUS_DOWN);
     }
 
@@ -102,9 +135,11 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
                 Uri uri = Uri.parse(url);
                 code = uri.getQueryParameter("code");
                 Log.d(TAG, "access code: " +  code);
+
+                webView.clearCache(true);
                 webView.loadUrl("about:blank");
 
-                OAuthStrategy strategy = new OAuthStrategy(clientId, clientSecret, redirectUri, scope, code);
+                OAuthStrategy strategy = new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, code);
                 strategy.authorize(listener);
 
                 return false;

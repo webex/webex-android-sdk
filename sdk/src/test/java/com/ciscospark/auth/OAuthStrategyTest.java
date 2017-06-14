@@ -29,35 +29,37 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Created on 10/06/2017.
+ * Created on 13/06/2017.
  */
-public class JWTStrategyTest {
-    static final String TAG = "JWTStrategyTest";
-    private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMiIsIm5hbWUiOiJ1c2VyICMyIiwiaXNzIjoiWTJselkyOXpjR0Z5YXpvdkwzVnpMMDlTUjBGT1NWcEJWRWxQVGk5aU5tSmtNemRtTUMwNU56RXhMVFEzWldVdE9UUTFOUzAxWWpZNE1tUTNNRFV6TURZIn0.5VvjLtuD-jn9hXtLthnGDdhxlIHaoKZbI80y1vK2-bY";
+public class OAuthStrategyTest {
+    String clientId = "Cc580d5219555f0df8b03d99f3e020381eae4eee0bad1501ad187480db311cce4";
+    String clientSec = "d4e9385b2e5828eef376077995080ea4aa42b5c92f1b6af8f3a59fc6a4e79f6a";
+    String redirect = "AndroidDemoApp://response";
+    String code = "Mzg2ZTdmOWItOTc3NS00OWZhLTgyNzYtYTVkOTA4N2IwYjEwZjI0YmIxMGQtNThk";
+    String scope = "spark:all spark:kms";
 
     @Test
     public void authorize() throws Exception {
-        JWTStrategy strategy = new JWTStrategy(auth_token);
-        strategy.authorize(new AuthorizeListener() {
+        OAuthStrategy oAuth = new OAuthStrategy(clientId, clientSec, redirect, scope, "", code);
+        oAuth.authorize(new AuthorizeListener() {
             @Override
             public void onSuccess(OAuth2AccessToken token) {
-                System.out.println(token);
+                System.out.println("success");
+                System.out.println(token.toString());
                 System.out.println(token.getAccessToken());
-                System.out.println("expires in: " + token.getExpiresIn());
             }
 
             @Override
             public void onFailed() {
                 System.out.println("failed");
+
             }
         });
-
-        Thread.sleep(10000);
-
     }
 
     @Test
     public void deauthorize() throws Exception {
 
     }
+
 }

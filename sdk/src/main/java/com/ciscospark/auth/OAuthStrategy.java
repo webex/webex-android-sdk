@@ -1,29 +1,28 @@
-// Copyright 2016-2017 Cisco Systems Inc
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+/*
+ * Copyright (c) 2016-2017 Cisco Systems Inc
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 package com.ciscospark.auth;
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
-import com.cisco.spark.android.core.AuthenticatedUser;
-import com.cisco.spark.android.sync.ActorRecord;
 import com.google.gson.Gson;
 
 import retrofit2.Call;
@@ -67,11 +66,13 @@ public class OAuthStrategy implements AuthorizationStrategy {
                          String clientSecret,
                          String redirectUri,
                          String scope,
+                         String email,
                          String authCode) {
         this.clientId = clientId;
         this.clientScret = clientSecret;
         this.scope = scope;
         this.redirectUri = redirectUri;
+        this.email = email;
         this.authCode = authCode;
 
         retrofit = new Retrofit.Builder()
@@ -89,8 +90,7 @@ public class OAuthStrategy implements AuthorizationStrategy {
             @Override
             public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
                 OAuth2Tokens token = response.body();
-                AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(email), "", token, "Unknown", null, 0, null);
-                listener.onSuccess(response.body());
+                listener.onSuccess(token);
             }
 
             @Override

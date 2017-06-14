@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 
-        package="com.cisco.wx2.sdk.video.api">
+        package="com.ciscospark.sdk">
         <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
 
         <application android:allowBackup="true" android:label="@string/app_name"

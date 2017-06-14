@@ -76,7 +76,7 @@ dependencies {
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.squareup.okhttp3:mockwebserver:3.7.0'
     compile 'com.squareup.okhttp3:logging-interceptor:3.7.0'
-    
+
     compile libs.gson
     compile libs.retrofit
     compile libs.retrofit_gsonconverter
