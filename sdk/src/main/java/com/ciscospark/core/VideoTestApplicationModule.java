@@ -2,7 +2,6 @@ package com.ciscospark.core;
 
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
 
 import com.cisco.spark.android.BuildConfig;
@@ -19,7 +18,6 @@ import com.cisco.spark.android.core.AccessManager;
 import com.cisco.spark.android.core.AccountUi;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
-import com.cisco.spark.android.core.AvatarProvider;
 import com.cisco.spark.android.core.BackgroundCheck;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.core.Settings;
