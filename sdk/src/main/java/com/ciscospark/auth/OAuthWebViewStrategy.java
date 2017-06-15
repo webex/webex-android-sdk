@@ -29,7 +29,6 @@ import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.util.Log;
-import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
@@ -80,9 +79,9 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
     }
 
     @Override
-    public OAuth2AccessToken getAccessToken() {
+    public OAuth2AccessToken getToken() {
         if (delegated_strategy != null)
-            return delegated_strategy.getAccessToken();
+            return delegated_strategy.getToken();
         return null;
     }
 

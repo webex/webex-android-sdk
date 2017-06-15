@@ -35,7 +35,7 @@ public interface AuthorizationStrategy {
 
     void deauthorize();
 
-    OAuth2AccessToken getAccessToken();
+    OAuth2AccessToken getToken();
 
     boolean isAuthorized();
 
