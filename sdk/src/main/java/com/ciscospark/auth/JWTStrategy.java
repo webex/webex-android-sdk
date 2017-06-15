@@ -86,6 +86,7 @@ public class JWTStrategy implements AuthorizationStrategy {
             public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
                 Log.i(TAG, "onResponse:->1 ");
                 JWTStrategy.this.token = response.body();
+
                 listener.onSuccess();
             }
 

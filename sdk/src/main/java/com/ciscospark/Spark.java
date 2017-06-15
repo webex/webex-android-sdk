@@ -53,6 +53,13 @@ public class Spark {
 
     }
 
+    //do close work, release resource
+    public void Close(){
+
+        mPhone.close();
+
+    }
+
     /**
      * Get current sdk version
      * @return      major.minor.build-alpha/beta

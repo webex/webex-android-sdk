@@ -22,6 +22,7 @@
 
 package com.ciscospark.phone;
 
+import android.os.Handler;
 import android.util.Log;
 
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
@@ -40,6 +41,9 @@ import com.cisco.spark.android.sync.ActorRecord;
 import com.ciscospark.Spark;
 import com.ciscospark.core.SparkApplication;
 import com.webex.wseclient.WseSurfaceView;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.inject.Inject;
 
@@ -81,6 +85,15 @@ public class Phone {
     //keep temp listener
     private RegisterListener mListener;
 
+    //registered on WMD or not
+    private boolean registerInWDM;
+
+    //as common lib doesn't provide timeout event, we use this to handle timeout
+    private Timer mTimer;
+
+    private Handler mtimeHandler;
+    private Runnable mtimeRunnable;
+
     public Phone(Spark spark){
         Log.i(TAG, "Phone: ->start");
         SparkApplication.getInstance().inject(this);
@@ -88,10 +101,19 @@ public class Phone {
         
         this.mspark = spark;
 
+        registerInWDM = false;
+
+        this.mtimeHandler = new Handler();
+
+        //prevent common lib automatically register by using old data
+        logout();
+
         Log.i(TAG, "Phone: ->end");
 
     }
 
+    //release eventbus.
+    //clean data from common lib,to prevent automatically register
     public void close() {
         Log.i(TAG, "close: ->");
 
@@ -100,19 +122,40 @@ public class Phone {
             bus.unregister(this);
 
         }
+
+        //prevent common lib automatically register by using old data
+        logout();
+    }
+
+    private boolean isAuthorized()
+    {
+        Log.i(TAG, "isAuthorized: ->");
+
+        if(this.mspark.getStrategy().getToken() == null) {
+
+            Log.i(TAG, "register: -> no valid Token");
+
+            return false;
+
+        }
+
+        return true;
+
     }
     
     
 
     public void register(RegisterListener listener) {
+
+        Log.i(TAG, "register: ->start");
         
-        if(this.mspark.getStrategy().getToken() == null) {
+        if(!isAuthorized())
+        {
 
-            Log.i(TAG, "register: -> no valid Token");
-
+            //not authorized
             return;
-        
         }
+
 
         OAuth2Tokens tokens = new OAuth2Tokens();
 
@@ -134,11 +177,48 @@ public class Phone {
 
         new AuthenticatedUserTask(applicationController).execute();
 
-        Log.i(TAG, "After execute ");
+
+
+        //start to monitor register timeout
+        startRegisterTimer(Constant.timeout);
+
+        Log.i(TAG, "register: ->end ");
     }
 
-    public void deregister(DeregisterListener listener) {
+    private void startRegisterTimer(int timeoutinSeconds){
 
+        this.mtimeRunnable = new Runnable() {
+            @Override
+            public void run() {
+
+                Log.i(TAG, "run: -> register timeout");
+
+                if(!Phone.this.registerInWDM){
+                    if(Phone.this.mListener != null)
+                    {
+                        Phone.this.mListener.onFailed();
+                    }
+                }
+            }
+        };
+
+        this.mtimeHandler.postDelayed(this.mtimeRunnable, timeoutinSeconds*1000);
+
+
+
+    }
+
+
+    public void deregister(DeregisterListener listener) {
+        
+        
+
+    }
+    
+    private void logout(){
+        Log.i(TAG, "logout: ->1");
+        applicationController.logout(null, false);
+        
     }
 
     public Call dial(String dialString) {
@@ -161,10 +241,33 @@ public class Phone {
 
         Log.i(TAG, "DeviceRegistrationChangedEvent -> is received ");
 
+        if(this.mListener == null)
+        {
+            //in case, even logout is called, common lib still send out event by using old date
+            // to register
+            Log.i(TAG, "this.mListener is null ");
+            return;
+        }
+
+        if(!isAuthorized())
+        {
+            Log.i(TAG, "not authorized,something wrong! ");
+            //not authorized,something wrong
+            return;
+        }
+
         this.mListener.onSuccess();
+
+        //successfully registered
+        this.registerInWDM = true;
+
+        //cancel timer for register
+
+        this.mtimeHandler.removeCallbacks(this.mtimeRunnable);
 
         Log.i(TAG, "onEventMainThread: Registered:" + event.getDeviceRegistration().getId());
 
     }
+
 
 }
