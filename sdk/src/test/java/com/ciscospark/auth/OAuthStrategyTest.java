@@ -24,7 +24,12 @@ package com.ciscospark.auth;
 
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 
+import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created on 13/06/2017.
@@ -36,12 +41,21 @@ public class OAuthStrategyTest {
     String code = "Mzg2ZTdmOWItOTc3NS00OWZhLTgyNzYtYTVkOTA4N2IwYjEwZjI0YmIxMGQtNThk";
     String scope = "spark:all spark:kms";
 
+    OAuthStrategy strategy;
+
+    @Before
+    public void init() throws Exception {
+        strategy = new OAuthStrategy(clientId, clientSec, redirect, scope, "", code);
+    }
+
     @Test
     public void authorize() throws Exception {
-        OAuthStrategy oAuth = new OAuthStrategy(clientId, clientSec, redirect, scope, "", code);
-        oAuth.authorize(new AuthorizeListener() {
+        strategy.authorize(new AuthorizeListener() {
             @Override
-            public void onSuccess(OAuth2AccessToken token) {
+            public void onSuccess() {
+                assertTrue(strategy.isAuthorized());
+                OAuth2AccessToken token = strategy.getAccessToken();
+                assertNotNull(token);
                 System.out.println("success");
                 System.out.println(token.toString());
                 System.out.println(token.getAccessToken());
@@ -50,14 +64,16 @@ public class OAuthStrategyTest {
             @Override
             public void onFailed() {
                 System.out.println("failed");
-
             }
         });
+        Thread.sleep(5000);
     }
 
     @Test
     public void deauthorize() throws Exception {
-
+        strategy.deauthorize();
+        OAuth2AccessToken token = strategy.getAccessToken();
+        assertNull(token);
     }
 
 }

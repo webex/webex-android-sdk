@@ -22,23 +22,38 @@
 
 package com.ciscospark.auth;
 
+import android.util.Log;
+
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 
+import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created on 10/06/2017.
  */
 public class JWTStrategyTest {
-    static final String TAG = "JWTStrategyTest";
     private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMiIsIm5hbWUiOiJ1c2VyICMyIiwiaXNzIjoiWTJselkyOXpjR0Z5YXpvdkwzVnpMMDlTUjBGT1NWcEJWRWxQVGk5aU5tSmtNemRtTUMwNU56RXhMVFEzWldVdE9UUTFOUzAxWWpZNE1tUTNNRFV6TURZIn0.5VvjLtuD-jn9hXtLthnGDdhxlIHaoKZbI80y1vK2-bY";
+    private JWTStrategy strategy;
+    private static final String TAG = JWTStrategyTest.class.getName();
+
+    @Before
+    public void init() throws Exception {
+        strategy = new JWTStrategy(auth_token);
+    }
 
     @Test
     public void authorize() throws Exception {
-        JWTStrategy strategy = new JWTStrategy(auth_token);
         strategy.authorize(new AuthorizeListener() {
             @Override
-            public void onSuccess(OAuth2AccessToken token) {
+            public void onSuccess() {
+                assertTrue(strategy.isAuthorized());
+                OAuth2AccessToken token = strategy.getAccessToken();
+                assertNotNull(token);
                 System.out.println(token);
                 System.out.println(token.getAccessToken());
                 System.out.println("expires in: " + token.getExpiresIn());
@@ -50,12 +65,15 @@ public class JWTStrategyTest {
             }
         });
 
-        Thread.sleep(10000);
+        Thread.sleep(5000);
 
     }
 
     @Test
     public void deauthorize() throws Exception {
+        strategy.deauthorize();
+        OAuth2AccessToken token = strategy.getAccessToken();
+        assertNull(token);
 
     }
 }

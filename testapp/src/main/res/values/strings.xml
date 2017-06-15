@@ -22,4 +22,5 @@
 
 <resources>
     <string name="app_name">TestApp</string>
+    <string name="authorize">Authorize</string>
 </resources>
