@@ -56,8 +56,6 @@ import com.cisco.spark.android.util.UserAgentProvider;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.spark.android.whiteboard.WhiteboardCache;
 import com.cisco.spark.android.whiteboard.WhiteboardService;
-
-
 import com.ciscospark.phone.Phone;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;

@@ -37,6 +37,6 @@ public interface AuthorizationStrategy {
 
     OAuth2AccessToken getToken();
 
-
+    boolean isAuthorized();
 
 }

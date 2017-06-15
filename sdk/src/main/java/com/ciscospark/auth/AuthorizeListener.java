@@ -22,18 +22,12 @@
 
 package com.ciscospark.auth;
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
-
 /**
  * @author      Allen Xiao<xionxiao@cisco.com>
  * @version     0.1
  */
 public interface AuthorizeListener {
-    /**
-     * get access token callback
-     * @param token
-     * TODO: should not use OAuth2AccessToken class from client SDK. Write own AccessToken class.
-     */
+
     void onSuccess();
     void onFailed();
 }

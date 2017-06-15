@@ -22,6 +22,8 @@
 
 package com.ciscospark.auth;
 
+
+
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 
@@ -50,12 +52,9 @@ public class OAuthStrategy implements AuthorizationStrategy {
     private String authCode;
     private String email;
 
-    private OAuth2AccessToken token;
-
-
     private Retrofit retrofit;
     private Call<OAuth2Tokens> call;
-
+    private OAuth2Tokens token = null;
 
     /**
      * OAuth 2 authorize strategy.
@@ -92,8 +91,11 @@ public class OAuthStrategy implements AuthorizationStrategy {
         call.enqueue(new Callback<OAuth2Tokens>() {
             @Override
             public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
-                OAuthStrategy.this.token = response.body();
-                listener.onSuccess();
+               token = response.body();
+                if (token != null)
+                    listener.onSuccess();
+                else
+                    listener.onFailed();
             }
 
             @Override
@@ -105,12 +107,17 @@ public class OAuthStrategy implements AuthorizationStrategy {
 
     @Override
     public void deauthorize() {
-
+        token = null;
     }
 
     @Override
     public OAuth2AccessToken getToken() {
-        return this.token;
+        return token;
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        return token != null;
     }
 
     private interface AuthService {

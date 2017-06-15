@@ -22,8 +22,6 @@
 
 package com.ciscospark.auth;
 
-import android.util.Log;
-
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.google.gson.annotations.SerializedName;
 
@@ -42,8 +40,7 @@ import static com.ciscospark.auth.Constant.JWT_BASE_URL;
  * @version     0.1
  */
 public class JWTStrategy implements AuthorizationStrategy {
-    private String authcode;
-    private JwtToken token;
+    private JwtToken token = null;
     Call<JwtToken> call;
     private static final String TAG = "JWTStrategy";
 
@@ -70,7 +67,6 @@ public class JWTStrategy implements AuthorizationStrategy {
 
 
     public JWTStrategy(String authcode) {
-        this.authcode = authcode;
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(JWT_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -84,9 +80,7 @@ public class JWTStrategy implements AuthorizationStrategy {
         call.enqueue(new Callback<JwtToken>() {
             @Override
             public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
-                Log.i(TAG, "onResponse:->1 ");
-                JWTStrategy.this.token = response.body();
-
+                token = response.body();
                 listener.onSuccess();
             }
 
@@ -100,12 +94,17 @@ public class JWTStrategy implements AuthorizationStrategy {
 
     @Override
     public void deauthorize() {
-
+        token = null;
     }
 
     @Override
     public OAuth2AccessToken getToken() {
-        return this.token;
+        return token;
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        return (token != null);
     }
 
     private interface AuthService {

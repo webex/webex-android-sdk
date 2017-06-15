@@ -29,7 +29,6 @@ import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.util.Log;
-import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
@@ -60,6 +59,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
     private String state;
     private String email;
     private AuthorizeListener listener;
+    private OAuthStrategy delegated_strategy = null;
     static final String TAG = "OAuthWebViewStrategy";
 
     private OAuth2AccessToken token;
@@ -69,12 +69,27 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
         this.listener = listener;
         String url = buildCodeGrantUrl(email);
         Log.d(TAG, "authorize" + url);
+        CookieManager.getInstance().removeAllCookie();
         webView.loadUrl(url);
     }
 
     @Override
     public void deauthorize() {
         this.state = "";
+        delegated_strategy.deauthorize();
+        delegated_strategy = null;
+    }
+
+    @Override
+    public OAuth2AccessToken getToken() {
+        if (delegated_strategy != null)
+            return delegated_strategy.getToken();
+        return null;
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        return delegated_strategy != null && delegated_strategy.isAuthorized();
     }
 
     /**
@@ -127,8 +142,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
         webSettings.setAllowFileAccess(false);
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
-        CookieManager.getInstance().setAcceptCookie(false);
-        webView.requestFocus(View.FOCUS_DOWN);
+        CookieManager.getInstance().setAcceptCookie(true);
     }
 
 
@@ -145,8 +159,8 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
                 webView.clearCache(true);
                 webView.loadUrl("about:blank");
 
-                OAuthStrategy strategy = new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, code);
-                strategy.authorize(listener);
+                delegated_strategy= new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, code);
+                delegated_strategy.authorize(listener);
 
                 return false;
             }
@@ -175,10 +189,5 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
                 Log.w(TAG, new Exception("SSLError unknown"));
         }
 
-    }
-
-    @Override
-    public OAuth2AccessToken getToken() {
-        return this.token;
     }
 }
