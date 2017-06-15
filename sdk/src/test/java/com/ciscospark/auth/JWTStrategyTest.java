@@ -22,8 +22,6 @@
 
 package com.ciscospark.auth;
 
-import android.util.Log;
-
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 
 import org.junit.Before;
@@ -52,7 +50,7 @@ public class JWTStrategyTest {
             @Override
             public void onSuccess() {
                 assertTrue(strategy.isAuthorized());
-                OAuth2AccessToken token = strategy.getAccessToken();
+                OAuth2AccessToken token = strategy.getToken();
                 assertNotNull(token);
                 System.out.println(token);
                 System.out.println(token.getAccessToken());
@@ -72,7 +70,7 @@ public class JWTStrategyTest {
     @Test
     public void deauthorize() throws Exception {
         strategy.deauthorize();
-        OAuth2AccessToken token = strategy.getAccessToken();
+        OAuth2AccessToken token = strategy.getToken();
         assertNull(token);
 
     }

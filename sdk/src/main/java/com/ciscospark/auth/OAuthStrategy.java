@@ -111,7 +111,7 @@ public class OAuthStrategy implements AuthorizationStrategy {
     }
 
     @Override
-    public OAuth2AccessToken getAccessToken() {
+    public OAuth2AccessToken getToken() {
         return token;
     }
 
