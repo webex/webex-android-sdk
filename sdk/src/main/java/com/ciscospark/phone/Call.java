@@ -33,6 +33,10 @@ public class Call {
         USER, ENVIRONMENT
     }
 
+    public enum CallStatus {
+        Active, ENVIRONMENT
+    }
+
     public void answer(CallObserver observer) {
 
     }
@@ -55,6 +59,18 @@ public class Call {
 
     public void setCallObserver(CallObserver observer) {
 
+    }
+
+    private CallObserver mObserver;
+
+    public void setObservor(CallObserver observer)
+    {
+        this.mObserver = observer;
+    }
+
+    public CallObserver getObserver()
+    {
+        return this.mObserver;
     }
 
 

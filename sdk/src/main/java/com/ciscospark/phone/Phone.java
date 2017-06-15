@@ -42,6 +42,8 @@ import com.ciscospark.Spark;
 import com.ciscospark.core.SparkApplication;
 import com.webex.wseclient.WseSurfaceView;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -52,8 +54,9 @@ import de.greenrobot.event.EventBus;
 public class Phone {
     
     private Spark mspark;
-    
-    private OAuth2AccessToken access_token;
+
+    private List<Call> calllist;
+
     private static final String TAG = "Phone";
 
     private ApplicationDelegate applicationDelegate;
@@ -76,9 +79,6 @@ public class Phone {
     @Inject
     EventBus bus;
 
-    WseSurfaceView mRemoteSurfaceView;
-
-    WseSurfaceView mLocalSurfaceView;
 
     private CallContext callContext;
 
@@ -107,6 +107,8 @@ public class Phone {
 
         //prevent common lib automatically register by using old data
         logout();
+
+        calllist = new ArrayList<Call>();
 
         Log.i(TAG, "Phone: ->end");
 
@@ -261,8 +263,7 @@ public class Phone {
         //successfully registered
         this.registerInWDM = true;
 
-        //cancel timer for register
-
+        //cancel register timer
         this.mtimeHandler.removeCallbacks(this.mtimeRunnable);
 
         Log.i(TAG, "onEventMainThread: Registered:" + event.getDeviceRegistration().getId());
