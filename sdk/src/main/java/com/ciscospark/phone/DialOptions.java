@@ -8,11 +8,11 @@ import com.webex.wseclient.WseSurfaceView;
 
 public class DialOptions {
 
-    private CallType mCalltype;
+    public CallType mCalltype;
 
-    private WseSurfaceView mRemoteView;
+    public WseSurfaceView mRemoteView;
 
-    private WseSurfaceView mLocalView;
+    public WseSurfaceView mLocalView;
 
     public DialOptions(CallType type,WseSurfaceView remoteView,WseSurfaceView localView)
     {

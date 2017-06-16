@@ -22,13 +22,18 @@
 
 package com.ciscospark.phone;
 
+import java.util.List;
+
 /**
  * Created on 12/06/2017.
  */
 
-public interface CallObserver {
-    void onRinging(Call call);
-    void onConnected(Call call);
-    void onDisconnected(Call call);
-    void onMediaChanged(Call call);
+public abstract class CallObserver {
+    public Call mcall;
+
+    public abstract void onRinging();
+    public abstract void onConnected();
+    public abstract void onDisconnected();
+    public abstract void onMediaChanged();
+    public abstract void onPermissionRequired(List<String> permissions);
 }

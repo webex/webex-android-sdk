@@ -22,6 +22,8 @@
 
 package com.ciscospark.phone;
 
+import com.cisco.spark.android.locus.model.LocusKey;
+
 import java.util.List;
 
 /**
@@ -34,8 +36,54 @@ public class Call {
     }
 
     public enum CallStatus {
-        Active, ENVIRONMENT
+        initiated,
+        ringing,
+        connected,
+        disconnected
     }
+
+    public enum CallType {
+        Video,
+        Audio
+    }
+
+    public enum Direction {
+        incoming,
+        outgoing
+    }
+
+    protected Phone mPhone;
+
+    protected CallStatus status;
+
+    protected CallType calltype;
+
+    protected Direction direction;
+
+
+    private CallObserver mObserver;
+
+    public LocusKey locusKey;
+
+
+    public void setObserver(CallObserver observer){
+        this.mObserver = observer;
+        observer.mcall = this;
+    }
+
+    public CallObserver getObserver()
+    {
+        return this.mObserver;
+    }
+
+    public Call(Phone phone){
+        this.mPhone = phone;
+
+        this.status = CallStatus.initiated;
+
+    }
+
+
 
     public void answer(CallObserver observer) {
 
@@ -61,17 +109,6 @@ public class Call {
 
     }
 
-    private CallObserver mObserver;
-
-    public void setObservor(CallObserver observer)
-    {
-        this.mObserver = observer;
-    }
-
-    public CallObserver getObserver()
-    {
-        return this.mObserver;
-    }
 
 
     public List<CallMembership> getMembership() {
