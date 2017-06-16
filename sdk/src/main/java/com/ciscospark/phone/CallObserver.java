@@ -33,7 +33,17 @@ public abstract class CallObserver {
 
     public abstract void onRinging();
     public abstract void onConnected();
-    public abstract void onDisconnected();
-    public abstract void onMediaChanged();
+    public abstract void onDisconnected(DisconnectedReason reason);
+    public abstract void onMediaChanged(MediaChangeReason reason);
     public abstract void onPermissionRequired(List<String> permissions);
+
+
+    public enum DisconnectedReason {
+        calleeRejected,
+        endForAndroidPermission
+    }
+
+    public enum MediaChangeReason {
+        DTMF
+    }
 }

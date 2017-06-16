@@ -22,6 +22,8 @@
 
 package com.ciscospark.phone;
 
+import android.util.Log;
+
 import com.cisco.spark.android.locus.model.LocusKey;
 
 import java.util.List;
@@ -65,7 +67,7 @@ public class Call {
 
     public LocusKey locusKey;
 
-
+    private static final String TAG = "Call";
     public void setObserver(CallObserver observer){
         this.mObserver = observer;
         observer.mcall = this;
@@ -84,7 +86,6 @@ public class Call {
     }
 
 
-
     public void answer(CallObserver observer) {
 
     }
@@ -94,6 +95,7 @@ public class Call {
     }
 
     public void hangup() {
+        Log.i(TAG, "hangup: ->start");
 
     }
 
@@ -104,12 +106,6 @@ public class Call {
     public void acknowledge() {
 
     }
-
-    public void setCallObserver(CallObserver observer) {
-
-    }
-
-
 
     public List<CallMembership> getMembership() {
         return null;

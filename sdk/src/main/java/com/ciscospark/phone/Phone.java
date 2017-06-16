@@ -306,13 +306,20 @@ public class Phone {
             //set this call as active call
             this.ActiveCall = call;
 
+            //joinCall will trigger permission synchronouslly
+            observer.onSuccess(call);
+
             this.mLocalSurfaceView = options.mLocalView;
             this.mRemoteSurfaceView = options.mRemoteView;
 
+
             CallContext callContext = new CallContext.Builder(dialString).build();
 
-            //return call to UI, let ui to add call observer
-            observer.onSuccess(call);
+            callControlService.joinCall(callContext);
+
+
+
+            Log.i(TAG, "dial: ->sendout");
 
         }
 
@@ -378,6 +385,34 @@ public class Phone {
         }
 
         this.ActiveCall.getObserver().onPermissionRequired(permissions);
+
+        //during the first dial, the permission event will happen.
+        //it means the first dial end for permission reason
+        //need to remove this ActiveCall and set it to disconnected
+
+        for (int j = 0; j < this.calllist.size(); j++) {
+            Call call = this.calllist.get(j);
+
+            //same call object
+            if(this.ActiveCall == call) {
+
+                Log.i(TAG, "find the ActiveCall from list");
+
+                this.ActiveCall.status = Call.CallStatus.disconnected;
+
+                //notify UI why this call is dead,
+                this.ActiveCall.getObserver().onDisconnected(CallObserver.DisconnectedReason.endForAndroidPermission);
+
+                this.calllist.remove(j);
+                this.ActiveCall = null;
+
+                break;
+            }
+
+        }
+
+
+
         Log.i(TAG, "RequestCallingPermissions -> end");
 
     }
@@ -387,6 +422,7 @@ public class Phone {
         Log.i(TAG, "CallControlLocusCreatedEvent -> is received ");
         Log.i(TAG, "call of locuskey " + event.getLocusKey() + " : is Created");
 
+        //save locuskey into call object
         this.ActiveCall.locusKey = event.getLocusKey();
 
 
@@ -398,7 +434,12 @@ public class Phone {
     public void onEventMainThread(ParticipantNotifiedEvent event) {
         Log.i(TAG, "ParticipantNotifiedEvent -> is received ");
 
+        //sync call status
+        this.ActiveCall.status = Call.CallStatus.ringing;
+
+        //notify ui
         this.ActiveCall.getObserver().onRinging();
+
         if(this.ActiveCall.calltype == Call.CallType.Video){
             callControlService.setPreviewWindow(event.getLocusKey(), this.mLocalSurfaceView);
         }
@@ -413,6 +454,12 @@ public class Phone {
         if(this.ActiveCall.calltype == Call.CallType.Video){
             callControlService.setRemoteWindow(event.getLocusKey(), this.mRemoteSurfaceView);
         }
+
+        //sync call status
+        this.ActiveCall.status = Call.CallStatus.connected;
+
+        //notify ui
+        this.ActiveCall.getObserver().onConnected();
     }
 
 
