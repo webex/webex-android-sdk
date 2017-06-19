@@ -94,8 +94,16 @@ public class Call {
 
     }
 
+    //handup ongoing active call(both in dialing and incall status)
     public void hangup() {
         Log.i(TAG, "hangup: ->start");
+        
+        if(this.mPhone.getActiveCall() != this){
+            Log.i(TAG, "this Call is not activecall");
+            return;
+        }
+
+        this.mPhone.hangup();
 
     }
 

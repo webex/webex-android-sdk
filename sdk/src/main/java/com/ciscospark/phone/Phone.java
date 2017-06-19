@@ -31,8 +31,11 @@ import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
+import com.cisco.spark.android.callcontrol.events.CallControlLeaveLocusEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocusCreatedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantJoinedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlParticipantLeftEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlSelfParticipantLeftEvent;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.core.ApplicationDelegate;
@@ -100,12 +103,12 @@ public class Phone {
     //as common lib doesn't provide timeout event, we use this to handle timeout
     private Timer mTimer;
 
-    private Handler mtimeHandler;
-    private Runnable mtimeRunnable;
+    private Handler mTimeHandler;
+    private Runnable mTimeRunnable;
 
 
     //keep activitied call reference
-    private Call ActiveCall;
+    private Call mActiveCall;
 
 
     public Phone(Spark spark){
@@ -117,7 +120,7 @@ public class Phone {
 
         isRegisterInWDM = false;
 
-        this.mtimeHandler = new Handler();
+        this.mTimeHandler = new Handler();
 
         //prevent common lib automatically register by using old data
         logout();
@@ -128,7 +131,9 @@ public class Phone {
 
     }
 
-
+    public Call getActiveCall(){
+        return this.mActiveCall;
+    }
 
 
     //release eventbus.
@@ -209,18 +214,9 @@ public class Phone {
     }
 
 
-    //check if a activitedCall exist
-    //1 a dialing is in dail or in call
-    //2 incomingCalls happen
-    protected boolean isInActivitiedCall()
-    {
-
-        return false;
-    }
-
     private void startRegisterTimer(int timeoutinSeconds){
 
-        this.mtimeRunnable = new Runnable() {
+        this.mTimeRunnable = new Runnable() {
             @Override
             public void run() {
 
@@ -235,7 +231,7 @@ public class Phone {
             }
         };
 
-        this.mtimeHandler.postDelayed(this.mtimeRunnable, timeoutinSeconds*1000);
+        this.mTimeHandler.postDelayed(this.mTimeRunnable, timeoutinSeconds*1000);
 
 
 
@@ -248,6 +244,37 @@ public class Phone {
         this.logout();
 
         listener.onSuccess();
+
+    }
+
+    //hang up current active call
+    protected void hangup(){
+        Log.i(TAG, "hangup: ->Start");
+        if(this.mActiveCall == null)
+        {
+            Log.i(TAG, " no active call ");
+            return;
+        }
+
+        if((this.mActiveCall.status == Call.CallStatus.initiated)||
+                (this.mActiveCall.status == Call.CallStatus.ringing)){
+
+            //call is not setup
+            Log.i(TAG, "cancelCall");
+
+            this.callControlService.cancelCall(true);
+            return;
+        }
+        if(this.mActiveCall.status == Call.CallStatus.connected){
+
+            //call is setup
+            Log.i(TAG, "leaveCall");
+
+            this.callControlService.leaveCall(this.mActiveCall.locusKey);
+            return;
+
+        }
+
 
     }
     
@@ -269,7 +296,7 @@ public class Phone {
 
         }
 
-        if(this.ActiveCall != null ){
+        if(this.mActiveCall != null ){
 
             Log.i(TAG, "isInActivitiedCall");
 
@@ -304,7 +331,7 @@ public class Phone {
             this.calllist.add(call);
 
             //set this call as active call
-            this.ActiveCall = call;
+            this.mActiveCall = call;
 
             //joinCall will trigger permission synchronouslly
             observer.onSuccess(call);
@@ -322,6 +349,45 @@ public class Phone {
             Log.i(TAG, "dial: ->sendout");
 
         }
+
+
+    }
+
+    //*.remove call from array
+    //
+    //*. set the removed call to disconnected
+    //*. set phone.Activecall as null
+    //*. inform UI call end reason
+    protected void removeCallAndMarkIt(Call call, CallObserver.DisconnectedReason
+            reason)
+    {
+        Log.i(TAG, "removeCallfromArray: ->start");
+
+
+        for (int j = 0; j < this.calllist.size(); j++) {
+            Call call2 = this.calllist.get(j);
+
+            //same call object
+            if(call == call2) {
+
+                Log.i(TAG, "find the removed callobject from list");
+
+                //set it to disconnected
+                call2.status = Call.CallStatus.disconnected;
+
+                //notify UI why this call is dead,
+                if(this.mActiveCall.getObserver() != null) {
+                    this.mActiveCall.getObserver().onDisconnected(reason);
+                }
+
+                this.calllist.remove(j);
+                this.mActiveCall = null;
+
+                break;
+            }
+
+        }
+
 
 
     }
@@ -364,7 +430,7 @@ public class Phone {
         this.isRegisterInWDM = true;
 
         //cancel register timer
-        this.mtimeHandler.removeCallbacks(this.mtimeRunnable);
+        this.mTimeHandler.removeCallbacks(this.mTimeRunnable);
 
         Log.i(TAG, "onEventMainThread: Registered:" + event.getDeviceRegistration().getId());
 
@@ -378,33 +444,33 @@ public class Phone {
         permissions.add(Manifest.permission.RECORD_AUDIO);
         permissions.add(Manifest.permission.CAMERA);
 
-        if(this.ActiveCall == null)
+        if(this.mActiveCall == null)
         {
-            Log.i(TAG, "Something is Wrong, how ActiveCall is null");
+            Log.i(TAG, "Something is Wrong, how mActiveCall is null");
             return;
         }
 
-        this.ActiveCall.getObserver().onPermissionRequired(permissions);
+        this.mActiveCall.getObserver().onPermissionRequired(permissions);
 
         //during the first dial, the permission event will happen.
         //it means the first dial end for permission reason
-        //need to remove this ActiveCall and set it to disconnected
+        //need to remove this mActiveCall and set it to disconnected
 
         for (int j = 0; j < this.calllist.size(); j++) {
             Call call = this.calllist.get(j);
 
             //same call object
-            if(this.ActiveCall == call) {
+            if(this.mActiveCall == call) {
 
-                Log.i(TAG, "find the ActiveCall from list");
+                Log.i(TAG, "find the mActiveCall from list");
 
-                this.ActiveCall.status = Call.CallStatus.disconnected;
+                this.mActiveCall.status = Call.CallStatus.disconnected;
 
                 //notify UI why this call is dead,
-                this.ActiveCall.getObserver().onDisconnected(CallObserver.DisconnectedReason.endForAndroidPermission);
+                this.mActiveCall.getObserver().onDisconnected(CallObserver.DisconnectedReason.endForAndroidPermission);
 
                 this.calllist.remove(j);
-                this.ActiveCall = null;
+                this.mActiveCall = null;
 
                 break;
             }
@@ -423,11 +489,79 @@ public class Phone {
         Log.i(TAG, "call of locuskey " + event.getLocusKey() + " : is Created");
 
         //save locuskey into call object
-        this.ActiveCall.locusKey = event.getLocusKey();
+        this.mActiveCall.locusKey = event.getLocusKey();
 
 
     }
 
+    public void onEventMainThread(CallControlParticipantLeftEvent event) {
+
+        Log.i(TAG, "CallControlParticipantLeftEvent is received ");
+
+        //no Activecall
+        if(this.mActiveCall == null)
+        {
+            return;
+        }
+        Log.i(TAG, "event.lockskey is " + event.getLocusKey().toString());
+        Log.i(TAG, "this.mActiveCall.locusKey is " + this.mActiveCall.locusKey.toString());
+        if(event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString()))
+        {
+            Log.i(TAG, "ActiveCall is end by remoted");
+
+            this.removeCallAndMarkIt(this.mActiveCall,CallObserver.DisconnectedReason.remoteHangUP);
+
+        }
+
+    }
+
+    public void onEventMainThread(CallControlSelfParticipantLeftEvent event) {
+
+        Log.i(TAG, "CallControlSelfParticipantLeftEvent is received ");
+        //no Activecall
+        if(this.mActiveCall == null)
+        {
+            return;
+        }
+        Log.i(TAG, "event.lockskey is " + event.getLocusKey().toString());
+        Log.i(TAG, "this.mActiveCall.locusKey is " + this.mActiveCall.locusKey.toString());
+
+        if(event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString()))
+        {
+            Log.i(TAG, "ActiveCall is ended");
+
+            this.removeCallAndMarkIt(this.mActiveCall,CallObserver.DisconnectedReason.selfHangUP);
+
+
+
+        }
+
+    }
+
+
+    //case 1: call is rejected by remoted
+    public void onEventMainThread(CallControlLeaveLocusEvent event) {
+
+        Log.i(TAG, "CallControlLeaveLocusEvent is received ");
+
+        //no Activecall
+        if(this.mActiveCall == null)
+        {
+            return;
+        }
+
+        //new CallControlLeaveLocusEvent(locusData, false, false, false, false, ""); is declined
+        //wasMediaFlowing,wasUCCall,wasRoomCall,wasRoomCallConnected all are false  is declined
+        if (!(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event
+                .wasRoomCallConnected())) {
+
+            Log.i(TAG, "Call is Rejected ");
+            this.removeCallAndMarkIt(this.mActiveCall,CallObserver.DisconnectedReason.remoteReject);
+
+
+        }
+
+    }
 
 
     //remoted send acknowledge and it means it is ringing
@@ -435,12 +569,12 @@ public class Phone {
         Log.i(TAG, "ParticipantNotifiedEvent -> is received ");
 
         //sync call status
-        this.ActiveCall.status = Call.CallStatus.ringing;
+        this.mActiveCall.status = Call.CallStatus.ringing;
 
         //notify ui
-        this.ActiveCall.getObserver().onRinging();
+        this.mActiveCall.getObserver().onRinging();
 
-        if(this.ActiveCall.calltype == Call.CallType.Video){
+        if(this.mActiveCall.calltype == Call.CallType.Video){
             callControlService.setPreviewWindow(event.getLocusKey(), this.mLocalSurfaceView);
         }
 
@@ -451,15 +585,15 @@ public class Phone {
     public void onEventMainThread(CallControlParticipantJoinedEvent event) {
         Log.i(TAG, "CallControlParticipantJoinedEvent -> is received ");
 
-        if(this.ActiveCall.calltype == Call.CallType.Video){
+        if(this.mActiveCall.calltype == Call.CallType.Video){
             callControlService.setRemoteWindow(event.getLocusKey(), this.mRemoteSurfaceView);
         }
 
         //sync call status
-        this.ActiveCall.status = Call.CallStatus.connected;
+        this.mActiveCall.status = Call.CallStatus.connected;
 
         //notify ui
-        this.ActiveCall.getObserver().onConnected();
+        this.mActiveCall.getObserver().onConnected();
     }
 
 

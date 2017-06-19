@@ -40,7 +40,10 @@ public abstract class CallObserver {
 
     public enum DisconnectedReason {
         calleeRejected,
-        endForAndroidPermission
+        endForAndroidPermission,
+        selfHangUP,
+        remoteHangUP,
+        remoteReject
     }
 
     public enum MediaChangeReason {
