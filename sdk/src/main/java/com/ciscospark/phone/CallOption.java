@@ -6,7 +6,7 @@ import com.webex.wseclient.WseSurfaceView;
  * Created by lm on 6/15/17.
  */
 
-public class DialOptions {
+public class CallOption {
 
     public CallType mCalltype;
 
@@ -14,7 +14,7 @@ public class DialOptions {
 
     public WseSurfaceView mLocalView;
 
-    public DialOptions(CallType type,WseSurfaceView remoteView,WseSurfaceView localView)
+    public CallOption(CallType type, WseSurfaceView remoteView, WseSurfaceView localView)
     {
         this.mCalltype = type;
         this.mLocalView = localView;
@@ -40,10 +40,7 @@ public class DialOptions {
     }
 
     public enum CallType {
-        Audio,
-        Video
+        AUDIO,
+        VIDEO
     }
-
-
-
 }

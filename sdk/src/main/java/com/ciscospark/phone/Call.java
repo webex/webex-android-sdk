@@ -24,6 +24,8 @@ package com.ciscospark.phone;
 
 import android.util.Log;
 
+import com.cisco.spark.android.callcontrol.CallContext;
+import com.cisco.spark.android.callcontrol.CallOptions;
 import com.cisco.spark.android.locus.model.LocusKey;
 
 import java.util.List;
@@ -33,41 +35,38 @@ import java.util.List;
  * @version 0.1
  */
 public class Call {
+    private static final String TAG = "Call";
+
     public enum FacingMode {
-        USER, ENVIRONMENT
+        USER,
+        ENVIROMENT
     }
 
     public enum CallStatus {
-        initiated,
-        ringing,
-        connected,
-        disconnected
+        INITIATED,
+        RINGING,
+        CONNECTED,
+        DISCONNECTED
     }
 
     public enum CallType {
-        Video,
-        Audio
+        VIDEO,
+        AUDIO
     }
 
     public enum Direction {
-        incoming,
-        outgoing
+        INCOMING,
+        OUTGOING
     }
 
     protected Phone mPhone;
-
     protected CallStatus status;
-
     protected CallType calltype;
-
     protected Direction direction;
-
-
     private CallObserver mObserver;
-
     public LocusKey locusKey;
 
-    private static final String TAG = "Call";
+
     public void setObserver(CallObserver observer){
         this.mObserver = observer;
         observer.mcall = this;
@@ -80,22 +79,39 @@ public class Call {
 
     public Call(Phone phone){
         this.mPhone = phone;
-
-        this.status = CallStatus.initiated;
-
+        this.status = CallStatus.INITIATED;
     }
 
-
-    public void answer(CallObserver observer) {
-
+    public void answer(CallOption option) {
+        Log.i(TAG, "answer call");
+        if (direction == Direction.INCOMING) {
+            if (status == CallStatus.INITIATED || status == CallStatus.RINGING) {
+                Log.i(TAG, "locuskey: " + locusKey.toString());
+                CallContext callContext = new CallContext.Builder(locusKey).build();
+                Log.i(TAG, "active call is null " + (mPhone.ActiveCall != null));
+                if (mPhone.ActiveCall != null) {
+                    mPhone.ActiveCall.hangup();
+                }
+                mPhone.setCallOption(option);
+                mPhone.ActiveCall = this;
+                mPhone.callControlService.joinCall(callContext);
+            }
+        }
     }
 
     public void reject() {
-
+        Log.i(TAG, "reject call");
+        if (direction == Direction.INCOMING && status == CallStatus.RINGING) {
+            mPhone.callControlService.declineCall(locusKey);
+        }
     }
 
     public void hangup() {
         Log.i(TAG, "hangup: ->start");
+        if (status != CallStatus.DISCONNECTED) {
+            mPhone.callControlService.declineCall(locusKey);
+            status = CallStatus.DISCONNECTED;
+        }
 
     }
 

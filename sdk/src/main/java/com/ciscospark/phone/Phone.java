@@ -37,6 +37,8 @@ import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.core.ApplicationDelegate;
 import com.cisco.spark.android.core.AuthenticatedUser;
+import com.cisco.spark.android.events.CallNotificationEvent;
+import com.cisco.spark.android.events.CallNotificationType;
 import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.cisco.spark.android.events.RequestCallingPermissions;
 import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
@@ -105,7 +107,12 @@ public class Phone {
 
 
     //keep activitied call reference
-    private Call ActiveCall;
+    protected Call ActiveCall;
+
+    // keep most resent INCOMING call
+    private Call incomingCall;
+
+    private IncomingCallObserver incomingCallObserver;
 
 
     public Phone(Spark spark){
@@ -128,6 +135,10 @@ public class Phone {
 
     }
 
+
+    public void setIncomingCallObserver(IncomingCallObserver observer) {
+        this.incomingCallObserver = observer;
+    }
 
 
 
@@ -258,72 +269,75 @@ public class Phone {
         
     }
 
-    public void dial(String dialString,DialOptions options,DialObserver observer) {
+    public void setLocalSurfaceView(WseSurfaceView surfaceView) {
+        mLocalSurfaceView = surfaceView;
+    }
+
+    public void setRemoteSurfaceView(WseSurfaceView surfaceView) {
+        mRemoteSurfaceView = surfaceView;
+    }
+
+    public void dial(String dialString, CallOption option, DialObserver observer) {
         Log.i(TAG, "dial: ->start");
 
         if(!this.isRegisterInWDM){
+            Log.i(TAG, "register wdm failed");
+            observer.onFailed(DialObserver.ErrorCode.ILLEGAL_STATUS);
+            return;
+        }
+
+        /*
+        if(this.ActiveCall != null && this.ActiveCall.status != Call.CallStatus.DISCONNECTED){
             Log.i(TAG, "isInActivitiedCall");
-
-            observer.onFailed(DialObserver.ErrorCode.illegalStatus);
+            observer.onFailed(DialObserver.ErrorCode.ILLEGAL_STATUS);
             return;
-
         }
+        */
 
-        if(this.ActiveCall != null ){
-
-            Log.i(TAG, "isInActivitiedCall");
-
-            observer.onFailed(DialObserver.ErrorCode.illegalStatus);
-
-            return;
-
-        }
-
-
-        if((options.mCalltype == DialOptions.CallType.Video)
-                && ((options.mLocalView == null)||(options.mRemoteView == null))){
-            //video call but not set remoteView or localView
-
-            Log.i(TAG, "videoCall but Views are missed");
-
-            observer.onFailed(DialObserver.ErrorCode.illegalParameter);
+        if (!setCallOption(option)) {
+            Log.i(TAG, "setCallOption failed");
+            observer.onFailed(DialObserver.ErrorCode.ILLEGAL_PARAMETER);
             return;
         }
 
-        if(options.mCalltype == DialOptions.CallType.Video){
+        Call call = new Call(this);
 
-            Log.i(TAG, "videoCall");
+        call.status = Call.CallStatus.INITIATED;
+        call.direction = Call.Direction.OUTGOING;
+        call.calltype = Call.CallType.VIDEO;
 
-            Call call = new Call(this);
+        //add this call to list
+        this.calllist.add(call);
 
-            call.status = Call.CallStatus.initiated;
-            call.direction = Call.Direction.outgoing;
-            call.calltype = Call.CallType.Video;
+        //set this call as active call
+        this.ActiveCall = call;
 
-            //add this call to list
-            this.calllist.add(call);
+        //joinCall will trigger permission synchronouslly
+        observer.onSuccess(call);
 
-            //set this call as active call
-            this.ActiveCall = call;
+        CallContext callContext = new CallContext.Builder(dialString).build();
+        callControlService.joinCall(callContext);
+        Log.i(TAG, "dial: ->sendout");
 
-            //joinCall will trigger permission synchronouslly
-            observer.onSuccess(call);
+    }
 
-            this.mLocalSurfaceView = options.mLocalView;
-            this.mRemoteSurfaceView = options.mRemoteView;
+    protected boolean setCallOption(CallOption option) {
+        if(option.mCalltype == CallOption.CallType.VIDEO) {
 
-
-            CallContext callContext = new CallContext.Builder(dialString).build();
-
-            callControlService.joinCall(callContext);
-
-
-
-            Log.i(TAG, "dial: ->sendout");
-
+            if (option.mLocalView == null || option.mRemoteView == null) {
+                //video call but not set remoteView or localView
+                Log.i(TAG, "videoCall but Views are missed");
+                return false;
+            } else {
+                Log.i(TAG, "videoCall");
+                this.mLocalSurfaceView = option.mLocalView;
+                this.mRemoteSurfaceView = option.mRemoteView;
+                return true;
+            }
         }
 
-
+        // Other CallType
+        return false;
     }
 
     public void startPreView() {
@@ -388,7 +402,7 @@ public class Phone {
 
         //during the first dial, the permission event will happen.
         //it means the first dial end for permission reason
-        //need to remove this ActiveCall and set it to disconnected
+        //need to remove this ActiveCall and set it to DISCONNECTED
 
         for (int j = 0; j < this.calllist.size(); j++) {
             Call call = this.calllist.get(j);
@@ -398,7 +412,7 @@ public class Phone {
 
                 Log.i(TAG, "find the ActiveCall from list");
 
-                this.ActiveCall.status = Call.CallStatus.disconnected;
+                this.ActiveCall.status = Call.CallStatus.DISCONNECTED;
 
                 //notify UI why this call is dead,
                 this.ActiveCall.getObserver().onDisconnected(CallObserver.DisconnectedReason.endForAndroidPermission);
@@ -430,37 +444,58 @@ public class Phone {
 
 
 
-    //remoted send acknowledge and it means it is ringing
+    //remoted send acknowledge and it means it is RINGING
     public void onEventMainThread(ParticipantNotifiedEvent event) {
         Log.i(TAG, "ParticipantNotifiedEvent -> is received ");
 
+        if (this.ActiveCall == null) return;
+
+        Log.i(TAG, "ActiveCall is not null");
         //sync call status
-        this.ActiveCall.status = Call.CallStatus.ringing;
+        this.ActiveCall.status = Call.CallStatus.RINGING;
 
         //notify ui
         this.ActiveCall.getObserver().onRinging();
 
-        if(this.ActiveCall.calltype == Call.CallType.Video){
+        if(this.ActiveCall.calltype == Call.CallType.VIDEO){
+            Log.i(TAG, "set local view " + (mLocalSurfaceView == null));
             callControlService.setPreviewWindow(event.getLocusKey(), this.mLocalSurfaceView);
         }
-
-
     }
 
     //remote accept call, call will be setup
     public void onEventMainThread(CallControlParticipantJoinedEvent event) {
         Log.i(TAG, "CallControlParticipantJoinedEvent -> is received ");
 
-        if(this.ActiveCall.calltype == Call.CallType.Video){
+        if(this.ActiveCall.calltype == Call.CallType.VIDEO){
             callControlService.setRemoteWindow(event.getLocusKey(), this.mRemoteSurfaceView);
+            callControlService.setPreviewWindow(event.getLocusKey(), this.mLocalSurfaceView);
         }
 
         //sync call status
-        this.ActiveCall.status = Call.CallStatus.connected;
+        this.ActiveCall.status = Call.CallStatus.CONNECTED;
 
         //notify ui
         this.ActiveCall.getObserver().onConnected();
     }
 
+
+    // receive INCOMING call
+    @SuppressWarnings("UnusedDeclaration")
+    public void onEventMainThread(CallNotificationEvent event) {
+        Log.i(TAG, "CallNotificationEvent " + event.getType());
+        if (event.getType() == CallNotificationType.INCOMING) {
+            Log.i(TAG, "InComing Call");
+            Call call = new Call(this);
+            call.direction = Call.Direction.INCOMING;
+            call.status = Call.CallStatus.RINGING;
+            call.calltype = Call.CallType.VIDEO;
+            call.locusKey = event.getLocusKey();
+            this.calllist.add(call);
+            this.incomingCall = call;
+            if (incomingCallObserver != null)
+                incomingCallObserver.onIncomingCall(call);
+        }
+    }
 
 }
