@@ -25,7 +25,6 @@ package com.ciscospark.phone;
 import android.util.Log;
 
 import com.cisco.spark.android.callcontrol.CallContext;
-import com.cisco.spark.android.callcontrol.CallOptions;
 import com.cisco.spark.android.locus.model.LocusKey;
 
 import java.util.List;
@@ -67,21 +66,21 @@ public class Call {
     public LocusKey locusKey;
 
 
-    public void setObserver(CallObserver observer){
+    public void setObserver(CallObserver observer) {
         this.mObserver = observer;
         observer.mcall = this;
     }
 
-    public CallObserver getObserver()
-    {
+    public CallObserver getObserver() {
         return this.mObserver;
     }
 
-    public Call(Phone phone){
+    public Call(Phone phone) {
         this.mPhone = phone;
         this.status = CallStatus.INITIATED;
     }
 
+    @SuppressWarnings("unused")
     public void answer(CallOption option) {
         Log.i(TAG, "answer call");
         if (direction == Direction.INCOMING) {
@@ -99,6 +98,7 @@ public class Call {
         }
     }
 
+    @SuppressWarnings("unused")
     public void reject() {
         Log.i(TAG, "reject call");
         if (direction == Direction.INCOMING && status == CallStatus.RINGING) {
@@ -108,17 +108,13 @@ public class Call {
 
     //handup ongoing active call(both in dialing and incall status)
     public void hangup() {
-        Log.i(TAG, "hangup: ->start");
-
-
-        if(this.mPhone.getActiveCall() != this){
-            Log.i(TAG, "this Call is not activecall");
+        Log.i(TAG, "hangup call");
+        if (this.mPhone.getActiveCall() != this) {
+            Log.i(TAG, "this Call is not active call");
+            reject();
             return;
         }
-
         this.mPhone.hangup();
-
-
     }
 
     public void send(String dtmf) {

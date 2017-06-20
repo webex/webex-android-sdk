@@ -61,7 +61,7 @@ import javax.inject.Inject;
 import de.greenrobot.event.EventBus;
 
 public class Phone {
-    
+
     private Spark mspark;
 
     private List<Call> calllist;
@@ -122,7 +122,7 @@ public class Phone {
         Log.i(TAG, "Phone: ->start");
         SparkApplication.getInstance().inject(this);
         bus.register(this);
-        
+
         this.mspark = spark;
 
         isRegisterInWDM = false;
@@ -183,13 +183,13 @@ public class Phone {
         return true;
 
     }
-    
-    
+
+
 
     public void register(RegisterListener listener) {
 
         Log.i(TAG, "register: ->start");
-        
+
         if(!isAuthorized())
         {
 
@@ -251,7 +251,6 @@ public class Phone {
         this.mTimeHandler.postDelayed(this.mTimeRunnable, timeoutinSeconds*1000);
 
 
-
     }
 
 
@@ -294,21 +293,15 @@ public class Phone {
 
 
     }
-    
+
     private void logout(){
         Log.i(TAG, "logout: ->1");
         applicationController.logout(null, false);
         this.isRegisterInWDM = false;
-        
+
     }
 
-    public void setLocalSurfaceView(WseSurfaceView surfaceView) {
-        mLocalSurfaceView = surfaceView;
-    }
 
-    public void setRemoteSurfaceView(WseSurfaceView surfaceView) {
-        mRemoteSurfaceView = surfaceView;
-    }
 
     public void dial(String dialString, CallOption option, DialObserver observer) {
         Log.i(TAG, "dial: ->start");
@@ -463,6 +456,7 @@ public class Phone {
         Log.i(TAG, "onEventMainThread: Registered:" + event.getDeviceRegistration().getId());
 
     }
+
     //request camera and microphone permission
     public void onEventMainThread(RequestCallingPermissions event) {
         Log.i(TAG, "RequestCallingPermissions -> is received ");
