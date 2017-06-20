@@ -25,8 +25,11 @@ package com.ciscospark.auth;
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -34,6 +37,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created on 10/06/2017.
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JWTStrategyTest {
     private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMiIsIm5hbWUiOiJ1c2VyICMyIiwiaXNzIjoiWTJselkyOXpjR0Z5YXpvdkwzVnpMMDlTUjBGT1NWcEJWRWxQVGk5aU5tSmtNemRtTUMwNU56RXhMVFEzWldVdE9UUTFOUzAxWWpZNE1tUTNNRFV6TURZIn0.5VvjLtuD-jn9hXtLthnGDdhxlIHaoKZbI80y1vK2-bY";
     private JWTStrategy strategy;
@@ -45,14 +49,13 @@ public class JWTStrategyTest {
     }
 
     @Test
-    public void authorize() throws Exception {
+    public void a_authorize() throws Exception {
         strategy.authorize(new AuthorizeListener() {
             @Override
             public void onSuccess() {
                 assertTrue(strategy.isAuthorized());
                 OAuth2AccessToken token = strategy.getToken();
                 assertNotNull(token);
-                System.out.println(token);
                 System.out.println(token.getAccessToken());
                 System.out.println("expires in: " + token.getExpiresIn());
             }
@@ -63,15 +66,33 @@ public class JWTStrategyTest {
             }
         });
 
-        Thread.sleep(5000);
+        Thread.sleep(10 * 1000);
 
     }
 
     @Test
-    public void deauthorize() throws Exception {
+    public void b_deauthorize() throws Exception {
         strategy.deauthorize();
+        assertFalse(strategy.isAuthorized());
         OAuth2AccessToken token = strategy.getToken();
         assertNull(token);
+    }
 
+    @Test
+    public void c_authorizeFailed() throws Exception {
+        strategy = new JWTStrategy("Wrong token");
+        strategy.authorize(new AuthorizeListener() {
+            @Override
+            public void onSuccess() {
+                assertFalse(true);
+            }
+
+            @Override
+            public void onFailed() {
+                assertFalse(strategy.isAuthorized());
+            }
+        });
+
+        Thread.sleep(10 * 1000);
     }
 }
