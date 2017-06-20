@@ -26,8 +26,9 @@ import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 
 /**
  * Authorization interface used by Spark
- * @author      Allen Xiao<xionxiao@cisco.com>
- * @version     0.1
+ *
+ * @author Allen Xiao<xionxiao@cisco.com>
+ * @version 0.1
  */
 public interface AuthorizationStrategy {
 

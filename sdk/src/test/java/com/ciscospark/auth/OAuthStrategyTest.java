@@ -27,12 +27,11 @@ import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
- * Created on 13/06/2017.
+ * @author Allen Xiao<xionxiao@cisco.com>
+ * @version 0.1
  */
 public class OAuthStrategyTest {
     String clientId = "Cc580d5219555f0df8b03d99f3e020381eae4eee0bad1501ad187480db311cce4";
@@ -53,7 +52,7 @@ public class OAuthStrategyTest {
         strategy.authorize(new AuthorizeListener() {
             @Override
             public void onSuccess() {
-               System.out.println("success");
+                System.out.println("success");
             }
 
             @Override

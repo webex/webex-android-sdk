@@ -101,7 +101,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
      * @param webView
      */
     public OAuthWebViewStrategy(String clientId, String clientSecret, String redirectUri,
-                         String scope, String email, WebView webView) {
+                                String scope, String email, WebView webView) {
         super();
         this.webView = webView;
         this.clientId = clientId;
@@ -124,7 +124,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
                 .appendQueryParameter("scope", scope)
                 .appendQueryParameter("state", state);
         if (!email.isEmpty())
-                builder.appendQueryParameter("email", email);
+            builder.appendQueryParameter("email", email);
         return builder.toString();
     }
 
@@ -150,16 +150,16 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            Log.d(TAG,  url);
+            Log.d(TAG, url);
             if (url.startsWith(redirectUri.toLowerCase())) {
                 Uri uri = Uri.parse(url);
                 code = uri.getQueryParameter("code");
-                Log.d(TAG, "access code: " +  code);
+                Log.d(TAG, "access code: " + code);
 
                 webView.clearCache(true);
                 webView.loadUrl("about:blank");
 
-                delegated_strategy= new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, code);
+                delegated_strategy = new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, code);
                 delegated_strategy.authorize(listener);
 
                 return false;
