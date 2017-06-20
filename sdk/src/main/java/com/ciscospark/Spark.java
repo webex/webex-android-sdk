@@ -48,25 +48,6 @@ import de.greenrobot.event.EventBus;
  */
 public class Spark {
     private AuthorizationStrategy strategy;
-    private OAuth2AccessToken token;
-
-    @Inject
-    ApplicationController applicationController;
-
-    @Inject
-    ApiTokenProvider apiTokenProvider;
-
-    @Inject
-    ApiClientProvider apiClientProvider;
-
-    @Inject
-    CallControlService callControlService;
-
-    @Inject
-    MediaEngine mediaEngine;
-
-    @Inject
-    EventBus bus;
 
     /**
      * Get current sdk version
@@ -89,11 +70,11 @@ public class Spark {
     }
 
     public boolean isAuthorized() {
-        return false;
+        return strategy.isAuthorized();
     }
 
     public Phone phone() {
-        return null;
+        return new Phone(strategy.getToken());
     }
 
     public MessageClient messages() { return new MessageClient(); }

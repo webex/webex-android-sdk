@@ -22,17 +22,47 @@
 
 package com.ciscospark;
 
+import android.util.Log;
+
+import com.ciscospark.auth.AuthorizeListener;
+import com.ciscospark.auth.JWTStrategy;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created on 12/06/2017.
  */
 public class SparkTest {
+    private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMiIsIm5hbWUiOiJ1c2VyICMyIiwiaXNzIjoiWTJselkyOXpjR0Z5YXpvdkwzVnpMMDlTUjBGT1NWcEJWRWxQVGk5aU5tSmtNemRtTUMwNU56RXhMVFEzWldVdE9UUTFOUzAxWWpZNE1tUTNNRFV6TURZIn0.5VvjLtuD-jn9hXtLthnGDdhxlIHaoKZbI80y1vK2-bY";
+    private static final String TAG = "SparkTest";
+
     @Test
     public void version() throws Exception {
         Spark spark = new Spark();
         assertEquals(spark.version(), "0.1");
+    }
+
+    @Test
+    public void authorize() throws Exception {
+        Spark spark = new Spark();
+        JWTStrategy strategy = new JWTStrategy(auth_token);
+        spark.init(strategy);
+        spark.authorize(new AuthorizeListener() {
+            @Override
+            public void onSuccess() {
+                assertTrue(spark.isAuthorized());
+                Log.i(TAG, "get token: " + strategy.getToken().getAccessToken());
+            }
+
+            @Override
+            public void onFailed() {
+                assertFalse(true);
+            }
+        });
+        Thread.sleep(10 * 1000);
     }
 }
