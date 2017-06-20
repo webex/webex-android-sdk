@@ -36,8 +36,8 @@ import retrofit2.http.POST;
 import static com.ciscospark.auth.Constant.JWT_BASE_URL;
 
 /**
- * @author      Allen Xiao<xionxiao@cisco.com>
- * @version     0.1
+ * @author Allen Xiao<xionxiao@cisco.com>
+ * @version 0.1
  */
 public class JWTStrategy implements AuthorizationStrategy {
     private JwtToken token = null;
@@ -57,7 +57,9 @@ public class JWTStrategy implements AuthorizationStrategy {
         }
 
         @Override
-        public String getAccessToken() { return this.accessToken; }
+        public String getAccessToken() {
+            return this.accessToken;
+        }
 
         @Override
         public boolean shouldRefreshNow() {
@@ -81,7 +83,10 @@ public class JWTStrategy implements AuthorizationStrategy {
             @Override
             public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
                 token = response.body();
-                listener.onSuccess();
+                if (token == null)
+                    listener.onFailed();
+                else
+                    listener.onSuccess();
             }
 
             @Override
