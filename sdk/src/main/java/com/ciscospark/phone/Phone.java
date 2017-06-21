@@ -353,6 +353,31 @@ public class Phone {
             Log.i(TAG, "dial: ->sendout");
         }
 
+        if(option.mCalltype == CallOption.CallType.AUDIO) {
+
+            Log.i(TAG, "AudioCall");
+
+            Call call = new Call(this);
+
+
+            call.status = Call.CallStatus.INITIATED;
+            call.direction = Call.Direction.OUTGOING;
+            call.calltype = Call.CallType.AUDIO;
+
+            //add this call to list
+            this.calllist.add(call);
+
+            //set this call as active call
+            this.mActiveCall = call;
+
+            //joinCall will trigger permission synchronouslly
+            observer.onSuccess(call);
+
+            callContext = new CallContext.Builder(dialString).setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly).build();
+            callControlService.joinCall(callContext);
+            Log.i(TAG, "dial: ->sendout");
+        }
+
     }
 
     protected boolean setCallOption(CallOption option) {
@@ -368,6 +393,13 @@ public class Phone {
                 this.mRemoteSurfaceView = option.mRemoteView;
                 return true;
             }
+        }
+
+        if(option.mCalltype == CallOption.CallType.AUDIO) {
+
+            Log.i(TAG, "AudioCall");
+
+            return true;
         }
 
         // Other CallType
@@ -604,12 +636,14 @@ public class Phone {
         //notify ui
         this.mActiveCall.getObserver().onRinging();
 
-
+        //only show local and remoted video after remoted accept call
+        /*
         if(this.mActiveCall.calltype == Call.CallType.VIDEO){
             Log.i(TAG, "set local view " + (mLocalSurfaceView == null));
 
             callControlService.setPreviewWindow(event.getLocusKey(), this.mLocalSurfaceView);
         }
+        */
     }
 
     //remote accept call, call will be setup
@@ -617,6 +651,7 @@ public class Phone {
         Log.i(TAG, "CallControlParticipantJoinedEvent -> is received ");
 
 
+        //only show local and remoted video after remoted accept call
         if(this.mActiveCall.calltype == Call.CallType.VIDEO){
 
             callControlService.setRemoteWindow(event.getLocusKey(), this.mRemoteSurfaceView);
