@@ -31,6 +31,8 @@ import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
+import com.cisco.spark.android.callcontrol.events.CallControlCallJoinErrorEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlEndLocusEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLeaveLocusEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocusCreatedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantJoinedEvent;
@@ -622,6 +624,44 @@ public class Phone {
         }
 
     }
+
+
+    public void onEventMainThread(CallControlEndLocusEvent event) {
+
+        Log.i(TAG, "CallControlEndLocusEvent is received ");
+        //no Activecall
+        if(this.mActiveCall == null)
+        {
+            return;
+        }
+        Log.i(TAG, "event.lockskey is " + event.getLocusKey().toString());
+        Log.i(TAG, "this.mActiveCall.locusKey is " + this.mActiveCall.locusKey.toString());
+
+        if(event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString()))
+        {
+            Log.i(TAG, "ActiveCall is ended");
+
+            this.removeCallAndMarkIt(this.mActiveCall,CallObserver.DisconnectedReason.callEnd);
+
+
+
+        }
+
+    }
+
+    public void onEventMainThread(CallControlCallJoinErrorEvent event) {
+
+        Log.i(TAG, "CallControlCallJoinErrorEvent is received ");
+        //no Activecall
+        if(this.mActiveCall == null)
+        {
+            return;
+        }
+
+
+    }
+
+
 
 
     //remoted send acknowledge and it means it is RINGING

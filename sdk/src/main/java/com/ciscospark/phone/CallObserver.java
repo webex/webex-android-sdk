@@ -43,7 +43,8 @@ public abstract class CallObserver {
         endForAndroidPermission,
         selfHangUP,
         remoteHangUP,
-        remoteReject
+        remoteReject,
+        callEnd
     }
 
     public enum MediaChangeReason {

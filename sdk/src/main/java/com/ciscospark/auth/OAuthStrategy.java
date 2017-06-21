@@ -86,6 +86,9 @@ public class OAuthStrategy implements AuthorizationStrategy {
                 redirectUri, AUTHORIZATION_CODE, authCode);
     }
 
+    /**
+     * @param listener
+     */
     @Override
     public void authorize(AuthorizeListener listener) {
         call.enqueue(new Callback<OAuth2Tokens>() {
