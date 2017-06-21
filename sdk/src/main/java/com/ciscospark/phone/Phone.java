@@ -44,7 +44,10 @@ import com.cisco.spark.android.events.CallNotificationEvent;
 import com.cisco.spark.android.events.CallNotificationType;
 import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.cisco.spark.android.events.RequestCallingPermissions;
+import com.cisco.spark.android.locus.events.ParticipantJoinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
+import com.cisco.spark.android.locus.model.LocusData;
+import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.sync.ActorRecord;
 import com.ciscospark.Spark;
@@ -685,4 +688,8 @@ public class Phone {
         }
     }
 
+    @SuppressWarnings("UnusedDeclaration")
+    public void onEventMainThread(ParticipantJoinedEvent event) {
+        Log.i(TAG, "ParticipantJointed Event");
+    }
 }

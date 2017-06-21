@@ -22,9 +22,68 @@
 
 package com.ciscospark.phone;
 
+import com.google.common.base.Joiner;
+
 /**
  * Created on 12/06/2017.
  */
 
-class CallMembership {
+public class CallMembership {
+    private String name = "";
+    private String id = "";
+    private String email = "";
+    private String displayName = "";
+    private String organizeId = "";
+
+    CallMembership(String name, String id, String email, String displayName, String orgId) {
+        this.setName(name);
+        this.setId(id);
+        this.setEmail(email);
+        this.setDisplayName(displayName);
+        this.setOrganizeId(orgId);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getOrganizeId() {
+        return organizeId;
+    }
+
+    public void setOrganizeId(String organizeId) {
+        this.organizeId = organizeId;
+    }
+
+    public String toString() {
+        return id + ":" + name + ":" + email + ":" + displayName + ":" + organizeId;
+    }
 }

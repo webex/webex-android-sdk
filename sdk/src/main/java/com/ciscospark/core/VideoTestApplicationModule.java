@@ -56,6 +56,7 @@ import com.cisco.spark.android.util.UserAgentProvider;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.spark.android.whiteboard.WhiteboardCache;
 import com.cisco.spark.android.whiteboard.WhiteboardService;
+import com.ciscospark.phone.Call;
 import com.ciscospark.phone.Phone;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
@@ -75,7 +76,8 @@ import okhttp3.OkHttpClient;
         includes = {},
         injects = {
                 VideoTestApplicationDelegate.class,
-                Phone.class
+                Phone.class,
+                Call.class
         }
 )
 class VideoTestApplicationModule {

@@ -25,9 +25,17 @@ package com.ciscospark.phone;
 import android.util.Log;
 
 import com.cisco.spark.android.callcontrol.CallContext;
+import com.cisco.spark.android.callcontrol.CallControlService;
+import com.cisco.spark.android.locus.model.LocusData;
 import com.cisco.spark.android.locus.model.LocusKey;
+import com.cisco.spark.android.locus.model.LocusParticipant;
+import com.cisco.spark.android.locus.model.LocusParticipantInfo;
+import com.ciscospark.core.SparkApplication;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 /**
  * @author Allen Xiao<xionxiao@cisco.com>
@@ -65,6 +73,10 @@ public class Call {
     private CallObserver mObserver;
     public LocusKey locusKey;
 
+    @Inject
+    CallControlService callControlServcie;
+
+    private List<CallMembership> callMemberships;
 
     public void setObserver(CallObserver observer) {
         this.mObserver = observer;
@@ -78,6 +90,8 @@ public class Call {
     public Call(Phone phone) {
         this.mPhone = phone;
         this.status = CallStatus.INITIATED;
+        SparkApplication.getInstance().inject(this);
+        callMemberships = new ArrayList<>();
     }
 
     @SuppressWarnings("unused")
@@ -126,7 +140,17 @@ public class Call {
     }
 
     public List<CallMembership> getMembership() {
-        return null;
+        LocusData locusData = callControlServcie.getLocusData(locusKey);
+        List<LocusParticipant> participants = locusData.getJoinedParticipants();
+        callMemberships.clear();
+        for (LocusParticipant p : participants) {
+            LocusParticipantInfo person = p.getPerson();
+            CallMembership member = new CallMembership(person.getName(),
+                    person.getId(), person.getEmail(), person.getDisplayName(), person.getOrgId());
+            Log.d(TAG, "add member: " + member.toString());
+            callMemberships.add(member);
+        }
+        return callMemberships;
     }
 
     public int getLocalVideoSize() {
