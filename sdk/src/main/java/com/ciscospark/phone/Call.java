@@ -144,9 +144,7 @@ public class Call {
         List<LocusParticipant> participants = locusData.getJoinedParticipants();
         callMemberships.clear();
         for (LocusParticipant p : participants) {
-            LocusParticipantInfo person = p.getPerson();
-            CallMembership member = new CallMembership(person.getName(),
-                    person.getId(), person.getEmail(), person.getDisplayName(), person.getOrgId());
+            CallMembership member = new CallMembership(p);
             Log.d(TAG, "add member: " + member.toString());
             callMemberships.add(member);
         }

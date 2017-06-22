@@ -22,41 +22,60 @@
 
 package com.ciscospark.phone;
 
-import com.google.common.base.Joiner;
+import com.cisco.spark.android.locus.model.LocusParticipant;
+import com.cisco.spark.android.locus.model.LocusParticipant.State;
+import com.cisco.spark.android.locus.model.LocusParticipantInfo;
 
 /**
  * Created on 12/06/2017.
  */
 
 public class CallMembership {
+    private String personId = "";
     private String name = "";
-    private String id = "";
     private String email = "";
-    private String displayName = "";
-    private String organizeId = "";
+    private String phoneNumber = "";
+    private String sipUrl = "";
+    private boolean isInitiator = false;
+    private State state;
 
-    CallMembership(String name, String id, String email, String displayName, String orgId) {
+    CallMembership(String id, String name, String email, String phoneNumber, String sipUrl, State state, boolean isInitiator) {
         this.setName(name);
-        this.setId(id);
+        this.setPersonId(id);
         this.setEmail(email);
-        this.setDisplayName(displayName);
-        this.setOrganizeId(orgId);
+        this.setPhoneNumber(phoneNumber);
+        this.setSipUrl(sipUrl);
+        this.setState(state);
+        this.setInitiator(isInitiator);
     }
 
-    public String getName() {
-        return name;
+    CallMembership(LocusParticipant participant) {
+        LocusParticipantInfo person = participant.getPerson();
+        this.personId = person.getId();
+        this.name = person.getName();
+        this.email = person.getEmail();
+        this.phoneNumber = person.getPhoneNumber();
+        this.sipUrl = person.getSipUrl();
+        this.isInitiator = participant.isCreator();
+        this.state = participant.getState();
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String toString() {
+        return getPersonId() + ":"
+                + getName() + ":"
+                + getEmail() + ":"
+                + getPhoneNumber() + ":"
+                + getSipUrl() + ":"
+                + getState() + ":"
+                + this.isInitiator();
     }
 
-    public String getId() {
-        return id;
+    public String getPersonId() {
+        return personId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setPersonId(String personId) {
+        this.personId = personId;
     }
 
     public String getEmail() {
@@ -67,23 +86,43 @@ public class CallMembership {
         this.email = email;
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public String getName() {
+        return name;
     }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getOrganizeId() {
-        return organizeId;
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
-    public void setOrganizeId(String organizeId) {
-        this.organizeId = organizeId;
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
-    public String toString() {
-        return id + ":" + name + ":" + email + ":" + displayName + ":" + organizeId;
+    public String getSipUrl() {
+        return sipUrl;
+    }
+
+    public void setSipUrl(String sipUrl) {
+        this.sipUrl = sipUrl;
+    }
+
+    public boolean isInitiator() {
+        return isInitiator;
+    }
+
+    public void setInitiator(boolean initiator) {
+        isInitiator = initiator;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
     }
 }
