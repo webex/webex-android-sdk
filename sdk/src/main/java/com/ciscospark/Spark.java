@@ -23,9 +23,7 @@
 package com.ciscospark;
 
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.ciscospark.auth.AuthorizationStrategy;
-import com.ciscospark.auth.AuthorizeListener;
 import com.ciscospark.membership.MembershipClient;
 import com.ciscospark.message.MessageClient;
 import com.ciscospark.people.PeopleClient;
@@ -35,28 +33,21 @@ import com.ciscospark.room.RoomClient;
 import com.ciscospark.team.TeamClient;
 import com.ciscospark.team.TeamMembershipClient;
 
-/**
- * @author Allen Xiao<xionxiao@cisco.com>
- * @version 0.1
- */
+
+
 public class Spark {
     private AuthorizationStrategy strategy;
-    private OAuth2AccessToken mToken;
-
     private Phone mPhone;
-
 
     public Spark() {
 
         mPhone = new Phone(this);
-
     }
 
     //do close work, release resource
     public void Close() {
 
         mPhone.close();
-
     }
 
     /**
@@ -74,6 +65,7 @@ public class Spark {
         this.strategy = strategy;
     }
 
+    /*
     public void authorize(AuthorizeListener listener) {
 
         strategy.authorize(listener);
@@ -86,20 +78,21 @@ public class Spark {
 
     public boolean isAuthorized() {
 
-        return false;
+        return strategy.isAuthorized();
     }
+    */
 
     /**
      * @return
      */
     public Phone phone() {
-
         return this.mPhone;
     }
 
     public MessageClient messages() {
         return new MessageClient();
     }
+
 
     public PeopleClient people() {
         return new PeopleClient();
@@ -115,12 +108,12 @@ public class Spark {
 
     public TeamMembershipClient teamMembershipClient() {
         return new TeamMembershipClient();
+
     }
 
     public RoomClient rooms() {
         return new RoomClient();
     }
-
 
     public void setStrategy(AuthorizationStrategy strategy) {
         this.strategy = strategy;
@@ -130,5 +123,6 @@ public class Spark {
     public AuthorizationStrategy getStrategy() {
         return this.strategy;
     }
+
 
 }
