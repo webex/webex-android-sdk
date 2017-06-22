@@ -426,7 +426,7 @@ public class Phone {
 
                 //notify UI why this call is dead,
                 if (this.mActiveCall.getObserver() != null) {
-                    this.mActiveCall.getObserver().onDisconnected(reason);
+                    this.mActiveCall.getObserver().onDisconnected(this.mActiveCall,reason);
                 }
 
                 this.calllist.remove(j);
@@ -516,7 +516,8 @@ public class Phone {
 
 
                 //notify UI why this call is dead,
-                this.mActiveCall.getObserver().onDisconnected(CallObserver.DisconnectedReason.endForAndroidPermission);
+                this.mActiveCall.getObserver().onDisconnected(this.mActiveCall,CallObserver
+                        .DisconnectedReason.endForAndroidPermission);
 
                 this.calllist.remove(j);
                 this.mActiveCall = null;
@@ -650,7 +651,7 @@ public class Phone {
 
 
         //notify ui
-        this.mActiveCall.getObserver().onRinging();
+        this.mActiveCall.getObserver().onRinging(this.mActiveCall);
 
         //only show local and remoted video after remoted accept call
         /*
@@ -679,7 +680,7 @@ public class Phone {
         this.mActiveCall.status = Call.CallStatus.CONNECTED;
 
         //notify ui
-        this.mActiveCall.getObserver().onConnected();
+        this.mActiveCall.getObserver().onConnected(this.mActiveCall);
     }
 
 

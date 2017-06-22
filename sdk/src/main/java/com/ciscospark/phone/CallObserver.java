@@ -28,13 +28,12 @@ import java.util.List;
  * Created on 12/06/2017.
  */
 
-public abstract class CallObserver {
-    public Call mcall;
+public interface CallObserver {
 
-    public abstract void onRinging();
-    public abstract void onConnected();
-    public abstract void onDisconnected(DisconnectedReason reason);
-    public abstract void onMediaChanged(MediaChangeReason reason);
+    public abstract void onRinging(Call call);
+    public abstract void onConnected(Call call);
+    public abstract void onDisconnected(Call call,DisconnectedReason reason);
+    public abstract void onMediaChanged(Call call,MediaChangeReason reason);
     public abstract void onPermissionRequired(List<String> permissions);
 
 

@@ -80,7 +80,6 @@ public class Call {
 
     public void setObserver(CallObserver observer) {
         this.mObserver = observer;
-        observer.mcall = this;
     }
 
     public CallObserver getObserver() {
