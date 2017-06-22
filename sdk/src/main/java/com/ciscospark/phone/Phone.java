@@ -702,6 +702,6 @@ public class Phone {
 
     @SuppressWarnings("UnusedDeclaration")
     public void onEventMainThread(ParticipantJoinedEvent event) {
-        Log.i(TAG, "ParticipantJointed Event");
+        Log.i(TAG, "ParticipantJointed Event " + event.getLocusKey());
     }
 }

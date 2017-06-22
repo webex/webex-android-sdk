@@ -103,5 +103,23 @@ public class OAuthStrategyTest {
         });
         Thread.sleep(10 * 1000);
     }
+
+    @Test
+    public void d_authorizeFailed() throws Exception {
+        strategy.setScope("wrong_scope");
+        strategy.authorize(new AuthorizeListener() {
+            @Override
+            public void onSuccess() {
+                // not go here
+                assertFalse(true);
+            }
+
+            @Override
+            public void onFailed() {
+                assertTrue(true);
+            }
+        });
+        Thread.sleep(10 * 1000);
+    }
 }
 

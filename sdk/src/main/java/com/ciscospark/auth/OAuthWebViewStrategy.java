@@ -116,7 +116,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
                 .appendQueryParameter("response_type", "code")
                 .appendQueryParameter("client_id", getClientId())
                 .appendQueryParameter("redirect_uri", getRedirectUri())
-                .appendQueryParameter("scope", getRedirectUri())
+                .appendQueryParameter("scope", getScope())
                 .appendQueryParameter("mState", mState);
         if (!email.isEmpty())
             builder.appendQueryParameter("email", email);
@@ -198,7 +198,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
             if (url.startsWith(getRedirectUri().toLowerCase())) {
                 Uri uri = Uri.parse(url);
                 String code = uri.getQueryParameter("code");
-                if (code.isEmpty()) {
+                if (code == null || code.isEmpty()) {
                     mAuthListener.onFailed();
                     return false;
                 }

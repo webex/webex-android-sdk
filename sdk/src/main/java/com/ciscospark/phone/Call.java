@@ -115,7 +115,13 @@ public class Call {
     public void reject() {
         Log.i(TAG, "reject call");
         if (direction == Direction.INCOMING && status == CallStatus.RINGING) {
+            Log.i(TAG, "decline call");
             mPhone.callControlService.declineCall(locusKey);
+            status = CallStatus.DISCONNECTED;
+            /*
+            mPhone.callControlService.leaveCall(locusKey);
+            mPhone.callControlService.endCall();
+            */
         }
     }
 
