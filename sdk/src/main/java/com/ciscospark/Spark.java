@@ -23,9 +23,7 @@
 package com.ciscospark;
 
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.ciscospark.auth.AuthorizationStrategy;
-import com.ciscospark.auth.AuthorizeListener;
 import com.ciscospark.membership.MembershipClient;
 import com.ciscospark.message.MessageClient;
 import com.ciscospark.people.PeopleClient;
@@ -35,34 +33,24 @@ import com.ciscospark.room.RoomClient;
 import com.ciscospark.team.TeamClient;
 import com.ciscospark.team.TeamMembershipClient;
 
-/**
- * @author      Allen Xiao<xionxiao@cisco.com>
- * @version     0.1
- */
+
 public class Spark {
     private AuthorizationStrategy strategy;
-    private OAuth2AccessToken mToken;
-
-
     private Phone mPhone;
 
-
-    public Spark(){
-
+    public Spark() {
         mPhone = new Phone(this);
-
     }
 
     //do close work, release resource
-    public void Close(){
-
+    public void Close() {
         mPhone.close();
-
     }
 
     /**
      * Get current sdk version
-     * @return      major.minor.build-alpha/beta
+     *
+     * @return major.minor.build-alpha/beta
      */
     public String version() {
 
@@ -74,6 +62,7 @@ public class Spark {
         this.strategy = strategy;
     }
 
+    /*
     public void authorize(AuthorizeListener listener) {
 
         strategy.authorize(listener);
@@ -86,38 +75,45 @@ public class Spark {
 
     public boolean isAuthorized() {
 
-        return false;
+        return strategy.isAuthorized();
     }
+    */
 
     public Phone phone() {
-
         return this.mPhone;
     }
 
-    public MessageClient messages() { return new MessageClient(); }
+    public MessageClient messages() {
+        return new MessageClient();
+    }
 
-    public PeopleClient people() { return new PeopleClient(); }
+    public PeopleClient people() {
+        return new PeopleClient();
+    }
 
-    public MembershipClient memberships() { return new MembershipClient(); }
+    public MembershipClient memberships() {
+        return new MembershipClient();
+    }
 
-    public TeamClient teams() { return new TeamClient(); }
+    public TeamClient teams() {
+        return new TeamClient();
+    }
 
-    public TeamMembershipClient teamMembershipClient() { return new TeamMembershipClient(); }
+    public TeamMembershipClient teamMembershipClient() {
+        return new TeamMembershipClient();
+    }
 
-    public RoomClient rooms() { return new RoomClient(); }
+    public RoomClient rooms() {
+        return new RoomClient();
+    }
 
-
-    public void setStrategy(AuthorizationStrategy strategy){
+    public void setStrategy(AuthorizationStrategy strategy) {
         this.strategy = strategy;
     }
 
-
-    public AuthorizationStrategy getStrategy(){
+    public AuthorizationStrategy getStrategy() {
         return this.strategy;
     }
-
-
-
 
 
 }
