@@ -46,9 +46,7 @@ import static com.ciscospark.auth.Constant.JWT_BASE_URL;
 public class JWTStrategy implements AuthorizationStrategy {
     private JwtToken mToken = null;
     private String mAuthCode;
-    private Call<JwtToken> mCall;
     private AuthService mAuthService;
-    private static final String TAG = "JWTStrategy";
 
 
     public JWTStrategy(String authcode) {

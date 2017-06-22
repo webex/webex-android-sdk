@@ -12,10 +12,4 @@ public class Constant {
     public final static int timeout = 300;
 
 
-
-
-
-
-
-
 }

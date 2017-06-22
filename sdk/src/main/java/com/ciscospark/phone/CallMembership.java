@@ -61,13 +61,7 @@ public class CallMembership {
     }
 
     public String toString() {
-        return getPersonId() + ":"
-                + getName() + ":"
-                + getEmail() + ":"
-                + getPhoneNumber() + ":"
-                + getSipUrl() + ":"
-                + getState() + ":"
-                + this.isInitiator();
+        return getPersonId() + ":" + getName() + ":" + getEmail() + ":" + getPhoneNumber() + ":" + getSipUrl() + ":" + getState() + ":" + this.isInitiator();
     }
 
     public String getPersonId() {

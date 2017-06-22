@@ -43,8 +43,8 @@ public class OAuthStrategyTest {
     String clientId = "Cc580d5219555f0df8b03d99f3e020381eae4eee0bad1501ad187480db311cce4";
     String clientSec = "d4e9385b2e5828eef376077995080ea4aa42b5c92f1b6af8f3a59fc6a4e79f6a";
     String redirect = "AndroidDemoApp://response";
-    // Every time get the code from browser with the email, or test will fail.
-    String code = "YmQ1MzI4NWYtZWU5Ni00ZmNkLTkxMGUtNWUxMWJhNzkxMGNiMmE3ZjY2MjctNmQx";
+    // Every time get the code from browser manually, or test will fail.
+    String code = "MGQxMjViYTItNjY4NS00YmUzLThhZGEtZjY0YzBkMjI0N2NmZmU3ZjI0ODAtOWUw";
     String email = "xionxiao@cisco.com";
     String scope = "spark:all spark:kms";
 
@@ -72,8 +72,7 @@ public class OAuthStrategyTest {
 
             @Override
             public void onFailed() {
-                assertFalse(true);
-                System.out.println("failed");
+                assertFalse("Every time get the code from browser manually, or test will fail.", true);
             }
         });
         Thread.sleep(10 * 1000);

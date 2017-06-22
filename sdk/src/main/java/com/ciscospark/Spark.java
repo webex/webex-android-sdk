@@ -39,11 +39,13 @@ public class Spark {
     private Phone mPhone;
 
     public Spark() {
+
         mPhone = new Phone(this);
     }
 
     //do close work, release resource
     public void Close() {
+
         mPhone.close();
     }
 
@@ -79,6 +81,9 @@ public class Spark {
     }
     */
 
+    /**
+     * @return
+     */
     public Phone phone() {
         return this.mPhone;
     }
@@ -86,6 +91,7 @@ public class Spark {
     public MessageClient messages() {
         return new MessageClient();
     }
+
 
     public PeopleClient people() {
         return new PeopleClient();
@@ -101,6 +107,7 @@ public class Spark {
 
     public TeamMembershipClient teamMembershipClient() {
         return new TeamMembershipClient();
+
     }
 
     public RoomClient rooms() {
@@ -110,6 +117,7 @@ public class Spark {
     public void setStrategy(AuthorizationStrategy strategy) {
         this.strategy = strategy;
     }
+
 
     public AuthorizationStrategy getStrategy() {
         return this.strategy;
