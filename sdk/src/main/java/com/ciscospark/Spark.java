@@ -36,25 +36,24 @@ import com.ciscospark.team.TeamClient;
 import com.ciscospark.team.TeamMembershipClient;
 
 /**
- * @author      Allen Xiao<xionxiao@cisco.com>
- * @version     0.1
+ * @author Allen Xiao<xionxiao@cisco.com>
+ * @version 0.1
  */
 public class Spark {
     private AuthorizationStrategy strategy;
     private OAuth2AccessToken mToken;
 
-
     private Phone mPhone;
 
 
-    public Spark(){
+    public Spark() {
 
         mPhone = new Phone(this);
 
     }
 
     //do close work, release resource
-    public void Close(){
+    public void Close() {
 
         mPhone.close();
 
@@ -62,7 +61,8 @@ public class Spark {
 
     /**
      * Get current sdk version
-     * @return      major.minor.build-alpha/beta
+     *
+     * @return major.minor.build-alpha/beta
      */
     public String version() {
 
@@ -89,35 +89,46 @@ public class Spark {
         return false;
     }
 
+    /**
+     * @return
+     */
     public Phone phone() {
 
         return this.mPhone;
     }
 
-    public MessageClient messages() { return new MessageClient(); }
+    public MessageClient messages() {
+        return new MessageClient();
+    }
 
-    public PeopleClient people() { return new PeopleClient(); }
+    public PeopleClient people() {
+        return new PeopleClient();
+    }
 
-    public MembershipClient memberships() { return new MembershipClient(); }
+    public MembershipClient memberships() {
+        return new MembershipClient();
+    }
 
-    public TeamClient teams() { return new TeamClient(); }
+    public TeamClient teams() {
+        return new TeamClient();
+    }
 
-    public TeamMembershipClient teamMembershipClient() { return new TeamMembershipClient(); }
+    public TeamMembershipClient teamMembershipClient() {
+        return new TeamMembershipClient();
+    }
 
-    public RoomClient rooms() { return new RoomClient(); }
+    public RoomClient rooms() {
+        return new RoomClient();
+    }
 
 
-    public void setStrategy(AuthorizationStrategy strategy){
+    public void setStrategy(AuthorizationStrategy strategy) {
         this.strategy = strategy;
     }
 
 
-    public AuthorizationStrategy getStrategy(){
+    public AuthorizationStrategy getStrategy() {
         return this.strategy;
     }
-
-
-
-
 
 }

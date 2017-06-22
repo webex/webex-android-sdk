@@ -94,7 +94,6 @@ public class Phone {
     EventBus bus;
 
 
-
     WseSurfaceView mRemoteSurfaceView;
 
     WseSurfaceView mLocalSurfaceView;
@@ -122,8 +121,7 @@ public class Phone {
     private IncomingCallObserver incomingCallObserver;
 
 
-
-    public Phone(Spark spark){
+    public Phone(Spark spark) {
         Log.i(TAG, "Phone: ->start");
         SparkApplication.getInstance().inject(this);
         bus.register(this);
@@ -144,18 +142,17 @@ public class Phone {
     }
 
 
-    public Call getActiveCall(){
+    public Call getActiveCall() {
         return this.mActiveCall;
     }
 
-    public void setActiveCall(Call call){
+    public void setActiveCall(Call call) {
         this.mActiveCall = call;
     }
 
     public void setIncomingCallObserver(IncomingCallObserver observer) {
         this.incomingCallObserver = observer;
     }
-
 
 
     //release eventbus.
@@ -173,11 +170,10 @@ public class Phone {
         logout();
     }
 
-    private boolean isAuthorized()
-    {
+    private boolean isAuthorized() {
         Log.i(TAG, "isAuthorized: ->");
 
-        if(this.mspark.getStrategy().getToken() == null) {
+        if (this.mspark.getStrategy().getToken() == null) {
 
             Log.i(TAG, "register: -> no valid Token");
 
@@ -190,13 +186,11 @@ public class Phone {
     }
 
 
-
     public void register(RegisterListener listener) {
 
         Log.i(TAG, "register: ->start");
 
-        if(!isAuthorized())
-        {
+        if (!isAuthorized()) {
 
             //not authorized
 
@@ -228,7 +222,6 @@ public class Phone {
         new AuthenticatedUserTask(applicationController).execute();
 
 
-
         //start to monitor register timeout
         startRegisterTimer(Constant.timeout);
 
@@ -236,7 +229,7 @@ public class Phone {
     }
 
 
-    private void startRegisterTimer(int timeoutinSeconds){
+    private void startRegisterTimer(int timeoutinSeconds) {
 
         this.mTimeRunnable = new Runnable() {
             @Override
@@ -244,16 +237,15 @@ public class Phone {
 
                 Log.i(TAG, "run: -> register timeout");
 
-                if(!Phone.this.isRegisterInWDM){
-                    if(Phone.this.mListener != null)
-                    {
+                if (!Phone.this.isRegisterInWDM) {
+                    if (Phone.this.mListener != null) {
                         Phone.this.mListener.onFailed();
                     }
                 }
             }
         };
 
-        this.mTimeHandler.postDelayed(this.mTimeRunnable, timeoutinSeconds*1000);
+        this.mTimeHandler.postDelayed(this.mTimeRunnable, timeoutinSeconds * 1000);
 
 
     }
@@ -269,16 +261,14 @@ public class Phone {
     }
 
     //hang up current active call
-    protected void hangup(){
+    protected void hangup() {
         Log.i(TAG, "hangup: ->Start");
-        if(this.mActiveCall == null)
-        {
+        if (this.mActiveCall == null) {
             Log.i(TAG, " no active call ");
             return;
         }
 
-        if((this.mActiveCall.status == Call.CallStatus.INITIATED)||
-                (this.mActiveCall.status == Call.CallStatus.RINGING)){
+        if ((this.mActiveCall.status == Call.CallStatus.INITIATED) || (this.mActiveCall.status == Call.CallStatus.RINGING)) {
 
             //call is not setup
             Log.i(TAG, "cancelCall");
@@ -286,7 +276,7 @@ public class Phone {
             this.callControlService.cancelCall(true);
             return;
         }
-        if(this.mActiveCall.status == Call.CallStatus.CONNECTED){
+        if (this.mActiveCall.status == Call.CallStatus.CONNECTED) {
 
             //call is setup
             Log.i(TAG, "leaveCall");
@@ -299,7 +289,7 @@ public class Phone {
 
     }
 
-    private void logout(){
+    private void logout() {
         Log.i(TAG, "logout: ->1");
         applicationController.logout(null, false);
         this.isRegisterInWDM = false;
@@ -307,18 +297,17 @@ public class Phone {
     }
 
 
-
     public void dial(String dialString, CallOption option, DialObserver observer) {
         Log.i(TAG, "dial: ->start");
 
-        if(!this.isRegisterInWDM){
+        if (!this.isRegisterInWDM) {
             Log.i(TAG, "register wdm failed");
             observer.onFailed(DialObserver.ErrorCode.ILLEGAL_STATUS);
             return;
         }
 
 
-        if(this.mActiveCall != null ){
+        if (this.mActiveCall != null) {
 
             Log.i(TAG, "isInActivitiedCall");
             observer.onFailed(DialObserver.ErrorCode.ILLEGAL_STATUS);
@@ -333,7 +322,7 @@ public class Phone {
         }
 
 
-        if(option.mCalltype == CallOption.CallType.VIDEO) {
+        if (option.mCalltype == CallOption.CallType.VIDEO) {
 
             Log.i(TAG, "videoCall");
 
@@ -358,7 +347,7 @@ public class Phone {
             Log.i(TAG, "dial: ->sendout");
         }
 
-        if(option.mCalltype == CallOption.CallType.AUDIO) {
+        if (option.mCalltype == CallOption.CallType.AUDIO) {
 
             Log.i(TAG, "AudioCall");
 
@@ -386,7 +375,7 @@ public class Phone {
     }
 
     protected boolean setCallOption(CallOption option) {
-        if(option.mCalltype == CallOption.CallType.VIDEO) {
+        if (option.mCalltype == CallOption.CallType.VIDEO) {
 
             if (option.mLocalView == null || option.mRemoteView == null) {
                 //video call but not set remoteView or localView
@@ -400,7 +389,7 @@ public class Phone {
             }
         }
 
-        if(option.mCalltype == CallOption.CallType.AUDIO) {
+        if (option.mCalltype == CallOption.CallType.AUDIO) {
 
             Log.i(TAG, "AudioCall");
 
@@ -411,14 +400,16 @@ public class Phone {
         return false;
     }
 
+    /**
+     * @param call
+     * @param reason
+     */
     //*.remove call from array
     //
     //*. set the removed call to disconnected
     //*. set phone.Activecall as null
     //*. inform UI call end reason
-    protected void removeCallAndMarkIt(Call call, CallObserver.DisconnectedReason
-            reason)
-    {
+    protected void removeCallAndMarkIt(Call call, CallObserver.DisconnectedReason reason) {
         Log.i(TAG, "removeCallfromArray: ->start");
 
 
@@ -426,7 +417,7 @@ public class Phone {
             Call call2 = this.calllist.get(j);
 
             //same call object
-            if(call == call2) {
+            if (call == call2) {
 
                 Log.i(TAG, "find the removed callobject from list");
 
@@ -434,7 +425,7 @@ public class Phone {
                 call2.status = Call.CallStatus.DISCONNECTED;
 
                 //notify UI why this call is dead,
-                if(this.mActiveCall.getObserver() != null) {
+                if (this.mActiveCall.getObserver() != null) {
                     this.mActiveCall.getObserver().onDisconnected(reason);
                 }
 
@@ -445,7 +436,6 @@ public class Phone {
             }
 
         }
-
 
 
     }
@@ -467,16 +457,14 @@ public class Phone {
 
         Log.i(TAG, "DeviceRegistrationChangedEvent -> is received ");
 
-        if(this.mListener == null)
-        {
+        if (this.mListener == null) {
             //in case, even logout is called, common lib still send out event by using old date
             // to register
             Log.i(TAG, "this.mListener is null ");
             return;
         }
 
-        if(!isAuthorized())
-        {
+        if (!isAuthorized()) {
             Log.i(TAG, "not authorized,something wrong! ");
             //not authorized,something wrong
             return;
@@ -503,8 +491,7 @@ public class Phone {
         permissions.add(Manifest.permission.RECORD_AUDIO);
         permissions.add(Manifest.permission.CAMERA);
 
-        if(this.mActiveCall == null)
-        {
+        if (this.mActiveCall == null) {
             Log.i(TAG, "Something is Wrong, how mActiveCall is null");
             return;
         }
@@ -521,7 +508,7 @@ public class Phone {
             Call call = this.calllist.get(j);
 
             //same call object
-            if(this.mActiveCall == call) {
+            if (this.mActiveCall == call) {
 
                 Log.i(TAG, "find the mActiveCall from list");
 
@@ -538,7 +525,6 @@ public class Phone {
             }
 
         }
-
 
 
         Log.i(TAG, "RequestCallingPermissions -> end");
@@ -561,17 +547,15 @@ public class Phone {
         Log.i(TAG, "CallControlParticipantLeftEvent is received ");
 
         //no Activecall
-        if(this.mActiveCall == null)
-        {
+        if (this.mActiveCall == null) {
             return;
         }
         Log.i(TAG, "event.lockskey is " + event.getLocusKey().toString());
         Log.i(TAG, "this.mActiveCall.locusKey is " + this.mActiveCall.locusKey.toString());
-        if(event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString()))
-        {
+        if (event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString())) {
             Log.i(TAG, "ActiveCall is end by remoted");
 
-            this.removeCallAndMarkIt(this.mActiveCall,CallObserver.DisconnectedReason.remoteHangUP);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.remoteHangUP);
 
         }
 
@@ -581,19 +565,16 @@ public class Phone {
 
         Log.i(TAG, "CallControlSelfParticipantLeftEvent is received ");
         //no Activecall
-        if(this.mActiveCall == null)
-        {
+        if (this.mActiveCall == null) {
             return;
         }
         Log.i(TAG, "event.lockskey is " + event.getLocusKey().toString());
         Log.i(TAG, "this.mActiveCall.locusKey is " + this.mActiveCall.locusKey.toString());
 
-        if(event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString()))
-        {
+        if (event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString())) {
             Log.i(TAG, "ActiveCall is ended");
 
-            this.removeCallAndMarkIt(this.mActiveCall,CallObserver.DisconnectedReason.selfHangUP);
-
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.selfHangUP);
 
 
         }
@@ -607,18 +588,16 @@ public class Phone {
         Log.i(TAG, "CallControlLeaveLocusEvent is received ");
 
         //no Activecall
-        if(this.mActiveCall == null)
-        {
+        if (this.mActiveCall == null) {
             return;
         }
 
         //new CallControlLeaveLocusEvent(locusData, false, false, false, false, ""); is declined
         //wasMediaFlowing,wasUCCall,wasRoomCall,wasRoomCallConnected all are false  is declined
-        if (!(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event
-                .wasRoomCallConnected())) {
+        if (!(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected())) {
 
             Log.i(TAG, "Call is Rejected ");
-            this.removeCallAndMarkIt(this.mActiveCall,CallObserver.DisconnectedReason.remoteReject);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.remoteReject);
 
 
         }
@@ -630,19 +609,16 @@ public class Phone {
 
         Log.i(TAG, "CallControlEndLocusEvent is received ");
         //no Activecall
-        if(this.mActiveCall == null)
-        {
+        if (this.mActiveCall == null) {
             return;
         }
         Log.i(TAG, "event.lockskey is " + event.getLocusKey().toString());
         Log.i(TAG, "this.mActiveCall.locusKey is " + this.mActiveCall.locusKey.toString());
 
-        if(event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString()))
-        {
+        if (event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString())) {
             Log.i(TAG, "ActiveCall is ended");
 
-            this.removeCallAndMarkIt(this.mActiveCall,CallObserver.DisconnectedReason.callEnd);
-
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.callEnd);
 
 
         }
@@ -653,15 +629,12 @@ public class Phone {
 
         Log.i(TAG, "CallControlCallJoinErrorEvent is received ");
         //no Activecall
-        if(this.mActiveCall == null)
-        {
+        if (this.mActiveCall == null) {
             return;
         }
 
 
     }
-
-
 
 
     //remoted send acknowledge and it means it is RINGING
@@ -695,7 +668,7 @@ public class Phone {
 
 
         //only show local and remoted video after remoted accept call
-        if(this.mActiveCall.calltype == Call.CallType.VIDEO){
+        if (this.mActiveCall.calltype == Call.CallType.VIDEO) {
 
             callControlService.setRemoteWindow(event.getLocusKey(), this.mRemoteSurfaceView);
             callControlService.setPreviewWindow(event.getLocusKey(), this.mLocalSurfaceView);
@@ -723,8 +696,7 @@ public class Phone {
             call.locusKey = event.getLocusKey();
             this.calllist.add(call);
 
-            if (incomingCallObserver != null)
-                incomingCallObserver.onIncomingCall(call);
+            if (incomingCallObserver != null) incomingCallObserver.onIncomingCall(call);
         }
     }
 
