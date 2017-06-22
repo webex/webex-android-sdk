@@ -198,7 +198,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
             if (url.startsWith(getRedirectUri().toLowerCase())) {
                 Uri uri = Uri.parse(url);
                 String code = uri.getQueryParameter("code");
-                if (code.isEmpty()) {
+                if (code == null || code.isEmpty()) {
                     mAuthListener.onFailed();
                     return false;
                 }
