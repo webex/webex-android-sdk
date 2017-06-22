@@ -30,14 +30,18 @@ import java.util.List;
 
 public interface CallObserver {
 
-    public abstract void onRinging(Call call);
-    public abstract void onConnected(Call call);
-    public abstract void onDisconnected(Call call,DisconnectedReason reason);
-    public abstract void onMediaChanged(Call call,MediaChangeReason reason);
-    public abstract void onPermissionRequired(List<String> permissions);
+    void onRinging(Call call);
+
+    void onConnected(Call call);
+
+    void onDisconnected(Call call, DisconnectedReason reason);
+
+    void onMediaChanged(Call call, MediaChangeReason reason);
+
+    void onPermissionRequired(List<String> permissions);
 
 
-    public enum DisconnectedReason {
+    enum DisconnectedReason {
         calleeRejected,
         endForAndroidPermission,
         selfHangUP,
@@ -46,7 +50,7 @@ public interface CallObserver {
         callEnd
     }
 
-    public enum MediaChangeReason {
+    enum MediaChangeReason {
         DTMF
     }
 }
