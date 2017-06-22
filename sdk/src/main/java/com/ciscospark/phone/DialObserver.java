@@ -11,7 +11,7 @@ public interface DialObserver {
     public enum ErrorCode {
         GENERAL_ERROR,
         ILLEGAL_PARAMETER,
-        ILLEGAL_STATUS     //for example, if in a ActivitedCall period, dial can not be called.
+        ILLEGAL_STATUS  //for example, if in a ActivitedCall period, dial can not be called.
     }
 
     public void onSuccess(Call call);

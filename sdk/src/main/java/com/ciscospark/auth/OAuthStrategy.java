@@ -64,12 +64,7 @@ public class OAuthStrategy implements AuthorizationStrategy {
      * @param redirectUri
      * @param authCode
      */
-    public OAuthStrategy(String clientId,
-                         String clientSecret,
-                         String redirectUri,
-                         String scope,
-                         String email,
-                         String authCode) {
+    public OAuthStrategy(String clientId, String clientSecret, String redirectUri, String scope, String email, String authCode) {
         this.clientId = clientId;
         this.clientScret = clientSecret;
         this.scope = scope;
@@ -77,13 +72,9 @@ public class OAuthStrategy implements AuthorizationStrategy {
         this.email = email;
         this.authCode = authCode;
 
-        retrofit = new Retrofit.Builder()
-                .baseUrl(OAUTH_BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+        retrofit = new Retrofit.Builder().baseUrl(OAUTH_BASE_URL).addConverterFactory(GsonConverterFactory.create()).build();
         AuthService service = retrofit.create(AuthService.class);
-        call = service.getToken(clientId, clientSecret,
-                redirectUri, AUTHORIZATION_CODE, authCode);
+        call = service.getToken(clientId, clientSecret, redirectUri, AUTHORIZATION_CODE, authCode);
     }
 
     /**
@@ -95,10 +86,8 @@ public class OAuthStrategy implements AuthorizationStrategy {
             @Override
             public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
                 token = response.body();
-                if (token != null)
-                    listener.onSuccess();
-                else
-                    listener.onFailed();
+                if (token != null) listener.onSuccess();
+                else listener.onFailed();
             }
 
             @Override
@@ -126,10 +115,6 @@ public class OAuthStrategy implements AuthorizationStrategy {
     private interface AuthService {
         @FormUrlEncoded
         @POST("access_token")
-        Call<OAuth2Tokens> getToken(@Field("client_id") String client_id,
-                                    @Field("client_secret") String client_secret,
-                                    @Field("redirect_uri") String redirect_uri,
-                                    @Field("grant_type") String grant_type,
-                                    @Field("code") String code);
+        Call<OAuth2Tokens> getToken(@Field("client_id") String client_id, @Field("client_secret") String client_secret, @Field("redirect_uri") String redirect_uri, @Field("grant_type") String grant_type, @Field("code") String code);
     }
 }

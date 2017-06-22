@@ -28,5 +28,6 @@ package com.ciscospark.phone;
 
 public interface DeregisterListener {
     void onSuccess();
+
     void onFailed();
 }

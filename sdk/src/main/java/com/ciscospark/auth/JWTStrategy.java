@@ -69,10 +69,7 @@ public class JWTStrategy implements AuthorizationStrategy {
 
 
     public JWTStrategy(String authcode) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(JWT_BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(JWT_BASE_URL).addConverterFactory(GsonConverterFactory.create()).build();
         AuthService service = retrofit.create(AuthService.class);
         call = service.getToken(authcode);
     }
@@ -83,10 +80,8 @@ public class JWTStrategy implements AuthorizationStrategy {
             @Override
             public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
                 token = response.body();
-                if (token == null)
-                    listener.onFailed();
-                else
-                    listener.onSuccess();
+                if (token == null) listener.onFailed();
+                else listener.onSuccess();
             }
 
             @Override

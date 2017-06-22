@@ -34,7 +34,6 @@ import com.ciscospark.team.TeamClient;
 import com.ciscospark.team.TeamMembershipClient;
 
 
-
 public class Spark {
     private AuthorizationStrategy strategy;
     private Phone mPhone;
