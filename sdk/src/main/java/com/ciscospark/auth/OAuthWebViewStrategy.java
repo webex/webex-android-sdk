@@ -47,50 +47,18 @@ import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
 
 /**
  * OAuth2 authorization strategy using android WebView.
+ *
+ * @author Allen Xiao<xionxiao@cisco.com>
+ * @version 0.1
  */
 public class OAuthWebViewStrategy implements AuthorizationStrategy {
-    String baseUrl = OAUTH_BASE_URL;
-    private WebView webView;
-    private String clientId;
-    private String clientSecret;
-    private String scope;
-    private String redirectUri;
-    private String code;
-    private String state;
-    private String email;
-    private AuthorizeListener listener;
-    private OAuthStrategy delegated_strategy = null;
+    private String mBaseUrl = OAUTH_BASE_URL;
+    private WebView mWebView;
+    private String mState;
+    private AuthorizeListener mAuthListener;
+    private OAuthStrategy mOAuthStategyDelegate = null;
     static final String TAG = "OAuthWebViewStrategy";
 
-    private OAuth2AccessToken token;
-
-    @Override
-    public void authorize(AuthorizeListener listener) {
-        this.listener = listener;
-        String url = buildCodeGrantUrl(email);
-        Log.d(TAG, "authorize" + url);
-        CookieManager.getInstance().removeAllCookie();
-        webView.loadUrl(url);
-    }
-
-    @Override
-    public void deauthorize() {
-        this.state = "";
-        delegated_strategy.deauthorize();
-        delegated_strategy = null;
-    }
-
-    @Override
-    public OAuth2AccessToken getToken() {
-        if (delegated_strategy != null)
-            return delegated_strategy.getToken();
-        return null;
-    }
-
-    @Override
-    public boolean isAuthorized() {
-        return delegated_strategy != null && delegated_strategy.isAuthorized();
-    }
 
     /**
      * @param clientId
@@ -103,37 +71,64 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
     public OAuthWebViewStrategy(String clientId, String clientSecret, String redirectUri,
                                 String scope, String email, WebView webView) {
         super();
-        this.webView = webView;
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-        this.redirectUri = redirectUri;
-        this.scope = scope;
-        this.email = email;
-        init();
+        this.mWebView = webView;
+        mOAuthStategyDelegate = new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, "");
+
+        initWebView();
+    }
+
+    @Override
+    public void authorize(AuthorizeListener listener) {
+        this.mAuthListener = listener;
+        String url = buildCodeGrantUrl(getEmail());
+        Log.d(TAG, "authorize" + url);
+        CookieManager.getInstance().removeAllCookie();
+        mWebView.loadUrl(url);
+    }
+
+    @Override
+    public void deauthorize() {
+        this.mState = "";
+        if (mOAuthStategyDelegate != null) {
+            mOAuthStategyDelegate.deauthorize();
+            mOAuthStategyDelegate = null;
+        }
+    }
+
+    @Override
+    public OAuth2AccessToken getToken() {
+        if (mOAuthStategyDelegate != null)
+            return mOAuthStategyDelegate.getToken();
+        return null;
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        return mOAuthStategyDelegate != null && mOAuthStategyDelegate.isAuthorized();
     }
 
     private String buildCodeGrantUrl(String email) {
         SecureRandom random = new SecureRandom();
-        state = new BigInteger(130, random).toString(32);
-        Uri.Builder builder = Uri.parse(baseUrl).buildUpon();
+        mState = new BigInteger(130, random).toString(32);
+        Uri.Builder builder = Uri.parse(mBaseUrl).buildUpon();
 
         builder.appendPath("authorize")
                 .appendQueryParameter("response_type", "code")
-                .appendQueryParameter("client_id", clientId)
-                .appendQueryParameter("redirect_uri", redirectUri)
-                .appendQueryParameter("scope", scope)
-                .appendQueryParameter("state", state);
+                .appendQueryParameter("client_id", getClientId())
+                .appendQueryParameter("redirect_uri", getRedirectUri())
+                .appendQueryParameter("scope", getRedirectUri())
+                .appendQueryParameter("mState", mState);
         if (!email.isEmpty())
             builder.appendQueryParameter("email", email);
         return builder.toString();
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private void init() {
-        webView.clearCache(true);
+    private void initWebView() {
+        mWebView.clearCache(true);
         BrowserWebViewClient client = new BrowserWebViewClient();
-        webView.setWebViewClient(client);
-        WebSettings webSettings = webView.getSettings();
+        mWebView.setWebViewClient(client);
+        WebSettings webSettings = mWebView.getSettings();
         webSettings.setSupportZoom(true);
         webSettings.setJavaScriptEnabled(true);
         // Required for javascript to work with HTML5
@@ -145,22 +140,76 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
         CookieManager.getInstance().setAcceptCookie(true);
     }
 
+    public String getClientId() {
+        return mOAuthStategyDelegate.getClientId();
+    }
+
+    public void setClientId(String clientId) {
+        mOAuthStategyDelegate.setClientId(clientId);
+    }
+
+    public String getClientSecret() {
+        return mOAuthStategyDelegate.getClientSecret();
+    }
+
+    public void setClientSecret(String clientSecret) {
+        mOAuthStategyDelegate.setClientSecret(clientSecret);
+    }
+
+    public String getScope() {
+        return mOAuthStategyDelegate.getScope();
+    }
+
+    public void setScope(String scope) {
+        mOAuthStategyDelegate.setScope(scope);
+    }
+
+    public String getRedirectUri() {
+        return mOAuthStategyDelegate.getRedirectUri();
+    }
+
+    public void setRedirectUri(String redirectUri) {
+        mOAuthStategyDelegate.setRedirectUri(redirectUri);
+    }
+
+    public String getAuthCode() {
+        return mOAuthStategyDelegate.getAuthCode();
+    }
+
+    public void setAuthCode(String code) {
+        mOAuthStategyDelegate.setAuthCode(code);
+    }
+
+    public String getEmail() {
+        return mOAuthStategyDelegate.getEmail();
+    }
+
+    public void setEmail(String email) {
+        mOAuthStategyDelegate.setEmail(email);
+    }
+
 
     private class BrowserWebViewClient extends WebViewClient {
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             Log.d(TAG, url);
-            if (url.startsWith(redirectUri.toLowerCase())) {
+            // redirect uri is returned from server by lowercase.
+            if (url.startsWith(getRedirectUri().toLowerCase())) {
                 Uri uri = Uri.parse(url);
-                code = uri.getQueryParameter("code");
-                Log.d(TAG, "access code: " + code);
+                String code = uri.getQueryParameter("code");
+                if (code.isEmpty()) {
+                    mAuthListener.onFailed();
+                    return false;
+                }
+                setAuthCode(code);
+                Log.d(TAG, "access code: " + getAuthCode());
 
-                webView.clearCache(true);
-                webView.loadUrl("about:blank");
+                mWebView.clearCache(true);
+                mWebView.loadUrl("about:blank");
 
-                delegated_strategy = new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, code);
-                delegated_strategy.authorize(listener);
+                mOAuthStategyDelegate.setAuthCode(getAuthCode());
+                mOAuthStategyDelegate.authorize(mAuthListener);
 
                 return false;
             }
@@ -184,10 +233,9 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
             Log.e(TAG, error.toString());
             handler.cancel();
             if (error != null) {
-                listener.onFailed();
+                mAuthListener.onFailed();
             } else
                 Log.w(TAG, new Exception("SSLError unknown"));
         }
-
     }
 }

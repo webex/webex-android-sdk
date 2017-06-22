@@ -39,21 +39,22 @@ import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
 
 
 /**
+ * OAuth2 strategy using granted auth code.
+ *
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
 public class OAuthStrategy implements AuthorizationStrategy {
-    public static final String AUTHORIZATION_CODE = "authorization_code";
-    private String clientId;
-    private String clientScret;
-    private String scope;
-    private String redirectUri;
-    private String authCode;
-    private String email;
+    static final String AUTHORIZATION_CODE = "authorization_code";
+    private String mClientId;
+    private String mClientSecret;
+    private String mScope;
+    private String mRedirectUri;
+    private String mAuthCode;
+    private String mEmail;
 
-    private Retrofit retrofit;
-    private Call<OAuth2Tokens> call;
-    private OAuth2Tokens token = null;
+    private OAuth2Tokens mToken = null;
+    private AuthService mAuthService;
 
     /**
      * OAuth 2 authorize strategy.
@@ -70,20 +71,18 @@ public class OAuthStrategy implements AuthorizationStrategy {
                          String scope,
                          String email,
                          String authCode) {
-        this.clientId = clientId;
-        this.clientScret = clientSecret;
-        this.scope = scope;
-        this.redirectUri = redirectUri;
-        this.email = email;
-        this.authCode = authCode;
+        this.setClientId(clientId);
+        this.setClientSecret(clientSecret);
+        this.setScope(scope);
+        this.setRedirectUri(redirectUri);
+        this.setEmail(email);
+        this.setAuthCode(authCode);
 
-        retrofit = new Retrofit.Builder()
+        Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(OAUTH_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        AuthService service = retrofit.create(AuthService.class);
-        call = service.getToken(clientId, clientSecret,
-                redirectUri, AUTHORIZATION_CODE, authCode);
+        mAuthService = retrofit.create(AuthService.class);
     }
 
     /**
@@ -91,36 +90,85 @@ public class OAuthStrategy implements AuthorizationStrategy {
      */
     @Override
     public void authorize(AuthorizeListener listener) {
-        call.enqueue(new Callback<OAuth2Tokens>() {
-            @Override
-            public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
-                token = response.body();
-                if (token != null)
-                    listener.onSuccess();
-                else
-                    listener.onFailed();
-            }
+        mAuthService.getToken(mClientId, mClientSecret, mRedirectUri, AUTHORIZATION_CODE, mAuthCode)
+                .enqueue(new Callback<OAuth2Tokens>() {
+                    @Override
+                    public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
+                        mToken = response.body();
+                        if (mToken != null)
+                            listener.onSuccess();
+                        else
+                            listener.onFailed();
+                    }
 
-            @Override
-            public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
-                listener.onFailed();
-            }
-        });
+                    @Override
+                    public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
+                        listener.onFailed();
+                    }
+                });
     }
 
     @Override
     public void deauthorize() {
-        token = null;
+        mToken = null;
     }
 
     @Override
     public OAuth2AccessToken getToken() {
-        return token;
+        return mToken;
     }
 
     @Override
     public boolean isAuthorized() {
-        return token != null;
+        return mToken != null;
+    }
+
+    protected String getClientId() {
+        return mClientId;
+    }
+
+    protected void setClientId(String clientId) {
+        this.mClientId = clientId;
+    }
+
+    protected String getClientSecret() {
+        return mClientSecret;
+    }
+
+    protected void setClientSecret(String clientSecret) {
+        this.mClientSecret = clientSecret;
+    }
+
+    protected String getScope() {
+        return mScope;
+    }
+
+    protected void setScope(String scope) {
+        this.mScope = scope;
+    }
+
+    protected String getRedirectUri() {
+        return mRedirectUri;
+    }
+
+    protected void setRedirectUri(String redirectUri) {
+        this.mRedirectUri = redirectUri;
+    }
+
+    protected String getAuthCode() {
+        return mAuthCode;
+    }
+
+    protected void setAuthCode(String authCode) {
+        this.mAuthCode = authCode;
+    }
+
+    protected String getEmail() {
+        return mEmail;
+    }
+
+    protected void setEmail(String email) {
+        this.mEmail = email;
     }
 
     private interface AuthService {

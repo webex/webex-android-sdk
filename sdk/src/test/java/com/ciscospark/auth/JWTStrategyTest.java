@@ -57,12 +57,15 @@ public class JWTStrategyTest {
                 assertTrue(strategy.isAuthorized());
                 OAuth2AccessToken token = strategy.getToken();
                 assertNotNull(token);
+                assertNotNull(token.getAccessToken());
+                assertFalse(token.getAccessToken().isEmpty());
                 System.out.println(token.getAccessToken());
                 System.out.println("expires in: " + token.getExpiresIn());
             }
 
             @Override
             public void onFailed() {
+                assertFalse(true);
                 System.out.println("failed");
             }
         });

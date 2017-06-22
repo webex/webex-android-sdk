@@ -22,6 +22,7 @@
 
 package com.ciscospark.auth;
 
+
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.google.gson.annotations.SerializedName;
 
@@ -36,13 +37,77 @@ import retrofit2.http.POST;
 import static com.ciscospark.auth.Constant.JWT_BASE_URL;
 
 /**
+ * JWT authorize strategy.
+ * Reference http://www.jwt.io
+ *
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
 public class JWTStrategy implements AuthorizationStrategy {
-    private JwtToken token = null;
-    Call<JwtToken> call;
+    private JwtToken mToken = null;
+    private String mAuthCode;
+    private Call<JwtToken> mCall;
+    private AuthService mAuthService;
     private static final String TAG = "JWTStrategy";
+
+
+    public JWTStrategy(String authcode) {
+        setAuthCode(authcode);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(JWT_BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        mAuthService = retrofit.create(AuthService.class);
+    }
+
+    @Override
+    public void authorize(AuthorizeListener listener) {
+        mAuthService.getToken(getAuthCode()).enqueue(new Callback<JwtToken>() {
+            @Override
+            public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
+                mToken = response.body();
+                if (mToken == null)
+                    listener.onFailed();
+                else
+                    listener.onSuccess();
+            }
+
+            @Override
+            public void onFailure(Call<JwtToken> call, Throwable t) {
+                listener.onFailed();
+            }
+        });
+    }
+
+    @Override
+    public void deauthorize() {
+        mToken = null;
+    }
+
+    @Override
+    public OAuth2AccessToken getToken() {
+        return mToken;
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        return (mToken != null);
+    }
+
+    public String getAuthCode() {
+        return mAuthCode;
+    }
+
+    public void setAuthCode(String mAuthCode) {
+        this.mAuthCode = mAuthCode;
+    }
+
+
+    private interface AuthService {
+        @POST("login")
+        Call<JwtToken> getToken(@Header("Authorization") String authorization);
+    }
+
 
     class JwtToken extends OAuth2AccessToken {
         @SerializedName("expiresIn")
@@ -65,55 +130,5 @@ public class JWTStrategy implements AuthorizationStrategy {
         public boolean shouldRefreshNow() {
             return false;
         }
-    }
-
-
-    public JWTStrategy(String authcode) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(JWT_BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        AuthService service = retrofit.create(AuthService.class);
-        call = service.getToken(authcode);
-    }
-
-    @Override
-    public void authorize(AuthorizeListener listener) {
-        call.enqueue(new Callback<JwtToken>() {
-            @Override
-            public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
-                token = response.body();
-                if (token == null)
-                    listener.onFailed();
-                else
-                    listener.onSuccess();
-            }
-
-            @Override
-            public void onFailure(Call<JwtToken> call, Throwable t) {
-                listener.onFailed();
-            }
-        });
-
-    }
-
-    @Override
-    public void deauthorize() {
-        token = null;
-    }
-
-    @Override
-    public OAuth2AccessToken getToken() {
-        return token;
-    }
-
-    @Override
-    public boolean isAuthorized() {
-        return (token != null);
-    }
-
-    private interface AuthService {
-        @POST("login")
-        Call<JwtToken> getToken(@Header("Authorization") String authorization);
     }
 }
