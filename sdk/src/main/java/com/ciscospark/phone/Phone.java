@@ -32,12 +32,42 @@ import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
 import com.cisco.spark.android.callcontrol.events.CallControlCallJoinErrorEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlDisableVideoEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlDisconnectedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlEndLocusEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlEndWhiteboardShare;
+import com.cisco.spark.android.callcontrol.events.CallControlFloorGrantedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlFloorReleasedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlHeldEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlInvalidLocusEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlJoinedLobbyEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlJoinedMeetingEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLeaveLocusEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlLocalAudioMutedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlLocalVideoMutedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlLocusChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocusCreatedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlLocusPmrChangedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlLostEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlMediaDeviceListenersRegisteredEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlMeetingControlsEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlMeetingControlsExpelEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlMeetingControlsLockEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlMeetingControlsStatusEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlMeetingNotStartedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlMeetingRecordEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlModeratorMutedParticipantEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlNumericDialingPreventedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlParticipantAudioMuteEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlParticipantChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantJoinedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantLeftEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlParticipantVideoMutedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlPhoneStateChangedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlReconnectEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlResumedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlSelfParticipantLeftEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlViewWhiteboardShare;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.core.ApplicationDelegate;
@@ -625,12 +655,22 @@ public class Phone {
 
     }
 
+
+    //before call is setup, something worng happen.
+    //for exampple, self calling.
+
     public void onEventMainThread(CallControlCallJoinErrorEvent event) {
 
         Log.i(TAG, "CallControlCallJoinErrorEvent is received ");
         //no Activecall
         if (this.mActiveCall == null) {
             return;
+        }
+        //self calling.
+        if ((this.mActiveCall.status == Call.CallStatus.RINGING) || (this.mActiveCall.status == Call.CallStatus.INITIATED)) {
+            Log.i(TAG, "self calling");
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.Error_serviceFailed_CallJoinError);
+
         }
 
 
@@ -703,5 +743,189 @@ public class Phone {
     @SuppressWarnings("UnusedDeclaration")
     public void onEventMainThread(ParticipantJoinedEvent event) {
         Log.i(TAG, "ParticipantJointed Event " + event.getLocusKey());
+    }
+
+    public void onEventMainThread(CallControlDisableVideoEvent event) {
+
+        Log.i(TAG, "CallControlDisableVideoEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlDisconnectedEvent event) {
+
+        Log.i(TAG, "CallControlDisconnectedEvent is received ");
+
+    }
+
+
+    public void onEventMainThread(CallControlEndWhiteboardShare event) {
+
+        Log.i(TAG, "CallControlEndWhiteboardShare is received ");
+
+    }
+
+    public void onEventMainThread(CallControlFloorGrantedEvent event) {
+
+        Log.i(TAG, "CallControlFloorGrantedEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlFloorReleasedEvent event) {
+
+        Log.i(TAG, "CallControlFloorReleasedEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlHeldEvent event) {
+
+        Log.i(TAG, "CallControlHeldEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlInvalidLocusEvent event) {
+
+        Log.i(TAG, "CallControlInvalidLocusEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlJoinedLobbyEvent event) {
+
+        Log.i(TAG, "CallControlJoinedLobbyEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlJoinedMeetingEvent event) {
+
+        Log.i(TAG, "CallControlJoinedMeetingEvent is received ");
+
+    }
+
+
+    public void onEventMainThread(CallControlLocalAudioMutedEvent event) {
+
+        Log.i(TAG, "CallControlLocalAudioMutedEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlLocalVideoMutedEvent event) {
+
+        Log.i(TAG, "CallControlLocalVideoMutedEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlLocusChangedEvent event) {
+
+        Log.i(TAG, "CallControlLocusChangedEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlLocusPmrChangedEvent event) {
+
+        Log.i(TAG, "CallControlLocusPmrChangedEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlLostEvent event) {
+
+        Log.i(TAG, "CallControlLostEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlMediaDeviceListenersRegisteredEvent event) {
+
+        Log.i(TAG, "CallControlMediaDeviceListenersRegisteredEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlMeetingControlsEvent event) {
+
+        Log.i(TAG, "CallControlMeetingControlsEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlMeetingControlsExpelEvent event) {
+
+        Log.i(TAG, "CallControlMeetingControlsExpelEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlMeetingControlsLockEvent event) {
+
+        Log.i(TAG, "CallControlMeetingControlsLockEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlMeetingControlsStatusEvent event) {
+
+        Log.i(TAG, "CallControlMeetingControlsStatusEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlMeetingNotStartedEvent event) {
+
+        Log.i(TAG, "CallControlMeetingNotStartedEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlMeetingRecordEvent event) {
+
+        Log.i(TAG, "CallControlMeetingRecordEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlModeratorMutedParticipantEvent event) {
+
+        Log.i(TAG, "CallControlModeratorMutedParticipantEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlNumericDialingPreventedEvent event) {
+
+        Log.i(TAG, "CallControlNumericDialingPreventedEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlParticipantAudioMuteEvent event) {
+
+        Log.i(TAG, "CallControlParticipantAudioMuteEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlParticipantChangedEvent event) {
+
+        Log.i(TAG, "CallControlParticipantChangedEvent is received ");
+
+    }
+
+
+    public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
+
+        Log.i(TAG, "CallControlParticipantVideoMutedEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlPhoneStateChangedEvent event) {
+
+        Log.i(TAG, "CallControlPhoneStateChangedEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlReconnectEvent event) {
+
+        Log.i(TAG, "CallControlReconnectEvent is received ");
+
+    }
+
+    public void onEventMainThread(CallControlResumedEvent event) {
+
+        Log.i(TAG, "CallControlResumedEvent is received ");
+
+    }
+
+
+    public void onEventMainThread(CallControlViewWhiteboardShare event) {
+
+        Log.i(TAG, "CallControlViewWhiteboardShare is received ");
+
     }
 }
