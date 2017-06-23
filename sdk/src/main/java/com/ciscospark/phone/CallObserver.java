@@ -47,7 +47,9 @@ public interface CallObserver {
         selfHangUP,
         remoteHangUP,
         remoteReject,
-        callEnd
+        callEnd,
+        Error_serviceFailed_CallJoinError
+
     }
 
     enum MediaChangeReason {
