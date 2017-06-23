@@ -44,7 +44,9 @@ public class OAuthStrategyTest {
     String clientSec = "d4e9385b2e5828eef376077995080ea4aa42b5c92f1b6af8f3a59fc6a4e79f6a";
     String redirect = "AndroidDemoApp://response";
     // Every time get the code from browser manually, or test will fail.
-    String code = "MGQxMjViYTItNjY4NS00YmUzLThhZGEtZjY0YzBkMjI0N2NmZmU3ZjI0ODAtOWUw";
+    // Visit flowing link in browser to get the code:
+    // "https://api.ciscospark.com/v1/authorize?client_id=Cc580d5219555f0df8b03d99f3e020381eae4eee0bad1501ad187480db311cce4&response_type=code&redirect_uri=AndroidDemoApp%3A%2F%2Fresponse&scope=spark%3Aall%20spark%3Akms"
+    String code = "ZjFjMDZhNGItZDBiYS00Nzk0LWI5YjktYTU4YzU1NDRlZjA1ODA3MjJhZGUtYjk2";
     String email = "xionxiao@cisco.com";
     String scope = "spark:all spark:kms";
 

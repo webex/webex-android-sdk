@@ -146,6 +146,9 @@ public class Call {
 
     public List<CallMembership> getMembership() {
         LocusData locusData = callControlServcie.getLocusData(locusKey);
+        if (locusData == null) {
+            return callMemberships;
+        }
         List<LocusParticipant> participants = locusData.getJoinedParticipants();
         callMemberships.clear();
         for (LocusParticipant p : participants) {

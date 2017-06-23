@@ -43,9 +43,12 @@ import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.core.ApplicationDelegate;
 import com.cisco.spark.android.core.AuthenticatedUser;
 import com.cisco.spark.android.events.CallNotificationEvent;
+import com.cisco.spark.android.events.CallNotificationRemoveEvent;
 import com.cisco.spark.android.events.CallNotificationType;
+import com.cisco.spark.android.events.CallNotificationUpdateEvent;
 import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.cisco.spark.android.events.RequestCallingPermissions;
+import com.cisco.spark.android.locus.events.IncomingCallEvent;
 import com.cisco.spark.android.locus.events.ParticipantJoinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
 import com.cisco.spark.android.locus.model.LocusData;
@@ -57,6 +60,7 @@ import com.ciscospark.core.SparkApplication;
 import com.webex.wseclient.WseSurfaceView;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
@@ -704,4 +708,26 @@ public class Phone {
     public void onEventMainThread(ParticipantJoinedEvent event) {
         Log.i(TAG, "ParticipantJointed Event " + event.getLocusKey());
     }
+
+    public void onEventMainThread(IncomingCallEvent event) {
+        Log.i(TAG, "IncomingCallEvent " + event.getLocusKey());
+    }
+
+    public void onEventMainThread(CallNotificationRemoveEvent event) {
+        Log.i(TAG, "CallNotification remove event" + event.getLocusKey());
+        LocusKey locusKey = event.getLocusKey();
+        Iterator<Call> it = calllist.iterator();
+        while (it.hasNext()) {
+            Call call = it.next();
+            if (call.locusKey.equals(locusKey)) {
+                call.status = Call.CallStatus.DISCONNECTED;
+                it.remove();
+            }
+        }
+    }
+
+    public void onEventMainThread(CallNotificationUpdateEvent event) {
+        Log.i(TAG, "CallNotification update event" + event.getLocusKey());
+    }
 }
+
