@@ -150,8 +150,8 @@ class VideoTestApplicationModule {
 
     @Provides
     @Singleton
-    CallNotification provideCallNotification() {
-        return new VideoTestCallNotification();
+    CallNotification provideCallNotification(LocusDataCache calls) {
+        return new VideoTestCallNotification(calls);
     }
 
 
