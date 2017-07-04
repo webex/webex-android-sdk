@@ -28,7 +28,7 @@ package com.ciscospark.common;
  */
 
 public class SparkError {
-    enum ErrorCode {
+    public enum ErrorCode {
         /* add error code here */
         UNKNOWN,
     }
@@ -67,6 +67,22 @@ public class SparkError {
 
     @Override
     public String toString() {
-        return mErrorCode.toString() + ": " + mErrorMessage;
+        String code;
+        String message;
+        if(mErrorCode == null){
+            code = "";
+        }else
+        {
+            code =mErrorCode.toString();
+        }
+
+        if(mErrorMessage == null){
+            message = "";
+        }else
+        {
+            message =mErrorMessage.toString();
+        }
+
+        return code + ": " + message;
     }
 }

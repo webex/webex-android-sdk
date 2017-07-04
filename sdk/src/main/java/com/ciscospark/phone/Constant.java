@@ -12,4 +12,7 @@ public class Constant {
     public final static int timeout = 300;
 
 
+    public final static String ErrorCallJoinError = "CallJoinError";
+
+
 }

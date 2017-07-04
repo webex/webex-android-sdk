@@ -22,6 +22,10 @@
 
 package com.ciscospark.phone;
 
+
+
+import com.ciscospark.common.SparkError;
+
 import java.util.List;
 
 /**
@@ -30,24 +34,74 @@ import java.util.List;
 
 public interface CallObserver {
 
+    /**
+     * this function will be called while remoted part is ringing
+     * @param call  the call to which this event belonged.
+     * @return none
+     */
     void onRinging(Call call);
 
+    /**
+     * this function will be called while a call is connected
+     * @param call  the call to which this event belonged.
+     * @return none
+     */
     void onConnected(Call call);
 
-    void onDisconnected(Call call, DisconnectedReason reason);
 
+    /**
+     * this function will be called while a call is disconnected
+     * @param call  the call to which this event belonged.
+     * @param reason  reason of disconnection
+     * @param errorInfo, if the reason is a error type, errorInfo will contain supplement
+     *                   information
+     *                   if the reason is not a error, errorInfo will be null.
+     * @return none
+     */
+    void onDisconnected(Call call, DisconnectedReason reason, SparkError errorInfo);
+
+
+    /**
+     * this function will be called while a call is disconnected
+     * @param call  the call to which this event belonged.
+     * @param reason  what change.
+     * @return none
+     */
     void onMediaChanged(Call call, MediaChangeReason reason);
 
+    /**
+     * this function will be called while user need to grant permission
+     * @param permissions  permission list
+     * @return none
+     */
     void onPermissionRequired(List<String> permissions);
 
 
     enum DisconnectedReason {
-        calleeRejected,
+
+        /**
+         * call end as user need to grant permissions.
+         */
         endForAndroidPermission,
+        /**
+         * call end as user hang up
+         */
         selfHangUP,
+        /**
+         * call end as remoted part hang up
+         */
         remoteHangUP,
+        /**
+         * call end as remoted part reject
+         */
         remoteReject,
+        /**
+         * call end as sever end the call
+         */
         callEnd,
+        /**
+         * call end as get error
+         */
         Error_serviceFailed_CallJoinError
 
     }

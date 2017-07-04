@@ -27,7 +27,7 @@ task buildNative(type: Exec, dependsOn: 'ndkCheck') {
     commandLine getNdkBuild(), "--directory", ndkBuildingDir, "NDK_LIBS_OUT=../src/main/jniLibs"
 }
 
-task removeCShared (type: Delete, dependsOn: 'buildNative'){
+task removeCShared(type: Delete, dependsOn: 'buildNative') {
     delete "./src/main/jniLibs/armeabi-v7a/libc++_shared.so"
 }
 
@@ -72,6 +72,19 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
+            renderscriptOptimLevel 3
+            zipAlignEnabled false
+        }
+        debug {
+            minifyEnabled false
+            debuggable true
+            jniDebuggable false
+            renderscriptDebuggable false
+            renderscriptOptimLevel 3
+            zipAlignEnabled true
         }
     }
     productFlavors {
@@ -175,7 +188,6 @@ dependencies {
     compile 'joda-time:joda-time:2.9.2'
     compile 'com.android.support:multidex:1.0.1'
 }
-
 task styleCheck(type: Checkstyle) {
     configFile new File(rootDir, "checkstyle.xml")
     source 'src'

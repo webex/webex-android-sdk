@@ -18,13 +18,11 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-
         debug {
         }
-
     }
 
     productFlavors {
@@ -74,13 +72,41 @@ dependencies {
     lollipopDebugMemoryLeakCompile project(path: ':common', configuration: 'lollipopDebug')
 
     compile 'com.android.support:multidex:1.0.1'
-    compile 'com.squareup.okhttp3:mockwebserver:3.7.0'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.7.0'
+
+
+    //compile 'com.jakewharton:butterknife-compiler:8.4.0'
+
+    //compile 'com.jakewharton:butterknife:7.0.1'
+
+    //compile 'com.google.code.gson:gson:2.7'
+
+
+    //compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    //compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+
+    //compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
+
+
 
     compile libs.gson
     compile libs.retrofit
     compile libs.retrofit_gsonconverter
+
+
+
+
+    //compile libs.okhttp
+    //compile libs.okhttp_logging
+
+    compile 'com.squareup.okhttp3:mockwebserver:3.7.0'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.7.0'
+
     compile libs.websocket
+
+
+
+
+
     compile libs.dagger
     provided libs.daggercompiler
 

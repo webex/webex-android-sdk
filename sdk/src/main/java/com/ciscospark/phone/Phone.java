@@ -85,6 +85,7 @@ import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.sync.ActorRecord;
 import com.ciscospark.Spark;
+import com.ciscospark.common.SparkError;
 import com.ciscospark.core.SparkApplication;
 import com.webex.wseclient.WseSurfaceView;
 
@@ -436,13 +437,15 @@ public class Phone {
     /**
      * @param call
      * @param reason
+     * @param errorInfo
      */
     //*.remove call from array
     //
     //*. set the removed call to disconnected
     //*. set phone.Activecall as null
     //*. inform UI call end reason
-    protected void removeCallAndMarkIt(Call call, CallObserver.DisconnectedReason reason) {
+    protected void removeCallAndMarkIt(Call call, CallObserver.DisconnectedReason reason,
+                                       SparkError errorInfo) {
         Log.i(TAG, "removeCallfromArray: ->start");
 
 
@@ -459,7 +462,7 @@ public class Phone {
 
                 //notify UI why this call is dead,
                 if (this.mActiveCall.getObserver() != null) {
-                    this.mActiveCall.getObserver().onDisconnected(this.mActiveCall, reason);
+                    this.mActiveCall.getObserver().onDisconnected(this.mActiveCall, reason,errorInfo);
                 }
 
                 this.calllist.remove(j);
@@ -549,7 +552,8 @@ public class Phone {
 
 
                 //notify UI why this call is dead,
-                this.mActiveCall.getObserver().onDisconnected(this.mActiveCall, CallObserver.DisconnectedReason.endForAndroidPermission);
+                this.mActiveCall.getObserver().onDisconnected(this.mActiveCall, CallObserver
+                        .DisconnectedReason.endForAndroidPermission,null);
 
                 this.calllist.remove(j);
                 this.mActiveCall = null;
@@ -588,7 +592,8 @@ public class Phone {
         if (event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString())) {
             Log.i(TAG, "ActiveCall is end by remoted");
 
-            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.remoteHangUP);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason
+                    .remoteHangUP,null);
 
         }
 
@@ -607,7 +612,8 @@ public class Phone {
         if (event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString())) {
             Log.i(TAG, "ActiveCall is ended");
 
-            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.selfHangUP);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason
+                    .selfHangUP,null);
 
 
         }
@@ -629,7 +635,8 @@ public class Phone {
         if (!(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected())) {
 
             Log.i(TAG, "Call is Rejected ");
-            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.remoteReject);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason
+                    .remoteReject,null);
         }
     }
 
@@ -647,7 +654,8 @@ public class Phone {
         if (event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString())) {
             Log.i(TAG, "ActiveCall is ended");
 
-            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.callEnd);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.callEnd,
+                    null);
         }
 
     }
@@ -666,7 +674,10 @@ public class Phone {
         //self calling.
         if ((this.mActiveCall.status == Call.CallStatus.RINGING) || (this.mActiveCall.status == Call.CallStatus.INITIATED)) {
             Log.i(TAG, "self calling");
-            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.Error_serviceFailed_CallJoinError);
+            SparkError errorinfo = new SparkError(null,Constant
+                    .ErrorCallJoinError);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason
+                    .Error_serviceFailed_CallJoinError,errorinfo);
         }
 
     }
