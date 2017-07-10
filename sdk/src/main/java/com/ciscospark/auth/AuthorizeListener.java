@@ -22,13 +22,22 @@
 
 package com.ciscospark.auth;
 
+import com.ciscospark.common.SparkError;
+
 /**
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
 public interface AuthorizeListener {
+    enum AuthError {
+        UNAUTHENTICATED,
+        CLIENT_ERROR,
+        SERVER_ERROR,
+        NETWORK_ERROR,
+        UNEXPECTED_ERROR
+    }
 
     void onSuccess();
 
-    void onFailed();
+    void onFailed(SparkError<AuthError> error);
 }

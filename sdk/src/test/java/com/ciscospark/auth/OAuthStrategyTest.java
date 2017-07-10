@@ -23,6 +23,7 @@
 package com.ciscospark.auth;
 
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+import com.ciscospark.common.SparkError;
 
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -46,7 +47,7 @@ public class OAuthStrategyTest {
     // Every time get the code from browser manually, or test will fail.
     // Visit flowing link in browser to get the code:
     // "https://api.ciscospark.com/v1/authorize?client_id=Cc580d5219555f0df8b03d99f3e020381eae4eee0bad1501ad187480db311cce4&response_type=code&redirect_uri=AndroidDemoApp%3A%2F%2Fresponse&scope=spark%3Aall%20spark%3Akms"
-    String code = "ZjFjMDZhNGItZDBiYS00Nzk0LWI5YjktYTU4YzU1NDRlZjA1ODA3MjJhZGUtYjk2";
+    String code = "MmI5ZDkwY2ItYTUyNi00ODM2LTljZTctZGU5ZjdjNWRkZDBlMWMzN2Q1YWItNTM1";
     String email = "xionxiao@cisco.com";
     String scope = "spark:all spark:kms";
 
@@ -73,7 +74,7 @@ public class OAuthStrategyTest {
             }
 
             @Override
-            public void onFailed() {
+            public void onFailed(SparkError error) {
                 assertFalse("Every time get the code from browser manually, or test will fail.", true);
             }
         });
@@ -99,7 +100,7 @@ public class OAuthStrategyTest {
             }
 
             @Override
-            public void onFailed() {
+            public void onFailed(SparkError error) {
                 assertTrue(true);
             }
         });
@@ -117,7 +118,7 @@ public class OAuthStrategyTest {
             }
 
             @Override
-            public void onFailed() {
+            public void onFailed(SparkError error) {
                 assertTrue(true);
             }
         });

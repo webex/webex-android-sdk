@@ -27,37 +27,28 @@ package com.ciscospark.common;
  * Common Error class for Spark
  */
 
-public class SparkError {
+public class SparkError<E extends Enum> {
     public enum ErrorCode {
         /* add error code here */
         UNKNOWN,
     }
 
-    private final static String[] DEFAULT_ERROR_MESSAGE = {
-            "Unknown Error",
-    };
-
-    protected ErrorCode mErrorCode = ErrorCode.UNKNOWN;
-    protected String mErrorMessage = DEFAULT_ERROR_MESSAGE[0];
+    protected E mErrorCode = null;
+    protected String mErrorMessage = "";
 
     public SparkError() {
     }
 
-    public SparkError(ErrorCode errorCode) {
+    public SparkError(E errorCode) {
         mErrorCode = errorCode;
-        switch(mErrorCode) {
-            case UNKNOWN:
-            default:
-                mErrorMessage = DEFAULT_ERROR_MESSAGE[0];
-        }
     }
 
-    public SparkError(ErrorCode errorcode, String message) {
-        mErrorCode = errorcode;
+    public SparkError(E errorCode, String message) {
+        mErrorCode = errorCode;
         mErrorMessage = message;
     }
 
-    ErrorCode getErrorCode() {
+    E getErrorCode() {
         return mErrorCode;
     }
 
@@ -67,22 +58,6 @@ public class SparkError {
 
     @Override
     public String toString() {
-        String code;
-        String message;
-        if(mErrorCode == null){
-            code = "";
-        }else
-        {
-            code =mErrorCode.toString();
-        }
-
-        if(mErrorMessage == null){
-            message = "";
-        }else
-        {
-            message =mErrorMessage.toString();
-        }
-
-        return code + ": " + message;
+        return (mErrorCode == null ? "" : mErrorCode.name()) + "|" + mErrorMessage;
     }
 }

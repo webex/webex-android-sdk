@@ -24,16 +24,26 @@ package com.ciscospark.auth;
 
 
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+import com.ciscospark.common.SparkError;
 import com.google.gson.annotations.SerializedName;
 
-import retrofit2.Call;
-import retrofit2.Callback;
+import java.io.IOException;
+
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 
+import com.ciscospark.auth.ErrorHandlingAdapter.ErrorHandlingCallAdapterFactory;
+import com.ciscospark.auth.ErrorHandlingAdapter.ErrorHandlingCall;
+import com.ciscospark.auth.ErrorHandlingAdapter.ErrorHandlingCallback;
+
+import static com.ciscospark.auth.AuthorizeListener.AuthError.CLIENT_ERROR;
+import static com.ciscospark.auth.AuthorizeListener.AuthError.NETWORK_ERROR;
+import static com.ciscospark.auth.AuthorizeListener.AuthError.SERVER_ERROR;
+import static com.ciscospark.auth.AuthorizeListener.AuthError.UNAUTHENTICATED;
+import static com.ciscospark.auth.AuthorizeListener.AuthError.UNEXPECTED_ERROR;
 import static com.ciscospark.auth.Constant.JWT_BASE_URL;
 
 /**
@@ -48,11 +58,24 @@ public class JWTStrategy implements AuthorizationStrategy {
     private String mAuthCode;
     private AuthService mAuthService;
 
-
     public JWTStrategy(String authcode) {
         setAuthCode(authcode);
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(JWT_BASE_URL)
+                .addCallAdapterFactory(new ErrorHandlingCallAdapterFactory())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        mAuthService = retrofit.create(AuthService.class);
+    }
+
+    /* Used for mock test */
+    JWTStrategy(String authCode, String base_url) {
+        setAuthCode(authCode);
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(base_url)
+                .addCallAdapterFactory(new ErrorHandlingCallAdapterFactory())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         mAuthService = retrofit.create(AuthService.class);
@@ -60,19 +83,39 @@ public class JWTStrategy implements AuthorizationStrategy {
 
     @Override
     public void authorize(AuthorizeListener listener) {
-        mAuthService.getToken(getAuthCode()).enqueue(new Callback<JwtToken>() {
+        mAuthService.getToken(getAuthCode()).enqueue(new ErrorHandlingCallback<JwtToken>() {
             @Override
-            public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
+            public void success(Response<JwtToken> response) {
                 mToken = response.body();
                 if (mToken == null)
-                    listener.onFailed();
+                    listener.onFailed(new SparkError(CLIENT_ERROR, response.errorBody().toString()));
                 else
                     listener.onSuccess();
             }
 
             @Override
-            public void onFailure(Call<JwtToken> call, Throwable t) {
-                listener.onFailed();
+            public void unauthenticated(Response<?> response) {
+                listener.onFailed(new SparkError(UNAUTHENTICATED, Integer.toString(response.code())));
+            }
+
+            @Override
+            public void clientError(Response<?> response) {
+                listener.onFailed(new SparkError(CLIENT_ERROR, Integer.toString(response.code())));
+            }
+
+            @Override
+            public void serverError(Response<?> response) {
+                listener.onFailed(new SparkError(SERVER_ERROR, Integer.toString(response.code())));
+            }
+
+            @Override
+            public void networkError(IOException e) {
+                listener.onFailed(new SparkError(NETWORK_ERROR, "network error"));
+            }
+
+            @Override
+            public void unexpectedError(Throwable t) {
+                listener.onFailed(new SparkError(UNEXPECTED_ERROR, "unknown error"));
             }
         });
     }
@@ -101,13 +144,13 @@ public class JWTStrategy implements AuthorizationStrategy {
     }
 
 
-    private interface AuthService {
+    interface AuthService {
         @POST("login")
-        Call<JwtToken> getToken(@Header("Authorization") String authorization);
+        ErrorHandlingCall<JwtToken> getToken(@Header("Authorization") String authorization);
     }
 
 
-    class JwtToken extends OAuth2AccessToken {
+    static class JwtToken extends OAuth2AccessToken {
         @SerializedName("expiresIn")
         protected long expiresIn;
 

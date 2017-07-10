@@ -38,12 +38,13 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+import com.ciscospark.common.SparkError;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
+import static com.ciscospark.auth.AuthorizeListener.AuthError.SERVER_ERROR;
 import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
-
 
 /**
  * OAuth2 authorization strategy using android WebView.
@@ -199,7 +200,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
                 Uri uri = Uri.parse(url);
                 String code = uri.getQueryParameter("code");
                 if (code == null || code.isEmpty()) {
-                    mAuthListener.onFailed();
+                    mAuthListener.onFailed(new SparkError());
                     return false;
                 }
                 setAuthCode(code);
@@ -225,6 +226,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             Log.d(TAG, "" + errorCode + " " + description + " " + failingUrl);
+            mAuthListener.onFailed(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
@@ -233,7 +235,7 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
             Log.e(TAG, error.toString());
             handler.cancel();
             if (error != null) {
-                mAuthListener.onFailed();
+                mAuthListener.onFailed(new SparkError(SERVER_ERROR, error.toString()));
             } else
                 Log.w(TAG, new Exception("SSLError unknown"));
         }

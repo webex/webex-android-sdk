@@ -25,6 +25,7 @@ package com.ciscospark.auth;
 
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
+import com.ciscospark.common.SparkError;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -98,12 +99,12 @@ public class OAuthStrategy implements AuthorizationStrategy {
                         if (mToken != null)
                             listener.onSuccess();
                         else
-                            listener.onFailed();
+                            listener.onFailed(new SparkError());
                     }
 
                     @Override
                     public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
-                        listener.onFailed();
+                        listener.onFailed(new SparkError());
                     }
                 });
     }
