@@ -738,6 +738,20 @@ public class Phone {
 
         //save locuskey into call object
         //this.mActiveCall.locusKey = event.getLocusKey();
+        if(this.mDialoutCall == null){
+            //sometimes same locus creation event will be sent twice or more
+
+            if(event.getLocusKey() == this.mActiveCall.locusKey){
+                Log.i(TAG, "Get same locus event again and SAME locus key! ");
+            }
+            else
+            {
+                Log.i(TAG, "Get same locus event again But NOT SAME locus key!" );
+            }
+
+            return;
+
+        }
         this.mDialoutCall.locusKey = event.getLocusKey();
 
         //add this call to list
