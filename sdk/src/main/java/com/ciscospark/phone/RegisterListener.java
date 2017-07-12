@@ -23,8 +23,15 @@
 package com.ciscospark.phone;
 
 
+import com.ciscospark.common.SparkError;
+
 public interface RegisterListener {
+
+    public final static String ErrorNotAuthorized = "Not Authorized";
+
+    public final static String ErrorTimeout = "Time out";
+
     void onSuccess();
 
-    void onFailed();
+    void onFailed(SparkError error);
 }

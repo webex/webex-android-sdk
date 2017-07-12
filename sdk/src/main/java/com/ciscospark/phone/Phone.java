@@ -99,6 +99,14 @@ import javax.inject.Inject;
 
 import de.greenrobot.event.EventBus;
 
+import static com.ciscospark.phone.DialObserver.ErrorCallJoin;
+import static com.ciscospark.phone.DialObserver.ErrorPermission;
+import static com.ciscospark.phone.RegisterListener.ErrorNotAuthorized;
+import static com.ciscospark.phone.RegisterListener.ErrorTimeout;
+
+/**
+ * The type Phone.
+ */
 public class Phone {
 
     private Spark mspark;
@@ -109,33 +117,57 @@ public class Phone {
 
     private ApplicationDelegate applicationDelegate;
 
+    /**
+     * The Application controller.
+     */
     @Inject
     ApplicationController applicationController;
 
+    /**
+     * The Api token provider.
+     */
     @Inject
     ApiTokenProvider apiTokenProvider;
 
+    /**
+     * The Api client provider.
+     */
     @Inject
     ApiClientProvider apiClientProvider;
 
+    /**
+     * The Call control service.
+     */
     @Inject
     CallControlService callControlService;
 
+    /**
+     * The Media engine.
+     */
     @Inject
     MediaEngine mediaEngine;
 
+    /**
+     * The Bus.
+     */
     @Inject
     EventBus bus;
 
 
+    /**
+     * The M remote surface view.
+     */
     WseSurfaceView mRemoteSurfaceView;
 
+    /**
+     * The M local surface view.
+     */
     WseSurfaceView mLocalSurfaceView;
 
     private CallContext callContext;
 
     //keep temp listener
-    private RegisterListener mListener;
+    private RegisterListener mRegisterListener;
 
     //registered on WMD or not
     private boolean isRegisterInWDM;
@@ -147,14 +179,24 @@ public class Phone {
     private Runnable mTimeRunnable;
 
 
+
     //keep activitied call reference
 
     private Call mActiveCall;
 
 
+    //it is used to save call  period between dial and get first locus feed back.
+    private Call mDialoutCall;
+
+    private  DialObserver mdialObserver;
+
+
     private IncomingCallObserver incomingCallObserver;
 
-
+    /**
+     * @deprecated
+     *
+     */
     public Phone(Spark spark) {
         Log.i(TAG, "Phone: ->start");
         SparkApplication.getInstance().inject(this);
@@ -171,24 +213,46 @@ public class Phone {
 
         calllist = new LinkedList<Call>();
 
+
         Log.i(TAG, "Phone: ->end");
+
+
 
     }
 
 
-    public Call getActiveCall() {
+    /**
+     * Gets active call.
+     *
+     * @return the active call
+     */
+    protected Call getActiveCall() {
         return this.mActiveCall;
     }
 
-    public void setActiveCall(Call call) {
+    /**
+     * Sets active call.
+     *
+     * @param call the call
+     */
+    protected void setActiveCall(Call call) {
         this.mActiveCall = call;
     }
 
+    /**
+     * Sets incoming call observer.
+     *
+     * @param observer the observer
+     */
     public void setIncomingCallObserver(IncomingCallObserver observer) {
         this.incomingCallObserver = observer;
     }
 
 
+    /**
+     * @deprecated
+     * Close.
+     */
     //release eventbus.
     //clean data from common lib,to prevent automatically register
     public void close() {
@@ -220,6 +284,11 @@ public class Phone {
     }
 
 
+    /**
+     * Register.
+     *
+     * @param listener the listener
+     */
     public void register(RegisterListener listener) {
 
         Log.i(TAG, "register: ->start");
@@ -227,8 +296,9 @@ public class Phone {
         if (!isAuthorized()) {
 
             //not authorized
+            SparkError error = new SparkError(null,ErrorNotAuthorized);
 
-            listener.onFailed();
+            listener.onFailed(error);
 
 
             return;
@@ -251,7 +321,7 @@ public class Phone {
 
         Log.i(TAG, "->after setAuthenticatedUser");
 
-        this.mListener = listener;
+        this.mRegisterListener = listener;
 
         new AuthenticatedUserTask(applicationController).execute();
 
@@ -272,8 +342,9 @@ public class Phone {
                 Log.i(TAG, "run: -> register timeout");
 
                 if (!Phone.this.isRegisterInWDM) {
-                    if (Phone.this.mListener != null) {
-                        Phone.this.mListener.onFailed();
+                    if (Phone.this.mRegisterListener != null) {
+                        SparkError error = new SparkError(null,ErrorTimeout);
+                        Phone.this.mRegisterListener.onFailed(error);
                     }
                 }
             }
@@ -285,6 +356,11 @@ public class Phone {
     }
 
 
+    /**
+     * Deregister.
+     *
+     * @param listener the listener
+     */
     public void deregister(DeregisterListener listener) {
         Log.i(TAG, "deregister: ->start");
 
@@ -294,12 +370,25 @@ public class Phone {
 
     }
 
+    /**
+     * Hangup.
+     */
     //hang up current active call
     protected void hangup() {
         Log.i(TAG, "hangup: ->Start");
-        if (this.mActiveCall == null) {
-            Log.i(TAG, " no active call ");
+        if ((this.mActiveCall == null)&&(this.mDialoutCall == null) ){
+            Log.i(TAG, " no active call neither dialout call");
             return;
+        }
+
+        if (this.mDialoutCall != null) {
+
+            //call is setup
+            Log.i(TAG, "DialoutCall");
+
+            this.callControlService.cancelCall(true);
+            return;
+
         }
 
         if ((this.mActiveCall.status == Call.CallStatus.INITIATED) || (this.mActiveCall.status == Call.CallStatus.RINGING)) {
@@ -331,27 +420,41 @@ public class Phone {
     }
 
 
+    /**
+     * Dial.
+     *
+     * @param dialString the dial string
+     * @param option     the option
+     * @param observer   the observer
+     */
     public void dial(String dialString, CallOption option, DialObserver observer) {
         Log.i(TAG, "dial: ->start");
 
         if (!this.isRegisterInWDM) {
             Log.i(TAG, "register wdm failed");
-            observer.onFailed(DialObserver.ErrorCode.ILLEGAL_STATUS);
+            SparkError error = new SparkError(null,DialObserver.ErrorStatus);
+
+            observer.onFailed(error);
             return;
         }
 
-
-        if (this.mActiveCall != null) {
+        //an active call is ongoing , or a dialout is ongoning but not get locus feedback yet
+        if ((this.mActiveCall != null) ||(this.mDialoutCall != null)) {
 
             Log.i(TAG, "isInActivitiedCall");
-            observer.onFailed(DialObserver.ErrorCode.ILLEGAL_STATUS);
+            SparkError error = new SparkError(null,DialObserver.ErrorStatus);
+
+            observer.onFailed(error);
             return;
         }
 
 
         if (!setCallOption(option)) {
             Log.i(TAG, "setCallOption failed");
-            observer.onFailed(DialObserver.ErrorCode.ILLEGAL_PARAMETER);
+            SparkError error = new SparkError(null,DialObserver.ErrorParameter);
+
+            observer.onFailed(error);
+            //observer.onFailed(DialObserver.ErrorCode.ERROR_PARAMETER);
             return;
         }
 
@@ -368,13 +471,19 @@ public class Phone {
             call.calltype = Call.CallType.VIDEO;
 
             //add this call to list
-            this.calllist.add(call);
+            //this.calllist.add(call);
 
             //set this call as active call
-            this.mActiveCall = call;
+            //this.mActiveCall = call;
+
+            //save call
+            this.mDialoutCall = call;
 
             //joinCall will trigger permission synchronouslly
-            observer.onSuccess(call);
+            //observer.onSuccess(call);
+
+            //save dialObserver
+            this.mdialObserver = observer;
 
             CallContext callContext = new CallContext.Builder(dialString).build();
             callControlService.joinCall(callContext);
@@ -393,13 +502,21 @@ public class Phone {
             call.calltype = Call.CallType.AUDIO;
 
             //add this call to list
-            this.calllist.add(call);
+            //this.calllist.add(call);
 
             //set this call as active call
-            this.mActiveCall = call;
+            //this.mActiveCall = call;
+
+            //save call
+            this.mDialoutCall = call;
+
+
 
             //joinCall will trigger permission synchronouslly
-            observer.onSuccess(call);
+            //observer.onSuccess(call);
+
+            //save dialObserver
+            this.mdialObserver = observer;
 
             callContext = new CallContext.Builder(dialString).setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly).build();
             callControlService.joinCall(callContext);
@@ -408,6 +525,12 @@ public class Phone {
 
     }
 
+    /**
+     * Sets call option.
+     *
+     * @param option the option
+     * @return the call option
+     */
     protected boolean setCallOption(CallOption option) {
         if (option.mCalltype == CallOption.CallType.VIDEO) {
 
@@ -435,9 +558,11 @@ public class Phone {
     }
 
     /**
-     * @param call
-     * @param reason
-     * @param errorInfo
+     * Remove call and mark it.
+     *
+     * @param call      the call
+     * @param reason    the reason
+     * @param errorInfo the error info
      */
     //*.remove call from array
     //
@@ -476,27 +601,36 @@ public class Phone {
 
     }
 
+    /**
+     * Start pre view.
+     */
     public void startPreView() {
 
     }
 
+    /**
+     * Stop pre view.
+     */
     public void stopPreView() {
 
     }
 
-    public boolean isConnected() {
-        return false;
-    }
 
+
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     //registed a WDM successfully
     public void onEventMainThread(DeviceRegistrationChangedEvent event) {
 
         Log.i(TAG, "DeviceRegistrationChangedEvent -> is received ");
 
-        if (this.mListener == null) {
+        if (this.mRegisterListener == null) {
             //in case, even logout is called, common lib still send out event by using old date
             // to register
-            Log.i(TAG, "this.mListener is null ");
+            Log.i(TAG, "this.mRegisterListener is null ");
             return;
         }
 
@@ -506,7 +640,7 @@ public class Phone {
             return;
         }
 
-        this.mListener.onSuccess();
+        this.mRegisterListener.onSuccess();
 
         //successfully registered
         this.isRegisterInWDM = true;
@@ -518,6 +652,11 @@ public class Phone {
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     //request camera and microphone permission
     public void onEventMainThread(RequestCallingPermissions event) {
         Log.i(TAG, "RequestCallingPermissions -> is received ");
@@ -527,19 +666,37 @@ public class Phone {
         permissions.add(Manifest.permission.RECORD_AUDIO);
         permissions.add(Manifest.permission.CAMERA);
 
-        if (this.mActiveCall == null) {
-            Log.i(TAG, "Something is Wrong, how mActiveCall is null");
+        if (this.mDialoutCall == null) {
+            Log.i(TAG, "Something is Wrong, how mDialoutCall is null");
             return;
         }
 
-        this.mActiveCall.getObserver().onPermissionRequired(permissions);
+        //notify dialobserver to approval permission
+        if(this.mdialObserver == null){
+            Log.i(TAG, "Something is Wrong, how mdialObserver is null");
+            return;
+        }
+
+        SparkError error = new SparkError(null,ErrorPermission);
+
+        this.mdialObserver.onFailed(error);
+
+        this.mdialObserver.onPermissionRequired(permissions);
+
+        this.mDialoutCall = null;
+
+        this.mdialObserver = null;
+
+
+        //remove dialOut call
+
+        //this.mActiveCall.getObserver().onPermissionRequired(permissions);
 
         //during the first dial, the permission event will happen.
         //it means the first dial end for permission reason
 
         //need to remove this ActiveCall and set it to DISCONNECTED
-
-
+        /*
         for (int j = 0; j < this.calllist.size(); j++) {
             Call call = this.calllist.get(j);
 
@@ -562,23 +719,48 @@ public class Phone {
             }
 
         }
+        */
 
 
         Log.i(TAG, "RequestCallingPermissions -> end");
 
     }
 
-    //call is sent to locus,waiting remote to accept
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
+    //locus has create call,waiting remote to accept
     public void onEventMainThread(CallControlLocusCreatedEvent event) {
         Log.i(TAG, "CallControlLocusCreatedEvent -> is received ");
         Log.i(TAG, "call of locuskey " + event.getLocusKey() + " : is Created");
 
         //save locuskey into call object
-        this.mActiveCall.locusKey = event.getLocusKey();
+        //this.mActiveCall.locusKey = event.getLocusKey();
+        this.mDialoutCall.locusKey = event.getLocusKey();
+
+        //add this call to list
+        this.calllist.add(this.mDialoutCall);
+
+        //set this call as active call
+        this.mActiveCall = this.mDialoutCall;
+
+
+
+        this.mdialObserver.onSuccess(this.mActiveCall);
+
+        this.mdialObserver = null;
+        this.mDialoutCall = null;
 
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlParticipantLeftEvent event) {
 
         Log.i(TAG, "CallControlParticipantLeftEvent is received ");
@@ -599,6 +781,11 @@ public class Phone {
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlSelfParticipantLeftEvent event) {
 
         Log.i(TAG, "CallControlSelfParticipantLeftEvent is received ");
@@ -620,6 +807,11 @@ public class Phone {
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     //case 1: call is rejected by remoted
     public void onEventMainThread(CallControlLeaveLocusEvent event) {
 
@@ -641,6 +833,11 @@ public class Phone {
     }
 
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlEndLocusEvent event) {
 
         Log.i(TAG, "CallControlEndLocusEvent is received ");
@@ -664,13 +861,46 @@ public class Phone {
     //before call is setup, something worng happen.
     //for exampple, self calling.
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlCallJoinErrorEvent event) {
 
         Log.i(TAG, "CallControlCallJoinErrorEvent is received ");
-        //no Activecall
-        if (this.mActiveCall == null) {
+        //no Activecall and no dialoutcall
+        if( (this.mActiveCall == null)&&(this.mDialoutCall == null)) {
+            Log.i(TAG, "no Activecall neither dialoutcall,something wrong");
             return;
         }
+
+
+        //
+
+        if(this.mDialoutCall != null){
+
+            Log.i(TAG, "notify dial observer failed ");
+            SparkError error = new SparkError(null,ErrorCallJoin);
+            this.mdialObserver.onFailed(error);
+
+            this.mdialObserver = null;
+            this.mDialoutCall = null;
+
+            return;
+
+        }
+
+        if(this.mActiveCall != null ){
+
+            Log.i(TAG, "during Activecall,receive CallJoinError ");
+
+            return;
+
+        }
+
+
+        /*
         //self calling.
         if ((this.mActiveCall.status == Call.CallStatus.RINGING) || (this.mActiveCall.status == Call.CallStatus.INITIATED)) {
             Log.i(TAG, "self calling");
@@ -680,9 +910,16 @@ public class Phone {
                     .Error_serviceFailed_CallJoinError,errorinfo);
         }
 
+        */
+
     }
 
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     //remoted send acknowledge and it means it is RINGING
     public void onEventMainThread(ParticipantNotifiedEvent event) {
         Log.i(TAG, "ParticipantNotifiedEvent -> is received ");
@@ -708,6 +945,11 @@ public class Phone {
         */
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     //remote accept call, call will be setup
     public void onEventMainThread(CallControlParticipantJoinedEvent event) {
         Log.i(TAG, "CallControlParticipantJoinedEvent -> is received ");
@@ -729,6 +971,11 @@ public class Phone {
     }
 
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     // receive INCOMING call
     @SuppressWarnings("UnusedDeclaration")
     public void onEventMainThread(CallNotificationEvent event) {
@@ -746,15 +993,30 @@ public class Phone {
         }
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     @SuppressWarnings("UnusedDeclaration")
     public void onEventMainThread(ParticipantJoinedEvent event) {
         Log.i(TAG, "ParticipantJointed Event " + event.getLocusKey());
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(IncomingCallEvent event) {
         Log.i(TAG, "IncomingCallEvent " + event.getLocusKey());
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallNotificationRemoveEvent event) {
         Log.i(TAG, "CallNotification remove event" + event.getLocusKey());
         LocusKey locusKey = event.getLocusKey();
@@ -768,16 +1030,31 @@ public class Phone {
         }
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallNotificationUpdateEvent event) {
         Log.i(TAG, "CallNotification update event" + event.getLocusKey());
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlDisableVideoEvent event) {
 
         Log.i(TAG, "CallControlDisableVideoEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlDisconnectedEvent event) {
 
         Log.i(TAG, "CallControlDisconnectedEvent is received ");
@@ -785,42 +1062,77 @@ public class Phone {
     }
 
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlEndWhiteboardShare event) {
 
         Log.i(TAG, "CallControlEndWhiteboardShare is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlFloorGrantedEvent event) {
 
         Log.i(TAG, "CallControlFloorGrantedEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlFloorReleasedEvent event) {
 
         Log.i(TAG, "CallControlFloorReleasedEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlHeldEvent event) {
 
         Log.i(TAG, "CallControlHeldEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlInvalidLocusEvent event) {
 
         Log.i(TAG, "CallControlInvalidLocusEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlJoinedLobbyEvent event) {
 
         Log.i(TAG, "CallControlJoinedLobbyEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlJoinedMeetingEvent event) {
 
         Log.i(TAG, "CallControlJoinedMeetingEvent is received ");
@@ -828,96 +1140,171 @@ public class Phone {
     }
 
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlLocalAudioMutedEvent event) {
 
         Log.i(TAG, "CallControlLocalAudioMutedEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlLocalVideoMutedEvent event) {
 
         Log.i(TAG, "CallControlLocalVideoMutedEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlLocusChangedEvent event) {
 
         Log.i(TAG, "CallControlLocusChangedEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlLocusPmrChangedEvent event) {
 
         Log.i(TAG, "CallControlLocusPmrChangedEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlLostEvent event) {
 
         Log.i(TAG, "CallControlLostEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlMediaDeviceListenersRegisteredEvent event) {
 
         Log.i(TAG, "CallControlMediaDeviceListenersRegisteredEvent is received ");
 
     }
 
+    /**
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlMeetingControlsEvent event) {
 
         Log.i(TAG, "CallControlMeetingControlsEvent is received ");
 
     }
 
+    /**
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlMeetingControlsExpelEvent event) {
 
         Log.i(TAG, "CallControlMeetingControlsExpelEvent is received ");
 
     }
 
+    /**
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlMeetingControlsLockEvent event) {
 
         Log.i(TAG, "CallControlMeetingControlsLockEvent is received ");
 
     }
 
+    /**
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlMeetingControlsStatusEvent event) {
 
         Log.i(TAG, "CallControlMeetingControlsStatusEvent is received ");
 
     }
 
+    /**
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlMeetingNotStartedEvent event) {
 
         Log.i(TAG, "CallControlMeetingNotStartedEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlMeetingRecordEvent event) {
 
         Log.i(TAG, "CallControlMeetingRecordEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlModeratorMutedParticipantEvent event) {
 
         Log.i(TAG, "CallControlModeratorMutedParticipantEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlNumericDialingPreventedEvent event) {
 
         Log.i(TAG, "CallControlNumericDialingPreventedEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlParticipantAudioMuteEvent event) {
 
         Log.i(TAG, "CallControlParticipantAudioMuteEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlParticipantChangedEvent event) {
 
         Log.i(TAG, "CallControlParticipantChangedEvent is received ");
@@ -925,24 +1312,44 @@ public class Phone {
     }
 
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
 
         Log.i(TAG, "CallControlParticipantVideoMutedEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlPhoneStateChangedEvent event) {
 
         Log.i(TAG, "CallControlPhoneStateChangedEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlReconnectEvent event) {
 
         Log.i(TAG, "CallControlReconnectEvent is received ");
 
     }
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlResumedEvent event) {
 
         Log.i(TAG, "CallControlResumedEvent is received ");
@@ -950,6 +1357,11 @@ public class Phone {
     }
 
 
+    /**
+     *
+     * @deprecated
+     * @param event the event
+     */
     public void onEventMainThread(CallControlViewWhiteboardShare event) {
 
         Log.i(TAG, "CallControlViewWhiteboardShare is received ");

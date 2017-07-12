@@ -22,6 +22,8 @@
 
 package com.ciscospark.phone;
 
+import com.ciscospark.common.SparkError;
+
 /**
  * Created on 12/06/2017.
  */
@@ -29,5 +31,5 @@ package com.ciscospark.phone;
 public interface DeregisterListener {
     void onSuccess();
 
-    void onFailed();
+    void onFailed(SparkError error);
 }

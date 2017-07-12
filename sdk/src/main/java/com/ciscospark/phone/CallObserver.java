@@ -69,12 +69,7 @@ public interface CallObserver {
      */
     void onMediaChanged(Call call, MediaChangeReason reason);
 
-    /**
-     * this function will be called while user need to grant permission
-     * @param permissions  permission list
-     * @return none
-     */
-    void onPermissionRequired(List<String> permissions);
+
 
 
     enum DisconnectedReason {

@@ -25,18 +25,27 @@ public class SparkApplication extends Application {
         Log.i(TAG, "onCreate: ->after daggerInit");
     }
 
-
+    /**
+     * @deprecated
+     *
+     */
     public static SparkApplication getInstance() {
         return instance;
     }
 
-
+    /**
+     * @deprecated
+     *
+     */
     protected void daggerInit() {
         applicationDelegate = new VideoTestApplicationDelegate(this);
         applicationDelegate.create();
         Log.i(TAG, "daggerInit: ->after  applicationDelegate.create");
     }
-
+    /**
+     * @deprecated
+     *
+     */
     public void inject(Object object) {
         applicationDelegate.inject(object);
     }

@@ -44,7 +44,7 @@ public class Spark {
     }
 
     //do close work, release resource
-    public void Close() {
+    public void close() {
 
         mPhone.close();
     }
