@@ -33,7 +33,7 @@
 
         <provider
             android:name="com.cisco.spark.android.sync.ConversationContentProvider"
-            android:authorities="com.cisco.wx2.sdk.video.api.android.sync.conversation"
+            android:authorities="com.ciscospark.sdk.sync.conversation"
             android:exported="false"
             />
 

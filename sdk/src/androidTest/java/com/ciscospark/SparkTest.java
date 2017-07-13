@@ -59,7 +59,7 @@ public class SparkTest {
             }
 
             @Override
-            public void onFailed() {
+            public void onFailed(SparkError<AuthError> E) {
                 assertFalse(true);
             }
         });

@@ -30,6 +30,7 @@ import android.webkit.WebView;
 import android.widget.Button;
 
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+import com.ciscospark.SparkError;
 import com.ciscospark.auth.AuthorizeListener;
 import com.ciscospark.auth.OAuthWebViewStrategy;
 
@@ -75,8 +76,8 @@ public class MainActivity extends Activity implements AuthorizeListener {
     }
 
     @Override
-    public void onFailed() {
+    public void onFailed(SparkError<AuthError> E) {
         btn.setVisibility(View.VISIBLE);
-        Log.d(TAG, "failed");
+        Log.d(TAG, "failed " + E.toString());
     }
 }

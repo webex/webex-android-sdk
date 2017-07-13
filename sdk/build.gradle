@@ -63,6 +63,7 @@ dependencies {
     compile libs.retrofit_gsonconverter
     compile libs.websocket
     compile libs.dagger
+    compile libs.ln
     provided libs.daggercompiler
     compile libs.eventbus
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {

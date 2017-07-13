@@ -32,7 +32,7 @@ public class SparkApplication extends Application {
 
 
     protected void daggerInit() {
-        applicationDelegate = new VideoTestApplicationDelegate(this);
+        applicationDelegate = new SparkApplicationDelegate(this);
         applicationDelegate.create();
         Log.i(TAG, "daggerInit: ->after  applicationDelegate.create");
     }

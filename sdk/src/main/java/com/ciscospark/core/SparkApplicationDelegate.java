@@ -7,14 +7,13 @@ import com.cisco.spark.android.core.ApplicationDelegate;
 import com.cisco.spark.android.core.RootModule;
 import com.github.benoitdion.ln.DebugLn;
 import com.github.benoitdion.ln.NaturalLog;
-import com.squareup.leakcanary.RefWatcher;
 
-class VideoTestApplicationDelegate extends ApplicationDelegate {
-    private final VideoTestApplicationModule applicationModule;
+class SparkApplicationDelegate extends ApplicationDelegate {
+    private final SparkApplicationModule applicationModule;
 
-    public VideoTestApplicationDelegate(Application application) {
+    public SparkApplicationDelegate(Application application) {
         super(application);
-        applicationModule = new VideoTestApplicationModule();
+        applicationModule = new SparkApplicationModule();
     }
 
 
@@ -26,7 +25,6 @@ class VideoTestApplicationDelegate extends ApplicationDelegate {
     @Override
     protected void objectGraphCreated() {
         RootModule.setInjector(this);
-        applicationModule.setRefWatcher(RefWatcher.DISABLED);
     }
 
     @Override

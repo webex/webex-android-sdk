@@ -20,24 +20,44 @@
  * THE SOFTWARE.
  */
 
-package com.ciscospark.auth;
+package com.ciscospark;
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 
 /**
- * Authorization interface used by Spark
- *
- * @author Allen Xiao<xionxiao@cisco.com>
- * @version 0.1
+ * Common Error class for Spark
  */
-public interface AuthorizationStrategy {
 
-    void authorize(AuthorizeListener listener);
+public class SparkError<E extends Enum> {
+    public enum ErrorCode {
+        /* add error code here */
+        UNKNOWN,
+    }
 
-    void deauthorize();
+    protected E mErrorCode = null;
+    protected String mErrorMessage = "";
 
-    OAuth2AccessToken getToken();
+    public SparkError() {
+    }
 
-    boolean isAuthorized();
+    public SparkError(E errorCode) {
+        mErrorCode = errorCode;
+    }
 
+    public SparkError(E errorCode, String message) {
+        mErrorCode = errorCode;
+        mErrorMessage = message;
+    }
+
+    E getErrorCode() {
+        return mErrorCode;
+    }
+
+    String getErrorMessage() {
+        return mErrorMessage;
+    }
+
+    @Override
+    public String toString() {
+        return (mErrorCode == null ? "" : mErrorCode.name()) + "|" + mErrorMessage;
+    }
 }
