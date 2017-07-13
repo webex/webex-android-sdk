@@ -50,42 +50,26 @@ android {
 }
 
 configurations {
-    devDebugCompile
-    prodDebugCompile
-    prodReleaseCompile
-    lollipopDebugCompile
-    devDebugMemoryLeakCompile
-    lollipopDebugMemoryLeakCompile
+    //devDebugCompile
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-
-    //devDebugCompile project(path: ':common', configuration: 'prodDebug')
-    prodDebugCompile project(path: ':common', configuration: 'prodDebug')
-    prodReleaseCompile project(path: ':common', configuration: 'prodRelease')
-    lollipopDebugCompile project(path: ':common', configuration: 'lollipopDebug')
-    devDebugMemoryLeakCompile project(path: ':common', configuration: 'prodDebug')
-    lollipopDebugMemoryLeakCompile project(path: ':common', configuration: 'lollipopDebug')
-
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.squareup.okhttp3:mockwebserver:3.7.0'
     compile 'com.squareup.okhttp3:logging-interceptor:3.7.0'
-
     compile libs.gson
     compile libs.retrofit
     compile libs.retrofit_gsonconverter
     compile libs.websocket
     compile libs.dagger
     provided libs.daggercompiler
-
     compile libs.eventbus
-
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile 'com.android.support:appcompat-v7:25.1.1'
     compile 'com.android.support:design:25.1.1'
     testCompile 'junit:junit:4.12'
-    compile project(path: ':common')
+    compile project(':common')
 }

@@ -3,17 +3,5 @@
         package="com.ciscospark.sdk">
         <uses-permission android:name="android.permission.INTERNET" />
         <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-
-        <application android:allowBackup="true" android:label="@string/app_name"
-            android:supportsRtl="true">
-
-                <provider
-                    android:name="com.cisco.spark.android.sync.ConversationContentProvider"
-                    android:authorities="com.cisco.wx2.sdk.video.api.android.sync.conversation"
-                    android:exported="false"
-                    />
-
-        </application>
-
 </manifest>
 

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- duplicate in the spark app -->
-    <color name="gray_light_4">#F5F5F6</color>
-    <color name="gray_dark_2">#4F5051</color>
-</resources>
