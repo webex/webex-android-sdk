@@ -53,7 +53,7 @@ import static com.ciscospark.auth.Constant.JWT_BASE_URL;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class JWTStrategy implements AuthorizationStrategy {
+public class JWTStrategy implements Authenticator {
     private JwtToken mToken = null;
     private String mAuthCode;
     private AuthService mAuthService;
@@ -126,8 +126,8 @@ public class JWTStrategy implements AuthorizationStrategy {
     }
 
     @Override
-    public OAuth2AccessToken getToken() {
-        return mToken;
+    public String accessToken() {
+        return mToken.getAccessToken();
     }
 
     @Override

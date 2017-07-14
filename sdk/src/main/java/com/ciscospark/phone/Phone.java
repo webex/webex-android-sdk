@@ -271,7 +271,7 @@ public class Phone {
     private boolean isAuthorized() {
         Log.i(TAG, "isAuthorized: ->");
 
-        if (this.mspark.getStrategy().getToken() == null) {
+        if (this.mspark.getStrategy().accessToken() == null) {
 
             Log.i(TAG, "register: -> no valid Token");
 
@@ -307,7 +307,7 @@ public class Phone {
 
         OAuth2Tokens tokens = new OAuth2Tokens();
 
-        tokens.update(this.mspark.getStrategy().getToken());
+        tokens.update(this.mspark.getStrategy().accessToken());
 
 
         String email1 = "";

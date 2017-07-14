@@ -52,7 +52,7 @@ import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class OAuthWebViewStrategy implements AuthorizationStrategy {
+public class OAuthWebViewStrategy implements Authenticator {
     private String mBaseUrl = OAUTH_BASE_URL;
     private WebView mWebView;
     private String mState;
@@ -97,9 +97,9 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
     }
 
     @Override
-    public OAuth2AccessToken getToken() {
+    public String accessToken() {
         if (mOAuthStategyDelegate != null)
-            return mOAuthStategyDelegate.getToken();
+            return mOAuthStategyDelegate.accessToken();
         return null;
     }
 

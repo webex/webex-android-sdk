@@ -45,7 +45,7 @@ import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class OAuthStrategy implements AuthorizationStrategy {
+public class OAuthStrategy implements Authenticator {
     static final String AUTHORIZATION_CODE = "authorization_code";
     private String mClientId;
     private String mClientSecret;
@@ -115,8 +115,8 @@ public class OAuthStrategy implements AuthorizationStrategy {
     }
 
     @Override
-    public OAuth2AccessToken getToken() {
-        return mToken;
+    public String accessToken() {
+        return mToken.getAccessToken();
     }
 
     @Override

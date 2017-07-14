@@ -64,7 +64,7 @@ public class OAuthStrategyTest {
             @Override
             public void onSuccess() {
                 assertTrue(strategy.isAuthorized());
-                OAuth2AccessToken token = strategy.getToken();
+                OAuth2AccessToken token = strategy.accessToken();
                 assertNotNull(token);
                 assertNotNull(token.getAccessToken());
                 assertFalse(token.getAccessToken().isEmpty());
@@ -85,7 +85,7 @@ public class OAuthStrategyTest {
     public void b_deauthorize() throws Exception {
         strategy.deauthorize();
         assertFalse(strategy.isAuthorized());
-        OAuth2AccessToken token = strategy.getToken();
+        OAuth2AccessToken token = strategy.accessToken();
         assertNull(token);
     }
 

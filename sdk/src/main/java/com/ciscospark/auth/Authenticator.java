@@ -22,21 +22,19 @@
 
 package com.ciscospark.auth;
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
-
 /**
  * Authorization interface used by Spark
  *
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public interface AuthorizationStrategy {
+public interface Authenticator {
 
     void authorize(AuthorizeListener listener);
 
     void deauthorize();
 
-    OAuth2AccessToken getToken();
+    String accessToken();
 
     boolean isAuthorized();
 
