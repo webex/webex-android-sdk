@@ -10,7 +10,7 @@ import com.cisco.spark.android.core.ApplicationDelegate;
 
 public class SparkApplication extends Application {
     private static SparkApplication instance;
-    private ApplicationDelegate applicationDelegate;
+    private ApplicationDelegate delegate;
 
     private static final String TAG = "SparkApplication";
 
@@ -21,24 +21,17 @@ public class SparkApplication extends Application {
         instance = this;
 
         Log.d(TAG, "before daggerInit");
-        daggerInit();
+        delegate = new SparkApplicationDelegate(this);
+        delegate.create();
         Log.i(TAG, "onCreate: ->after daggerInit");
     }
-
 
     public static SparkApplication getInstance() {
         return instance;
     }
 
-
-    protected void daggerInit() {
-        applicationDelegate = new SparkApplicationDelegate(this);
-        applicationDelegate.create();
-        Log.i(TAG, "daggerInit: ->after  applicationDelegate.create");
-    }
-
     public void inject(Object object) {
-        applicationDelegate.inject(object);
+        delegate.inject(object);
     }
 
 }

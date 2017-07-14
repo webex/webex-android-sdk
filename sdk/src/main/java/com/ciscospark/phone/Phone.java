@@ -43,6 +43,7 @@ public class Phone {
     private OAuth2AccessToken access_token;
     private static final String TAG = "Phone";
 
+    /*
     @Inject
     ApplicationController applicationController;
 
@@ -54,6 +55,7 @@ public class Phone {
 
     @Inject
     CallControlService callControlService;
+    */
 
     @Inject
     MediaEngine mediaEngine;
@@ -72,9 +74,9 @@ public class Phone {
         String email = "";
         String name = "";
 
-        AuthenticatedUser authenticatedUser = new AuthenticatedUser(email, new ActorRecord.ActorKey(email), name, tokens, "Unknown", null, 0, null);
-        apiTokenProvider.setAuthenticatedUser(authenticatedUser);
-        new AuthenticatedUserTask(applicationController).execute();
+        //AuthenticatedUser authenticatedUser = new AuthenticatedUser(email, new ActorRecord.ActorKey(email), name, tokens, "Unknown", null, 0, null);
+        //apiTokenProvider.setAuthenticatedUser(authenticatedUser);
+        //new AuthenticatedUserTask(applicationController).execute();
     }
 
     public void deregister(DeregisterListener listener) {

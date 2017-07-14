@@ -23,7 +23,7 @@
 package com.ciscospark.auth;
 
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
-import com.ciscospark.common.SparkError;
+import com.ciscospark.SparkError;
 
 import org.junit.Before;
 import org.junit.FixMethodOrder;

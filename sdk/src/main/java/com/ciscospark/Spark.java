@@ -22,12 +22,6 @@
 
 package com.ciscospark;
 
-import com.cisco.spark.android.authenticator.ApiTokenProvider;
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
-import com.cisco.spark.android.callcontrol.CallControlService;
-import com.cisco.spark.android.core.ApiClientProvider;
-import com.cisco.spark.android.core.ApplicationController;
-import com.cisco.spark.android.media.MediaEngine;
 import com.ciscospark.auth.AuthorizationStrategy;
 import com.ciscospark.auth.AuthorizeListener;
 import com.ciscospark.membership.MembershipClient;
@@ -38,20 +32,17 @@ import com.ciscospark.room.RoomClient;
 import com.ciscospark.team.TeamClient;
 import com.ciscospark.team.TeamMembershipClient;
 
-import javax.inject.Inject;
-
-import de.greenrobot.event.EventBus;
-
 /**
- * @author      Allen Xiao<xionxiao@cisco.com>
- * @version     0.1
+ * @author Allen Xiao<xionxiao@cisco.com>
+ * @version 0.1
  */
 public class Spark {
     private AuthorizationStrategy strategy;
 
     /**
      * Get current sdk version
-     * @return      major.minor.build-alpha/beta
+     *
+     * @return major.minor.build-alpha/beta
      */
     public String version() {
         return "0.1";
@@ -77,16 +68,28 @@ public class Spark {
         return new Phone(strategy.getToken());
     }
 
-    public MessageClient messages() { return new MessageClient(); }
+    public MessageClient messages() {
+        return new MessageClient();
+    }
 
-    public PeopleClient people() { return new PeopleClient(); }
+    public PeopleClient people() {
+        return new PeopleClient();
+    }
 
-    public MembershipClient memberships() { return new MembershipClient(); }
+    public MembershipClient memberships() {
+        return new MembershipClient();
+    }
 
-    public TeamClient teams() { return new TeamClient(); }
+    public TeamClient teams() {
+        return new TeamClient();
+    }
 
-    public TeamMembershipClient teamMembershipClient() { return new TeamMembershipClient(); }
+    public TeamMembershipClient teamMembershipClient() {
+        return new TeamMembershipClient();
+    }
 
-    public RoomClient rooms() { return new RoomClient(); }
+    public RoomClient rooms() {
+        return new RoomClient();
+    }
 
 }
