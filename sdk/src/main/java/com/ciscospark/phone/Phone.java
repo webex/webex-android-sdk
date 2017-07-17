@@ -487,7 +487,9 @@ public class Phone {
 
             CallContext callContext = new CallContext.Builder(dialString).build();
             callControlService.joinCall(callContext);
-            Log.i(TAG, "dial: ->sendout");
+
+            Log.i(TAG, "dial: ->videoCall sendout");
+            return;
         }
 
         if (option.mCalltype == CallOption.CallType.AUDIO) {
@@ -520,7 +522,8 @@ public class Phone {
 
             callContext = new CallContext.Builder(dialString).setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly).build();
             callControlService.joinCall(callContext);
-            Log.i(TAG, "dial: ->sendout");
+            Log.i(TAG, "dial: ->AudioCall sendout");
+            return;
         }
 
     }
