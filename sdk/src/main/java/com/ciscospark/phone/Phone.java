@@ -643,6 +643,23 @@ public class Phone {
             return;
         }
 
+        //check if it is 451 cases, get success but it is not authenticated indeed
+        if(event.getDeviceRegistration().getId() == null){
+
+            //ID is null, it is likely failed
+
+            Log.i(TAG, "DeviceRegistrationChangedEvent.id is null, it maybe a 451 ");
+
+            SparkError error = new SparkError(null,"Error451");
+
+            this.mRegisterListener.onFailed(error);
+
+            this.mTimeHandler.removeCallbacks(this.mTimeRunnable);
+
+            return;
+        }
+
+
         this.mRegisterListener.onSuccess();
 
         //successfully registered
@@ -742,6 +759,8 @@ public class Phone {
         //save locuskey into call object
         //this.mActiveCall.locusKey = event.getLocusKey();
         if(this.mDialoutCall == null){
+
+            Log.i(TAG, "Something is Wrong, get duplicated locus event ");
             //sometimes same locus creation event will be sent twice or more
 
             if(event.getLocusKey() == this.mActiveCall.locusKey){
