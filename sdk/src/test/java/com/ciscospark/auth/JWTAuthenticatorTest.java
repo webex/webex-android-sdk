@@ -32,7 +32,6 @@ import org.junit.runners.MethodSorters;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -40,36 +39,38 @@ import static org.junit.Assert.assertTrue;
  * @version 0.1
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class JWTStrategyTest {
+public class JWTAuthenticatorTest {
     private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMiIsIm5hbWUiOiJ1c2VyICMyIiwiaXNzIjoiWTJselkyOXpjR0Z5YXpvdkwzVnpMMDlTUjBGT1NWcEJWRWxQVGk5aU5tSmtNemRtTUMwNU56RXhMVFEzWldVdE9UUTFOUzAxWWpZNE1tUTNNRFV6TURZIn0.5VvjLtuD-jn9hXtLthnGDdhxlIHaoKZbI80y1vK2-bY";
-    private JWTStrategy strategy;
+    private JWTAuthenticator strategy;
 
     @Before
     public void init() throws Exception {
-        strategy = new JWTStrategy(auth_token);
+        strategy = new JWTAuthenticator();
     }
 
     @Test
     public void a_authorize() throws Exception {
-        strategy.authorize(new AuthorizeListener() {
-            @Override
-            public void onSuccess() {
-                assertTrue(strategy.isAuthorized());
-                OAuth2AccessToken token = strategy.accessToken();
-                assertNotNull(token);
-                assertNotNull(token.getAccessToken());
-                assertFalse(token.getAccessToken().isEmpty());
-                System.out.println(token.getAccessToken());
-                System.out.println("expires in: " + token.getExpiresIn());
-            }
+        strategy.authorize(auth_token);
+        assertTrue(strategy.isAuthorized());
+        if (strategy.isAuthorized()) {
+        strategy.accessToken(new AuthorizeListener() {
+                @Override
+                public void onSuccess(OAuth2AccessToken access_token) {
+                    assertTrue(strategy.isAuthorized());
+                    assertNotNull(access_token);
+                    assertFalse(access_token.getAccessToken().isEmpty());
+                    System.out.println(access_token.getAccessToken());
+                    System.out.println(access_token.getExpiresIn());
+                }
 
-            @Override
-            public void onFailed(SparkError error) {
-                //assertFalse(true);
-                System.out.println("failed");
-                System.out.println(error.toString());
-            }
-        });
+                @Override
+                public void onFailed(SparkError error) {
+                    assertFalse(true);
+                    System.out.println("failed");
+                    System.out.println(error.toString());
+                }
+            });
+        }
 
         Thread.sleep(5 * 1000);
     }
@@ -78,25 +79,27 @@ public class JWTStrategyTest {
     public void b_deauthorize() throws Exception {
         strategy.deauthorize();
         assertFalse(strategy.isAuthorized());
-        OAuth2AccessToken token = strategy.accessToken();
-        assertNull(token);
     }
 
     @Test
     public void c_authorizeFailed() throws Exception {
-        strategy = new JWTStrategy("Wrong token");
-        strategy.authorize(new AuthorizeListener() {
-            @Override
-            public void onSuccess() {
-                assertFalse(true);
-            }
+        strategy = new JWTAuthenticator();
+        strategy.authorize("wrong token");
+        assertTrue(strategy.isAuthorized());
+        if (strategy.isAuthorized()) {
+            strategy.accessToken(new AuthorizeListener() {
+                @Override
+                public void onSuccess(OAuth2AccessToken access_token) {
+                    assertFalse(true);
+                }
 
-            @Override
-            public void onFailed(SparkError error) {
-                assertFalse(strategy.isAuthorized());
-                System.out.println(error.toString());
-            }
-        });
+                @Override
+                public void onFailed(SparkError error) {
+                    assertFalse(strategy.isAuthorized());
+                    System.out.println(error.toString());
+                }
+            });
+        }
 
         Thread.sleep(5 * 1000);
     }

@@ -28,7 +28,7 @@ import android.annotation.TargetApi;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
-import android.util.Log;
+import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
@@ -37,11 +37,20 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.ciscospark.common.SparkError;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.Field;
+import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.POST;
 
 import static com.ciscospark.auth.AuthorizeListener.AuthError.SERVER_ERROR;
 import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
@@ -52,13 +61,21 @@ import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class OAuthWebViewStrategy implements Authenticator {
+public class OAuthWebViewAuthenticator implements Authenticator {
+    static final String AUTHORIZATION_CODE = "authorization_code";
+    static final String REFRESH_TOKEN_CODE = "refresh_code";
     private String mBaseUrl = OAUTH_BASE_URL;
     private WebView mWebView;
     private String mState;
+    private String mClientId;
+    private String mClientSecret;
+    private String mScope;
+    private String mRedirectUri;
+    private String mAuthCode;
+
+    private OAuth2Tokens mToken = null;
+    private AuthService mAuthService;
     private AuthorizeListener mAuthListener;
-    private OAuthStrategy mOAuthStategyDelegate = null;
-    static final String TAG = "OAuthWebViewStrategy";
 
 
     /**
@@ -66,61 +83,80 @@ public class OAuthWebViewStrategy implements Authenticator {
      * @param clientSecret
      * @param redirectUri
      * @param scope
-     * @param email
-     * @param webView
      */
-    public OAuthWebViewStrategy(String clientId, String clientSecret, String redirectUri,
-                                String scope, String email, WebView webView) {
-        super();
-        this.mWebView = webView;
-        mOAuthStategyDelegate = new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, "");
+    public OAuthWebViewAuthenticator(String clientId, String clientSecret, String redirectUri,
+                                     String scope) {
+        mClientId = clientId;
+        mClientSecret = clientSecret;
+        mRedirectUri = redirectUri;
+        mScope = scope;
 
-        initWebView();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(OAUTH_BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        mAuthService = retrofit.create(AuthService.class);
     }
 
-    @Override
-    public void authorize(AuthorizeListener listener) {
-        this.mAuthListener = listener;
-        String url = buildCodeGrantUrl(getEmail());
-        Log.d(TAG, "authorize" + url);
+    public void authorize(WebView webView, AuthorizeListener listener) {
+        this.mWebView = webView;
+        mAuthListener = listener;
+        initWebView();
+        String url = buildCodeGrantUrl();
         CookieManager.getInstance().removeAllCookie();
+        mWebView.setVisibility(View.VISIBLE);
         mWebView.loadUrl(url);
     }
 
     @Override
     public void deauthorize() {
         this.mState = "";
-        if (mOAuthStategyDelegate != null) {
-            mOAuthStategyDelegate.deauthorize();
-            mOAuthStategyDelegate = null;
+        mToken = null;
+    }
+
+    @Override
+    public void accessToken(AuthorizeListener listener) {
+        if (!isAuthorized()) {
+            listener.onSuccess(mToken);
+        } else {
+            if (mToken.shouldRefreshNow()) {
+                // refresh token
+                mAuthService.refreshToken(mClientId, mClientSecret, mToken.getRefreshToken(), REFRESH_TOKEN_CODE)
+                        .enqueue(new Callback<OAuth2Tokens>() {
+                            @Override
+                            public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
+                                mToken = response.body();
+                                if (mToken != null)
+                                    listener.onSuccess(mToken);
+                                else
+                                    listener.onFailed(new SparkError());
+                            }
+
+                            @Override
+                            public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
+                                listener.onFailed(new SparkError());
+                            }
+                        });
+            }
         }
     }
 
     @Override
-    public String accessToken() {
-        if (mOAuthStategyDelegate != null)
-            return mOAuthStategyDelegate.accessToken();
-        return null;
-    }
-
-    @Override
     public boolean isAuthorized() {
-        return mOAuthStategyDelegate != null && mOAuthStategyDelegate.isAuthorized();
+        return (mToken != null) && (mToken.getAccessToken() != null) && mToken.getAccessToken().isEmpty();
     }
 
-    private String buildCodeGrantUrl(String email) {
+    private String buildCodeGrantUrl() {
         SecureRandom random = new SecureRandom();
         mState = new BigInteger(130, random).toString(32);
         Uri.Builder builder = Uri.parse(mBaseUrl).buildUpon();
 
         builder.appendPath("authorize")
                 .appendQueryParameter("response_type", "code")
-                .appendQueryParameter("client_id", getClientId())
-                .appendQueryParameter("redirect_uri", getRedirectUri())
-                .appendQueryParameter("scope", getScope())
+                .appendQueryParameter("client_id", mClientId)
+                .appendQueryParameter("redirect_uri", mRedirectUri)
+                .appendQueryParameter("scope", mScope)
                 .appendQueryParameter("mState", mState);
-        if (!email.isEmpty())
-            builder.appendQueryParameter("email", email);
         return builder.toString();
     }
 
@@ -141,77 +177,40 @@ public class OAuthWebViewStrategy implements Authenticator {
         CookieManager.getInstance().setAcceptCookie(true);
     }
 
-    public String getClientId() {
-        return mOAuthStategyDelegate.getClientId();
-    }
-
-    public void setClientId(String clientId) {
-        mOAuthStategyDelegate.setClientId(clientId);
-    }
-
-    public String getClientSecret() {
-        return mOAuthStategyDelegate.getClientSecret();
-    }
-
-    public void setClientSecret(String clientSecret) {
-        mOAuthStategyDelegate.setClientSecret(clientSecret);
-    }
-
-    public String getScope() {
-        return mOAuthStategyDelegate.getScope();
-    }
-
-    public void setScope(String scope) {
-        mOAuthStategyDelegate.setScope(scope);
-    }
-
-    public String getRedirectUri() {
-        return mOAuthStategyDelegate.getRedirectUri();
-    }
-
-    public void setRedirectUri(String redirectUri) {
-        mOAuthStategyDelegate.setRedirectUri(redirectUri);
-    }
-
-    public String getAuthCode() {
-        return mOAuthStategyDelegate.getAuthCode();
-    }
-
-    public void setAuthCode(String code) {
-        mOAuthStategyDelegate.setAuthCode(code);
-    }
-
-    public String getEmail() {
-        return mOAuthStategyDelegate.getEmail();
-    }
-
-    public void setEmail(String email) {
-        mOAuthStategyDelegate.setEmail(email);
-    }
-
 
     private class BrowserWebViewClient extends WebViewClient {
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            Log.d(TAG, url);
             // redirect uri is returned from server by lowercase.
-            if (url.startsWith(getRedirectUri().toLowerCase())) {
+            if (url.startsWith(mRedirectUri.toLowerCase())) {
                 Uri uri = Uri.parse(url);
                 String code = uri.getQueryParameter("code");
                 if (code == null || code.isEmpty()) {
                     mAuthListener.onFailed(new SparkError());
                     return false;
                 }
-                setAuthCode(code);
-                Log.d(TAG, "access code: " + getAuthCode());
+                mAuthCode = code;
 
                 mWebView.clearCache(true);
                 mWebView.loadUrl("about:blank");
 
-                mOAuthStategyDelegate.setAuthCode(getAuthCode());
-                mOAuthStategyDelegate.authorize(mAuthListener);
+                mAuthService.getToken(mClientId, mClientSecret, mRedirectUri, AUTHORIZATION_CODE, mAuthCode)
+                        .enqueue(new Callback<OAuth2Tokens>() {
+                            @Override
+                            public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
+                                mToken = response.body();
+                                if (mToken != null && mToken.getAccessToken() != null && !mToken.getAccessToken().isEmpty())
+                                    mAuthListener.onSuccess(mToken);
+                                else
+                                    mAuthListener.onFailed(new SparkError(SERVER_ERROR, "" + response.code()));
+                            }
 
+                            @Override
+                            public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
+                                mAuthListener.onFailed(new SparkError(SERVER_ERROR, "Unknown error"));
+                            }
+                        });
                 return false;
             }
             return super.shouldOverrideUrlLoading(view, url);
@@ -225,19 +224,35 @@ public class OAuthWebViewStrategy implements Authenticator {
 
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            Log.d(TAG, "" + errorCode + " " + description + " " + failingUrl);
             mAuthListener.onFailed(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
         @Override
         public void onReceivedSslError(WebView view, final SslErrorHandler handler, SslError error) {
-            Log.e(TAG, error.toString());
             handler.cancel();
             if (error != null) {
                 mAuthListener.onFailed(new SparkError(SERVER_ERROR, error.toString()));
-            } else
-                Log.w(TAG, new Exception("SSLError unknown"));
+            } else {
+                mAuthListener.onFailed(new SparkError(SERVER_ERROR, "unknown error"));
+            }
         }
+    }
+
+    private interface AuthService {
+        @FormUrlEncoded
+        @POST("access_token")
+        Call<OAuth2Tokens> getToken(@Field("client_id") String client_id,
+                                    @Field("client_secret") String client_secret,
+                                    @Field("redirect_uri") String redirect_uri,
+                                    @Field("grant_type") String grant_type,
+                                    @Field("code") String code);
+
+        @FormUrlEncoded
+        @POST("access_token")
+        Call<OAuth2Tokens> refreshToken(@Field("client_id") String client_id,
+                                        @Field("client_secret") String client_secret,
+                                        @Field("refresh_token") String refresh_token,
+                                        @Field("grant_type") String grant_type);
     }
 }

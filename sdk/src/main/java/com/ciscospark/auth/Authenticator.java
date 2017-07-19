@@ -30,11 +30,16 @@ package com.ciscospark.auth;
  */
 public interface Authenticator {
 
-    void authorize(AuthorizeListener listener);
+    /**
+     * REMOVE to align with iOS sdk
+     * Why an Authenticator interface do not have authorize method?
+     * violate the basic design principle: Dependency Inversion Principle
+     */
+    //void authorize(AuthorizeListener listener);
 
     void deauthorize();
 
-    String accessToken();
+    void accessToken(AuthorizeListener listener);
 
     boolean isAuthorized();
 

@@ -22,6 +22,7 @@
 
 package com.ciscospark.auth;
 
+import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.ciscospark.common.SparkError;
 
 /**
@@ -37,7 +38,7 @@ public interface AuthorizeListener {
         UNEXPECTED_ERROR
     }
 
-    void onSuccess();
+    void onSuccess(OAuth2AccessToken accessToken);
 
     void onFailed(SparkError<AuthError> error);
 }

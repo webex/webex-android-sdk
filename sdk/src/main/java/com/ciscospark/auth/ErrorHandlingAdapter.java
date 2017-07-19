@@ -80,27 +80,31 @@ final class ErrorHandlingAdapter {
             call.enqueue(new Callback<T>() {
                 @Override public void onResponse(Call<T> call, Response<T> response) {
 
-                    int code = response.code();
-                    if (code >= 200 && code < 300) {
-                        callback.success(response);
-                    } else if (code == 401) {
-                        callback.unauthenticated(response);
-                    } else if (code >= 400 && code < 500) {
-                        callback.clientError(response);
-                    } else if (code >= 500 && code < 600) {
-                        callback.serverError(response);
-                    } else {
-                        callback.unexpectedError(new RuntimeException("Unexpected response " + response));
-                    }
+                    callbackExecutor.execute(()-> {
+                        int code = response.code();
+                        if (code >= 200 && code < 300) {
+                            callback.success(response);
+                        } else if (code == 401) {
+                            callback.unauthenticated(response);
+                        } else if (code >= 400 && code < 500) {
+                            callback.clientError(response);
+                        } else if (code >= 500 && code < 600) {
+                            callback.serverError(response);
+                        } else {
+                            callback.unexpectedError(new RuntimeException("Unexpected response " + response));
+                        }
+                    });
                 }
 
                 @Override public void onFailure(Call<T> call, Throwable t) {
 
-                    if (t instanceof IOException) {
-                        callback.networkError((IOException) t);
-                    } else {
-                        callback.unexpectedError(t);
-                    }
+                    callbackExecutor.execute(()-> {
+                        if (t instanceof IOException) {
+                            callback.networkError((IOException) t);
+                        } else {
+                            callback.unexpectedError(t);
+                        }
+                    });
                 }
             });
         }

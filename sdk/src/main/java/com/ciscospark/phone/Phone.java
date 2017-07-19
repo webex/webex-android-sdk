@@ -28,6 +28,7 @@ import android.util.Log;
 
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
+import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
@@ -85,6 +86,7 @@ import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.sync.ActorRecord;
 import com.ciscospark.Spark;
+import com.ciscospark.auth.AuthorizeListener;
 import com.ciscospark.common.SparkError;
 import com.ciscospark.core.SparkApplication;
 import com.webex.wseclient.WseSurfaceView;
@@ -179,7 +181,6 @@ public class Phone {
     private Runnable mTimeRunnable;
 
 
-
     //keep activitied call reference
 
     private Call mActiveCall;
@@ -188,14 +189,13 @@ public class Phone {
     //it is used to save call  period between dial and get first locus feed back.
     private Call mDialoutCall;
 
-    private  DialObserver mdialObserver;
+    private DialObserver mdialObserver;
 
 
     private IncomingCallObserver incomingCallObserver;
 
     /**
      * @deprecated
-     *
      */
     public Phone(Spark spark) {
         Log.i(TAG, "Phone: ->start");
@@ -215,7 +215,6 @@ public class Phone {
 
 
         Log.i(TAG, "Phone: ->end");
-
 
 
     }
@@ -250,8 +249,7 @@ public class Phone {
 
 
     /**
-     * @deprecated
-     * Close.
+     * @deprecated Close.
      */
     //release eventbus.
     //clean data from common lib,to prevent automatically register
@@ -270,17 +268,7 @@ public class Phone {
 
     private boolean isAuthorized() {
         Log.i(TAG, "isAuthorized: ->");
-
-        if (this.mspark.getStrategy().accessToken() == null) {
-
-            Log.i(TAG, "register: -> no valid Token");
-
-            return false;
-
-        }
-
-        return true;
-
+        return this.mspark.getStrategy().isAuthorized();
     }
 
 
@@ -293,10 +281,11 @@ public class Phone {
 
         Log.i(TAG, "register: ->start");
 
+        this.mRegisterListener = listener;
         if (!isAuthorized()) {
 
             //not authorized
-            SparkError error = new SparkError(null,ErrorNotAuthorized);
+            SparkError error = new SparkError(null, ErrorNotAuthorized);
 
             listener.onFailed(error);
 
@@ -307,29 +296,36 @@ public class Phone {
 
         OAuth2Tokens tokens = new OAuth2Tokens();
 
-        tokens.update(this.mspark.getStrategy().accessToken());
+        this.mspark.getStrategy().accessToken(new AuthorizeListener() {
+            @Override
+            public void onSuccess(OAuth2AccessToken accessToken) {
+                tokens.update(accessToken);
+                String email1 = "";
+                String name1 = "";
+
+                AuthenticatedUser authenticatedUser = new AuthenticatedUser(email1, new ActorRecord.ActorKey(email1), name1, tokens, "Unknown", null, 0, null);
+
+                Log.i(TAG, "->after new AuthenticatedUser");
+
+                apiTokenProvider.setAuthenticatedUser(authenticatedUser);
+
+                Log.i(TAG, "->after setAuthenticatedUser");
 
 
-        String email1 = "";
-        String name1 = "";
-
-        AuthenticatedUser authenticatedUser = new AuthenticatedUser(email1, new ActorRecord.ActorKey(email1), name1, tokens, "Unknown", null, 0, null);
-
-        Log.i(TAG, "->after new AuthenticatedUser");
-
-        apiTokenProvider.setAuthenticatedUser(authenticatedUser);
-
-        Log.i(TAG, "->after setAuthenticatedUser");
-
-        this.mRegisterListener = listener;
-
-        new AuthenticatedUserTask(applicationController).execute();
+                new AuthenticatedUserTask(applicationController).execute();
 
 
-        //start to monitor register timeout
-        startRegisterTimer(Constant.timeout);
+                //start to monitor register timeout
+                startRegisterTimer(Constant.timeout);
 
-        Log.i(TAG, "register: ->end ");
+                Log.i(TAG, "register: ->end ");
+            }
+
+            @Override
+            public void onFailed(SparkError<AuthError> error) {
+                listener.onFailed(new SparkError());
+            }
+        });
     }
 
 
@@ -343,7 +339,7 @@ public class Phone {
 
                 if (!Phone.this.isRegisterInWDM) {
                     if (Phone.this.mRegisterListener != null) {
-                        SparkError error = new SparkError(null,ErrorTimeout);
+                        SparkError error = new SparkError(null, ErrorTimeout);
                         Phone.this.mRegisterListener.onFailed(error);
                     }
                 }
@@ -376,7 +372,7 @@ public class Phone {
     //hang up current active call
     protected void hangup() {
         Log.i(TAG, "hangup: ->Start");
-        if ((this.mActiveCall == null)&&(this.mDialoutCall == null) ){
+        if ((this.mActiveCall == null) && (this.mDialoutCall == null)) {
             Log.i(TAG, " no active call neither dialout call");
             return;
         }
@@ -432,17 +428,17 @@ public class Phone {
 
         if (!this.isRegisterInWDM) {
             Log.i(TAG, "register wdm failed");
-            SparkError error = new SparkError(null,DialObserver.ErrorStatus);
+            SparkError error = new SparkError(null, DialObserver.ErrorStatus);
 
             observer.onFailed(error);
             return;
         }
 
         //an active call is ongoing , or a dialout is ongoning but not get locus feedback yet
-        if ((this.mActiveCall != null) ||(this.mDialoutCall != null)) {
+        if ((this.mActiveCall != null) || (this.mDialoutCall != null)) {
 
             Log.i(TAG, "isInActivitiedCall");
-            SparkError error = new SparkError(null,DialObserver.ErrorStatus);
+            SparkError error = new SparkError(null, DialObserver.ErrorStatus);
 
             observer.onFailed(error);
             return;
@@ -451,7 +447,7 @@ public class Phone {
 
         if (!setCallOption(option)) {
             Log.i(TAG, "setCallOption failed");
-            SparkError error = new SparkError(null,DialObserver.ErrorParameter);
+            SparkError error = new SparkError(null, DialObserver.ErrorParameter);
 
             observer.onFailed(error);
             //observer.onFailed(DialObserver.ErrorCode.ERROR_PARAMETER);
@@ -509,7 +505,6 @@ public class Phone {
 
             //save call
             this.mDialoutCall = call;
-
 
 
             //joinCall will trigger permission synchronouslly
@@ -587,7 +582,7 @@ public class Phone {
 
                 //notify UI why this call is dead,
                 if (this.mActiveCall.getObserver() != null) {
-                    this.mActiveCall.getObserver().onDisconnected(this.mActiveCall, reason,errorInfo);
+                    this.mActiveCall.getObserver().onDisconnected(this.mActiveCall, reason, errorInfo);
                 }
 
                 this.calllist.remove(j);
@@ -616,11 +611,9 @@ public class Phone {
     }
 
 
-
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     //registed a WDM successfully
     public void onEventMainThread(DeviceRegistrationChangedEvent event) {
@@ -653,9 +646,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     //request camera and microphone permission
     public void onEventMainThread(RequestCallingPermissions event) {
@@ -672,12 +664,12 @@ public class Phone {
         }
 
         //notify dialobserver to approval permission
-        if(this.mdialObserver == null){
+        if (this.mdialObserver == null) {
             Log.i(TAG, "Something is Wrong, how mdialObserver is null");
             return;
         }
 
-        SparkError error = new SparkError(null,ErrorPermission);
+        SparkError error = new SparkError(null, ErrorPermission);
 
         this.mdialObserver.onFailed(error);
 
@@ -727,9 +719,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     //locus has create call,waiting remote to accept
     public void onEventMainThread(CallControlLocusCreatedEvent event) {
@@ -738,15 +729,13 @@ public class Phone {
 
         //save locuskey into call object
         //this.mActiveCall.locusKey = event.getLocusKey();
-        if(this.mDialoutCall == null){
+        if (this.mDialoutCall == null) {
             //sometimes same locus creation event will be sent twice or more
 
-            if(event.getLocusKey() == this.mActiveCall.locusKey){
+            if (event.getLocusKey() == this.mActiveCall.locusKey) {
                 Log.i(TAG, "Get same locus event again and SAME locus key! ");
-            }
-            else
-            {
-                Log.i(TAG, "Get same locus event again But NOT SAME locus key!" );
+            } else {
+                Log.i(TAG, "Get same locus event again But NOT SAME locus key!");
             }
 
             return;
@@ -761,7 +750,6 @@ public class Phone {
         this.mActiveCall = this.mDialoutCall;
 
 
-
         this.mdialObserver.onSuccess(this.mActiveCall);
 
         this.mdialObserver = null;
@@ -771,9 +759,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlParticipantLeftEvent event) {
 
@@ -789,16 +776,15 @@ public class Phone {
             Log.i(TAG, "ActiveCall is end by remoted");
 
             this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason
-                    .remoteHangUP,null);
+                    .remoteHangUP, null);
 
         }
 
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlSelfParticipantLeftEvent event) {
 
@@ -814,7 +800,7 @@ public class Phone {
             Log.i(TAG, "ActiveCall is ended");
 
             this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason
-                    .selfHangUP,null);
+                    .selfHangUP, null);
 
 
         }
@@ -822,9 +808,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     //case 1: call is rejected by remoted
     public void onEventMainThread(CallControlLeaveLocusEvent event) {
@@ -842,15 +827,14 @@ public class Phone {
 
             Log.i(TAG, "Call is Rejected ");
             this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason
-                    .remoteReject,null);
+                    .remoteReject, null);
         }
     }
 
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlEndLocusEvent event) {
 
@@ -876,15 +860,14 @@ public class Phone {
     //for exampple, self calling.
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlCallJoinErrorEvent event) {
 
         Log.i(TAG, "CallControlCallJoinErrorEvent is received ");
         //no Activecall and no dialoutcall
-        if( (this.mActiveCall == null)&&(this.mDialoutCall == null)) {
+        if ((this.mActiveCall == null) && (this.mDialoutCall == null)) {
             Log.i(TAG, "no Activecall neither dialoutcall,something wrong");
             return;
         }
@@ -892,10 +875,10 @@ public class Phone {
 
         //
 
-        if(this.mDialoutCall != null){
+        if (this.mDialoutCall != null) {
 
             Log.i(TAG, "notify dial observer failed ");
-            SparkError error = new SparkError(null,ErrorCallJoin);
+            SparkError error = new SparkError(null, ErrorCallJoin);
             this.mdialObserver.onFailed(error);
 
             this.mdialObserver = null;
@@ -905,7 +888,7 @@ public class Phone {
 
         }
 
-        if(this.mActiveCall != null ){
+        if (this.mActiveCall != null) {
 
             Log.i(TAG, "during Activecall,receive CallJoinError ");
 
@@ -930,9 +913,8 @@ public class Phone {
 
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     //remoted send acknowledge and it means it is RINGING
     public void onEventMainThread(ParticipantNotifiedEvent event) {
@@ -960,9 +942,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     //remote accept call, call will be setup
     public void onEventMainThread(CallControlParticipantJoinedEvent event) {
@@ -986,9 +967,8 @@ public class Phone {
 
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     // receive INCOMING call
     @SuppressWarnings("UnusedDeclaration")
@@ -1008,9 +988,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     @SuppressWarnings("UnusedDeclaration")
     public void onEventMainThread(ParticipantJoinedEvent event) {
@@ -1018,18 +997,16 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(IncomingCallEvent event) {
         Log.i(TAG, "IncomingCallEvent " + event.getLocusKey());
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallNotificationRemoveEvent event) {
         Log.i(TAG, "CallNotification remove event" + event.getLocusKey());
@@ -1045,18 +1022,16 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallNotificationUpdateEvent event) {
         Log.i(TAG, "CallNotification update event" + event.getLocusKey());
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlDisableVideoEvent event) {
 
@@ -1065,9 +1040,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlDisconnectedEvent event) {
 
@@ -1077,9 +1051,8 @@ public class Phone {
 
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlEndWhiteboardShare event) {
 
@@ -1088,9 +1061,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlFloorGrantedEvent event) {
 
@@ -1099,9 +1071,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlFloorReleasedEvent event) {
 
@@ -1110,9 +1081,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlHeldEvent event) {
 
@@ -1121,9 +1091,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlInvalidLocusEvent event) {
 
@@ -1132,9 +1101,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlJoinedLobbyEvent event) {
 
@@ -1143,9 +1111,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlJoinedMeetingEvent event) {
 
@@ -1155,9 +1122,8 @@ public class Phone {
 
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlLocalAudioMutedEvent event) {
 
@@ -1166,9 +1132,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlLocalVideoMutedEvent event) {
 
@@ -1177,9 +1142,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlLocusChangedEvent event) {
 
@@ -1188,9 +1152,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlLocusPmrChangedEvent event) {
 
@@ -1199,9 +1162,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlLostEvent event) {
 
@@ -1210,9 +1172,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlMediaDeviceListenersRegisteredEvent event) {
 
@@ -1221,8 +1182,8 @@ public class Phone {
     }
 
     /**
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlMeetingControlsEvent event) {
 
@@ -1231,8 +1192,8 @@ public class Phone {
     }
 
     /**
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlMeetingControlsExpelEvent event) {
 
@@ -1241,8 +1202,8 @@ public class Phone {
     }
 
     /**
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlMeetingControlsLockEvent event) {
 
@@ -1251,8 +1212,8 @@ public class Phone {
     }
 
     /**
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlMeetingControlsStatusEvent event) {
 
@@ -1261,8 +1222,8 @@ public class Phone {
     }
 
     /**
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlMeetingNotStartedEvent event) {
 
@@ -1271,9 +1232,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlMeetingRecordEvent event) {
 
@@ -1282,9 +1242,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlModeratorMutedParticipantEvent event) {
 
@@ -1293,9 +1252,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlNumericDialingPreventedEvent event) {
 
@@ -1304,9 +1262,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlParticipantAudioMuteEvent event) {
 
@@ -1315,9 +1272,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlParticipantChangedEvent event) {
 
@@ -1327,9 +1283,8 @@ public class Phone {
 
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
 
@@ -1338,9 +1293,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlPhoneStateChangedEvent event) {
 
@@ -1349,9 +1303,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlReconnectEvent event) {
 
@@ -1360,9 +1313,8 @@ public class Phone {
     }
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlResumedEvent event) {
 
@@ -1372,9 +1324,8 @@ public class Phone {
 
 
     /**
-     *
-     * @deprecated
      * @param event the event
+     * @deprecated
      */
     public void onEventMainThread(CallControlViewWhiteboardShare event) {
 
