@@ -28,6 +28,8 @@ import android.annotation.TargetApi;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.SslErrorHandler;
@@ -37,6 +39,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.ciscospark.common.SparkError;
 
@@ -76,6 +79,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     private OAuth2Tokens mToken = null;
     private AuthService mAuthService;
     private AuthorizeListener mAuthListener;
+    private final AuthListenerDelegate delegate = new AuthListenerDelegate();
 
 
     /**
@@ -98,7 +102,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
         mAuthService = retrofit.create(AuthService.class);
     }
 
-    public void authorize(WebView webView, AuthorizeListener listener) {
+    public void authorize(WebView webView, @NonNull AuthorizeListener listener) {
         this.mWebView = webView;
         mAuthListener = listener;
         initWebView();
@@ -116,7 +120,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
 
     @Override
     public void accessToken(AuthorizeListener listener) {
-        if (!isAuthorized()) {
+        if (isAuthorized()) {
             listener.onSuccess(mToken);
         } else {
             if (mToken.shouldRefreshNow()) {
@@ -143,7 +147,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
 
     @Override
     public boolean isAuthorized() {
-        return (mToken != null) && (mToken.getAccessToken() != null) && mToken.getAccessToken().isEmpty();
+        return (mToken != null) && (mToken.getAccessToken() != null) && !mToken.getAccessToken().isEmpty();
     }
 
     private String buildCodeGrantUrl() {
@@ -187,10 +191,11 @@ public class OAuthWebViewAuthenticator implements Authenticator {
                 Uri uri = Uri.parse(url);
                 String code = uri.getQueryParameter("code");
                 if (code == null || code.isEmpty()) {
-                    mAuthListener.onFailed(new SparkError());
+                    delegate.onFailed(new SparkError(SERVER_ERROR, "invalid auth code"));
                     return false;
                 }
                 mAuthCode = code;
+                Log.d("OAUTH2", code);
 
                 mWebView.clearCache(true);
                 mWebView.loadUrl("about:blank");
@@ -200,15 +205,18 @@ public class OAuthWebViewAuthenticator implements Authenticator {
                             @Override
                             public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
                                 mToken = response.body();
-                                if (mToken != null && mToken.getAccessToken() != null && !mToken.getAccessToken().isEmpty())
-                                    mAuthListener.onSuccess(mToken);
-                                else
-                                    mAuthListener.onFailed(new SparkError(SERVER_ERROR, "" + response.code()));
+                                if (isAuthorized()) {
+                                    Log.d("OAUTH2", mToken.getAccessToken());
+                                    mToken.recordOptimisticRefreshTime();
+                                    delegate.onSuccess(mToken);
+                                } else
+                                    Log.d("OAUTH2", response.errorBody().toString());
+                                    delegate.onFailed(new SparkError(SERVER_ERROR, "" + response.code()));
                             }
 
                             @Override
                             public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
-                                mAuthListener.onFailed(new SparkError(SERVER_ERROR, "Unknown error"));
+                                delegate.onFailed(new SparkError(SERVER_ERROR, "Unknown error"));
                             }
                         });
                 return false;
@@ -224,7 +232,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
 
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            mAuthListener.onFailed(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
+            delegate.onFailed(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
@@ -232,9 +240,28 @@ public class OAuthWebViewAuthenticator implements Authenticator {
         public void onReceivedSslError(WebView view, final SslErrorHandler handler, SslError error) {
             handler.cancel();
             if (error != null) {
-                mAuthListener.onFailed(new SparkError(SERVER_ERROR, error.toString()));
+                delegate.onFailed(new SparkError(SERVER_ERROR, error.toString()));
             } else {
-                mAuthListener.onFailed(new SparkError(SERVER_ERROR, "unknown error"));
+                delegate.onFailed(new SparkError(SERVER_ERROR, "unknown error"));
+            }
+        }
+    }
+
+    private final class AuthListenerDelegate implements AuthorizeListener {
+
+        @Override
+        public void onSuccess(OAuth2AccessToken accessToken) {
+            if (mAuthListener != null) {
+                mAuthListener.onSuccess(accessToken);
+                mAuthListener = null;
+            }
+        }
+
+        @Override
+        public void onFailed(SparkError<AuthError> error) {
+            if (mAuthListener != null) {
+                mAuthListener.onFailed(error);
+                mAuthListener = null;
             }
         }
     }
