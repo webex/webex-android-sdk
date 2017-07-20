@@ -23,6 +23,8 @@
 package com.ciscospark.auth;
 
 
+import android.util.Log;
+
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.ciscospark.common.SparkError;
 import com.google.gson.annotations.SerializedName;
@@ -57,6 +59,7 @@ public class JWTStrategy implements AuthorizationStrategy {
     private JwtToken mToken = null;
     private String mAuthCode;
     private AuthService mAuthService;
+    private static final String TAG = "JWTStrategy";
 
     public JWTStrategy(String authcode) {
         setAuthCode(authcode);
@@ -87,10 +90,22 @@ public class JWTStrategy implements AuthorizationStrategy {
             @Override
             public void success(Response<JwtToken> response) {
                 mToken = response.body();
-                if (mToken == null)
-                    listener.onFailed(new SparkError(CLIENT_ERROR, response.errorBody().toString()));
-                else
-                    listener.onSuccess();
+                if (mToken == null){
+                    if(listener !=null){
+                        listener.onFailed(new SparkError(CLIENT_ERROR, response.errorBody().toString()));
+                    }else{
+                        Log.i(TAG,"listener is null");
+                    }
+                }else{
+                    if(listener !=null){
+                        listener.onSuccess();
+                    }else{
+                        Log.i(TAG,"listener is null");
+                    }
+
+                }
+
+
             }
 
             @Override

@@ -298,7 +298,13 @@ public class Phone {
             //not authorized
             SparkError error = new SparkError(null,ErrorNotAuthorized);
 
-            listener.onFailed(error);
+            //listener.onFailed(error);
+            if(listener != null){
+                listener.onFailed(error);
+            }else{
+                Log.i(TAG,"listener is null");
+            }
+
 
 
             return;
@@ -344,7 +350,13 @@ public class Phone {
                 if (!Phone.this.isRegisterInWDM) {
                     if (Phone.this.mRegisterListener != null) {
                         SparkError error = new SparkError(null,ErrorTimeout);
-                        Phone.this.mRegisterListener.onFailed(error);
+
+                        //Phone.this.mRegisterListener.onFailed(error);
+                        if(Phone.this.mRegisterListener != null){
+                            Phone.this.mRegisterListener.onFailed(error);
+                        }else{
+                            Log.i(TAG,"Phone.this.mRegisterListener is null");
+                        }
                     }
                 }
             }
@@ -366,7 +378,13 @@ public class Phone {
 
         this.logout();
 
-        listener.onSuccess();
+        //listener.onSuccess();
+        if(listener != null){
+            listener.onSuccess();
+        }else{
+            Log.i(TAG,"listener is null");
+        }
+
 
     }
 
@@ -434,7 +452,12 @@ public class Phone {
             Log.i(TAG, "register wdm failed");
             SparkError error = new SparkError(null,DialObserver.ErrorStatus);
 
-            observer.onFailed(error);
+            //observer.onFailed(error);
+            if(observer != null){
+                observer.onFailed(error);
+            }else{
+                Log.i(TAG,"observer is null");
+            }
             return;
         }
 
@@ -444,7 +467,13 @@ public class Phone {
             Log.i(TAG, "isInActivitiedCall");
             SparkError error = new SparkError(null,DialObserver.ErrorStatus);
 
-            observer.onFailed(error);
+            //observer.onFailed(error);
+            if(observer != null){
+                observer.onFailed(error);
+            }else{
+                Log.i(TAG,"observer is null");
+            }
+
             return;
         }
 
@@ -453,7 +482,12 @@ public class Phone {
             Log.i(TAG, "setCallOption failed");
             SparkError error = new SparkError(null,DialObserver.ErrorParameter);
 
-            observer.onFailed(error);
+            //observer.onFailed(error);
+            if(observer != null){
+                observer.onFailed(error);
+            }else{
+                Log.i(TAG,"observer is null");
+            }
             //observer.onFailed(DialObserver.ErrorCode.ERROR_PARAMETER);
             return;
         }
@@ -591,6 +625,8 @@ public class Phone {
                 //notify UI why this call is dead,
                 if (this.mActiveCall.getObserver() != null) {
                     this.mActiveCall.getObserver().onDisconnected(this.mActiveCall, reason,errorInfo);
+                }else{
+                    Log.i(TAG, "removeCallAndMarkIt: getOvserver is null");
                 }
 
                 this.calllist.remove(j);
@@ -652,7 +688,15 @@ public class Phone {
 
             SparkError error = new SparkError(null,"Error451");
 
-            this.mRegisterListener.onFailed(error);
+
+
+            //this.mRegisterListener.onFailed(error);
+            if(this.mRegisterListener!= null){
+                this.mRegisterListener.onFailed(error);
+            }else{
+                Log.i(TAG,"mRegisterListener is null");
+            }
+
 
             this.mTimeHandler.removeCallbacks(this.mTimeRunnable);
 
@@ -660,7 +704,13 @@ public class Phone {
         }
 
 
-        this.mRegisterListener.onSuccess();
+        //this.mRegisterListener.onSuccess();
+        if(this.mRegisterListener != null){
+            this.mRegisterListener.onSuccess();
+        }else{
+            Log.i(TAG,"mRegisterListener is null");
+        }
+
 
         //successfully registered
         this.isRegisterInWDM = true;
@@ -699,7 +749,12 @@ public class Phone {
 
         SparkError error = new SparkError(null,ErrorPermission);
 
-        this.mdialObserver.onFailed(error);
+        //this.mdialObserver.onFailed(error);
+        if(this.mdialObserver != null){
+            this.mdialObserver.onFailed(error);
+        }else{
+            Log.i(TAG,"mdialObserver is null");
+        }
 
         this.mdialObserver.onPermissionRequired(permissions);
 
@@ -784,7 +839,13 @@ public class Phone {
 
 
 
-        this.mdialObserver.onSuccess(this.mActiveCall);
+        //this.mdialObserver.onSuccess(this.mActiveCall);
+        if(this.mdialObserver != null){
+            this.mdialObserver.onSuccess(this.mActiveCall);
+        }else{
+            Log.i(TAG,"this.mdialObserver is null");
+        }
+
 
         this.mdialObserver = null;
         this.mDialoutCall = null;
@@ -918,7 +979,14 @@ public class Phone {
 
             Log.i(TAG, "notify dial observer failed ");
             SparkError error = new SparkError(null,ErrorCallJoin);
-            this.mdialObserver.onFailed(error);
+            //this.mdialObserver.onFailed(error);
+
+            if(this.mdialObserver != null){
+                this.mdialObserver.onFailed(error);
+            }else{
+                Log.i(TAG,"mdialObserver is null");
+            }
+
 
             this.mdialObserver = null;
             this.mDialoutCall = null;
@@ -969,7 +1037,12 @@ public class Phone {
 
 
         //notify ui
-        this.mActiveCall.getObserver().onRinging(this.mActiveCall);
+        if(this.mActiveCall.getObserver() != null){
+            this.mActiveCall.getObserver().onRinging(this.mActiveCall);
+        }else{
+            Log.i(TAG,"getObserver is null");
+        }
+
 
         //only show local and remoted video after remoted accept call
         /*
@@ -1003,7 +1076,13 @@ public class Phone {
         this.mActiveCall.status = Call.CallStatus.CONNECTED;
 
         //notify ui
-        this.mActiveCall.getObserver().onConnected(this.mActiveCall);
+        //this.mActiveCall.getObserver().onConnected(this.mActiveCall);
+        if(this.mActiveCall.getObserver() != null){
+            this.mActiveCall.getObserver().onConnected(this.mActiveCall);
+        }else{
+            Log.i(TAG,"getObserver is null");
+        }
+
     }
 
 
@@ -1025,8 +1104,13 @@ public class Phone {
             call.locusKey = event.getLocusKey();
             this.calllist.add(call);
 
-            if (incomingCallObserver != null) incomingCallObserver.onIncomingCall(call);
-        }
+            if (incomingCallObserver != null) {
+                incomingCallObserver.onIncomingCall(call);
+            }else{
+                Log.i(TAG, "onEventMainThread: incomingCallObserver is null");
+                }
+            }
+
     }
 
     /**

@@ -23,6 +23,8 @@
 package com.ciscospark.auth;
 
 
+import android.util.Log;
+
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.ciscospark.common.SparkError;
@@ -56,6 +58,8 @@ public class OAuthStrategy implements AuthorizationStrategy {
 
     private OAuth2Tokens mToken = null;
     private AuthService mAuthService;
+
+    private static final String TAG = "OAuthStrategy";
 
     /**
      * OAuth 2 authorize strategy.
@@ -96,15 +100,31 @@ public class OAuthStrategy implements AuthorizationStrategy {
                     @Override
                     public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
                         mToken = response.body();
-                        if (mToken != null)
-                            listener.onSuccess();
-                        else
-                            listener.onFailed(new SparkError());
+                        if (mToken != null){
+                            if(listener !=null){
+                                listener.onSuccess();
+                            }else{
+                                Log.i(TAG,"listener is null");
+                            }
+                        }
+
+                        else{
+                            if(listener !=null){
+                                listener.onFailed(new SparkError());
+                            }else{
+                                Log.i(TAG,"listener is null");
+                            }
+                        }
+
                     }
 
                     @Override
                     public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
-                        listener.onFailed(new SparkError());
+                        if(listener !=null){
+                            listener.onFailed(new SparkError());
+                        }else{
+                            Log.i(TAG,"listener is null");
+                        }
                     }
                 });
     }
