@@ -22,21 +22,24 @@
 
 package com.ciscospark.auth;
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
-
 /**
  * Authorization interface used by Spark
  *
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public interface AuthorizationStrategy {
+public interface Authenticator {
 
-    void authorize(AuthorizeListener listener);
+    /**
+     * REMOVE to align with iOS sdk
+     * Why an Authenticator interface do not have authorize method?
+     * violate the basic design principle: Dependency Inversion Principle
+     */
+    //void authorize(AuthorizeListener listener);
 
     void deauthorize();
 
-    OAuth2AccessToken getToken();
+    void accessToken(AuthorizeListener listener);
 
     boolean isAuthorized();
 

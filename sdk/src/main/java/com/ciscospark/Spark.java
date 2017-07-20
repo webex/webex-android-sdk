@@ -23,7 +23,7 @@
 package com.ciscospark;
 
 
-import com.ciscospark.auth.AuthorizationStrategy;
+import com.ciscospark.auth.Authenticator;
 import com.ciscospark.membership.MembershipClient;
 import com.ciscospark.message.MessageClient;
 import com.ciscospark.people.PeopleClient;
@@ -35,7 +35,7 @@ import com.ciscospark.team.TeamMembershipClient;
 
 
 public class Spark {
-    private AuthorizationStrategy strategy;
+    private Authenticator strategy;
     private Phone mPhone;
 
     public Spark() {
@@ -59,7 +59,7 @@ public class Spark {
         return Constant.Version;
     }
 
-    public void init(AuthorizationStrategy strategy) {
+    public void init(Authenticator strategy) {
 
         this.strategy = strategy;
     }
@@ -114,12 +114,12 @@ public class Spark {
         return new RoomClient();
     }
 
-    public void setStrategy(AuthorizationStrategy strategy) {
+    public void setStrategy(Authenticator strategy) {
         this.strategy = strategy;
     }
 
 
-    public AuthorizationStrategy getStrategy() {
+    public Authenticator getStrategy() {
         return this.strategy;
     }
 

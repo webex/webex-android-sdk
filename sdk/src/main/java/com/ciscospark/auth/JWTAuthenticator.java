@@ -23,7 +23,10 @@
 package com.ciscospark.auth;
 
 
+
 import android.util.Log;
+
+import com.cisco.spark.android.authenticator.OAuth2;
 
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.ciscospark.common.SparkError;
@@ -55,14 +58,14 @@ import static com.ciscospark.auth.Constant.JWT_BASE_URL;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class JWTStrategy implements AuthorizationStrategy {
+public class JWTAuthenticator implements Authenticator {
     private JwtToken mToken = null;
     private String mAuthCode;
     private AuthService mAuthService;
     private static final String TAG = "JWTStrategy";
 
-    public JWTStrategy(String authcode) {
-        setAuthCode(authcode);
+    public void authorize(String jwt) {
+        mAuthCode = jwt;
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(JWT_BASE_URL)
@@ -72,92 +75,73 @@ public class JWTStrategy implements AuthorizationStrategy {
         mAuthService = retrofit.create(AuthService.class);
     }
 
-    /* Used for mock test */
-    JWTStrategy(String authCode, String base_url) {
-        setAuthCode(authCode);
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(base_url)
-                .addCallAdapterFactory(new ErrorHandlingCallAdapterFactory())
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        mAuthService = retrofit.create(AuthService.class);
-    }
-
-    @Override
-    public void authorize(AuthorizeListener listener) {
-        mAuthService.getToken(getAuthCode()).enqueue(new ErrorHandlingCallback<JwtToken>() {
-            @Override
-            public void success(Response<JwtToken> response) {
-                mToken = response.body();
-                if (mToken == null){
-                    if(listener !=null){
-                        listener.onFailed(new SparkError(CLIENT_ERROR, response.errorBody().toString()));
-                    }else{
-                        Log.i(TAG,"listener is null");
-                    }
-                }else{
-                    if(listener !=null){
-                        listener.onSuccess();
-                    }else{
-                        Log.i(TAG,"listener is null");
-                    }
-
-                }
-
-
-            }
-
-            @Override
-            public void unauthenticated(Response<?> response) {
-                listener.onFailed(new SparkError(UNAUTHENTICATED, Integer.toString(response.code())));
-            }
-
-            @Override
-            public void clientError(Response<?> response) {
-                listener.onFailed(new SparkError(CLIENT_ERROR, Integer.toString(response.code())));
-            }
-
-            @Override
-            public void serverError(Response<?> response) {
-                listener.onFailed(new SparkError(SERVER_ERROR, Integer.toString(response.code())));
-            }
-
-            @Override
-            public void networkError(IOException e) {
-                listener.onFailed(new SparkError(NETWORK_ERROR, "network error"));
-            }
-
-            @Override
-            public void unexpectedError(Throwable t) {
-                listener.onFailed(new SparkError(UNEXPECTED_ERROR, "unknown error"));
-            }
-        });
-    }
 
     @Override
     public void deauthorize() {
+        mAuthCode = null;
         mToken = null;
     }
 
     @Override
-    public OAuth2AccessToken getToken() {
-        return mToken;
+    public void accessToken(AuthorizeListener listener) {
+        if (!isAuthorized()) {
+            listener.onFailed(new SparkError(UNAUTHENTICATED, "no jwt token"));
+            return;
+        }
+
+        if (mToken == null || mToken.shoudlRefetchTokenNow()) {
+            mAuthService.getToken(mAuthCode).enqueue(new ErrorHandlingCallback<JwtToken>() {
+                @Override
+                public void success(Response<JwtToken> response) {
+                    mToken = response.body();
+                    if (mToken == null) {
+                        deauthorize();
+                        listener.onFailed(new SparkError(CLIENT_ERROR, response.errorBody().toString()));
+                    } else {
+                        mToken.recordOptimisticRefreshTime();
+                        listener.onSuccess(mToken);
+                    }
+                }
+
+                @Override
+                public void unauthenticated(Response<?> response) {
+                    deauthorize();
+                    listener.onFailed(new SparkError(UNAUTHENTICATED, Integer.toString(response.code())));
+                }
+
+                @Override
+                public void clientError(Response<?> response) {
+                    deauthorize();
+                    listener.onFailed(new SparkError(CLIENT_ERROR, Integer.toString(response.code())));
+                }
+
+                @Override
+                public void serverError(Response<?> response) {
+                    deauthorize();
+                    listener.onFailed(new SparkError(SERVER_ERROR, Integer.toString(response.code())));
+                }
+
+                @Override
+                public void networkError(IOException e) {
+                    deauthorize();
+                    listener.onFailed(new SparkError(NETWORK_ERROR, "network error"));
+                }
+
+                @Override
+                public void unexpectedError(Throwable t) {
+                    deauthorize();
+                    listener.onFailed(new SparkError(UNEXPECTED_ERROR, "unknown error"));
+                }
+            });
+        } else {
+            listener.onSuccess(mToken);
+        }
     }
 
     @Override
     public boolean isAuthorized() {
-        return (mToken != null);
+        return mAuthCode != null && !mAuthCode.isEmpty();
     }
-
-    public String getAuthCode() {
-        return mAuthCode;
-    }
-
-    public void setAuthCode(String mAuthCode) {
-        this.mAuthCode = mAuthCode;
-    }
-
 
     interface AuthService {
         @POST("login")
@@ -185,6 +169,10 @@ public class JWTStrategy implements AuthorizationStrategy {
         @Override
         public boolean shouldRefreshNow() {
             return false;
+        }
+
+        boolean shoudlRefetchTokenNow() {
+            return super.shouldRefreshNow();
         }
     }
 }
