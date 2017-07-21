@@ -23,28 +23,21 @@
 package com.ciscospark.auth;
 
 
-import com.cisco.spark.android.authenticator.OAuth2;
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.ciscospark.common.SparkError;
 import com.google.gson.annotations.SerializedName;
 
-import java.io.IOException;
-
+import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 
-import com.ciscospark.auth.ErrorHandlingAdapter.ErrorHandlingCallAdapterFactory;
-import com.ciscospark.auth.ErrorHandlingAdapter.ErrorHandlingCall;
-import com.ciscospark.auth.ErrorHandlingAdapter.ErrorHandlingCallback;
-
-import static com.ciscospark.auth.AuthorizeListener.AuthError.CLIENT_ERROR;
 import static com.ciscospark.auth.AuthorizeListener.AuthError.NETWORK_ERROR;
 import static com.ciscospark.auth.AuthorizeListener.AuthError.SERVER_ERROR;
 import static com.ciscospark.auth.AuthorizeListener.AuthError.UNAUTHENTICATED;
-import static com.ciscospark.auth.AuthorizeListener.AuthError.UNEXPECTED_ERROR;
 import static com.ciscospark.auth.Constant.JWT_BASE_URL;
 
 /**
@@ -64,7 +57,6 @@ public class JWTAuthenticator implements Authenticator {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(JWT_BASE_URL)
-                .addCallAdapterFactory(new ErrorHandlingCallAdapterFactory())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         mAuthService = retrofit.create(AuthService.class);
@@ -79,56 +71,37 @@ public class JWTAuthenticator implements Authenticator {
     @Override
     public void accessToken(AuthorizeListener listener) {
         if (!isAuthorized()) {
-            listener.onFailed(new SparkError(UNAUTHENTICATED, "no jwt token"));
+            if (listener != null)
+                listener.onFailed(new SparkError<>(UNAUTHENTICATED, "no jwt token"));
             return;
         }
 
         if (mToken == null || mToken.shoudlRefetchTokenNow()) {
-            mAuthService.getToken(mAuthCode).enqueue(new ErrorHandlingCallback<JwtToken>() {
+            mAuthService.getToken(mAuthCode).enqueue(new Callback<JwtToken>() {
                 @Override
-                public void success(Response<JwtToken> response) {
+                public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
                     mToken = response.body();
                     if (mToken == null) {
                         deauthorize();
-                        listener.onFailed(new SparkError(CLIENT_ERROR, response.errorBody().toString()));
+                        if (listener != null)
+                            listener.onFailed(new SparkError<>(SERVER_ERROR, String.valueOf(response.code())));
                     } else {
                         mToken.recordOptimisticRefreshTime();
-                        listener.onSuccess(mToken);
+                        if (listener != null)
+                            listener.onSuccess(mToken);
                     }
                 }
 
                 @Override
-                public void unauthenticated(Response<?> response) {
+                public void onFailure(Call<JwtToken> call, Throwable t) {
                     deauthorize();
-                    listener.onFailed(new SparkError(UNAUTHENTICATED, Integer.toString(response.code())));
-                }
-
-                @Override
-                public void clientError(Response<?> response) {
-                    deauthorize();
-                    listener.onFailed(new SparkError(CLIENT_ERROR, Integer.toString(response.code())));
-                }
-
-                @Override
-                public void serverError(Response<?> response) {
-                    deauthorize();
-                    listener.onFailed(new SparkError(SERVER_ERROR, Integer.toString(response.code())));
-                }
-
-                @Override
-                public void networkError(IOException e) {
-                    deauthorize();
-                    listener.onFailed(new SparkError(NETWORK_ERROR, "network error"));
-                }
-
-                @Override
-                public void unexpectedError(Throwable t) {
-                    deauthorize();
-                    listener.onFailed(new SparkError(UNEXPECTED_ERROR, "unknown error"));
+                    if (listener != null)
+                        listener.onFailed(new SparkError<>(NETWORK_ERROR, t.toString()));
                 }
             });
         } else {
-            listener.onSuccess(mToken);
+            if (listener != null)
+                listener.onSuccess(mToken);
         }
     }
 
@@ -139,7 +112,7 @@ public class JWTAuthenticator implements Authenticator {
 
     interface AuthService {
         @POST("login")
-        ErrorHandlingCall<JwtToken> getToken(@Header("Authorization") String authorization);
+        Call<JwtToken> getToken(@Header("Authorization") String authorization);
     }
 
 

@@ -29,7 +29,6 @@ import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.SslErrorHandler;
@@ -64,22 +63,20 @@ import static com.ciscospark.auth.Constant.OAUTH_BASE_URL;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class OAuthWebViewAuthenticator implements Authenticator {
-    static final String AUTHORIZATION_CODE = "authorization_code";
-    static final String REFRESH_TOKEN_CODE = "refresh_code";
-    private String mBaseUrl = OAUTH_BASE_URL;
+public class OAuth2Authenticator implements Authenticator {
+    private static final String AUTHORIZATION_CODE = "authorization_code";
+    private static final String REFRESH_TOKEN_CODE = "refresh_code";
     private WebView mWebView;
     private String mState;
     private String mClientId;
     private String mClientSecret;
     private String mScope;
     private String mRedirectUri;
-    private String mAuthCode;
 
     private OAuth2Tokens mToken = null;
     private AuthService mAuthService;
     private AuthorizeListener mAuthListener;
-    private final AuthListenerDelegate delegate = new AuthListenerDelegate();
+    private final NonNullDelegate delegate = new NonNullDelegate();
 
 
     /**
@@ -88,8 +85,8 @@ public class OAuthWebViewAuthenticator implements Authenticator {
      * @param redirectUri
      * @param scope
      */
-    public OAuthWebViewAuthenticator(String clientId, String clientSecret, String redirectUri,
-                                     String scope) {
+    public OAuth2Authenticator(String clientId, String clientSecret, String redirectUri,
+                               String scope) {
         mClientId = clientId;
         mClientSecret = clientSecret;
         mRedirectUri = redirectUri;
@@ -121,7 +118,8 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     @Override
     public void accessToken(AuthorizeListener listener) {
         if (isAuthorized()) {
-            listener.onSuccess(mToken);
+            if (listener != null)
+                listener.onSuccess(mToken);
         } else {
             if (mToken.shouldRefreshNow()) {
                 // refresh token
@@ -130,15 +128,19 @@ public class OAuthWebViewAuthenticator implements Authenticator {
                             @Override
                             public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
                                 mToken = response.body();
-                                if (mToken != null)
-                                    listener.onSuccess(mToken);
-                                else
-                                    listener.onFailed(new SparkError());
+                                if (mToken != null) {
+                                    if (listener != null)
+                                        listener.onSuccess(mToken);
+                                } else {
+                                    if (listener != null)
+                                        listener.onFailed(new SparkError<>(SERVER_ERROR, "refresh token error"));
+                                }
                             }
 
                             @Override
                             public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
-                                listener.onFailed(new SparkError());
+                                if (listener != null)
+                                    listener.onFailed(new SparkError<>(SERVER_ERROR, "refresh token error"));
                             }
                         });
             }
@@ -153,7 +155,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     private String buildCodeGrantUrl() {
         SecureRandom random = new SecureRandom();
         mState = new BigInteger(130, random).toString(32);
-        Uri.Builder builder = Uri.parse(mBaseUrl).buildUpon();
+        Uri.Builder builder = Uri.parse(OAUTH_BASE_URL).buildUpon();
 
         builder.appendPath("authorize")
                 .appendQueryParameter("response_type", "code")
@@ -189,34 +191,31 @@ public class OAuthWebViewAuthenticator implements Authenticator {
             // redirect uri is returned from server by lowercase.
             if (url.startsWith(mRedirectUri.toLowerCase())) {
                 Uri uri = Uri.parse(url);
-                String code = uri.getQueryParameter("code");
-                if (code == null || code.isEmpty()) {
-                    delegate.onFailed(new SparkError(SERVER_ERROR, "invalid auth code"));
-                    return false;
-                }
-                mAuthCode = code;
-                Log.d("OAUTH2", code);
-
                 mWebView.clearCache(true);
                 mWebView.loadUrl("about:blank");
+                mWebView.setVisibility(View.INVISIBLE);
+                String code = uri.getQueryParameter("code");
+                if (code == null || code.isEmpty()) {
+                    delegate.onFailed(new SparkError<>(SERVER_ERROR, "invalid auth code"));
+                    return false;
+                }
 
-                mAuthService.getToken(mClientId, mClientSecret, mRedirectUri, AUTHORIZATION_CODE, mAuthCode)
+                mAuthService.getToken(mClientId, mClientSecret, mRedirectUri, AUTHORIZATION_CODE, code)
                         .enqueue(new Callback<OAuth2Tokens>() {
                             @Override
                             public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
                                 mToken = response.body();
                                 if (isAuthorized()) {
-                                    Log.d("OAUTH2", mToken.getAccessToken());
                                     mToken.recordOptimisticRefreshTime();
                                     delegate.onSuccess(mToken);
-                                } else
-                                    Log.d("OAUTH2", response.errorBody().toString());
-                                    delegate.onFailed(new SparkError(SERVER_ERROR, "" + response.code()));
+                                } else {
+                                    delegate.onFailed(new SparkError<>(SERVER_ERROR, "" + response.raw().toString()));
+                                }
                             }
 
                             @Override
                             public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
-                                delegate.onFailed(new SparkError(SERVER_ERROR, "Unknown error"));
+                                delegate.onFailed(new SparkError<>(SERVER_ERROR, "Unknown error"));
                             }
                         });
                 return false;
@@ -232,7 +231,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
 
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            delegate.onFailed(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
+            delegate.onFailed(new SparkError<>(SERVER_ERROR, Integer.toString(errorCode)));
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
@@ -240,14 +239,14 @@ public class OAuthWebViewAuthenticator implements Authenticator {
         public void onReceivedSslError(WebView view, final SslErrorHandler handler, SslError error) {
             handler.cancel();
             if (error != null) {
-                delegate.onFailed(new SparkError(SERVER_ERROR, error.toString()));
+                delegate.onFailed(new SparkError<>(SERVER_ERROR, error.toString()));
             } else {
-                delegate.onFailed(new SparkError(SERVER_ERROR, "unknown error"));
+                delegate.onFailed(new SparkError<>(SERVER_ERROR, "unknown error"));
             }
         }
     }
 
-    private final class AuthListenerDelegate implements AuthorizeListener {
+    private final class NonNullDelegate implements AuthorizeListener {
 
         @Override
         public void onSuccess(OAuth2AccessToken accessToken) {

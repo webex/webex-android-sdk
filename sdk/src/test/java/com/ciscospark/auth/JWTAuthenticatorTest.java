@@ -72,7 +72,7 @@ public class JWTAuthenticatorTest {
             });
         }
 
-        Thread.sleep(5 * 1000);
+        Thread.sleep(2 * 1000);
     }
 
     @Test
@@ -101,6 +101,6 @@ public class JWTAuthenticatorTest {
             });
         }
 
-        Thread.sleep(5 * 1000);
+        Thread.sleep(2 * 1000);
     }
 }
