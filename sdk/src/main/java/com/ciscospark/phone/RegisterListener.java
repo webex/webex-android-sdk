@@ -30,7 +30,7 @@ public interface RegisterListener {
     public final static String ErrorNotAuthorized = "Not Authorized";
 
     public final static String ErrorTimeout = "Time out";
-    public final static String Error451 = "get error 451";
+    public final static String Error451 = "Unavailable For Legal Reasons";
 
     void onSuccess();
 

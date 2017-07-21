@@ -193,7 +193,6 @@ public class OAuth2Authenticator implements Authenticator {
                 Uri uri = Uri.parse(url);
                 mWebView.clearCache(true);
                 mWebView.loadUrl("about:blank");
-                mWebView.setVisibility(View.INVISIBLE);
                 String code = uri.getQueryParameter("code");
                 if (code == null || code.isEmpty()) {
                     delegate.onFailed(new SparkError<>(SERVER_ERROR, "invalid auth code"));
@@ -231,7 +230,9 @@ public class OAuth2Authenticator implements Authenticator {
 
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            delegate.onFailed(new SparkError<>(SERVER_ERROR, Integer.toString(errorCode)));
+            if (!failingUrl.startsWith(mRedirectUri.toLowerCase())) {
+                delegate.onFailed(new SparkError<>(SERVER_ERROR, Integer.toString(errorCode)));
+            }
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
@@ -250,6 +251,9 @@ public class OAuth2Authenticator implements Authenticator {
 
         @Override
         public void onSuccess(OAuth2AccessToken accessToken) {
+            mWebView.clearCache(true);
+            mWebView.loadUrl("about:blank");
+            mWebView.setVisibility(View.INVISIBLE);
             if (mAuthListener != null) {
                 mAuthListener.onSuccess(accessToken);
                 mAuthListener = null;
@@ -258,6 +262,9 @@ public class OAuth2Authenticator implements Authenticator {
 
         @Override
         public void onFailed(SparkError<AuthError> error) {
+            mWebView.clearCache(true);
+            mWebView.loadUrl("about:blank");
+            mWebView.setVisibility(View.INVISIBLE);
             if (mAuthListener != null) {
                 mAuthListener.onFailed(error);
                 mAuthListener = null;
