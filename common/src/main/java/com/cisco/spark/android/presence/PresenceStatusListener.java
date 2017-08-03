@@ -98,7 +98,7 @@ public class PresenceStatusListener {
                     expirationDate = PresenceUtils.getExpireTime(30);
                 }
             } else {
-                expirationDate = PresenceUtils.getExpireTime(response.getExpiresTTL());
+                expirationDate = response.getExpirationDate();
             }
 
             actorRecord.setPresenceExpiration(expirationDate);

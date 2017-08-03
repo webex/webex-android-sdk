@@ -9,12 +9,14 @@ public class Lns {
     private static final String MERCURY = "MercuryTrace";
     private static final String CALLFLOW = "CallFlowTrace";
     private static final String APPLICATION = "ApplicationController";
+    private static final String ONBOARDING = "OnboardingFlow";
 
     private static NaturalLog contentLn;
     private static NaturalLog uxLn;
     private static NaturalLog mercuryLn;
     private static NaturalLog appLn;
     private static NaturalLog cftLn;
+    private static NaturalLog obLn;
     private static CallFlowTrace callFlowTrace;
 
 
@@ -42,12 +44,17 @@ public class Lns {
         return appLn;
     }
 
+    public static NaturalLog onboarding() {
+        if (obLn == null)
+            obLn = Ln.get(ONBOARDING);
+        return obLn;
+    }
+
     public static NaturalLog cft() {
         if (cftLn == null)
             cftLn = Ln.get(CALLFLOW);
         return cftLn;
     }
-
 
     public static CallFlowTrace callFlow() {
         if (callFlowTrace == null)

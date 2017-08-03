@@ -16,6 +16,7 @@ import com.cisco.spark.android.util.UriUtils;
 import com.github.benoitdion.ln.Ln;
 
 import java.text.ParseException;
+import java.util.HashSet;
 
 public class CatchUpSyncTask extends IncrementalSyncTask {
     private static boolean healEncrypted = true;
@@ -58,6 +59,8 @@ public class CatchUpSyncTask extends IncrementalSyncTask {
                     ConversationContract.ActivityEntry.DEFAULT_PROJECTION,
                     ConversationContract.ActivityEntry.ENCRYPTION_KEY_URL + " IS NOT NULL AND " + ConversationContract.ActivityEntry.IS_ENCRYPTED + " =1",
                     null, null);
+
+            HashSet<Uri> keysRequested = new HashSet<>();
 
             int activitiesDecrypted = 0;
             int activityDecryptionFailures = 0;

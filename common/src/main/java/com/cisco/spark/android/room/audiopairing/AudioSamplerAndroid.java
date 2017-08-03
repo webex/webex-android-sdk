@@ -5,6 +5,8 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.ConditionVariable;
 
+import com.cisco.spark.android.metrics.MetricsReporter;
+import com.cisco.spark.android.metrics.model.MetricsReportRequest;
 import com.github.benoitdion.ln.Ln;
 
 import java.nio.ByteBuffer;
@@ -35,7 +37,11 @@ public final class AudioSamplerAndroid {
     private int currentSessionId = -1; // Not set yet
     private ConditionVariable condition;
     private AudioRecord recorder;
+    private MetricsReporter metricsReporter;
 
+    public AudioSamplerAndroid(MetricsReporter metricsReporter) {
+        this.metricsReporter = metricsReporter;
+    }
 
     public void start(AudioDataListener listener) {
         stopped = false;
@@ -77,6 +83,14 @@ public final class AudioSamplerAndroid {
                     ex.toString()
 
             );
+            String errorInfo = (ex.getMessage() != null && ex.getMessage().contains(": ")) ? ex.getMessage().toString().split(": ")[1] : "Unknown";
+            MetricsReportRequest request =
+                    metricsReporter
+                            .newRoomServiceMetricsBuilder()
+                            .reportFailedAudioRecording(errorInfo)
+                            .build();
+            metricsReporter.enqueueMetricsReport(request);
+
             if (!shuttingDown.get()) {
                 Ln.i("audioSampler, failed, trigger onFailure");
                 listener.onFailure();

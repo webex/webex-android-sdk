@@ -4,7 +4,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -17,6 +16,7 @@ import com.cisco.spark.android.util.SchedulerProvider;
 import com.cisco.spark.android.util.Strings;
 import com.cisco.spark.android.whiteboard.WhiteboardCache;
 import com.cisco.spark.android.whiteboard.WhiteboardError;
+import com.cisco.spark.android.whiteboard.WhiteboardListService;
 import com.cisco.spark.android.whiteboard.WhiteboardOriginalData;
 import com.cisco.spark.android.whiteboard.WhiteboardService;
 import com.cisco.spark.android.whiteboard.WhiteboardStore;
@@ -27,7 +27,6 @@ import com.cisco.spark.android.whiteboard.persistence.model.ContentItems;
 import com.cisco.spark.android.whiteboard.persistence.model.SpaceUrl;
 import com.cisco.spark.android.whiteboard.util.WhiteboardConstants;
 import com.cisco.spark.android.whiteboard.util.WhiteboardUtils;
-import com.cisco.spark.android.whiteboard.view.model.Stroke;
 import com.cisco.wx2.sdk.kms.KmsResponseBody;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
@@ -37,21 +36,22 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
+import de.greenrobot.event.EventBus;
 import okhttp3.Headers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import rx.Observable;
-import rx.functions.Action1;
 
 import static com.cisco.spark.android.whiteboard.util.WhiteboardConstants.WHITEBOARD_LOAD_BOARD_LIST_DELAY_MILLIS;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
@@ -63,6 +63,7 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
     @Inject WhiteboardCache whiteboardCache;
     @Inject Clock clock;
     @Inject Gson gson;
+    @Inject EventBus bus;
 
     protected final WhiteboardService whiteboardService;
     protected final ApiClientProvider apiClientProvider;
@@ -74,16 +75,13 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
     private JsonParser jsonParser;
 
     private WhiteboardPersistenceClient whiteboardPersistenceClient;
-    private Map<List<Content>, JsonObject> contentCache = new HashMap<>();
 
     private Injector injector;
     private final Handler handler;
     private Runnable delayedLoadListRunnable;
 
     // Methods to override
-    protected abstract Call<Channel> createCreateChannelCall(Channel channel);
     protected abstract Call<ChannelItems<Channel>> createGetChannelsCall(String conversationId, int channelLimit);
-    protected abstract void processCreateChannelFailure();
     protected abstract boolean isPrivateStore();
 
     public AbsRemoteWhiteboardStore(@NonNull WhiteboardService whiteboardService, @NonNull  ApiClientProvider apiClientProvider,
@@ -125,91 +123,6 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
     }
 
     @Override
-    @CheckResult
-    public boolean createChannel(Channel channelRequest) {
-        return createChannel(channelRequest, null);
-    }
-
-    @Override
-    @CheckResult
-    public boolean createChannel(final Channel channel, @Nullable final List<Content> content) {
-
-        if (channel == null) {
-            return false;
-        }
-
-        if (channel.getDefaultEncryptionKeyUrl() == null) {
-            return false;
-        }
-
-        contentCache.clear();
-
-        Call<Channel> call = createCreateChannelCall(channel);
-        call.enqueue(new Callback<Channel>() {
-            @Override
-            public void onResponse(Call<Channel> call, Response<Channel> response) {
-                if (response.isSuccessful()) {
-                    processCreateChannelResponse(response, content);
-                    whiteboardService.createBoardComplete(response.body(), channel.getDefaultEncryptionKeyUrl());
-                } else {
-                    processCreateChannelFailure();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Channel> call, Throwable t) {
-                processCreateChannelFailure();
-            }
-        });
-
-        return true;
-    }
-
-
-    protected void processCreateChannelResponse(Response<Channel> response, @Nullable List<Content> content) {
-        if (response.isSuccessful()) {
-            Channel channelResult = response.body();
-            Ln.d("Created board %s", channelResult.getChannelId());
-            whiteboardService.setCurrentChannel(channelResult);
-
-            if (channelResult.getAclUrl() != null && !whiteboardService.isLocal()) {
-                whiteboardService.loadBoard(channelResult.getChannelId(), false);
-            }
-
-            List<Stroke> strokeList = new ArrayList<>();
-            if (content != null) {
-                saveContent(channelResult.getChannelId(), content, null);
-                for (Content c : content) {
-                    Stroke stroke = WhiteboardUtils.createStroke(c, jsonParser, gson);
-                    if (stroke != null) {
-                        strokeList.add(stroke);
-                    }
-
-                }
-            }
-            if (contentCache.size() > 0) {
-                for (Map.Entry<List<Content>, JsonObject> entry: contentCache.entrySet()) {
-                    saveContent(channelResult.getChannelId(), entry.getKey(), entry.getValue());
-                    strokeList.add(WhiteboardUtils.createStroke(entry.getValue(), gson));
-                    //TODO save snapshot
-                }
-                contentCache.clear();
-            }
-            whiteboardCache.initAndStartRealtimeForBoard(channelResult.getChannelId(), strokeList);
-        } else {
-            String message;
-            try {
-                message = response.errorBody().string();
-                Ln.e("Can't create a board, response = %s", message);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            sendBoardError(WhiteboardError.ErrorData.CREATE_BOARD_ERROR);
-            whiteboardService.boardReady();
-        }
-    }
-
-    @Override
     public void updateChannel(Channel updatedChannel) {
         Call<Channel> call = getWhiteboardPersistenceClient().updateChannel(updatedChannel.getChannelId(), updatedChannel);
         call.enqueue(new ProcessChannelResponse(null));
@@ -221,20 +134,22 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
         call.enqueue(new ProcessChannelResponse(clientCallback));
     }
 
-    @Override
-    public void getChannel(String channelId) {
-        Call<Channel> call = getWhiteboardPersistenceClient().getChannel(channelId);
-        if (call != null) {
-            call.enqueue(new ProcessChannelResponse(null));
-        }
+    public Observable<Channel> getChannel(String channelId) {
+        return getWhiteboardPersistenceClient().getChannelRx(channelId).subscribeOn(schedulerProvider.network());
     }
 
     @Override
-    public void getChannelInfo(String channelId) {
+    public void getChannelInfo(String channelId, @Nullable ChannelInfoCallback callback) {
         Call<Channel> call = getWhiteboardPersistenceClient().getChannel(channelId);
         if (call != null) {
-            call.enqueue(new ProcessGetChannelInfoResponse());
+            call.enqueue(new ProcessGetChannelInfoResponse(callback));
         }
+    }
+
+    @Deprecated
+    @Override
+    public void getChannelInfo(String channelId) {
+        getChannelInfo(channelId, null);
     }
 
     @Override
@@ -242,14 +157,15 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
         LoadWhiteboardContentTask.Callback callback = new LoadWhiteboardContentTask.Callback() {
             @Override
             public void onSuccess(String channelId, ContentItems contentItems) {
-                whiteboardService.parseContentItems(contentItems.getItems(), false);
+                whiteboardService.parseContentItems(channelId, contentItems.getItems(), false);
                 whiteboardService.setReloadBoard(false);
                 whiteboardService.setLoadingChannel(null);
+                sendBoardContentLoaded();
             }
 
             @Override
-            public void onFailure(String channelId, WhiteboardError.ErrorData errorData) {
-                sendBoardError(errorData);
+            public void onFailure(String channelId, String errorMessage) {
+                sendBoardError(WhiteboardError.ErrorData.LOAD_BOARD_ERROR, null, errorMessage);
                 whiteboardService.boardReady();
                 whiteboardService.setLoadingChannel(null);
             }
@@ -265,43 +181,36 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
     //    @Override
     public void _loadContent(final String channelId) {
         Call<ContentItems> call = getWhiteboardPersistenceClient().getContents(channelId, WhiteboardConstants.WHITEBOARD_CONTENT_BATCH_SIZE);
-        callLoadContent(call, true);
+        callLoadContent(channelId, call, true);
     }
 
-    protected void loadNextContentBatch(final String nextUrl) {
+    protected void loadNextContentBatch(final String nextUrl, final String channelId) {
         Call<ContentItems> call = getWhiteboardPersistenceClient().getContents(nextUrl);
-        callLoadContent(call, true);
+        callLoadContent(channelId, call, true);
     }
 
-    protected void callLoadContent(Call<ContentItems> call, final boolean autoloadContentBatch) {
+    protected void callLoadContent(String channelId, Call<ContentItems> call, final boolean autoloadContentBatch) {
         call.enqueue(new Callback<ContentItems>() {
             @Override
             public void onResponse(Call<ContentItems> call, final Response<ContentItems> response) {
                 if (response.isSuccessful()) {
+
                     final ContentItems result = response.body();
                     Observable.just(result)
                             .subscribeOn(schedulerProvider.from(singleThreadedExecutor))
-                            .subscribe(new Action1<ContentItems>() {
-                                @Override
-                                public void call(ContentItems result) {
-                                    whiteboardService.parseContentItems(result.getItems(), false);
-                                    whiteboardService.setReloadBoard(false);
-                                }
-                            }, new Action1<Throwable>() {
-                                @Override
-                                public void call(Throwable throwable) {
-                                    Ln.e(throwable);
-                                }
-                            });
+                            .subscribe(result1 -> {
+                                whiteboardService.parseContentItems(channelId, result1.getItems(), false);
+                                whiteboardService.setReloadBoard(false);
+                            }, Ln::e);
                 } else {
                     String message;
                     try {
                         message = response.errorBody().string();
                         Ln.e("Can't load the board, response = %s", message);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        Ln.e(e);
                     }
-                    sendBoardError(WhiteboardError.ErrorData.LOAD_BOARD_ERROR);
+                    sendBoardError(WhiteboardError.ErrorData.LOAD_BOARD_ERROR, null, WhiteboardConstants.LOAD_BOARD_CONTENT_FAILURE);
                     boardReady();
                 }
             }
@@ -309,23 +218,55 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
             @Override
             public void onFailure(Call<ContentItems> call, Throwable t) {
                 sendBoardError(WhiteboardError.ErrorData.NETWORK_ERROR);
+                sendBoardError(WhiteboardError.ErrorData.LOAD_BOARD_ERROR, null, WhiteboardConstants.LOAD_BOARD_CONTENT_NETWORK_ISSUE);
                 whiteboardService.boardReady();
             }
         });
     }
 
     @Override
-    public void saveContent(String channelId, List<Content> contentRequests, final JsonObject originalMessage) {
+    public synchronized void saveContent(Channel channel, List<Content> contentRequests, final JsonObject originalMessage) {
 
         if (contentRequests.size() <= MAX_CONTENT_BATCH_SIZE) {
-            saveContentBatch(channelId, contentRequests, originalMessage);
+            saveContentBatch(channel, contentRequests, originalMessage);
         } else {
             List<List<Content>> contentBatch = getContentBatch(contentRequests);
             for (List<Content> contents : contentBatch) {
-                saveContentBatch(channelId, contents, originalMessage);
+                saveContentBatch(channel, contents, originalMessage);
             }
         }
 
+    }
+
+    @Override
+    public void clearPartialContents(String channelId, List<Content> contentRequests, final JsonObject originalMessage) {
+        Call<ContentItems> call = getWhiteboardPersistenceClient().clearPartialContents(channelId, contentRequests);
+        call.enqueue(new retrofit2.Callback<ContentItems>() {
+            @Override
+            public void onResponse(Call<ContentItems> call, retrofit2.Response<ContentItems> response) {
+                if (response.isSuccessful()) {
+                    ContentItems contentItems = response.body();
+                    JsonArray resultArray = new JsonArray();
+                    for (Content content : contentItems.getItems()) {
+                        Ln.d("clear partial contents");
+                        resultArray.add(whiteboardService.createBridgeContentJson(content));
+                    }
+                    whiteboardService.createResponse(originalMessage, resultArray, null);
+                } else {
+                    whiteboardService.createResponse(originalMessage, new JsonObject(), response);
+                    whiteboardService.setReloadBoard(true);
+                    sendBoardError(WhiteboardError.ErrorData.CLEAR_PARTIAL_CONTENTS_ERROR, originalMessage);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ContentItems> call, Throwable t) {
+                Ln.e("clear partial contents failed " + t.getMessage());
+                // TODO retrofit2 error case?
+                whiteboardService.setReloadBoard(true);
+                sendBoardError(WhiteboardError.ErrorData.NETWORK_ERROR);
+            }
+        });
     }
 
     // Package local for testing
@@ -350,41 +291,50 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
         return contentBatches;
     }
 
-    private void saveContentBatch(String channelId, List<Content> contentRequests, final JsonObject originalMessage) {
+    private void saveContentBatch(Channel channel, List<Content> contentRequests, final JsonObject originalMessage) {
 
-        if (channelId == null) {
-            contentCache.put(contentRequests, originalMessage);
+        if (channel == null) {
             return;
         }
-        Call<ContentItems> call = getWhiteboardPersistenceClient().addContents(channelId, contentRequests);
-        call.enqueue(new retrofit2.Callback<ContentItems>() {
-            @Override
-            public void onResponse(Call<ContentItems> call, retrofit2.Response<ContentItems> response) {
-                if (response.isSuccessful()) {
-                    ContentItems contentItems = response.body();
-                    JsonArray resultArray = new JsonArray();
-                    for (Content content : contentItems.getItems()) {
-                        Ln.d("save content create bridge content");
-                        resultArray.add(whiteboardService.createBridgeContentJson(content));
-                    }
-                    whiteboardService.createResponse(originalMessage, resultArray, null);
-                    sendBoardError(WhiteboardError.ErrorData.NONE);
-                } else {
-                    whiteboardService.createResponse(originalMessage, new JsonObject(), response);
-                    whiteboardService.setReloadBoard(true);
-                    sendBoardError(WhiteboardError.ErrorData.SAVE_CONTENT_ERROR, originalMessage);
+        Call<ContentItems> call = null;
+        try {
+            call = getWhiteboardPersistenceClient().addContents(channel.getChannelId(), contentRequests);
+            Response<ContentItems> response = call.execute();
+            if (response.isSuccessful()) {
+                ContentItems contentItems = response.body();
+                JsonArray resultArray = new JsonArray();
+                for (Content content : contentItems.getItems()) {
+                    Ln.d("save content create bridge content");
+                    resultArray.add(whiteboardService.createBridgeContentJson(content));
                 }
-            }
-
-            @Override
-            public void onFailure(Call<ContentItems> call, Throwable t) {
-                Ln.e("saveContent failed " + t.getMessage());
-                // TODO retrofit2 error case?
-                whiteboardService.createDefaultError(originalMessage);
+                whiteboardService.createResponse(originalMessage, resultArray, null);
+                sendBoardError(WhiteboardError.ErrorData.NONE);
+            } else {
+                removeStrokeFromWhiteboardCache(originalMessage);
+                whiteboardService.createResponse(originalMessage, new JsonObject(), response);
                 whiteboardService.setReloadBoard(true);
-                sendBoardError(WhiteboardError.ErrorData.NETWORK_ERROR);
+                sendBoardError(WhiteboardError.ErrorData.SAVE_CONTENT_ERROR, originalMessage);
             }
-        });
+        } catch (IOException e) {
+            Ln.e("saveContent failed " + e.getMessage());
+            removeStrokeFromWhiteboardCache(originalMessage);
+            whiteboardService.createDefaultError(originalMessage);
+            whiteboardService.setReloadBoard(true);
+            sendBoardError(WhiteboardError.ErrorData.NETWORK_ERROR);
+        }
+    }
+
+    private void removeStrokeFromWhiteboardCache(JsonObject msg) {
+
+        if (msg == null) {
+            Ln.w("Unable to remove whiteboard stroke from cache with null message");
+            return;
+        }
+
+        String writerId = WhiteboardUtils.safeGetAsString(msg.get("writerId"), null);
+        if (writerId != null) {
+            whiteboardCache.removeStrokeFromCurrentRealtimeBoard(UUID.fromString(writerId));
+        }
     }
 
     @Override
@@ -414,7 +364,7 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
     }
 
     @Override
-    public void loadWhiteboardList(final String aclLink, final int channelsLimit) {
+    public void loadWhiteboardList(final String aclLink, final int channelsLimit, WhiteboardListService.WhiteboardListCallback callback) {
 
         WhiteboardListCache.WhiteboardListCacheEntry cachedEntry = whiteboardListCache.get(aclLink);
         boolean isCacheEntryEmpty = true;
@@ -422,13 +372,13 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
             List<Channel> cachedList = cachedEntry.getChannels();
             if (!cachedList.isEmpty()) {
                 isCacheEntryEmpty = false;
-                whiteboardService.loadWhiteboardsComplete(new ArrayList<>(cachedList), cachedEntry.getLink(), isPrivateStore(), true);
+                callback.loadWhiteboardsComplete(new ArrayList<>(cachedList), cachedEntry.getLink(), isPrivateStore(), true);
             }
         }
         if (isBoardListObsolete() || isCacheEntryEmpty) {
             Ln.d("board list obsolete, performing full refresh");
             Call<ChannelItems<Channel>> call = createGetChannelsCall(aclLink, channelsLimit);
-            processLoadListResponse(call, aclLink, true);
+            processLoadListResponse(call, aclLink, true, callback);
         } else {
 
             Ln.d("Board list not obsolete, scheduling update");
@@ -436,24 +386,21 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
                 handler.removeCallbacks(delayedLoadListRunnable);
             }
 
-            delayedLoadListRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    Call<ChannelItems<Channel>> call = createGetChannelsCall(aclLink, channelsLimit);
-                    processLoadListResponse(call, aclLink, true);
-                }
+            delayedLoadListRunnable = () -> {
+                Call<ChannelItems<Channel>> call = createGetChannelsCall(aclLink, channelsLimit);
+                processLoadListResponse(call, aclLink, true, callback);
             };
             handler.postDelayed(delayedLoadListRunnable, WHITEBOARD_LOAD_BOARD_LIST_DELAY_MILLIS);
         }
     }
 
     @Override
-    public void loadNextPageWhiteboards(String conversationId, String url) {
+    public void loadNextPageWhiteboards(String conversationId, String url, WhiteboardListService.WhiteboardListCallback callback) {
         Call<ChannelItems<Channel>> call = getWhiteboardPersistenceClient().getChannels(url);
-        processLoadListResponse(call, conversationId, false);
+        processLoadListResponse(call, conversationId, false, callback);
     }
 
-    protected void processLoadListResponse(Call<ChannelItems<Channel>> call, final String conversationId, final boolean isFirstPage) {
+    protected void processLoadListResponse(Call<ChannelItems<Channel>> call, final String conversationId, final boolean isFirstPage, WhiteboardListService.WhiteboardListCallback callback) {
         call.enqueue(new Callback<ChannelItems<Channel>>() {
             @Override
             public void onResponse(Call<ChannelItems<Channel>> call, final Response<ChannelItems<Channel>> response) {
@@ -465,7 +412,8 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
                         link = header.get("Link").replaceAll("[<>;]", "").split(" ")[0];
                     }
                     List<Channel> items = channelItems.getItems();
-                    whiteboardService.loadWhiteboardsComplete(items, link, isPrivateStore(), isFirstPage);
+                    decryptChannelImages(items);
+                    callback.loadWhiteboardsComplete(items, link, isPrivateStore(), isFirstPage);
                     if (isFirstPage) {
                         whiteboardListCache.put(conversationId, items, link);
                     } else {
@@ -478,7 +426,7 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
                         if (response.code() == HTTP_NOT_FOUND) {
                             //It's not necessarily a failure, the boards were probably just deleted
                             //So we send an empty list event anyway
-                            whiteboardService.loadWhiteboardsComplete(new ArrayList<Channel>(), "", isPrivateStore(),
+                            callback.loadWhiteboardsComplete(new ArrayList<>(), "", isPrivateStore(),
                                                                       isFirstPage);
                         } else {
                             whiteboardService.loadBoardsError(WhiteboardError.ErrorData.LOAD_BOARD_LIST_ERROR);
@@ -496,14 +444,19 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
         });
     }
 
-    protected void sendBoardError(WhiteboardError.ErrorData errorData, JsonObject originalMessage) {
+    protected void sendBoardError(WhiteboardError.ErrorData errorData, JsonObject originalMessage, String errorMessage) {
         WhiteboardOriginalData originalData = new WhiteboardOriginalData(errorData, originalMessage);
-        WhiteboardError whiteboardError = new WhiteboardError(errorData, originalData);
+        WhiteboardError whiteboardError = new WhiteboardError(errorData, originalData, errorMessage);
         WhiteboardService.OnWhiteboardEventListener boardListener = whiteboardService.getOnWhiteboardEventListener();
 
         if (boardListener != null) {
             boardListener.onBoardError(whiteboardError);
         }
+        bus.post(whiteboardError);
+    }
+
+    protected void sendBoardError(WhiteboardError.ErrorData errorData, JsonObject originalMessage) {
+        sendBoardError(errorData, originalMessage, null);
     }
 
     protected void sendBoardError(WhiteboardError.ErrorData errorData) {
@@ -513,6 +466,13 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
     protected void boardReady() {
         whiteboardService.boardReady();
         whiteboardService.setLoadingChannel(null);
+    }
+
+    protected void sendBoardContentLoaded() {
+        WhiteboardService.OnWhiteboardEventListener boardListener = whiteboardService.getOnWhiteboardEventListener();
+        if (boardListener != null) {
+            boardListener.onBoardContentLoaded();
+        }
     }
 
     @Override
@@ -582,7 +542,7 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
                 whiteboardListCache.update(channel);
 
                 if (mClientCallback != null)
-                    mClientCallback.onSuccess();
+                    mClientCallback.onSuccess(channel);
             } else {
                 String message = "";
                 try {
@@ -590,23 +550,13 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                // If saving a private board fails,
-                // We need to decrypt the kms message from the acl service
-                if (Strings.equalsIgnoreCase(call.request().method(), "patch")
-                        && !Strings.isEmpty(message)) {
-                    //TODO gotta fix those acl service errors case better
-                    try {
-                        JsonElement json = jsonParser.parse(message);
-                        String errorMessage = json.getAsJsonObject().get("message").getAsString();
-                        String kmsErrorMessage = errorMessage.substring(errorMessage.indexOf("error = '") + 9, errorMessage.indexOf("')"));
-                        KmsResponseBody kmsResponseBody = CryptoUtils.decryptKmsMessage(kmsErrorMessage, whiteboardService.getKeyManager().getSharedKeyAsJWK());
-                        if (kmsResponseBody != null) {
-                            Ln.e(kmsResponseBody.getReason());
-                        } else {
-                            Ln.e("Failed to decrypt KMS message");
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                // If saving a private board fails, we need to decrypt the kms message from the acl service
+                if (Strings.equalsIgnoreCase(call.request().method(), "patch") && !Strings.isEmpty(message)) {
+                    String msg = parseKmsError(message);
+                    if (msg != null) {
+                        Ln.e(new RuntimeException(msg));
+                    } else {
+                        Ln.e("Failed to decrypt KMS message");
                     }
                 }
 
@@ -615,8 +565,10 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
 
                 sendBoardError(getErrorData(call.request().method()));
                 whiteboardService.createDefaultError(new JsonObject());
-                if (mClientCallback != null)
+
+                if (mClientCallback != null) {
                     mClientCallback.onFailure(errorMessage);
+                }
             }
         }
 
@@ -644,22 +596,61 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
         }
     }
 
+    @Nullable
+    private String parseKmsError(String message) {
+
+        try {
+            JsonElement json = jsonParser.parse(message);
+            String errorMessage = json.getAsJsonObject().get("message").getAsString();
+            int errorIndex  = errorMessage.indexOf("error = '");
+            if (errorIndex != -1) {
+                String kmsErrorMessage = errorMessage.substring(errorIndex + 9, errorMessage.indexOf("')"));
+                KmsResponseBody kmsResponseBody = CryptoUtils.decryptKmsMessage(kmsErrorMessage,
+                                                                                whiteboardService.getKeyManager()
+                                                                                                 .getSharedKeyAsJWK());
+
+                if (kmsResponseBody != null) {
+                    return kmsResponseBody.getReason();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     private class ProcessGetChannelInfoResponse implements Callback<Channel> {
+        private final ChannelInfoCallback mCallback;
+
+        public ProcessGetChannelInfoResponse(@Nullable ChannelInfoCallback callback) {
+            mCallback = callback;
+        }
+
         @Override
         public void onResponse(Call<Channel> call, Response<Channel> response) {
             if (response.isSuccessful()) {
                 Ln.d(call.request().method() + " Channel successful");
                 Channel channel = response.body();
+
+                decryptChannelImages(Arrays.asList(channel));
+
                 whiteboardService.getChannelInfoComplete(channel);
                 whiteboardListCache.update(channel);
 
+                if (mCallback != null) {
+                    mCallback.onSuccess(channel);
+                }
             } else {
-                String message;
+                String message = "";
                 try {
                     message = response.errorBody().string();
                     Ln.e("Can't "  + call.request().method() + " the board, response = %s", message);
                 } catch (IOException e) {
                     e.printStackTrace();
+                }
+                if (mCallback != null) {
+                    mCallback.onFailure(message);
                 }
             }
         }
@@ -670,8 +661,29 @@ public abstract class AbsRemoteWhiteboardStore implements WhiteboardStore {
         }
     }
 
+    private void decryptChannelImages(List<Channel> channels) {
+        for (Channel channel : channels) {
+            if (channel.getImage() != null && channel.getImage().getEncryptionKeyUrl() != null) {
+                whiteboardService.getKeyManager().getBoundKeyDelaySync(channel.getImage().getEncryptionKeyUrl()).subscribe(ko -> {
+                    try {
+                        channel.getImage().decrypt(ko);
+                    } catch (IOException e) {
+                        Ln.e(e);
+                    } catch (ParseException e) {
+                        Ln.e(e);
+                    }
+                }, Ln::e);
+            }
+        }
+    }
+
     public interface ClientCallback {
-        void onSuccess();
+        void onSuccess(Channel channel);
+        void onFailure(String errorMessage);
+    }
+
+    public interface ChannelInfoCallback {
+        void onSuccess(Channel channel);
         void onFailure(String errorMessage);
     }
 }

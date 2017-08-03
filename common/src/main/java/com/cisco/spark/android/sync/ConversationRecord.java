@@ -100,7 +100,7 @@ public class ConversationRecord {
     private Uri retentionUrl;
     private String custodianOrgName;
     private String custodianOrgId;
-    private String aclUrl;
+    private Uri aclUrl;
 
     // We keep track of this because after the transaction is committed we write the lastReadable
     // and lastSeen dates (from the conversation record) if and only if the latest activity in this
@@ -114,11 +114,11 @@ public class ConversationRecord {
         this.id = id;
         this.titleBuilder = titleBuilder;
     }
-    public String getAclUrl() {
+    public Uri getAclUrl() {
         return aclUrl;
     }
 
-    public void setAclUrl(String aclUrl) {
+    public void setAclUrl(Uri aclUrl) {
         this.aclUrl = aclUrl;
     }
 
@@ -429,7 +429,7 @@ public class ConversationRecord {
         record.custodianOrgId = cursor.getString(vw_Conversation.CUSTODIAN_ORG_ID.ordinal());
         record.custodianOrgName = cursor.getString(vw_Conversation.CUSTODIAN_ORG_NAME.ordinal());
         record.retentionUrl = UriUtils.parseIfNotNull(cursor.getString(vw_Conversation.RETENTION_URL.ordinal()));
-        record.aclUrl = cursor.getString(vw_Conversation.ACL_URL.ordinal());
+        record.aclUrl = UriUtils.parseIfNotNull(cursor.getString(vw_Conversation.ACL_URL.ordinal()));
         Uri kroUri = parseIfNotNull(cursor.getString(vw_Conversation.KMS_RESOURCE_OBJECT_URI.ordinal()));
         if (kroUri != null)
             record.kro = new KmsResourceObject(kroUri);
@@ -585,10 +585,7 @@ public class ConversationRecord {
             custodianOrgId = custodianOrgInfo.getOrgId();
             custodianOrgName = custodianOrgInfo.getOrgName();
         }
-        String aclUrl = conversation.getAclUrl();
-        if (!TextUtils.isEmpty(aclUrl)) {
-            this.aclUrl = aclUrl;
-        }
+        aclUrl = conversation.getAclUrl();
         retentionUrl = conversation.getRetentionUrl();
 
     }
@@ -648,7 +645,8 @@ public class ConversationRecord {
         } else if (activity.isUpdateTitleAndSummaryActivity()) {
             setTitle(activity.getObject().getDisplayName());
             setSummary(((Conversation) activity.getObject()).getSummary());
-            setTitleKeyUrl(activity.getEncryptionKeyUrl());
+            if (activity.getEncryptionKeyUrl() != null)
+                setTitleKeyUrl(activity.getEncryptionKeyUrl());
             setAreTitleAndSummaryEncrypted(activity.getEncryptionKeyUrl() != null);
         } else if (activity.isAssignRoomAvatar()) {
             setAvatarEncryptionKeyUrl(activity.getEncryptionKeyUrl());
@@ -776,6 +774,9 @@ public class ConversationRecord {
         }
         if (getLastSeenActivityDateRemote() != null) {
             cv.put(ConversationEntry.TIMESTAMP_LAST_SEEN_ACTIVITY_REMOTE.name(), lastSeenActivityDateRemote.getTime());
+        }
+        if (syncOperationId != null) {
+            cv.put(ConversationEntry.SYNC_OPERATION_ID.name(), syncOperationId);
         }
         cv.putAll(getCountUpdateContentValues());
 
@@ -975,9 +976,7 @@ public class ConversationRecord {
         if (spaceUrlHidden != null) {
             cv.put(ConversationEntry.SPACE_URL_HIDDEN.name(), spaceUrlHidden);
         }
-        if (syncOperationId != null) {
-            cv.put(SYNC_OPERATION_ID.name(), syncOperationId);
-        }
+
         if (isOneOnOne()) {
             if (oneOnOneParticipant != null) {
                 cv.put(ConversationEntry.ONE_ON_ONE_PARTICIPANT.name(), oneOnOneParticipant.getEmail());
@@ -1053,7 +1052,7 @@ public class ConversationRecord {
         }
 
         if (aclUrl != null) {
-            cv.put(ConversationEntry.ACL_URL.name(), aclUrl);
+            cv.put(ConversationEntry.ACL_URL.name(), aclUrl.toString());
         }
         return cv;
     }
@@ -1151,7 +1150,7 @@ public class ConversationRecord {
     private String extractPersonName(List<ActorRecord> participants) {
         String displayName = null;
         for (ActorRecord actor : participants) {
-            if (actor.getType().equals(Person.PERSON)) {
+            if (Person.PERSON.equals(actor.getType())) {
                 displayName = actor.getDisplayName();
             }
         }
@@ -1172,19 +1171,6 @@ public class ConversationRecord {
 
     public void setKmsResourceObject(KmsResourceObject kmsResourceObject) {
         this.kro = kmsResourceObject;
-    }
-
-    public boolean isEncryptedConversation() {
-        if (defaultEncryptionKeyUrl != null)
-            return true;
-
-        if (TextUtils.equals(id, syncOperationId))
-            return true;
-
-        if (kro != null && kro.getUri() != null && kro.getUri().toString().startsWith("http"))
-            return true;
-
-        return false;
     }
 
     public void applyConversationObject(Conversation conv) {

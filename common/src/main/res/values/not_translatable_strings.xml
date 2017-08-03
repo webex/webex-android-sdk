@@ -3,6 +3,7 @@
 
     <!-- Contacts Integration -->
     <string name="spark" translatable="false">Spark</string>
-    <string name="spark_contact_mimetype" translatable="false">vnd.android.cursor.item/vnd.com.ciscospark.room</string>
+    <string name="spark_contact_mimetype" translatable="false">vnd.android.cursor.item/vnd.com.ciscospark.space</string>
+    <string name="spark_call_mimetype" translatable="false">vnd.android.cursor.item/vnd.com.ciscospark.call</string>
 
 </resources>

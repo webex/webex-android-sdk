@@ -2,6 +2,8 @@ package com.cisco.spark.android.lyra;
 
 import android.support.annotation.IntDef;
 
+import com.cisco.spark.android.whiteboard.util.WhiteboardConstants;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -19,10 +21,10 @@ public class LyraBindingEvent {
     }
 
     private @Events int event;
-    private boolean result;
+    private String result;
     private String conversationUrl;
 
-    public LyraBindingEvent(@Events int event, boolean result) {
+    public LyraBindingEvent(@Events int event, String result) {
         this.event = event;
         this.result = result;
     }
@@ -41,6 +43,10 @@ public class LyraBindingEvent {
     }
 
     public boolean isResult() {
+        return WhiteboardConstants.SUCCESS.equals(result);
+    }
+
+    public String getResult() {
         return result;
     }
 }

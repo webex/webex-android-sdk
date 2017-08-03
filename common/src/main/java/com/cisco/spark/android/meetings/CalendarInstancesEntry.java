@@ -14,7 +14,10 @@ public enum CalendarInstancesEntry {
     ORGANIZER(CalendarContract.Instances.ORGANIZER),
     EVENT_LOCATION(CalendarContract.Instances.EVENT_LOCATION),
     STATUS(CalendarContract.Instances.STATUS),
-    SELF_ATTENDEE_STATUS(CalendarContract.Instances.SELF_ATTENDEE_STATUS);
+    SELF_ATTENDEE_STATUS(CalendarContract.Instances.SELF_ATTENDEE_STATUS),
+    RRULE(CalendarContract.Instances.RRULE),
+    CALENDAR_COLOR(CalendarContract.Instances.CALENDAR_COLOR),
+    ALL_DAY(CalendarContract.Instances.ALL_DAY);
 
     private String name;
 

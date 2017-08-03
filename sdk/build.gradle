@@ -102,7 +102,7 @@ dependencies {
     compile 'com.squareup.okhttp3:logging-interceptor:3.7.0'
     compile 'com.squareup.retrofit2:retrofit-mock:2.0.2'
 
-    compile libs.websocket
+    //compile libs.websocket
 
 
 

@@ -13,6 +13,8 @@ import java.text.ParseException;
 
 public class ChannelImage implements ContentReference {
 
+    public static final String MIME_PNG = "image/png";
+
     private Long updatedTime;
     private Uri encryptionKeyUrl;
     private Long fileSize;
@@ -23,6 +25,15 @@ public class ChannelImage implements ContentReference {
     private String mimeType;
     private ChannelImageThumbnail thumbnail;
     private SecureContentReference secureContentReference;
+
+    public ChannelImage(Uri imageUri, int width, int height) {
+        this.url = imageUri;
+        this.width = width;
+        this.height = height;
+        this.mimeType = MIME_PNG;
+    }
+
+    public ChannelImage() { }
 
     public Long getUpdatedTime() {
         return updatedTime;
@@ -80,6 +91,11 @@ public class ChannelImage implements ContentReference {
 
     public ChannelImageThumbnail getThumbnail() {
         return thumbnail;
+    }
+
+    public void setDimensions(int width, int height) {
+        this.width = width;
+        this.height = height;
     }
 
 

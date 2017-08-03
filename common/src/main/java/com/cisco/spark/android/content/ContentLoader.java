@@ -4,7 +4,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
 
-import com.cisco.spark.android.metrics.ContentMetricsBuilder;
 import com.cisco.spark.android.metrics.MetricsReporter;
 import com.cisco.spark.android.util.FileUtils;
 import com.cisco.spark.android.util.MimeUtils;
@@ -77,11 +76,5 @@ public class ContentLoader {
 
             return new File(conversationDir.getAbsolutePath() + File.separator + contentId + ext);
         }
-    }
-
-    public void reportMetrics(boolean upload, boolean isEncrypted, boolean isThumbnail, boolean isImage, boolean success) {
-        ContentMetricsBuilder builder = metricsReporter.newContentMetricsBuilder();
-        builder.addContentMetrics(upload, isEncrypted, isThumbnail, isImage, success);
-        metricsReporter.enqueueMetricsReport(builder.build());
     }
 }

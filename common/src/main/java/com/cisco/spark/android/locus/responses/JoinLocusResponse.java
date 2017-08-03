@@ -7,6 +7,10 @@ import com.cisco.spark.android.locus.model.Locus;
 public class JoinLocusResponse {
     private Locus locus;
 
+    public JoinLocusResponse() {
+
+    }
+
     public JoinLocusResponse(Locus locus) {
         this.locus = locus;
     }

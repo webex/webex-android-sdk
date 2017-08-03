@@ -6,7 +6,9 @@ import android.view.View;
 
 import com.cisco.spark.android.media.statistics.MediaStats;
 import com.cisco.spark.android.room.audiopairing.AudioDataListener;
+import com.webex.wseclient.WseSurfaceView;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +16,8 @@ import java.util.Map;
 public interface MediaSession {
 
 
-    void startSession(String deviceSettings, MediaEngine.MediaDirection mediaDirection, MediaCallbackObserver mediaCallbackObserver);
-    void updateSession(MediaCallbackObserver mediaCallbackObserver, final MediaEngine.MediaDirection mediaDirection);
+    void startSession(String deviceSettings, MediaEngine.MediaDirection mediaDirection, MediaSessionCallbacks mediaSessionCallbacks, SdpReadyCallback sdpReadyCallback);
+    void updateSession(final MediaEngine.MediaDirection mediaDirection, SdpReadyCallback sdpReadyCallback);
     void endSession();
     boolean isMediaSessionStarted();
     boolean isMediaSessionEnding();
@@ -58,9 +60,13 @@ public interface MediaSession {
     void removeRemoteWindow(Long csi);
     void removeRemoteVideoWindows();
     void setShareWindow(View view);
+    void grabShareView(WseSurfaceView.FrameSaved frameSaved);
+    File getLastShareFrame();
     void removeShareWindow();
     void setPreviewWindow(View surface);
     void startSelfView();
+    void setActiveSpeakerWindow(View view);
+    void removeActiveSpeakerWindow();
 
     Rect getVideoSize(int vid);
     Rect getFullsceenVideoSize();
@@ -78,7 +84,7 @@ public interface MediaSession {
     boolean isRemoteAudioMuted();
     MediaRequestSource getVideoMuteSource();
 
-
+    // Move these to Call and use the onFirstPacketRx/onFirstPacketTx in MediaSessionCallback?
     boolean isReceivedFirstAudioPacket();
     boolean isReceivedFirstVideoPacket();
     boolean isSentFirstAudioPacket();
@@ -100,14 +106,17 @@ public interface MediaSession {
 
 
     void answerReceived(String sdp, Map<String, String> featureToggles);
+    void offerReceived(final String sdp);
     void updateSDP(final String sdp);
+
+    void createAnswer(SdpReadyCallback sdpReadyCallback);
 
 
     void headsetPluggedIn();
     void headsetPluggedOut();
     void joinShare(String shareId);
     void leaveShare(String shareId);
-    void startScreenShare(ScreenShareCallback screenShareCallback, String startScreenShare);
+    void startScreenShare(String startScreenShare);
     void stopScreenShare(String shareid);
     boolean isScreenSharing();
     void updateShareId(String shareId);

@@ -13,21 +13,18 @@ import com.cisco.spark.android.presence.operation.SendPresenceEventOperation;
 import com.cisco.spark.android.presence.operation.SubscribePresenceStatusOperation;
 import com.cisco.spark.android.sync.operationqueue.ActivityFillOperation;
 import com.cisco.spark.android.sync.operationqueue.AddPersonOperation;
-import com.cisco.spark.android.sync.operationqueue.AliasPreloginMetricsUserIdOperation;
 import com.cisco.spark.android.sync.operationqueue.AssignRoomAvatarOperation;
 import com.cisco.spark.android.sync.operationqueue.AudioMuteOperation;
 import com.cisco.spark.android.sync.operationqueue.AudioVolumeOperation;
 import com.cisco.spark.android.sync.operationqueue.AvatarUpdateOperation;
 import com.cisco.spark.android.sync.operationqueue.CatchUpSyncOperation;
 import com.cisco.spark.android.sync.operationqueue.ContentUploadOperation;
-import com.cisco.spark.android.sync.operationqueue.CreateKmsResourceOperation;
 import com.cisco.spark.android.sync.operationqueue.CustomNotificationsTagOperation;
 import com.cisco.spark.android.sync.operationqueue.DeleteActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.FeatureToggleOperation;
 import com.cisco.spark.android.sync.operationqueue.FetchActivityContextOperation;
 import com.cisco.spark.android.sync.operationqueue.FetchMentionsOperation;
 import com.cisco.spark.android.sync.operationqueue.FetchSpaceUrlOperation;
-import com.cisco.spark.android.sync.operationqueue.FetchStickyPackOperation;
 import com.cisco.spark.android.sync.operationqueue.FetchUnjoinedTeamRoomsOperation;
 import com.cisco.spark.android.sync.operationqueue.GetAvatarUrlsOperation;
 import com.cisco.spark.android.sync.operationqueue.GetRetentionPolicyInfoOperation;
@@ -43,10 +40,10 @@ import com.cisco.spark.android.sync.operationqueue.NewConversationWithRepostedMe
 import com.cisco.spark.android.sync.operationqueue.PostCommentOperation;
 import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.PostGenericMetricOperation;
-import com.cisco.spark.android.sync.operationqueue.PostStickyActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.RemoteSearchOperation;
 import com.cisco.spark.android.sync.operationqueue.RemoveParticipantOperation;
 import com.cisco.spark.android.sync.operationqueue.RemoveRoomAvatarOperation;
+import com.cisco.spark.android.sync.operationqueue.RoomBindOperation;
 import com.cisco.spark.android.sync.operationqueue.ScheduledEventActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.SendDtmfOperation;
 import com.cisco.spark.android.sync.operationqueue.SetTitleAndSummaryOperation;
@@ -135,13 +132,12 @@ public class ConversationContract {
     // we get a merge conflict if two branches update to the same schema version.
     //
     // To get the new hash, run the ConversationContractTest.testDbSchemaSanity unit test
-    public static final String[] SCHEMA_VERSION_AND_HASH = {"142", "dc4f8555abc1c5087512e60746c1b583"};
+    public static final String[] SCHEMA_VERSION_AND_HASH = {"154", "812186ce7bc28b75a3c72e38b709f4c9"};
 
     public static final int SCHEMA_VERSION = Integer.valueOf(SCHEMA_VERSION_AND_HASH[0]);
     public static final String DB_SCHEMA_HASH = SCHEMA_VERSION_AND_HASH[1];
 
-    //lm
-    public static final String CONTENT_AUTHORITY = "com.cisco.wx2.sdk.video.api.android.sync.conversation";
+    public static final String CONTENT_AUTHORITY = "com.cisco.spark.android.sync.conversation";
     private static final String CONTENT_TYPE_PREFIX = "vnd.android.cursor.dir/vnd.com.cisco.wx2.";
     private static final String CONTENT_ITEM_TYPE_PREFIX = "vnd.android.cursor.item/vnd.com.cisco.wx2.";
 
@@ -306,9 +302,10 @@ public class ConversationContract {
         CUSTODIAN_ORG_NAME(TEXT, 0),
         RETENTION_URL(TEXT,0),
         BINDING_STATE(INTEGER, DEFAULT_0),
-        RETENTION_DAYS(TEXT, 0),
+        RETENTION_DAYS(INTEGER, DEFAULT_0),
         ACL_URL(TEXT, 0),                                                           // ACL url for conversation
-        IS_TEAM_GUEST(INTEGER, 0);
+        IS_TEAM_GUEST(INTEGER, 0),
+        LAST_RETENTION_SYNC_TIMESTAMP(INTEGER, DEFAULT_0);
 
         public static final String[] DEFAULT_PROJECTION = getProjection(values());
 
@@ -401,7 +398,8 @@ public class ConversationContract {
         SYNC_OPERATION_ID(TEXT, UNIQUE),
         IS_MENTION(INTEGER, NOT_NULL | DEFAULT_0),
 
-        SYNC_STATE(INTEGER, 0);
+        SYNC_STATE(INTEGER, 0),
+        SPARK_WIDGET_MEETING_ID(TEXT, 0);
 
         // **DANGER** These are stored in the DB as ordinals, modify with care to avoid upgrade issues
         // When adding a new type be sure to revise the Activity.should* and getType functions as needed.
@@ -422,18 +420,22 @@ public class ConversationContract {
             UPDATE_CONTENT(Verb.update),
             FAVORITE(Verb.favorite),
             UNFAVORITE(Verb.unfavorite),
-            SCHEDULED_SYNCUP(Verb.schedule),
+            SCHEDULE_SPARK_MEETING(Verb.schedule),
             CALL_SESSION(Verb.update),
             TOMBSTONE(Verb.tombstone),
             FORWARDFILL_GAP(null), // used client-side only to keep track of holes in the stream. This gap triggers a forwardfill
-            IMAGE_URI(Verb.post),
+            DEPRECATED_IMAGE_URI(Verb.post), // deprecated. Do not use.
             NEW_TEAM_CONVERSATION(Verb.add),
             SET_TEAM_COLOR(Verb.update),
             ASSIGN_ROOM_AVATAR(Verb.assign),
             REMOVE_ROOM_AVATAR(Verb.unassign),
             WHITEBOARD(Verb.share),
             TAG(Verb.tag),
-            UNTAG(Verb.untag);
+            UNTAG(Verb.untag),
+            ADD_LYRASPACE(null),
+            REMOVE_LYRASPACE(null),
+            UPDATE_SPARK_MEETING(Verb.update),
+            DELETE_SPARK_MEETING(Verb.delete);
 
             public final String verb;
 
@@ -448,10 +450,10 @@ public class ConversationContract {
                     case UPDATE_CONTENT:
                     case WHITEBOARD:
                         return DisplayableFileSet.class;
-                    case SCHEDULED_SYNCUP:
-                        return EventUpdate.class;
-                    case IMAGE_URI:
-                        return ImageURI.class;
+                    case SCHEDULE_SPARK_MEETING:
+                    case UPDATE_SPARK_MEETING:
+                    case DELETE_SPARK_MEETING:
+                        return SparkMeetingWidget.class;
                     case ASSIGN_ROOM_AVATAR:
                     case REMOVE_ROOM_AVATAR:
                         return RoomAvatarAssignment.class;
@@ -469,19 +471,20 @@ public class ConversationContract {
                     case BACKFILL_GAP:
                     default:
                         return Message.class;
-                }
             }
+        }
 
-            public boolean isEncryptable() {
-                return this == MESSAGE
-                        || this == PHOTO
-                        || this == FILE
-                        || this == UPDATE_TITLE_AND_SUMMARY
-                        || this == ASSIGN_ROOM_AVATAR
-                        || this == SCHEDULED_SYNCUP
-                        || this == IMAGE_URI
-                        || this == SET_TEAM_COLOR
-                        || this == WHITEBOARD;
+        public boolean isEncryptable() {
+            return this == MESSAGE
+                    || this == PHOTO
+                    || this == FILE
+                    || this == UPDATE_TITLE_AND_SUMMARY
+                    || this == ASSIGN_ROOM_AVATAR
+                    || this == SET_TEAM_COLOR
+                    || this == WHITEBOARD
+                    || this == SCHEDULE_SPARK_MEETING
+                    || this == UPDATE_SPARK_MEETING
+                    || this == DELETE_SPARK_MEETING;
             }
 
             public boolean isSearchable() {
@@ -785,7 +788,7 @@ public class ConversationContract {
             /**
              * Terminal state. The operation has completed successfully.
              */
-            SUCCEEDED, state;
+            SUCCEEDED;
 
             public boolean isTerminal() {
                 return this == FAULTED || this == SUCCEEDED;
@@ -867,7 +870,7 @@ public class ConversationContract {
             SEND_DTMF(SendDtmfOperation.class),
             SET_AVATAR(AvatarUpdateOperation.class),
             SET_UP_SHARED_KMS_KEY(SetupSharedKeyWithKmsOperation.class),
-            STICKIES(PostStickyActivityOperation.class),
+            DEPRECATED_STICKIES(null), // Do not use. Remove next time minimum schema version is increased.
             UPDATE_ENCRYPTION_KEY(UpdateEncryptionKeyOperation.class),
             VIDEO_THUMBNAIL(VideoThumbnailOperation.class),
             ACTIVITY_FILL(ActivityFillOperation.class),
@@ -875,11 +878,11 @@ public class ConversationContract {
             FETCH_MENTIONS(FetchMentionsOperation.class),
             REGISTER_DEVICE(RegisterDeviceOperation.class),
             FETCH_UNJOINED_TEAMS(FetchUnjoinedTeamRoomsOperation.class),
-            KMS_CREATE_RESOURCE(CreateKmsResourceOperation.class),
+            DEPRECATED_KMS_CREATE_RESOURCE(null),
             CONVERSATION_ARCHIVE(ToggleActivityOperation.class),
             REMOTE_SEARCH_QUERY(RemoteSearchOperation.class),
             JOIN_TEAM_ROOM(JoinTeamRoomOperation.class),
-            FETCH_STICKY_PACK(FetchStickyPackOperation.class),
+            DEPRECATED_FETCH_STICKY_PACK(null), // Do not use. Remove next time minimum schema version is increased.
             SET_TEAM_COLOR(UpdateTeamColorOperation.class),
             FETCH_USER_PRESENCE(FetchPresenceStatusOperation.class),
             SUSBSCRIBE_USER_PRESENCE(SubscribePresenceStatusOperation.class),
@@ -906,7 +909,8 @@ public class ConversationContract {
             AUDIO_MUTE(AudioMuteOperation.class),
             AUDIO_VOLUME(AudioVolumeOperation.class),
             TAG_NOTIFICATIONS(CustomNotificationsTagOperation.class),
-            POST_ALIAS_USER(AliasPreloginMetricsUserIdOperation.class);
+            DELETE_WHITEBOARD(null),// Do not use. Remove next time minimum schema version is increased.
+            ROOM_BIND(RoomBindOperation.class);
 
             public final Class<? extends Operation> operationClass;
 
@@ -916,10 +920,6 @@ public class ConversationContract {
 
             public boolean isMessage() {
                 return this == MESSAGE_WITH_CONTENT || this == MESSAGE;
-            }
-
-            public boolean isSticker() {
-                return this == STICKIES;
             }
         }
 
@@ -1061,6 +1061,72 @@ public class ConversationContract {
         }
     }
 
+    public enum OrganizationEntry implements DbColumn, BaseColumns {
+        _id(INTEGER, PRIMARY_KEY | AUTOINCREMENT),
+        ORG_ID(TEXT, NOT_NULL | UNIQUE),
+        ORG_NAME(TEXT, DEFAULT_EMPTY_STRING),
+        RETENTION_URL(TEXT, DEFAULT_EMPTY_STRING),
+        RETENTION_DAYS(INTEGER, DEFAULT_0),
+        LAST_RETENTION_SYNC_TIMESTAMP(INTEGER, DEFAULT_0);
+
+        public static final String[] DEFAULT_PROJECTION = getProjection(values());
+
+        public static final String TABLE_NAME = OrganizationEntry.class.getSimpleName();
+        public static final int URI_MATCHCODE = getNextMatchId();
+        public static final int URI_IDMATCHCODE = URI_MATCHCODE + ID_URI_MATCH_ID_BASE;
+
+        public static final Uri CONTENT_URI = Uri
+                .parse("content://" + CONTENT_AUTHORITY + "/" + TABLE_NAME);
+
+        public String type = "";
+        int flags = 0;
+
+        OrganizationEntry(String type, int flags) {
+            this.type = type;
+            this.flags = flags;
+        }
+
+        @Override
+        public String tablename() {
+            return TABLE_NAME;
+        }
+
+        @Override
+        public int uriMatchCode() {
+            return URI_MATCHCODE;
+        }
+
+        @Override
+        public int idUriMatchCode() {
+            return URI_IDMATCHCODE;
+        }
+
+        @Override
+        public String datatype() {
+            return type;
+        }
+
+        @Override
+        public int flags() {
+            return flags;
+        }
+
+        @Override
+        public String contentType() {
+            return CONTENT_TYPE_PREFIX + TABLE_NAME.toLowerCase(Locale.US);
+        }
+
+        @Override
+        public String contentItemType() {
+            return CONTENT_ITEM_TYPE_PREFIX + TABLE_NAME.toLowerCase(Locale.US);
+        }
+
+        @Override
+        public Uri contentUri() {
+            return CONTENT_URI;
+        }
+    }
+
     public enum ContentDataCacheEntry implements DbColumn, BaseColumns {
         _id(INTEGER, PRIMARY_KEY | AUTOINCREMENT),
         DATA_LOCAL_URI(TEXT, 0),
@@ -1075,8 +1141,7 @@ public class ConversationContract {
         public enum Cache {
             THUMBNAIL,
             MEDIA,
-            AVATAR,
-            IMAGEURI
+            AVATAR
         }
 
         public static final String[] DEFAULT_PROJECTION = getProjection(values());
@@ -1215,13 +1280,13 @@ public class ConversationContract {
         DIRECTION(TEXT, NOT_NULL),
         DISPOSTION(TEXT, NOT_NULL),
         PARTICIPANT_COUNT(INTEGER, NOT_NULL | DEFAULT_0),
+        CALLBACK_ADDRESS(TEXT, 0),
         OTHER_UUID(TEXT, 0),
         OTHER_EMAIL(TEXT, 0),
         OTHER_NAME(TEXT, 0),
         OTHER_IS_EXTERNAL(INTEGER, NOT_NULL | DEFAULT_0),
         OTHER_PRIMARY_DISPLAY_STRING(TEXT, 0),
         OTHER_SECONDARY_DISPLAY_STRING(TEXT, 0),
-        OTHER_CALLBACK_ADDRESS(TEXT, 0),
         OTHER_PHONE_NUMBER(TEXT, 0),
         OTHER_SIP_URL(TEXT, 0),
         OTHER_TEL_URL(TEXT, 0),
@@ -1510,76 +1575,6 @@ public class ConversationContract {
         }
     }
 
-        /*
-         *  Mapping between Pad ID's and key value/key ID
-         *
-         */
-        public enum StickyEntry implements DbColumn, BaseColumns {
-            _id(INTEGER, PRIMARY_KEY | AUTOINCREMENT),
-            PAD_ID(TEXT, NOT_NULL),
-            PAD_DESCRIPTION(TEXT, 0),
-            STICKY_ID(TEXT, NOT_NULL),
-            STICKY_URL(TEXT, NOT_NULL),
-            STICKY_DESCRIPTION(TEXT, 0);
-
-            public static final String[] DEFAULT_PROJECTION = getProjection(values());
-
-            public static final String TABLE_NAME = StickyEntry.class.getSimpleName();
-            public static final int URI_MATCHCODE = getNextMatchId();
-            public static final int URI_IDMATCHCODE = URI_MATCHCODE + ID_URI_MATCH_ID_BASE;
-
-            public static final Uri CONTENT_URI = Uri
-                    .parse("content://" + CONTENT_AUTHORITY + "/" + TABLE_NAME);
-
-            public String type = "";
-            int flags = 0;
-
-            StickyEntry(String type, int flags) {
-                this.type = type;
-                this.flags = flags;
-            }
-
-            @Override
-            public String tablename() {
-                return TABLE_NAME;
-            }
-
-            @Override
-            public int uriMatchCode() {
-                return URI_MATCHCODE;
-            }
-
-            @Override
-            public int idUriMatchCode() {
-                return URI_IDMATCHCODE;
-            }
-
-            @Override
-            public String datatype() {
-                return type;
-            }
-
-            @Override
-            public int flags() {
-                return flags;
-            }
-
-            @Override
-            public String contentType() {
-                return CONTENT_TYPE_PREFIX + TABLE_NAME.toLowerCase(Locale.US);
-            }
-
-            @Override
-            public String contentItemType() {
-                return CONTENT_ITEM_TYPE_PREFIX + TABLE_NAME.toLowerCase(Locale.US);
-            }
-
-            @Override
-            public Uri contentUri() {
-                return CONTENT_URI;
-            }
-        }
-
     public enum TeamEntry implements DbColumn, BaseColumns {
         _id(INTEGER, PRIMARY_KEY | AUTOINCREMENT),
         TEAM_ID(TEXT, NOT_NULL | UNIQUE),
@@ -1646,8 +1641,8 @@ public class ConversationContract {
 
     public enum LocusMeetingInfoEntry implements DbColumn, BaseColumns {
         _id(INTEGER, PRIMARY_KEY | AUTOINCREMENT),
-        LOCUS_URL(TEXT, UNIQUE | NOT_NULL),
-        LOCUS_ID(TEXT, UNIQUE | NOT_NULL),
+        LOCUS_URL(TEXT, UNIQUE),
+        LOCUS_ID(TEXT, UNIQUE),
         WEBEX_MEETING_URL(TEXT, UNIQUE),
         SIP_MEETING_URI(TEXT, UNIQUE),
         OWNER_ID(TEXT, 0),
@@ -1718,10 +1713,92 @@ public class ConversationContract {
 
     }
 
+    public enum CalendarMeetingInfoEntry implements DbColumn, BaseColumns {
+        _id(INTEGER, PRIMARY_KEY | AUTOINCREMENT),
+        CALENDAR_MEETING_ID(TEXT, UNIQUE | NOT_NULL),
+        SERIES_ID(TEXT, DEFAULT_0),
+        START_TIME(INTEGER, DEFAULT_0),
+        DURATION_MINUTES(INTEGER, DEFAULT_0),
+        ORGANIZER_ID(TEXT, 0),
+        ENCRYPTION_KEY_URL(TEXT, 0),
+        SUBJECT(TEXT, 0),
+        IS_RECURRING(INTEGER, NOT_NULL | DEFAULT_0),
+        CALL_URI(TEXT, 0),
+        NOTES(TEXT, 0),
+        LOCATION(TEXT, 0),
+        LINKS(TEXT, 0),
+        PARTICIPANTS(TEXT, 0),
+        MEETING_SENSITIVITY(TEXT, 0),
+        CONVERSATION_ID(TEXT, 0),
+        SPACE_URI(TEXT, 0),
+        SPACE_URL(TEXT, 0),
+        SPACE_MEET_URL(TEXT, 0),
+        WEBEX_URI(TEXT, 0),
+        WEBEX_URL(TEXT, 0),
+        IS_DELETED(INTEGER, NOT_NULL | DEFAULT_0),
+        LAST_MODIFIED_TIME(INTEGER, DEFAULT_0),
+        IS_ENCRYPTED(INTEGER, NOT_NULL | DEFAULT_0);
+
+        public static final String[] DEFAULT_PROJECTION = getProjection(values());
+
+        public static final String TABLE_NAME = CalendarMeetingInfoEntry.class.getSimpleName();
+        public static final int URI_MATCHCODE = getNextMatchId();
+        public static final int URI_IDMATCHCODE = URI_MATCHCODE + ID_URI_MATCH_ID_BASE;
+
+        public static final Uri CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY + "/" + TABLE_NAME);
+
+        public String type = "";
+        int flags = 0;
+
+        CalendarMeetingInfoEntry(String type, int flags) {
+            this.type = type;
+            this.flags = flags;
+        }
+
+        @Override
+        public String tablename() {
+            return TABLE_NAME;
+        }
+
+        @Override
+        public int uriMatchCode() {
+            return URI_MATCHCODE;
+        }
+
+        @Override
+        public int idUriMatchCode() {
+            return URI_IDMATCHCODE;
+        }
+
+        @Override
+        public String datatype() {
+            return type;
+        }
+
+        @Override
+        public int flags() {
+            return flags;
+        }
+
+        @Override
+        public String contentType() {
+            return CONTENT_TYPE_PREFIX + TABLE_NAME.toLowerCase(Locale.US);
+        }
+
+        @Override
+        public String contentItemType() {
+            return CONTENT_ITEM_TYPE_PREFIX + TABLE_NAME.toLowerCase(Locale.US);
+        }
+
+        @Override
+        public Uri contentUri() {
+            return CONTENT_URI;
+        }
+    }
+
     /* Serves as content table for Conversation search FTS
     *
     */
-
     public enum ConversationSearchDataEntry implements DbColumn, BaseColumns {
         _id(INTEGER, PRIMARY_KEY | AUTOINCREMENT),
         suggest_text_1(TEXT, 0),
@@ -1962,7 +2039,8 @@ public class ConversationContract {
         RETENTION_URL(ConversationEntry.RETENTION_URL),
         BINDING_STATE(ConversationEntry.BINDING_STATE),
         RETENTION_DAYS(ConversationEntry.RETENTION_DAYS),
-        IS_TEAM_GUEST(ConversationEntry.IS_TEAM_GUEST);
+        IS_TEAM_GUEST(ConversationEntry.IS_TEAM_GUEST),
+        LAST_RETENTION_SYNC_TIMESTAMP(ConversationEntry.LAST_RETENTION_SYNC_TIMESTAMP);
 
 
         public static final String[] DEFAULT_PROJECTION = getProjection(vw_Conversation.values());
@@ -2068,7 +2146,7 @@ public class ConversationContract {
         CI_NOTFOUND(ActorEntry.CI_NOTFOUND),
         PRESENCE_STATUS(ActorEntry.PRESENCE_STATUS),
         PRESENCE_LAST_ACTIVE(ActorEntry.PRESENCE_LAST_ACTIVE),
-        PRESENCE_EXPIRATION_DATE(ActorEntry.PRESENCE_EXPIRATION_DATE),;
+        PRESENCE_EXPIRATION_DATE(ActorEntry.PRESENCE_EXPIRATION_DATE);
 
         public static final String[] DEFAULT_PROJECTION = getProjection(vw_Participant.values());
 
@@ -2137,7 +2215,6 @@ public class ConversationContract {
             return CONTENT_URI;
         }
     }
-
 
     public enum vw_PeopleInSmallRooms implements ViewColumn {
         _id(ActorEntry._id),
@@ -2386,13 +2463,13 @@ public class ConversationContract {
         DIRECTION(CallHistory.DIRECTION),
         DISPOSTION(CallHistory.DISPOSTION),
         PARTICIPANT_COUNT(CallHistory.PARTICIPANT_COUNT),
+        CALLBACK_ADDRESS(CallHistory.CALLBACK_ADDRESS),
         OTHER_UUID(CallHistory.OTHER_UUID),
         OTHER_EMAIL(CallHistory.OTHER_EMAIL),
         OTHER_NAME(CallHistory.OTHER_NAME),
         OTHER_IS_EXTERNAL(CallHistory.OTHER_IS_EXTERNAL),
         OTHER_PRIMARY_DISPLAY_STRING(CallHistory.OTHER_PRIMARY_DISPLAY_STRING),
         OTHER_SECONDARY_DISPLAY_STRING(CallHistory.OTHER_SECONDARY_DISPLAY_STRING),
-        OTHER_CALLBACK_ADDRESS(CallHistory.OTHER_CALLBACK_ADDRESS),
         OTHER_PHONE_NUMBER(CallHistory.OTHER_PHONE_NUMBER),
         OTHER_SIP_URL(CallHistory.OTHER_SIP_URL),
         OTHER_TEL_URL(CallHistory.OTHER_TEL_URL),
@@ -2495,7 +2572,11 @@ public class ConversationContract {
         FLAG_STATE(FlagEntry.FLAG_STATE),
         PRESENCE_STATUS(ActorEntry.PRESENCE_STATUS),
         PRESENCE_LAST_ACTIVE(ActorEntry.PRESENCE_LAST_ACTIVE),
-        PRESENCE_EXPIRATION_DATE(ActorEntry.PRESENCE_EXPIRATION_DATE);
+        PRESENCE_EXPIRATION_DATE(ActorEntry.PRESENCE_EXPIRATION_DATE),
+        ORG_ID(OrganizationEntry.ORG_ID),
+        RETENTION_DAYS(OrganizationEntry.RETENTION_DAYS),
+        ONE_ON_ONE_PARTICIPANT(ConversationEntry.ONE_ON_ONE_PARTICIPANT),
+        SPARK_WIDGET_MEETING_ID(ActivityEntry.SPARK_WIDGET_MEETING_ID),;
 
         public static final String[] DEFAULT_PROJECTION = getProjection(vw_Activities.values());
 
@@ -2517,7 +2598,12 @@ public class ConversationContract {
                     + " LEFT JOIN " + FlagEntry.TABLE_NAME
                     + " ON " + fqname(ActivityEntry.ACTIVITY_ID) + " = " + fqname(FlagEntry.ACTIVITY_ID)
                     + " LEFT JOIN " + ActorEntry.TABLE_NAME
-                    + " ON " + fqname(ActivityEntry.ACTOR_ID) + " = " + fqname(ActorEntry.ACTOR_UUID);
+                    + " ON " + fqname(ActivityEntry.ACTOR_ID) + " = " + fqname(ActorEntry.ACTOR_UUID)
+                    + " LEFT JOIN " + OrganizationEntry.TABLE_NAME
+                    + " ON " + fqname(ActivityEntry.ACTOR_ID) + " = " + fqname(ActorEntry.ACTOR_UUID)
+                    + " AND " + fqname(ActorEntry.ORG_ID) + " = " + fqname(OrganizationEntry.ORG_ID)
+                    + " LEFT JOIN " + ConversationEntry.TABLE_NAME
+                    + " ON " + fqname(ActivityEntry.CONVERSATION_ID) + " = " + fqname(ConversationEntry.CONVERSATION_ID);
         }
 
         @Override
@@ -2602,8 +2688,7 @@ public class ConversationContract {
                     + " ON " + fqname(ActivityEntry.CONVERSATION_ID) + " = " + fqname(ConversationEntry.CONVERSATION_ID)
                     + " JOIN " + ActorEntry.TABLE_NAME
                     + " ON " + fqname(ActivityEntry.ACTOR_ID) + " = " + fqname(ActorEntry.ACTOR_UUID)
-                    + " WHERE " + ActivityEntry.IS_MENTION + " = 1 AND " + ActivityEntry.IS_ENCRYPTED + " = 0 AND " + ConversationEntry.SELF_JOINED + " = 1 ";
-
+                    + " WHERE " + ActivityEntry.IS_MENTION + " = 1 AND " + ActivityEntry.IS_ENCRYPTED + " = 0 AND " + ConversationEntry.SELF_JOINED + " = 1 AND " + ConversationEntry.ARCHIVED + " = 0 ";
         }
 
         @Override
@@ -2913,6 +2998,7 @@ public class ConversationContract {
         PRESENCE_STATUS(ActorEntry.PRESENCE_STATUS),
         PRESENCE_LAST_ACTIVE(ActorEntry.PRESENCE_LAST_ACTIVE),
         PRESENCE_EXPIRATION_DATE(ActorEntry.PRESENCE_EXPIRATION_DATE),
+        CI_NOTFOUND(ActorEntry.CI_NOTFOUND),
         TOTAL_CONV_COUNT(null),
         SMALL_CONV_COUNT(null),
         SCORE(null);
@@ -2977,11 +3063,121 @@ public class ConversationContract {
                 "sum(case when SMALL_CONVERSATION == 1 then 1 else 0 end) * 2 + count(*) as SCORE, " +
                 "sum(case when SMALL_CONVERSATION == 1 then 1 else 0 end) AS SMALL_CONV_COUNT, " +
                 "count(*) AS TOTAL_CONV_COUNT, " +
-                "ae.actor_uuid AS ACTOR_UUID, PRESENCE_STATUS, PRESENCE_LAST_ACTIVE, PRESENCE_EXPIRATION_DATE, DISPLAY_NAME, EMAIL, ENTITLEMENT_SQUARED " +
+                "ae.actor_uuid AS ACTOR_UUID, PRESENCE_STATUS, PRESENCE_LAST_ACTIVE, PRESENCE_EXPIRATION_DATE, DISPLAY_NAME, EMAIL, ENTITLEMENT_SQUARED, CI_NOTFOUND " +
 
                 "FROM " +
                 "(select conversation_id, case when PARTICIPANT_COUNT <= 20 then 1 else 0 end SMALL_CONVERSATION from ConversationEntry) sq " +
                 "join ParticipantEntry pe on sq.conversation_id = pe.conversation_id join ActorEntry ae on ae.actor_uuid = pe.actor_uuid group by pe.actor_uuid";
+        }
+
+        @Override
+        public @Nullable DbColumn sourceColumn() {
+            return sourceCol;
+        }
+    }
+
+    public enum vw_UniqueCallOutAddresses implements ViewColumn {
+        _id(null),
+        TOTAL_COUNT(null),
+        CALLBACK_ADDRESS(CallHistory.CALLBACK_ADDRESS),
+        OTHER_UUID(CallHistory.OTHER_UUID),
+        OTHER_EMAIL(CallHistory.OTHER_EMAIL),
+        OTHER_NAME(CallHistory.OTHER_NAME),
+        OTHER_IS_EXTERNAL(CallHistory.OTHER_IS_EXTERNAL),
+        OTHER_PRIMARY_DISPLAY_STRING(CallHistory.OTHER_PRIMARY_DISPLAY_STRING),
+        OTHER_SECONDARY_DISPLAY_STRING(CallHistory.OTHER_SECONDARY_DISPLAY_STRING),
+        OTHER_PHONE_NUMBER(CallHistory.OTHER_PHONE_NUMBER),
+        OTHER_SIP_URL(CallHistory.OTHER_SIP_URL),
+        OTHER_TEL_URL(CallHistory.OTHER_TEL_URL),
+        OTHER_OWNER_ID(CallHistory.OTHER_OWNER_ID),
+        CONVERSATION_URL(CallHistory.CONVERSATION_URL),
+        PARTICIPANT_COUNT(CallHistory.PARTICIPANT_COUNT),
+        CONVERSATION_DISPLAY_NAME(ConversationEntry.CONVERSATION_DISPLAY_NAME),
+        TITLE(ConversationEntry.TITLE),
+        ONE_ON_ONE_PARTICIPANT(ConversationEntry.ONE_ON_ONE_PARTICIPANT),
+        LOCUS_URL(ConversationEntry.LOCUS_URL),
+        TOP_PARTICIPANTS(ConversationEntry.TOP_PARTICIPANTS);
+
+        public DbColumn sourceCol;
+        public static final String VIEW_NAME = vw_UniqueCallOutAddresses.class.getSimpleName();
+        public static final int URI_MATCHCODE = getNextMatchId();
+        public static final int URI_IDMATCHCODE = URI_MATCHCODE + ID_URI_MATCH_ID_BASE;
+        public static final Uri CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY + "/" + VIEW_NAME);
+        public static final String[] DEFAULT_PROJECTION = getProjection(vw_UniqueCallOutAddresses.values());
+
+        vw_UniqueCallOutAddresses(@Nullable  DbColumn _sourceCol) {
+            sourceCol = _sourceCol;
+        }
+
+        @Override
+        public String datatype() {
+            // The only null sourceCols are integers
+            return sourceCol != null ? sourceCol.datatype() : INTEGER;
+        }
+
+        @Override
+        public int flags() {
+            // The only null sourceCols are integers
+            return sourceCol != null ? sourceCol.flags() : NOT_NULL | DEFAULT_0;
+        }
+
+        @Override
+        public String tablename() {
+            return VIEW_NAME;
+        }
+
+        @Override
+        public int uriMatchCode() {
+            return URI_MATCHCODE;
+        }
+
+        @Override
+        public int idUriMatchCode() {
+            return URI_IDMATCHCODE;
+        }
+
+        @Override
+        public String contentType() {
+            return CONTENT_TYPE_PREFIX + VIEW_NAME.toLowerCase(Locale.US);
+        }
+
+        @Override
+        public String contentItemType() {
+            return CONTENT_ITEM_TYPE_PREFIX + VIEW_NAME.toLowerCase(Locale.US);
+        }
+
+        @Override
+        public Uri contentUri() {
+            return CONTENT_URI;
+        }
+
+        @Override
+        public String getViewSql() {
+
+            return "CREATE VIEW vw_UniqueCallOutAddresses " +
+                "AS SELECT " +
+                "CallHistory._id as _id, " +
+                "count(CALLBACK_ADDRESS) AS TOTAL_COUNT, " +
+                "CallHistory.CALLBACK_ADDRESS AS CALLBACK_ADDRESS, " +
+                "CallHistory.OTHER_UUID AS OTHER_UUID, " +
+                "CallHistory.OTHER_EMAIL AS OTHER_EMAIL, " +
+                "CallHistory.OTHER_NAME AS OTHER_NAME, " +
+                "CallHistory.OTHER_IS_EXTERNAL AS OTHER_IS_EXTERNAL, " +
+                "CallHistory.OTHER_PRIMARY_DISPLAY_STRING AS OTHER_PRIMARY_DISPLAY_STRING, " +
+                "CallHistory.OTHER_SECONDARY_DISPLAY_STRING AS OTHER_SECONDARY_DISPLAY_STRING, " +
+                "CallHistory.OTHER_PHONE_NUMBER AS OTHER_PHONE_NUMBER, " +
+                "CallHistory.OTHER_SIP_URL AS OTHER_SIP_URL, " +
+                "CallHistory.OTHER_TEL_URL AS OTHER_TEL_URL, " +
+                "CallHistory.OTHER_OWNER_ID AS OTHER_OWNER_ID, " +
+                "CallHistory.CONVERSATION_URL AS CONVERSATION_URL, " +
+                "CallHistory.PARTICIPANT_COUNT AS PARTICIPANT_COUNT, " +
+                "ConversationEntry.TITLE AS TITLE, " +
+                "ConversationEntry.LOCUS_URL AS LOCUS_URL, " +
+                "ConversationEntry.TOP_PARTICIPANTS AS TOP_PARTICIPANTS, " +
+                "ConversationEntry.CONVERSATION_DISPLAY_NAME AS CONVERSATION_DISPLAY_NAME, " +
+                "ConversationEntry.ONE_ON_ONE_PARTICIPANT AS ONE_ON_ONE_PARTICIPANT " +
+                "FROM CallHistory LEFT JOIN ConversationEntry ON ConversationEntry.URL = CONVERSATION_URL " +
+                "GROUP BY CALLBACK_ADDRESS HAVING CALLBACK_ADDRESS LIKE '%@%' ";
         }
 
         @Override
@@ -3261,14 +3457,15 @@ public class ConversationContract {
             ParticipantEntry.values(),
             ContentDataCacheEntry.values(),
             ConversationMeetingEntry.values(),
-            StickyEntry.values(),
             CallHistory.values(),
             EncryptionKeyEntry.values(),
             ConversationSearchDataEntry.values(),
             MessageSearchDataEntry.values(),
             ContentSearchDataEntry.values(),
             TeamEntry.values(),
-            LocusMeetingInfoEntry.values()
+            LocusMeetingInfoEntry.values(),
+            OrganizationEntry.values(),
+            CalendarMeetingInfoEntry.values()
     };
 
     public static final ViewColumn[][] allViews = {
@@ -3284,7 +3481,8 @@ public class ConversationContract {
             vw_Flags.values(),
             vw_TeamsList.values(),
             vw_Activities.values(),
-            vw_ScoredActorSearch.values()
+            vw_ScoredActorSearch.values(),
+            vw_UniqueCallOutAddresses.values()
     };
 
     public static final VirtualTableColumn[][] allVirtualTables = {
@@ -3363,6 +3561,15 @@ public class ConversationContract {
             "CREATE TRIGGER tr_insertConversationFTSEntry AFTER INSERT ON " + ConversationSearchDataEntry.TABLE_NAME + " BEGIN "
                     + "  INSERT INTO " + ConversationSearchEntry.TABLE_NAME + "(docid, CONVERSATION_NAME, PARTICIPANT_NAMES, PARTICIPANT_EMAILS)"
                     + " VALUES(new.rowid, new.CONVERSATION_NAME, new.PARTICIPANT_NAMES, new.PARTICIPANT_EMAILS); "
+                    + "END",
+
+            "CREATE TRIGGER IF NOT EXISTS tr_pruningActivityBeyondRetentionDate AFTER DELETE ON " + ActivityEntry.TABLE_NAME + " BEGIN "
+                    + "DELETE FROM " + FlagEntry.TABLE_NAME + " "
+                    + "WHERE " + FlagEntry.ACTIVITY_ID + " = OLD." + ActivityEntry.ACTIVITY_ID + "; "
+                    + "DELETE FROM " + MessageSearchDataEntry.TABLE_NAME + " "
+                    + "WHERE " + MessageSearchDataEntry.ACTIVITY_ID + " = OLD." + ActivityEntry.ACTIVITY_ID + "; "
+                    + "DELETE FROM " + ContentSearchDataEntry.TABLE_NAME + " "
+                    + "WHERE " + ContentSearchDataEntry.ACTIVITY_ID + " = OLD." + ActivityEntry.ACTIVITY_ID + "; "
                     + "END"
     };
 

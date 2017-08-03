@@ -3,6 +3,8 @@ package com.cisco.spark.android.sync.operationqueue;
 import android.support.annotation.NonNull;
 
 import com.cisco.spark.android.core.Injector;
+import com.cisco.spark.android.metrics.Timing;
+import com.cisco.spark.android.metrics.TimingProvider;
 import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.cisco.spark.android.sync.operationqueue.core.RetryPolicy;
@@ -11,8 +13,11 @@ import com.cisco.spark.android.sync.queue.ConversationSyncQueue;
 import com.cisco.spark.android.sync.queue.IncrementalSyncTask;
 import com.cisco.spark.android.sync.queue.ShellsTask;
 import com.cisco.spark.android.ui.conversation.ConversationResolver;
+import com.cisco.spark.android.wdm.DeviceRegistration;
+import com.github.benoitdion.ln.Ln;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -30,6 +35,13 @@ public class CatchUpSyncOperation extends Operation {
 
     @Inject
     transient EventBus bus;
+
+    @Inject
+    transient TimingProvider timingProvider;
+
+    @Inject
+    transient DeviceRegistration deviceRegistration;
+
 
     public CatchUpSyncOperation(Injector injector) {
         super(injector);
@@ -52,10 +64,11 @@ public class CatchUpSyncOperation extends Operation {
     protected ConversationContract.SyncOperationEntry.SyncState doWork() throws IOException {
 
         boolean success;
-        if (ConversationSyncQueue.getHighWaterMark(getContentResolver()) == 0) {
+        long highWaterMark = ConversationSyncQueue.getHighWaterMark(getContentResolver());
+        if (highWaterMark == 0) {
             success = doInitialSync();
         } else {
-            success = doCatchUpSync();
+            success = doCatchUpSync(System.currentTimeMillis() - highWaterMark > TimeUnit.HOURS.toMillis(12));
         }
 
         return success
@@ -63,29 +76,69 @@ public class CatchUpSyncOperation extends Operation {
                 : ConversationContract.SyncOperationEntry.SyncState.READY;
     }
 
-    private boolean doCatchUpSync() {
-        getFastShellsTask()
-                .withMaxParticipants(0)
-                .execute();
+    private boolean doCatchUpSync(boolean includeFastShells) {
+        Ln.i("Starting Catch-up Sync");
+        Timing t = timingProvider.get("android_performance_conversations_update");
+        t.start();
+        bus.post(new ConversationSyncQueue.ConversationSyncStartedEvent());
 
-        bus.post(new ConversationSyncQueue.ConversationListCompletedEvent());
-        return new CatchUpSyncTask(injector).execute();
+        // Be nice to the server, don't bother with fast shells unless it has been a while.
+        if (includeFastShells) {
+            getFastShellsTask()
+                    .withMaxParticipants(0)
+                    .execute();
+            bus.post(new ConversationSyncQueue.ConversationListCompletedEvent());
+        }
+
+        CatchUpSyncTask catchUpSyncTask = new CatchUpSyncTask(injector);
+        boolean success = catchUpSyncTask.execute();
+
+        if (success) {
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("count", catchUpSyncTask.getConversationsProcessed());
+            map.put("buffered-mercury-enabled", deviceRegistration.getFeatures().isBufferedMercuryEnabled());
+            map.put("include-fast-shells", includeFastShells);
+            t.endAndPublish(map);
+        }
+
+        if (!includeFastShells)
+            bus.post(new ConversationSyncQueue.ConversationListCompletedEvent());
+
+        return success;
     }
 
     private boolean doInitialSync() {
-        boolean success;
+        Ln.i("Starting Initial Sync");
+        Timing t = timingProvider.get("android_performance_conversations_initial");
+        t.start();
+
+        bus.post(new ConversationSyncQueue.ConversationSyncStartedEvent());
+
         getFastShellsTask()
                 // Min participants to render the title, plus one
                 .withMaxParticipants(ConversationResolver.MAX_TOP_PARTICIPANTS + 1)
                 .execute();
 
+        t.addSplit("fastShells");
+
         // This gets all the convs, all the participants, and 1 activity
-        success = getFullShellsTask().execute();
+        boolean success = getFullShellsTask().execute();
+
+        t.addSplit("fullShells");
 
         if (success) {
             bus.post(new ConversationSyncQueue.ConversationListCompletedEvent());
-            success = new CatchUpSyncTask(injector).execute();
+            CatchUpSyncTask catchUpSyncTask = new CatchUpSyncTask(injector);
+            success = catchUpSyncTask.execute();
+
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("count", catchUpSyncTask.getConversationsProcessed());
+
+            if (success) t.endAndPublish(map);
         }
+
+        if (success) t.endAndPublish();
+
         return success;
     }
 
@@ -104,9 +157,9 @@ public class CatchUpSyncOperation extends Operation {
     @NonNull
     @Override
     public RetryPolicy buildRetryPolicy() {
-        return RetryPolicy.newJobTimeoutPolicy(1, TimeUnit.HOURS)
-                .withExponentialBackoff(5, 120, TimeUnit.MINUTES)
-                .withAttemptTimeout(10, TimeUnit.MINUTES);
+        return RetryPolicy.newJobTimeoutPolicy(3, TimeUnit.HOURS)
+                .withExponentialBackoff(5, 120, TimeUnit.SECONDS)
+                .withAttemptTimeout(30, TimeUnit.MINUTES);
     }
 
     public ShellsTask getFastShellsTask() {

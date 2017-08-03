@@ -1,8 +1,10 @@
 package com.cisco.spark.android.lyra;
 
+import retrofit2.Response;
+
 public interface BindingCallback {
 
-    void onSuccess();
+    void onSuccess(Response response);
 
-    void onError();
+    void onError(Response response);
 }

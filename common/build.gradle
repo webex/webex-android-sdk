@@ -4,34 +4,63 @@ apply plugin: 'com.android.library'
 apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'checkstyle'
 
+project.ext {
+    // Property to store the ndk home value in
+    androidNdkHome = null
+}
+
 def gitSha() {
     return 'git rev-parse --short HEAD'.execute([], file(".")).text.trim()
 }
 
 def getNdkBuild() {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        return new File(ANDROID_NDK_HOME, 'ndk-build.cmd')
+        return new File(project.androidNdkHome, 'ndk-build.cmd')
     } else {
-        return new File(ANDROID_NDK_HOME, 'ndk-build')
+        return new File(project.androidNdkHome, 'ndk-build')
     }
 }
 
+// This task checks if you have ANDROID_NDK_HOME specified either in the
+// ~/.gradle/gradle.properties file or as an environment variable and
+// uses the latter if both is set.
 task ndkCheck {
-    def error = 'set ANDROID_NDK_HOME in your ~/.gradle/gradle.properties'
-    assert ANDROID_NDK_HOME != null: error
-    assert getNdkBuild().exists(): error
+
+    if (project.hasProperty("ANDROID_NDK_HOME")) {
+        project.androidNdkHome = project.property("ANDROID_NDK_HOME")
+        println "[ndkcheck] ANDROID_NDK_HOME found in gradle.properties = " + project.androidNdkHome
+    }
+    if (System.getenv("ANDROID_NDK_HOME") != null) {
+        project.androidNdkHome = System.getenv("ANDROID_NDK_HOME")
+        println "[ndkcheck] ANDROID_NDK_HOME found in environment = " + project.androidNdkHome
+        if (project.hasProperty("ANDROID_NDK_HOME")) {
+            println "[ndkcheck] Environment variable overrides gradle.properties property"
+        }
+    }
+
+    def error = 'set ANDROID_NDK_HOME in your ~/.gradle/gradle.properties or export as variable in environment. Current value: ' + project.androidNdkHome
+    def ndkBuildError = 'NDK build tools not found in path: ' + project.androidNdkHome
+
+    assert project.androidNdkHome != null: error
+    assert getNdkBuild().exists(): ndkBuildError
+
+    println "[ndkcheck] NDK path:      " + project.androidNdkHome
+    try {
+        def releaseFile = new File(project.androidNdkHome, 'RELEASE.txt')
+        def text = releaseFile.text
+        println "[ndkcheck] NDK Version:   android-ndk-" + text
+    } catch (FileNotFoundException ignore) {
+        // Safeguard, in case a version the sdk doesn't have the release file
+    }
 }
 
 task buildNative(type: Exec, dependsOn: 'ndkCheck') {
     def ndkBuildingDir = new File("jni");
-    commandLine getNdkBuild(), "--directory", ndkBuildingDir, "NDK_LIBS_OUT=../src/main/jniLibs"
+    commandLine getNdkBuild(), "--directory", ndkBuildingDir, "NDK_LIBS_OUT=../src/main/jniLibs", "NDK_TOOLCHAIN_VERSION=4.9"
 }
 
-task removeCShared(type: Delete, dependsOn: 'buildNative') {
-    delete "./src/main/jniLibs/armeabi-v7a/libc++_shared.so"
-}
+tasks.withType(JavaCompile) { compileTask -> compileTask.dependsOn buildNative }
 
-tasks.withType(JavaCompile) { compileTask -> compileTask.dependsOn removeCShared }
 
 
 task cleanNative(type: Exec, dependsOn: 'ndkCheck') {
@@ -60,8 +89,13 @@ android {
         buildConfigField "String", "CALLIOPE_REGISTRAR_URL", '"' + "https://calliope-a.wbx2.com/calliope/api/registrar/v1" + '"'
         buildConfigField "String", "GIT_COMMIT_SHA", '"' + gitSha() + '"'
         buildConfigField "String", "WB_URL", '"https://whiteboard.cisco.com/integrated/index.html"'
-        buildConfigField "String", "METRICS_API_URL", '"https://metrics-a.ciscospark.com"'
+        buildConfigField "String", "METRICS_API_URL", '"https://metrics-a.wbx2.com/metrics/api/v1/"'
         buildConfigField "String", "WB_ACL_URL", '"' + "https://acl-a.wbx2.com/acl/api/v1/" + '"'
+        buildConfigField "String", "IDBROKER_TOKEN_URL", '"' + "https://idbroker.webex.com/idb/token/v1/" + '"'
+        buildConfigField "String", "IDENTITY_API_URL", '"' + "https://identity.webex.com/identity/scim/v1/" + '"'
+
+
+        buildConfigField "String", "PUBLICSDK", '"SDKEnabled"'
     }
 
     compileOptions {
@@ -72,39 +106,15 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            debuggable false
-            jniDebuggable false
-            renderscriptDebuggable false
-            renderscriptOptimLevel 3
-            zipAlignEnabled false
-        }
-        debug {
-            minifyEnabled false
-            debuggable true
-            jniDebuggable false
-            renderscriptDebuggable false
-            renderscriptOptimLevel 3
-            zipAlignEnabled true
         }
     }
     productFlavors {
         prod {
             // Use the defaults
         }
-
-
         lollipop {
             minSdkVersion 21
         }
-
-    }
-
-    dexOptions {
-        preDexLibraries = false
-        javaMaxHeapSize "4g"
-
-        //lm
-        dexInProcess false
     }
 
     testOptions {
@@ -151,13 +161,10 @@ dependencies {
 
     compile libs.retrofit
     compile libs.retrofit_gsonconverter
-    compile libs.retrofit_deprecated
-    compile libs.okhttp3_for_retrofit1
     compile libs.retrofit_rxjava
 
     compile libs.okhttp
     compile libs.okhttp_logging
-    compile libs.websocket
 
     compile libs.eventbus
 
@@ -174,6 +181,12 @@ dependencies {
 
     compile libs.will
 
+    compile libs.sqlcipher
+
+    compile libs.fasterxml_annotations
+    compile libs.fasterxml_databind
+    compile libs.fasterxml_core
+
     debugCompile libs.leak_canary
     releaseCompile libs.leak_canary_disabled
     testCompile libs.leak_canary_disabled
@@ -185,9 +198,12 @@ dependencies {
     testCompile libs.robolectric
     testCompile libs.robolectric_multidex
     testCompile libs.mockito
-    compile 'joda-time:joda-time:2.9.2'
-    compile 'com.android.support:multidex:1.0.1'
+    compile 'joda-time:joda-time:2.9.9'
+    compile 'com.cisco.wx2:diagnostic-events-gson:1.0.86'
+
+    compile 'com.segment.analytics.android:analytics:4.3.0-RC1'
 }
+
 task styleCheck(type: Checkstyle) {
     configFile new File(rootDir, "checkstyle.xml")
     source 'src'

@@ -149,6 +149,7 @@ public class RemoteSearchQueryRequest {
                     remoteSearchQueryRequest.types = new ArrayList<>();
                 }
                 remoteSearchQueryRequest.types.add("content");
+                remoteSearchQueryRequest.types.add("file");
             }
             return this;
         }

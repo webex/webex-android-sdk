@@ -12,12 +12,11 @@ import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.model.Activity;
 import com.cisco.spark.android.model.ActivityReference;
 import com.cisco.spark.android.model.KeyObject;
-import com.cisco.spark.android.stickies.Sticky;
-import com.cisco.spark.android.stickies.StickyPad;
+import com.cisco.spark.android.model.RetentionPolicy;
 import com.cisco.spark.android.sync.ConversationContract.ActivityEntry;
 import com.cisco.spark.android.sync.ConversationContract.ParticipantEntry;
+import com.cisco.spark.android.sync.ConversationContract.vw_Activities;
 import com.cisco.spark.android.ui.conversation.ConversationResolver;
-import com.cisco.spark.android.util.CollectionUtils;
 import com.cisco.spark.android.util.DateUtils;
 import com.cisco.spark.android.util.Strings;
 import com.cisco.spark.android.util.UriUtils;
@@ -25,12 +24,10 @@ import com.github.benoitdion.ln.Ln;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static com.cisco.spark.android.sync.ConversationContentProviderOperation.ACTIVITY_PRUNING_BUFFER_DAYS;
 import static com.cisco.spark.android.sync.ConversationContract.ConversationEntry;
 import static com.cisco.spark.android.sync.ConversationContract.DbColumn;
 
@@ -444,7 +441,6 @@ public class ConversationContentProviderQueries {
             if (cursor != null) {
                 cursor.close();
             }
-            cursor = null;
         }
         return null;
     }
@@ -457,7 +453,7 @@ public class ConversationContentProviderQueries {
                     ConversationContract.EncryptionKeyEntry.ENCRYPTION_KEY_URI + "=? AND " + ConversationContract.EncryptionKeyEntry.ENCRYPTION_KEY + " IS NOT NULL",
                     new String[]{uri.toString()}, null);
 
-            if (cursor != null && cursor.moveToNext()) {
+            if (cursor != null && cursor.moveToNext() && !cursor.isNull(0) && !cursor.isNull(1)) {
                 String keyString = cursor.getString(0).trim();
                 String keyId = cursor.getString(1).trim();
                 if (!TextUtils.isEmpty(keyString) && !TextUtils.isEmpty(keyId))
@@ -470,7 +466,6 @@ public class ConversationContentProviderQueries {
             if (cursor != null) {
                 cursor.close();
             }
-            cursor = null;
         }
         return null;
     }
@@ -853,143 +848,6 @@ public class ConversationContentProviderQueries {
         return getOneLongValue(contentResolver, ConversationContract.vw_Participant.CONTENT_URI, "COUNT(*)", null, null);
     }
 
-    public static Set<UUID> getStickyPadIDs(ContentResolver contentResolver) {
-        if (contentResolver == null) {
-            return null;
-        }
-
-        Set<UUID> stickyPadIDs = new HashSet<>();
-        Cursor cursor = null;
-        try {
-            cursor = contentResolver.query(
-                    ConversationContract.StickyEntry.CONTENT_URI,
-                    new String[]{ConversationContract.StickyEntry.PAD_ID.name()},
-                    null,
-                    null,
-                    null);
-
-            final int columnIndex = cursor.getColumnIndex(ConversationContract.StickyEntry.PAD_ID.name());
-            while (cursor != null && cursor.moveToNext()) {
-                String id = cursor.getString(columnIndex);
-                stickyPadIDs.add(UUID.fromString(id));
-            }
-        } finally {
-            if (cursor != null && !cursor.isClosed()) {
-                cursor.close();
-            }
-        }
-
-        return stickyPadIDs;
-    }
-
-    public static Sticky getOneSticky(ContentResolver contentResolver, String filename) {
-        if (filename == null || contentResolver == null) {
-            return null;
-        }
-
-        Sticky sticky = null;
-        Cursor cursor = null;
-        try {
-            cursor = contentResolver.query(
-                    ConversationContract.StickyEntry.CONTENT_URI,
-                    ConversationContract.StickyEntry.DEFAULT_PROJECTION,
-                    ConversationContract.StickyEntry.STICKY_ID.name() + "=?",
-                    new String[]{filename},
-                    null);
-
-            if (cursor != null) {
-                sticky = new Sticky();
-
-                String stickyID = cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.STICKY_ID.name()));
-                String stickyDescription = cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.STICKY_DESCRIPTION.name()));
-                Uri location = Uri.parse(cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.STICKY_URL.name())));
-
-                sticky.setId(stickyID);
-                sticky.setDescription(stickyDescription);
-                sticky.setLocation(location);
-            }
-        } finally {
-            if (cursor != null && !cursor.isClosed()) {
-                cursor.close();
-            }
-        }
-
-        return sticky;
-
-
-    }
-
-    public static StickyPad getOneStickyPad(ContentResolver contentResolver, UUID stickyPadID) {
-        if (stickyPadID == null || contentResolver == null) {
-            return null;
-        }
-
-        StickyPad pad = null;
-        Cursor cursor = null;
-        try {
-            cursor = contentResolver.query(
-                    ConversationContract.StickyEntry.CONTENT_URI,
-                    ConversationContract.StickyEntry.DEFAULT_PROJECTION,
-                    ConversationContract.StickyEntry.PAD_ID.name() + "=?",
-                    new String[]{stickyPadID.toString()},
-                    null);
-
-            if (cursor != null) {
-                pad = new StickyPad();
-                pad.setId(stickyPadID);
-
-                List<Sticky> stickies = new ArrayList<>();
-                while (cursor.moveToNext()) {
-                    String padDescription = cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.PAD_DESCRIPTION.name()));
-                    pad.setDescription(padDescription);
-
-                    String stickyID = cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.STICKY_ID.name()));
-                    String stickyDescription = cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.STICKY_DESCRIPTION.name()));
-                    Uri location = Uri.parse(cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.STICKY_URL.name())));
-
-                    stickies.add(Sticky.createSticky(stickyID, stickyDescription, location));
-                }
-
-                pad.setStickies(stickies);
-            }
-        } finally {
-            if (cursor != null && !cursor.isClosed()) {
-                cursor.close();
-            }
-        }
-
-        return pad;
-    }
-
-    // Returns an empty list if the cursor is NULL or has no data
-    public static List<StickyPad> createStickyPadsFromCursor(Cursor cursor) {
-
-        HashMap<UUID, StickyPad> stickyPads = new HashMap<>();
-        StickyPad[] padArray = new StickyPad[]{};
-        if (cursor != null && !cursor.isClosed()) {
-            while (cursor.moveToNext()) {
-                UUID currentStickyPadID = UUID.fromString(cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.PAD_ID.name())));
-                String padDescription = cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.PAD_DESCRIPTION.name()));
-
-                StickyPad currentPad = stickyPads.get(currentStickyPadID);
-                if (currentPad == null) {
-                    currentPad = StickyPad.createStickyPad(currentStickyPadID, padDescription, new ArrayList<Sticky>());
-                    stickyPads.put(currentStickyPadID, currentPad);
-                }
-
-                String stickyId = cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.STICKY_ID.name()));
-                String stickyDescription = cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.STICKY_DESCRIPTION.name()));
-                Uri location = Uri.parse(cursor.getString(cursor.getColumnIndex(ConversationContract.StickyEntry.STICKY_URL.name())));
-
-                currentPad.getStickies().add(Sticky.createSticky(stickyId, stickyDescription, location));
-            }
-
-            padArray = stickyPads.values().toArray(new StickyPad[stickyPads.size()]);
-        }
-
-        return CollectionUtils.asList(padArray);
-    }
-
     public static KmsResourceObject getKmsResourceObject(ContentResolver contentResolver, String conversationId) {
         Uri uri = UriUtils.parseIfNotNull(getOneValue(contentResolver,
                 Uri.withAppendedPath(ConversationContract.ConversationEntry.CONTENT_URI, conversationId),
@@ -1002,12 +860,58 @@ public class ConversationContentProviderQueries {
         return new KmsResourceObject(uri);
     }
 
-    public static String getRetentionDuration(ContentResolver resolver, String conversationId) {
-        String retentionDuration = getOneValue(resolver,
-                Uri.withAppendedPath(ConversationContract.ConversationEntry.CONTENT_URI, conversationId),
-                ConversationEntry.RETENTION_DAYS.name(),
-                null, null);
-        return retentionDuration;
+    public static RetentionPolicy getRetentionPolicyOfRetetentionUrl(ContentResolver resolver, String retentionUrl) {
+        RetentionPolicy retentionPolicy = null;
+
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(ConversationEntry.CONTENT_URI,
+                    new String[]{ConversationEntry.RETENTION_DAYS.name(), ConversationEntry.LAST_RETENTION_SYNC_TIMESTAMP.name()},
+                    ConversationEntry.RETENTION_URL.name() + "=?",
+                    new String[]{retentionUrl},
+                    ConversationEntry.LAST_RETENTION_SYNC_TIMESTAMP + " DESC LIMIT 1");
+
+            if (cursor != null && cursor.moveToFirst()) {
+                retentionPolicy = new RetentionPolicy();
+                retentionPolicy.setRetentionDays(cursor.getInt(0));
+                retentionPolicy.setLastRetentionSyncTimestamp(cursor.getLong(1));
+            }
+
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+
+        return retentionPolicy;
+    }
+
+    public static List<String> getOneOnOneSpaceExpiredActivityIdsForPurge(ContentResolver resolver) {
+        List<String> activityIds = new ArrayList<>();
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(vw_Activities.CONTENT_URI,
+                    new String[]{vw_Activities.ACTIVITY_ID.name(), vw_Activities.ACTIVITY_PUBLISHED_TIME.name(), vw_Activities.RETENTION_DAYS.name()},
+                    vw_Activities.RETENTION_DAYS + ">0"
+                    + " AND " + vw_Activities.ONE_ON_ONE_PARTICIPANT + " IS NOT NULL"
+                    + " AND " + vw_Activities.ACTIVITY_TYPE + "!=" + ActivityEntry.Type.CREATE_CONVERSATION.ordinal(),
+                    null, null);
+
+            long now = System.currentTimeMillis();
+            while (cursor != null && cursor.moveToNext()) {
+                String activityId = cursor.getString(0);
+                long publishedTime = cursor.getLong(1);
+                int retentionDays = cursor.getInt(2);
+
+                if (now - publishedTime > TimeUnit.DAYS.toMillis(retentionDays - ACTIVITY_PRUNING_BUFFER_DAYS)) {
+                    activityIds.add(activityId);
+                }
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+
+        return activityIds;
     }
 
     public static boolean isTeamModerator(ContentResolver resolver, String teamId, String userId) {

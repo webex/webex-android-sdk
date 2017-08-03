@@ -15,6 +15,7 @@ import com.cisco.spark.android.authenticator.NotAuthenticatedException;
 import com.cisco.spark.android.authenticator.OAuth2;
 import com.cisco.spark.android.callcontrol.CallHistoryService;
 import com.cisco.spark.android.client.UrlProvider;
+import com.cisco.spark.android.events.ApplicationControllerStateChangedEvent;
 import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.cisco.spark.android.events.OAuth2ErrorResponseEvent;
 import com.cisco.spark.android.events.UIBackgroundTransition;
@@ -25,6 +26,7 @@ import com.cisco.spark.android.log.Lns;
 import com.cisco.spark.android.log.LogFilePrint;
 import com.cisco.spark.android.lyra.LyraService;
 import com.cisco.spark.android.media.MediaEngine;
+import com.cisco.spark.android.meetings.ScheduledMeetingsService;
 import com.cisco.spark.android.mercury.MercuryClient;
 import com.cisco.spark.android.metrics.MetricsReporter;
 import com.cisco.spark.android.model.KeyManager;
@@ -44,15 +46,18 @@ import com.cisco.spark.android.util.LocationManager;
 import com.cisco.spark.android.util.LoggingLock;
 import com.cisco.spark.android.util.SafeAsyncTask;
 import com.cisco.spark.android.util.UIUtils;
+import com.cisco.spark.android.voicemail.VoicemailService;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.spark.android.wdm.RegisterDeviceOperation;
 import com.cisco.spark.android.wdm.WdmClient;
 import com.cisco.spark.android.whiteboard.WhiteboardCache;
+import com.cisco.spark.android.whiteboard.WhiteboardListService;
 import com.cisco.spark.android.whiteboard.WhiteboardService;
 import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.NaturalLog;
 import com.webex.wme.MediaSessionAPI;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.util.HashSet;
@@ -61,7 +66,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.greenrobot.event.EventBus;
-import retrofit.RetrofitError;
+import retrofit2.Response;
 
 /**
  * The ApplicationController handles the mgrState of the application.
@@ -115,6 +120,7 @@ public class ApplicationController {
     //$REVIEW is this boolean needed?
     private boolean registered;
     private boolean running;
+    private boolean inBackground;
     private State state = State.NONE;
     private Runnable outstandingHomeActivityRunnable;
 
@@ -131,7 +137,8 @@ public class ApplicationController {
                                  final KeyManager keyManager, UIServiceAvailability uiServiceAvailability, OperationQueue operationQueue, Injector injector,
                                  final VideoMultitaskComponent videoMultitaskComponent, final Ln.Context lnContext, final AccountUi accountUi, final LogFilePrint log,
                                  final LinusReachabilityService linusReachabilityService, final WhiteboardService whiteboardService,
-                                 final LyraService lyraService, final UrlProvider urlProvider, final SdkClient sdkClient, final WhiteboardCache whiteboardCache) {
+                                 final LyraService lyraService, final UrlProvider urlProvider, final SdkClient sdkClient, final WhiteboardCache whiteboardCache,
+                                 final VoicemailService voicemailService, final ScheduledMeetingsService scheduledMeetingsService, final WhiteboardListService whiteboardListService) {
         this.context = context;
         this.clientProvider = clientProvider;
         this.tokenProvider = tokenProvider;
@@ -178,6 +185,9 @@ public class ApplicationController {
         lyraService.setApplicationController(this);
         conversationSyncQueue.setApplicationController(this);
         whiteboardCache.setApplicationController(this);
+        voicemailService.setApplicationController(this);
+        scheduledMeetingsService.setApplicationController(this);
+        register(whiteboardListService);
     }
 
     public boolean isStarted() {
@@ -240,7 +250,7 @@ public class ApplicationController {
 
             if (!backgroundCheck.isInBackground()) {
                 Ln.d("Submitting register device operation");
-                operationQueue.submit(new RegisterDeviceOperation(injector));
+                operationQueue.submit(new RegisterDeviceOperation(injector, !sdkClient.isMobileDevice()));
                 setState(State.REGISTERING);
             } else {
                 Ln.d("App is in the background, skipping registration");
@@ -269,6 +279,11 @@ public class ApplicationController {
     public void register(Component component) {
         syncLock.lock();
         try {
+            if (!sdkClient.componentEnabled(component)) {
+                ln.i("ApplicationController: Not registering disabled component %s", component.getClass());
+                return;
+            }
+
             if (!components.containsKey(component.getClass())) {
                 ln.i("ApplicationController: %s registered", component.getClass());
                 components.put(component.getClass(), new WeakReference<>(component));
@@ -395,6 +410,7 @@ public class ApplicationController {
         ln.i("ApplicationController - BackgroundTransition()");
         if (state == State.STARTED || state == State.REGISTERING) {
             stopComponents();
+            inBackground = true;
         } else {
             ln.w("ApplicationController - background transition: not in expected state '%s'", state.name());
         }
@@ -405,12 +421,13 @@ public class ApplicationController {
         ln.i("ApplicationController - ForegroundTransition()");
         if (state == State.BAD || state == State.REGISTERING || state == State.STARTED || state == State.STOPPED || state == State.NONE) {
             reset();
+            inBackground = false;
         } else {
             ln.w("ApplicationController - foreground transition: not in expected state '%s'", state.name());
         }
     }
 
-    private void clear() {
+    public void clear() {
         settings.clear();
         tokenProvider.clearAccount();
         deviceRegistration.getFeatures().clear();
@@ -423,10 +440,10 @@ public class ApplicationController {
     }
 
     public void logout(Activity activity, boolean isTeardown) {
-        logout(activity, isTeardown, true);
+        logout(activity, isTeardown, true, false);
     }
 
-    public void logout(Activity activity, boolean isTeardown, boolean clearAccount) {
+    public void logout(Activity activity, boolean isTeardown, boolean clearAccount, boolean showAlert) {
         if (state == State.NONE || state == State.UNREGISTERED) {
             ln.w("ApplicationController - None or already unregistered. Ignoring logout request");
             return;
@@ -436,7 +453,18 @@ public class ApplicationController {
         stop();
 
         accessManager.reset();
-        new UnregisterDeviceTask().execute();
+
+        // This is to make sure that the block is set to closed and will block instead
+        // of potentially being open if the ApplicationController process doesn't end at
+        // any point between two logout sessions.
+        unregisterCondition.close();
+
+        // Previously we had this setup as a SafeAsyncTask that executed here, but for whatever
+        // reason it would not execute until after the below block completed no longer how long
+        // the timeout was. The theory that led to this solution was that it was never being
+        // given a thread to execute on. Therefore, this was converted to a Runnable and started
+        // in its own dedicated thread here.
+        new Thread(new UnregisterDeviceRunnable(deviceRegistration.getId())).start();
 
         boolean result = unregisterCondition.block(NON_INTRUSIVE_UI_TIMEOUT);
         if (!result) {
@@ -458,7 +486,7 @@ public class ApplicationController {
         deviceRegistration.reset(urlProvider);
         setState(State.UNREGISTERED);
 
-        uiLogout(activity, isTeardown, clearAccount);
+        uiLogout(activity, isTeardown, clearAccount, showAlert);
     }
 
     public void sslErrorReLogin(Activity activity, boolean isTeardown) {
@@ -470,16 +498,16 @@ public class ApplicationController {
             }
         }.execute();
 
-        uiLogout(activity, isTeardown, false);
+        uiLogout(activity, isTeardown, false, true);
     }
 
-    private void uiLogout(Activity activity, boolean isTeardown, boolean clearAccount) {
+    private void uiLogout(Activity activity, boolean isTeardown, boolean clearAccount, boolean showAlert) {
 
         // Note: Consumers of this event must guarantee no persistent writes of personal data after
         // returning from onEvent(LogoutEvent).
         bus.post(new LogoutEvent());
 
-        accountUi.logout(context, activity, isTeardown);
+        accountUi.logout(context, activity, isTeardown, showAlert);
 
         if (clearAccount) {
             // Clearing again here in case anything was in flight during the logout event.
@@ -528,7 +556,7 @@ public class ApplicationController {
             case HttpURLConnection.HTTP_FORBIDDEN: // 403
                 if (OAuth2.isOAuth2Uri(uri)) {
                     ln.w("Failed sending auth to host. Logging out");
-                    logout(null, false);
+                    logout(null, false, true, true);
                 }
             default:
                 break;
@@ -539,7 +567,7 @@ public class ApplicationController {
         return locationManager;
     }
 
-    private void setState(State state) {
+    protected void setState(State state) {
         syncLock.lock();
         try {
             Lns.application().i("%s: %s->%s", STATE_TAG, this.state.name(), state.name());
@@ -547,28 +575,34 @@ public class ApplicationController {
         } finally {
             syncLock.unlock();
         }
+        bus.post(new ApplicationControllerStateChangedEvent());
     }
 
-    private class UnregisterDeviceTask extends SafeAsyncTask<Object> {
+    private class UnregisterDeviceRunnable implements Runnable {
+
+        private String deviceId;
+
+        UnregisterDeviceRunnable(String deviceId) {
+            this.deviceId = deviceId;
+        }
+
         @Override
-        public Object call() throws Exception {
+        public void run() {
             WdmClient wdmClient = clientProvider.getWdmClient();
             if (wdmClient != null) {
                 try {
-                    if (deviceRegistration.getId() != null)
-                        wdmClient.deleteDevice(tokenProvider.getAuthenticatedUser().getConversationAuthorizationHeader(), deviceRegistration.getId());
-                    else
+                    if (deviceId != null) {
+                        Response<Void> response = wdmClient.deleteDevice(tokenProvider.getAuthenticatedUser().getConversationAuthorizationHeader(), deviceId).execute();
+                        if (!response.isSuccessful()) {
+                            ln.i("ApplicationController - unregister device resulted in: %d - %s", response.code(), response.message());
+                        }
+                    } else {
                         ln.i("Ignoring request to unregister deviceRegistration with null id");
-                } catch (RetrofitError ex) {
+                    }
+                } catch (IOException ex) {
                     // We likely don't want to retry, as unregistering is not something that is required
                     // of a good WDM citizen; log it.
                     ln.i(ex);
-                    retrofit.client.Response response = ex.getResponse();
-                    if (response == null) {
-                        ln.i("ApplicationController - unregister device resulted in: %s", ex.getMessage());
-                    } else {
-                        ln.i("ApplicationController - unregister device resulted in: %d - %s", response.getStatus(), response.getReason());
-                    }
                 } catch (NotAuthenticatedException ex) {
                     // Okay, so the user isn't authenticated any more, we just didn't delete the
                     // current session. Is an okay situation; log it.
@@ -584,7 +618,6 @@ public class ApplicationController {
             // Regardless of outcome we want to open the condition variable.
             ln.d("ApplicationController - Opening unregister condition");
             unregisterCondition.open();
-            return null;
         }
     }
 
@@ -617,7 +650,7 @@ public class ApplicationController {
 
             registered = false;
             Ln.d("Submitting register device operation");
-            operationQueue.submit(new RegisterDeviceOperation(injector));
+            operationQueue.submit(new RegisterDeviceOperation(injector, !sdkClient.isMobileDevice()));
             setState(State.REGISTERING);
         } finally {
             syncLock.unlock();
@@ -666,5 +699,9 @@ public class ApplicationController {
     // For testing
     public State getState() {
         return state;
+    }
+
+    public boolean isInBackground() {
+        return inBackground;
     }
 }

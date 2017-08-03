@@ -36,6 +36,10 @@ public class LocusParticipantDevice {
         return intent;
     }
 
+    public void setIntent(LocusParticipant.Intent intent) {
+        this.intent = intent;
+    }
+
     public Uri getKeepAliveUrl() {
         return keepAliveUrl;
     }
@@ -50,6 +54,10 @@ public class LocusParticipantDevice {
 
     public String getCorrelationId() {
         return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
     }
 
     public static class Builder {

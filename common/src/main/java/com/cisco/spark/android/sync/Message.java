@@ -1,7 +1,5 @@
 package com.cisco.spark.android.sync;
 
-import android.text.TextUtils;
-
 import com.cisco.spark.android.model.Activity;
 import com.cisco.spark.android.model.ItemCollection;
 import com.cisco.spark.android.model.KeyObject;
@@ -158,18 +156,12 @@ public class Message {
     }
 
     public void decrypt(KeyObject key) throws IOException, ParseException, NullPointerException {
-        if (!TextUtils.isEmpty(text))
-            text = CryptoUtils.decryptFromJwe(key, text);
-
-        if (!TextUtils.isEmpty(content))
-            content = CryptoUtils.decryptFromJwe(key, content);
+        text = CryptoUtils.decryptFromJwe(key, text);
+        content = CryptoUtils.decryptFromJwe(key, content);
     }
 
     public void encrypt(KeyObject key) throws IOException {
-        if (!TextUtils.isEmpty(text))
-            text = CryptoUtils.encryptToJwe(key, text);
-
-        if (!TextUtils.isEmpty(content))
-            content = CryptoUtils.encryptToJwe(key, content);
+        text = CryptoUtils.encryptToJwe(key, text);
+        content = CryptoUtils.encryptToJwe(key, content);
     }
 }

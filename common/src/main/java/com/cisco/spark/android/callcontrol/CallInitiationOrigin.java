@@ -19,10 +19,14 @@ public enum CallInitiationOrigin {
     CallOriginationSettingsTab("SettingsPage"),
     CallOriginationConversationDetailsTab("RoomDetailsPage"),
     CallOriginationMiniProfile("MiniProfile"),
+    CallOriginationContactCard("ContactCard"),
     CallOriginationBRIC("BringRoomIntoCall"),
     CallOriginationWSS("WirelessScreenShare"),
     CallOriginationCrossLaunch("CrossLaunch"),
-    CallOriginationRoster("Roster");
+    CallOriginationRoster("Roster"),
+    CallOriginationMeetingsSpaceball("MeetingsSpaceball"),
+    CallOriginationObtp("Obtp"),
+    CallOriginationVoicemail("Voicemail");
 
     private String value;
 

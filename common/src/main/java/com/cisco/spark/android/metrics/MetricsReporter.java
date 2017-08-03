@@ -28,7 +28,6 @@ public class MetricsReporter implements Component {
 
     private static final int MAX_METRICS_PER_REPORT = 1000;
 
-    protected final Queue<MetricsReportRequest> circonusQueue;
     protected final Queue<MetricsReportRequest> splunkQueue;
     private ApiClientProvider clientProvider;
     private final LocusDataCache locusDataCache;
@@ -54,7 +53,6 @@ public class MetricsReporter implements Component {
         bus.register(this);
 
         this.timerPeriod = reportDelay;
-        circonusQueue = new ConcurrentLinkedQueue<>();
         splunkQueue = new ConcurrentLinkedQueue<>();
     }
 
@@ -74,16 +72,16 @@ public class MetricsReporter implements Component {
         return new CallMetricsBuilder(environment);
     }
 
-    public ContentMetricsBuilder newContentMetricsBuilder() {
-        return new ContentMetricsBuilder(env);
-    }
-
     public RoomServiceMetricsBuilder newRoomServiceMetricsBuilder() {
         return new RoomServiceMetricsBuilder(env);
     }
 
     public ConversationMetricsBuilder newConversationMetricsBuilder() {
         return new ConversationMetricsBuilder(env);
+    }
+
+    public WhiteboardServiceMetricsBuilder newWhiteboardServiceMetricsBuilder() {
+        return new WhiteboardServiceMetricsBuilder(env);
     }
 
     public EncryptionSplunkMetricsBuilder newEncryptionSplunkMetricsBuilder() {
@@ -95,9 +93,7 @@ public class MetricsReporter implements Component {
             return;
         }
 
-        if (request.getEndpoint() == MetricsReportRequest.Endpoint.CIRCONUS) {
-            circonusQueue.add(request);
-        } else if (request.getEndpoint() == MetricsReportRequest.Endpoint.SPLUNK) {
+        if (request.getEndpoint() == MetricsReportRequest.Endpoint.SPLUNK) {
             splunkQueue.add(request);
         }
     }
@@ -113,12 +109,95 @@ public class MetricsReporter implements Component {
 
     protected boolean isIdle() {
         synchronized (sync) {
-            return circonusQueue.isEmpty() && splunkQueue.isEmpty();
+            return splunkQueue.isEmpty();
         }
     }
 
     public MetricsEnvironment getEnvironment() {
         return env;
+    }
+
+    public boolean flushMetrics() {
+        /*
+         * report<type>Metrics() now return a list of successfully processed MetricsReportRequests.
+         * We keep calling this until we either see the flushRequest has been processed, or an error
+         * occurs. Try our best to flush both queues.
+         */
+        boolean success = true;
+        synchronized (sync) {
+            if (!splunkQueue.isEmpty()) {
+                MetricsReportRequest flushRequest = new MetricsReportRequest(MetricsReportRequest.Endpoint.FLUSH);
+                splunkQueue.add(flushRequest);
+                List<MetricsReportRequest> processedReports = new ArrayList<>();
+                while (!processedReports.contains(flushRequest)) {
+                    processedReports = reportSplunkMetrics();
+                    if (processedReports == null) {
+                        Ln.w("flushMetrics Splunk was not successful");
+                        success = false;
+                        break;
+                    }
+                }
+            }
+        }
+        return success;
+    }
+
+    private List<MetricsReportRequest> initializeReport(Queue<MetricsReportRequest> source, MetricsReportRequest report) {
+        // TODO: requests and reports really should be 2 different objects.
+        List<MetricsReportRequest> requests = new ArrayList<MetricsReportRequest>();
+        MetricsReportRequest request = source.poll();
+
+        while (request != null) {
+            report.getMetrics().addAll(request.getMetrics());
+            requests.add(request);
+            if (report.getMetrics().size() > MAX_METRICS_PER_REPORT) {
+                break;
+            }
+            request = source.poll();
+        }
+        return requests;
+    }
+
+    private List<MetricsReportRequest> reportSplunkMetrics() {
+        MetricsReportRequest report = new MetricsReportRequest(MetricsReportRequest.Endpoint.SPLUNK);
+        List<MetricsReportRequest> requests = initializeReport(splunkQueue, report);
+        try {
+            if (!report.getMetrics().isEmpty()) {
+                Response<Void> response = clientProvider.getMetricsClient().postGenericMetric(report).execute();
+
+                if (response.isSuccessful()) {
+                    onMetricsProcessed(requests, true);
+                    return requests;
+                } else {
+                    return handleErrors(splunkQueue, requests, response, null);
+                }
+            }
+        } catch (IOException exception) {
+            return handleErrors(splunkQueue, requests, null, exception);
+        } catch (NullPointerException e) { // See Crashlytics 16065
+            Ln.i(e);
+        }
+        return null;
+    }
+
+    private List<MetricsReportRequest> handleErrors(Queue<MetricsReportRequest> source, List<MetricsReportRequest> requests, Response<Void> response, IOException e) {
+        if (response != null && response.errorBody() != null) {
+            int statusCode = response.code();
+
+            if (statusCode >= 500) {
+                Ln.d(e, "An error occurred posting metrics. Retrying later");
+                source.addAll(requests);
+            } else if (statusCode >= 400) {
+                onMetricsProcessed(requests, true);
+                return requests;
+            }
+        } else if (e != null) {
+            Ln.d(e, "Error talking to servers");
+        } else {
+            Ln.w("An error occurred posting metrics. Retrying later");
+            source.addAll(requests);
+        }
+        return null;
     }
 
     private final class ReportMetricsTimerTask extends TimerTask {
@@ -135,7 +214,6 @@ public class MetricsReporter implements Component {
 
                 if (metricsReporter.isNetworkConnected && !metricsReporter.locusDataCache.isInCall() && !ConversationSyncQueue.isSyncBusy() && metricsReporter.clientProvider.getMetricsClient() != null) {
                     Ln.v("Beginning metrics report run");
-                    reportCirconusMetrics();
                     reportSplunkMetrics();
                     Ln.v("Completed metrics report run");
                 } else {
@@ -144,76 +222,6 @@ public class MetricsReporter implements Component {
             }
 
             metricsReporter.startTimer();
-        }
-
-        private void reportSplunkMetrics() {
-            MetricsReportRequest report = new MetricsReportRequest(MetricsReportRequest.Endpoint.SPLUNK);
-            List<MetricsReportRequest> requests = initializeReport(metricsReporter.splunkQueue, report);
-            try {
-                if (!report.getMetrics().isEmpty()) {
-                    Response<Void> response = metricsReporter.clientProvider.getMetricsClient().postGenericMetric(report).execute();
-
-                    if (response.isSuccessful()) {
-                        metricsReporter.onMetricsProcessed(requests, true);
-                    } else {
-                        handleErrors(metricsReporter.splunkQueue, requests, response, null);
-                    }
-                }
-            } catch (IOException exception) {
-                handleErrors(metricsReporter.splunkQueue, requests, null, exception);
-            } catch (NullPointerException e) { // See Crashlytics 16065
-                Ln.i(e);
-            }
-        }
-
-        private void reportCirconusMetrics() {
-            MetricsReportRequest report = new MetricsReportRequest(MetricsReportRequest.Endpoint.CIRCONUS);
-            List<MetricsReportRequest> requests = initializeReport(metricsReporter.circonusQueue, report);
-            try {
-                if (!report.getMetrics().isEmpty()) {
-                    Response<Void> response = metricsReporter.clientProvider.getConversationClient().recordMetrics(report).execute();
-                    if (response.isSuccessful()) {
-                        metricsReporter.onMetricsProcessed(requests, true);
-                    }
-                }
-            } catch (NullPointerException e) {  // See Crashlytics 16065
-                Ln.i(e);
-            } catch (IOException e) {
-                Ln.i(e);
-            }
-        }
-
-        private void handleErrors(Queue<MetricsReportRequest> source, List<MetricsReportRequest> requests, Response<Void> response, IOException e) {
-            if (response != null && response.errorBody() != null) {
-                int statusCode = response.code();
-
-                if (statusCode >= 500) {
-                    Ln.d(e, "An error occurred posting metrics. Retrying later");
-                    source.addAll(requests);
-                } else if (statusCode >= 400) {
-                    metricsReporter.onMetricsProcessed(requests, true);
-                }
-            } else if (e != null) {
-                Ln.d(e, "Error talking to servers");
-            } else {
-                Ln.w(e, "An error occurred posting metrics. Retrying later");
-                source.addAll(requests);
-            }
-        }
-
-        private List<MetricsReportRequest> initializeReport(Queue<MetricsReportRequest> source, MetricsReportRequest report) {
-            // TODO: requests and reports really should be 2 different objects.
-            List<MetricsReportRequest> requests = new ArrayList<MetricsReportRequest>();
-            MetricsReportRequest request = source.poll();
-
-            while (request != null) {
-                report.getMetrics().addAll(request.getMetrics());
-                requests.add(request);
-                if (report.getMetrics().size() > MAX_METRICS_PER_REPORT)
-                    break;
-                request = source.poll();
-            }
-            return requests;
         }
     }
 

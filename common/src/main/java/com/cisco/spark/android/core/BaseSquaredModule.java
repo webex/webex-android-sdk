@@ -3,27 +3,48 @@ package com.cisco.spark.android.core;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.OperationApplicationException;
+import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.RemoteException;
 
 import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.app.ActivityManager;
-import com.cisco.spark.android.app.AudioManager;
+import com.cisco.spark.android.app.AudioDeviceConnectionManager;
 import com.cisco.spark.android.app.PowerManager;
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.AuthenticatedUserProvider;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
+import com.cisco.spark.android.authenticator.IdentityClientPreLoginProvider;
 import com.cisco.spark.android.authenticator.OAuth2;
+import com.cisco.spark.android.authenticator.model.IdbrokerTokenClientProvider;
+import com.cisco.spark.android.callcontrol.CallControlService;
 import com.cisco.spark.android.callcontrol.CallPhoneStateReceiver;
+import com.cisco.spark.android.client.CountedTypedOutput;
 import com.cisco.spark.android.client.SquaredUrlProvider;
 import com.cisco.spark.android.client.TrackingIdGenerator;
 import com.cisco.spark.android.client.UrlProvider;
 import com.cisco.spark.android.contacts.ContactsContractManager;
 import com.cisco.spark.android.contacts.ViewContactNotifyService;
 import com.cisco.spark.android.content.ContentLoader;
+import com.cisco.spark.android.features.CoreFeatures;
 import com.cisco.spark.android.flag.FlagOperation;
 import com.cisco.spark.android.locus.model.LocusDataCache;
+import com.cisco.spark.android.locus.requests.AlertLocusRequest;
+import com.cisco.spark.android.locus.requests.CreateAclRequest;
+import com.cisco.spark.android.locus.requests.DeclineLocusRequest;
+import com.cisco.spark.android.locus.requests.FloorShareRequest;
+import com.cisco.spark.android.locus.requests.JoinLocusRequest;
+import com.cisco.spark.android.locus.requests.LeaveLocusRequest;
+import com.cisco.spark.android.locus.requests.LocusHoldRequest;
+import com.cisco.spark.android.locus.requests.LocusResumeRequest;
+import com.cisco.spark.android.locus.requests.MediaCreationRequest;
+import com.cisco.spark.android.locus.requests.MergeLociRequest;
+import com.cisco.spark.android.locus.requests.MigrateRequest;
+import com.cisco.spark.android.locus.requests.ModifyMediaRequest;
+import com.cisco.spark.android.locus.requests.SendDtmfRequest;
+import com.cisco.spark.android.locus.requests.UpdateLocusRequest;
 import com.cisco.spark.android.locus.service.LocusProcessor;
+import com.cisco.spark.android.locus.service.LocusProcessorReporter;
 import com.cisco.spark.android.locus.service.LocusService;
 import com.cisco.spark.android.log.LogFilePrint;
 import com.cisco.spark.android.log.UploadLogsService;
@@ -34,11 +55,13 @@ import com.cisco.spark.android.media.BluetoothBroadcastReceiver;
 import com.cisco.spark.android.media.HeadsetIntentReceiver;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.meetings.LocusMeetingInfoProvider;
+import com.cisco.spark.android.meetings.MeetingHubLocalCalendarChangeReceiver;
 import com.cisco.spark.android.mercury.MercuryClient;
-import com.cisco.spark.android.metrics.CallMetricsReporter;
+import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.metrics.EncryptionDurationMetricManager;
 import com.cisco.spark.android.metrics.MetricsEnvironment;
 import com.cisco.spark.android.metrics.MetricsReporter;
+import com.cisco.spark.android.metrics.SegmentService;
 import com.cisco.spark.android.model.Json;
 import com.cisco.spark.android.model.KeyManager;
 import com.cisco.spark.android.notification.Gcm;
@@ -48,6 +71,7 @@ import com.cisco.spark.android.presence.operation.SendPresenceEventOperation;
 import com.cisco.spark.android.presence.operation.SubscribePresenceStatusOperation;
 import com.cisco.spark.android.processing.ActivityListener;
 import com.cisco.spark.android.provisioning.ProvisioningClientProvider;
+import com.cisco.spark.android.provisioning.ProvisioningClientWithUserTokenProvider;
 import com.cisco.spark.android.reachability.ConnectivityChangeReceiver;
 import com.cisco.spark.android.reachability.NetworkReachability;
 import com.cisco.spark.android.reachability.UIServiceAvailability;
@@ -63,21 +87,18 @@ import com.cisco.spark.android.sync.TitleBuilder;
 import com.cisco.spark.android.sync.operationqueue.ActivityFillOperation;
 import com.cisco.spark.android.sync.operationqueue.ActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.AddPersonOperation;
-import com.cisco.spark.android.sync.operationqueue.AliasPreloginMetricsUserIdOperation;
 import com.cisco.spark.android.sync.operationqueue.AssignRoomAvatarOperation;
 import com.cisco.spark.android.sync.operationqueue.AudioMuteOperation;
 import com.cisco.spark.android.sync.operationqueue.AudioVolumeOperation;
 import com.cisco.spark.android.sync.operationqueue.AvatarUpdateOperation;
 import com.cisco.spark.android.sync.operationqueue.CatchUpSyncOperation;
 import com.cisco.spark.android.sync.operationqueue.ContentUploadOperation;
-import com.cisco.spark.android.sync.operationqueue.CreateKmsResourceOperation;
 import com.cisco.spark.android.sync.operationqueue.CustomNotificationsTagOperation;
 import com.cisco.spark.android.sync.operationqueue.DeleteActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.FeatureToggleOperation;
 import com.cisco.spark.android.sync.operationqueue.FetchActivityContextOperation;
 import com.cisco.spark.android.sync.operationqueue.FetchMentionsOperation;
 import com.cisco.spark.android.sync.operationqueue.FetchSpaceUrlOperation;
-import com.cisco.spark.android.sync.operationqueue.FetchStickyPackOperation;
 import com.cisco.spark.android.sync.operationqueue.FetchUnjoinedTeamRoomsOperation;
 import com.cisco.spark.android.sync.operationqueue.GetAvatarUrlsOperation;
 import com.cisco.spark.android.sync.operationqueue.GetRetentionPolicyInfoOperation;
@@ -94,10 +115,10 @@ import com.cisco.spark.android.sync.operationqueue.PostCommentOperation;
 import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.PostGenericMetricOperation;
 import com.cisco.spark.android.sync.operationqueue.PostKmsMessageOperation;
-import com.cisco.spark.android.sync.operationqueue.PostStickyActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.RemoteSearchOperation;
 import com.cisco.spark.android.sync.operationqueue.RemoveParticipantOperation;
 import com.cisco.spark.android.sync.operationqueue.RemoveRoomAvatarOperation;
+import com.cisco.spark.android.sync.operationqueue.RoomBindOperation;
 import com.cisco.spark.android.sync.operationqueue.ScheduledEventActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.SendDtmfOperation;
 import com.cisco.spark.android.sync.operationqueue.SetTitleAndSummaryOperation;
@@ -140,20 +161,28 @@ import com.cisco.spark.android.util.Clock;
 import com.cisco.spark.android.util.DiagnosticManager;
 import com.cisco.spark.android.util.LinusReachabilityService;
 import com.cisco.spark.android.util.ProximitySensor;
+import com.cisco.spark.android.util.Sanitizer;
 import com.cisco.spark.android.util.SchedulerProvider;
 import com.cisco.spark.android.util.SystemClock;
 import com.cisco.spark.android.util.TestUtils;
+import com.cisco.spark.android.util.Toaster;
 import com.cisco.spark.android.util.UserAgentProvider;
+import com.cisco.spark.android.voicemail.VoicemailClientProvider;
 import com.cisco.spark.android.wdm.DeviceInfo;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.spark.android.wdm.RegisterDeviceOperation;
 import com.cisco.spark.android.wdm.UCDeviceType;
+import com.cisco.spark.android.whiteboard.AnnotationCreator;
 import com.cisco.spark.android.whiteboard.WhiteboardCache;
 import com.cisco.spark.android.whiteboard.WhiteboardService;
+import com.cisco.spark.android.whiteboard.loader.FileLoader;
 import com.cisco.spark.android.whiteboard.persistence.LoadWhiteboardContentTask;
 import com.cisco.spark.android.whiteboard.persistence.RemoteWhiteboardStore;
 import com.cisco.spark.android.whiteboard.persistence.WhiteboardListCache;
+import com.cisco.spark.android.whiteboard.renderer.WhiteboardRenderer;
+import com.cisco.spark.android.whiteboard.snapshot.SnapshotManager;
 import com.cisco.spark.android.whiteboard.snapshot.SnapshotUploadOperation;
+import com.cisco.spark.android.whiteboard.renderer.WhiteboardRealtimeWriter;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 import com.squareup.leakcanary.RefWatcher;
@@ -230,13 +259,13 @@ import static android.content.Context.MODE_PRIVATE;
                 CustomNotificationsTagOperation.class,
                 DeleteActivityOperation.class,
                 CallPhoneStateReceiver.class,
+                MeetingHubLocalCalendarChangeReceiver.class,
                 VideoThumbnailOperation.class,
                 RemoveParticipantOperation.class,
                 ContentUploadOperation.class,
                 FetchSpaceUrlOperation.class,
                 RegisterDeviceOperation.class,
                 KeyManager.class,
-                PostStickyActivityOperation.class,
                 UIServiceAvailability.class,
                 ConversationForwardFillTask.class,
                 ActivityFillOperation.class,
@@ -245,12 +274,10 @@ import static android.content.Context.MODE_PRIVATE;
                 FetchActivityContextOperation.class,
                 FetchMentionsOperation.class,
                 FetchUnjoinedTeamRoomsOperation.class,
-                CreateKmsResourceOperation.class,
                 RemoteSearchOperation.class,
                 ActivitySyncTask.class,
                 BulkActivitySyncTask.class,
                 JoinTeamRoomOperation.class,
-                FetchStickyPackOperation.class,
                 UpdateTeamColorOperation.class,
                 FetchPresenceStatusOperation.class,
                 SubscribePresenceStatusOperation.class,
@@ -276,11 +303,30 @@ import static android.content.Context.MODE_PRIVATE;
                 FetchAcksOperation.class,
                 AudioMuteOperation.class,
                 AudioVolumeOperation.class,
+                RoomBindOperation.class,
                 RemoteWhiteboardStore.class,
                 LocusMeetingInfoProvider.class,
                 SnapshotUploadOperation.class,
-                AliasPreloginMetricsUserIdOperation.class,
                 LoadWhiteboardContentTask.class,
+                WhiteboardRealtimeWriter.class,
+                BluetoothBroadcastReceiver.class,
+                AudioDeviceConnectionManager.class,
+                CountedTypedOutput.class,
+                AlertLocusRequest.class,
+                CreateAclRequest.class,
+                DeclineLocusRequest.class,
+                FloorShareRequest.class,
+                JoinLocusRequest.class,
+                LeaveLocusRequest.class,
+                LocusHoldRequest.class,
+                LocusResumeRequest.class,
+                MediaCreationRequest.class,
+                MergeLociRequest.class,
+                MigrateRequest.class,
+                ModifyMediaRequest.class,
+                SendDtmfRequest.class,
+                UpdateLocusRequest.class,
+                WhiteboardRenderer.class,
         }
 )
 
@@ -353,11 +399,14 @@ public class BaseSquaredModule {
 
     @Provides
     @Singleton
-    LocusService provideLocusService(final Context context, final EventBus bus, final DeviceRegistration deviceRegistration,
+    LocusService provideLocusService(final EventBus bus, final DeviceRegistration deviceRegistration,
                                      final ApiClientProvider apiClientProvider, final LocusDataCache locusDataCache, final LocusProcessor locusProcessor,
-                                     final TrackingIdGenerator trackingIdGenerator, final CallMetricsReporter callMetricsReporter, final AccessManager accessManager, final Gson gson,
-                                     final ApiTokenProvider apiTokenProvider, final SchedulerProvider schedulerProvider, final  Lazy<EncryptedConversationProcessor> conversationProcessorLazy) {
-        return new LocusService(context, bus, deviceRegistration, apiClientProvider, locusDataCache, locusProcessor, trackingIdGenerator, accessManager, callMetricsReporter, gson, apiTokenProvider, schedulerProvider, conversationProcessorLazy);
+                                     final TrackingIdGenerator trackingIdGenerator, final Gson gson,
+                                     final ApiTokenProvider apiTokenProvider, final SchedulerProvider schedulerProvider, final  Lazy<EncryptedConversationProcessor> conversationProcessorLazy,
+                                     final Provider<Batch> batchProvider, final CoreFeatures coreFeatures, final CallAnalyzerReporter callAnalyzerReporter, final ContentResolver contentResolver, final Sanitizer sanitizer) {
+        return new LocusService(bus, deviceRegistration, apiClientProvider, locusDataCache, locusProcessor, trackingIdGenerator,
+                gson, apiTokenProvider, schedulerProvider, conversationProcessorLazy, batchProvider,
+                coreFeatures, callAnalyzerReporter, contentResolver, sanitizer);
     }
 
     @Provides
@@ -390,6 +439,21 @@ public class BaseSquaredModule {
 
     @Provides
     @Singleton
+    VoicemailClientProvider provideVoicemailClientProvider(UserAgentProvider userAgentProvider,
+                                                           TrackingIdGenerator trackingIdGenerator,
+                                                           Gson gson,
+                                                           EventBus bus, Settings settings,
+                                                           Context context, Ln.Context lnContext,
+                                                           Provider<OkHttpClient.Builder> okHttpClientBuilderProvider,
+                                                           Lazy<OperationQueue> operationQueue, UrlProvider urlProvider,
+                                                           DeviceRegistration deviceRegistration,
+                                                           AuthenticatedUserProvider authenticatedUserProvider) {
+        return new VoicemailClientProvider(userAgentProvider, trackingIdGenerator, gson, bus, settings, context, lnContext, okHttpClientBuilderProvider,
+                operationQueue, urlProvider, deviceRegistration, authenticatedUserProvider);
+    }
+
+    @Provides
+    @Singleton
     SearchManager provideSearchManager(Gson gson, ApiTokenProvider apiTokenProvider, Context context, ActorRecordProvider actorRecordProvider, DeviceRegistration deviceRegistration, EventBus bus, Provider<Batch> batchProvider) {
         return new SearchManager(gson, apiTokenProvider, context, actorRecordProvider, deviceRegistration, bus, batchProvider);
     }
@@ -403,10 +467,11 @@ public class BaseSquaredModule {
     @Provides
     @Singleton
     MetricsReporter provideMetricsReporter(final ApiTokenProvider apiTokenProvider,
-                                           final ApiClientProvider apiClientProvider, final EventBus bus, final LocusDataCache locusDataCache) {
+                                           final ApiClientProvider apiClientProvider, final EventBus bus,
+                                           final LocusDataCache locusDataCache, final Context context) {
         MetricsEnvironment env = MetricsEnvironment.ENV_PROD;
 
-        if (BuildConfig.DEBUG || TestUtils.isTestUser(apiTokenProvider)) {
+        if (BuildConfig.DEBUG || TestUtils.isTestUser(apiTokenProvider) || TestUtils.isPreLaunchTest(context)) {
             env = MetricsEnvironment.ENV_TEST;
         }
 
@@ -415,8 +480,8 @@ public class BaseSquaredModule {
 
     @Provides
     @Singleton
-    ConversationSyncQueue provideConversationSyncQueue(ContentResolver contentResolver, EventBus bus, ActivitySyncQueue activitySyncQueue, Injector injector) {
-        return new ConversationSyncQueue(contentResolver, bus, activitySyncQueue, injector);
+    ConversationSyncQueue provideConversationSyncQueue(ContentResolver contentResolver, EventBus bus, ActivitySyncQueue activitySyncQueue, KeyManager keyManager, Gson gson, Provider<Batch> batchProvider, Injector injector) {
+        return new ConversationSyncQueue(contentResolver, bus, activitySyncQueue, keyManager, gson, batchProvider, injector);
     }
 
     @Provides
@@ -448,6 +513,33 @@ public class BaseSquaredModule {
 
     @Provides
     @Singleton
+    ProvisioningClientWithUserTokenProvider provisioningClientWithUserTokenProvider(UserAgentProvider userAgentProvider, TrackingIdGenerator trackingIdGenerator,
+                                                                                    Gson gson, EventBus bus, Settings settings,
+                                                                                    Context context, Ln.Context lnContext,
+                                                                                    Provider<OkHttpClient.Builder> okHttpClientBuilderProvider, Lazy<OperationQueue> operationQueue, UrlProvider urlProvider) {
+        return new ProvisioningClientWithUserTokenProvider(userAgentProvider, trackingIdGenerator, gson, bus, settings, context, lnContext, okHttpClientBuilderProvider, operationQueue, urlProvider);
+    }
+
+    @Provides
+    @Singleton
+    IdbrokerTokenClientProvider idbrokerTokenClientProvider(UserAgentProvider userAgentProvider, TrackingIdGenerator trackingIdGenerator,
+                                                            Gson gson, EventBus bus, Settings settings,
+                                                            Context context, Ln.Context lnContext,
+                                                            Provider<OkHttpClient.Builder> okHttpClientBuilderProvider, Lazy<OperationQueue> operationQueue, UrlProvider urlProvider) {
+        return new IdbrokerTokenClientProvider(userAgentProvider, trackingIdGenerator, gson, bus, settings, context, lnContext, okHttpClientBuilderProvider, operationQueue, urlProvider);
+    }
+
+    @Provides
+    @Singleton
+    IdentityClientPreLoginProvider identityClientPreLoginProvider(UserAgentProvider userAgentProvider, TrackingIdGenerator trackingIdGenerator,
+                                                                  Gson gson, EventBus bus, Settings settings,
+                                                                  Context context, Ln.Context lnContext,
+                                                                  Provider<OkHttpClient.Builder> okHttpClientBuilderProvider, Lazy<OperationQueue> operationQueue, UrlProvider urlProvider) {
+        return new IdentityClientPreLoginProvider(userAgentProvider, trackingIdGenerator, gson, bus, settings, context, lnContext, okHttpClientBuilderProvider, operationQueue, urlProvider);
+    }
+
+    @Provides
+    @Singleton
     DiagnosticManager provideDiagnosticManager(EventBus eventBus, ApiClientProvider apiClientProvider) {
         return new DiagnosticManager(eventBus, apiClientProvider);
     }
@@ -459,13 +551,18 @@ public class BaseSquaredModule {
     }
 
     @Provides
-    Batch provideBatch(final Context context) {
+    Batch provideBatch(final Context context, final ApiTokenProvider apiTokenProvider) {
         return new Batch(context) {
 
             @Override
             public boolean apply() {
                 if (isEmpty())
                     return true;
+
+                if (!apiTokenProvider.isAuthenticated()) {
+                    Ln.e("Batch operation not performed because the user is not authenticated");
+                    return false;
+                }
 
                 try {
                     results = context.getContentResolver().applyBatch(authority, this);
@@ -498,12 +595,6 @@ public class BaseSquaredModule {
 
     @Provides
     @Singleton
-    BluetoothBroadcastReceiver provideBluetoothBroadcastReceiver(AudioManager audioManager) {
-        return new BluetoothBroadcastReceiver(audioManager);
-    }
-
-    @Provides
-    @Singleton
     AccessManager provideAccessManager(ApiClientProvider apiClientProvider, EventBus bus) {
         return new DiscoveryAccessManager(apiClientProvider, bus);
     }
@@ -527,13 +618,14 @@ public class BaseSquaredModule {
 
     @Provides
     @Singleton
-    MercuryClient provideMercuryClient(ApiClientProvider apiClientProvider, ApiTokenProvider apiTokenProvider, Gson gson, EventBus bus,
-                                       DeviceRegistration deviceRegistration, Settings settings, UserAgentProvider userAgentProvider,
-                                       TrackingIdGenerator trackingIdGenerator, ActivityListener activityListener, Ln.Context lnContext,
-                                       WhiteboardService whiteboardService) {
-        MercuryClient client = new MercuryClient(true, apiClientProvider, apiTokenProvider, gson, bus, deviceRegistration,  settings,  userAgentProvider,
-                trackingIdGenerator,  activityListener,  lnContext, whiteboardService);
+    MercuryClient provideMercuryClient(ApiClientProvider apiClientProvider, Gson gson, EventBus bus,
+                                       DeviceRegistration deviceRegistration, ActivityListener activityListener, Ln.Context lnContext,
+                                       WhiteboardService whiteboardService, MetricsReporter metricsReporter, OperationQueue operationQueue, Sanitizer sanitizer) {
+
+        MercuryClient client = new MercuryClient(true, apiClientProvider, gson, bus, deviceRegistration, activityListener,
+                lnContext, whiteboardService, operationQueue, sanitizer);
         whiteboardService.setPrimaryMercury(client);
+        whiteboardService.setMetricsReporter(metricsReporter);
         return client;
     }
 
@@ -545,8 +637,8 @@ public class BaseSquaredModule {
 
     @Provides
     @Singleton
-    BindingBackend provideBindingBackend(ApiClientProvider apiClientProvider, EventBus bus) {
-        return new CloudBindingBackend(apiClientProvider, bus);
+    BindingBackend provideBindingBackend(ApiClientProvider apiClientProvider, EventBus bus, Injector injector, OperationQueue operationQueue) {
+        return new CloudBindingBackend(apiClientProvider, bus, injector, operationQueue);
     }
 
     @Provides
@@ -567,7 +659,7 @@ public class BaseSquaredModule {
                                                            ContentResolver contentResolver, AvatarProvider avatarProvider,
                                                            ContentManager contentManager, EventBus bus) {
         return new ContactsContractManager(context, authenticatedUserProvider, batchProvider, actorRecordProvider, contentResolver,
-                                           avatarProvider, contentManager, bus);
+                avatarProvider, contentManager, bus);
 
     }
 
@@ -581,8 +673,24 @@ public class BaseSquaredModule {
     @Provides
     @Singleton
     LocusProcessor provideLocusProcessor(final ApiClientProvider apiClientProvider, final EventBus bus, final LocusDataCache locusDataCache,
-                                         Ln.Context lnContext, DeviceRegistration deviceRegistration, Provider<Batch> batchProvider) {
-        return new LocusProcessor(apiClientProvider, bus, locusDataCache, lnContext, deviceRegistration, batchProvider);
+                                         Ln.Context lnContext, DeviceRegistration deviceRegistration, Provider<Batch> batchProvider,
+                                         CoreFeatures coreFeatures, LocusProcessorReporter locusProcessorReporter, LocusMeetingInfoProvider locusMeetingInfoProvider) {
+        return new LocusProcessor(apiClientProvider, bus, locusDataCache, lnContext, deviceRegistration, batchProvider, coreFeatures, locusProcessorReporter, locusMeetingInfoProvider);
+    }
+
+    @Provides
+    LocusProcessorReporter provideLocusProcessorReporter(EventBus bus) {
+        // Default is an empty Reporter.  Tests should override and use default class to enable functionality
+        return new LocusProcessorReporter(bus) {
+            @Override
+            public void reportNewEvent(String info) {
+
+            }
+            @Override
+            public void reportProcessedEvent(String info) {
+
+            }
+        };
     }
 
     @Provides
@@ -620,9 +728,9 @@ public class BaseSquaredModule {
     @Singleton
     OperationQueue provideOperationQueue(Context context, Gson gson, EventBus bus, AuthenticatedUserProvider authenticatedUserProvider,
                                          NetworkReachability networkReachability, Provider<Batch> batchProvider, Injector injector,
-                                         RefWatcher refWatcher, SdkClient sdkClient, LocusDataCache locusDataCache) {
+                                         RefWatcher refWatcher, SdkClient sdkClient, LocusDataCache locusDataCache, DeviceRegistration deviceRegistration) {
         return new OperationQueue(context, gson, bus, authenticatedUserProvider, networkReachability, batchProvider,
-                                  injector, refWatcher, sdkClient, locusDataCache);
+                injector, refWatcher, sdkClient, locusDataCache, deviceRegistration);
     }
 
     @Provides
@@ -632,15 +740,88 @@ public class BaseSquaredModule {
                                                LogFilePrint logFilePrint, Settings settings,
                                                TrackingIdGenerator trackingIdGenerator, DeviceRegistration deviceRegistration,
                                                DiagnosticManager diagnosticManager, EventBus eventBus,
-                                               RoomService roomService, ProvisioningClientProvider provisioningClientProvider) {
+                                               RoomService roomService, ProvisioningClientProvider provisioningClientProvider,
+                                               SdkClient sdkClient) {
+
         return new UploadLogsService(context, apiClientProvider, apiTokenProvider, mediaEngine, logFilePrint, settings,
-                                     trackingIdGenerator, deviceRegistration, diagnosticManager, eventBus, roomService,
-                                     provisioningClientProvider);
+                trackingIdGenerator, deviceRegistration, diagnosticManager, eventBus, roomService,
+                provisioningClientProvider, sdkClient);
     }
 
     @Provides
     @Singleton
     WhiteboardCache provideWhiteboardCache(EventBus eventBus, Gson gson) {
         return new WhiteboardCache(eventBus, gson);
+    }
+
+    @Provides
+    @Singleton
+    AvatarProvider provideAvatarProvider(DeviceRegistration deviceRegistration, Resources resources) {
+        return new AvatarProvider(deviceRegistration, resources);
+    }
+
+    @Provides
+    @Singleton
+    FileLoader provideFileLoader(ApiClientProvider apiClientProvider, SchedulerProvider schedulerProvider) {
+        return new FileLoader(apiClientProvider, schedulerProvider);
+    }
+
+    @Provides
+    @Singleton
+    CallAnalyzerReporter provideCallAnalyzerReporter(final DeviceRegistration deviceReg, final ApiTokenProvider tokenProvider,
+                                                     final OperationQueue operationQueue, final UserAgentProvider uaProvider,
+                                                     final TrackingIdGenerator trackingIdGenerator, final NetworkReachability networkReachability) {
+        return new CallAnalyzerReporter(deviceReg, tokenProvider, operationQueue, uaProvider, trackingIdGenerator, networkReachability);
+    }
+
+
+    @Provides
+    @Singleton
+    SegmentService provideSegmentService(Context context, ApiClientProvider apiClientProvider, UrlProvider urlProvider, OAuth2 oAuth2,
+                                          TrackingIdGenerator trackingIdGenerator, ApiTokenProvider apiTokenProvider) {
+        String segmentWriteKey;
+        if (BuildConfig.DEBUG || TestUtils.isTestUser(apiTokenProvider) || TestUtils.isPreLaunchTest(context)) {
+            segmentWriteKey = SegmentService.TEST_WRITE_KEY;
+        } else {
+            segmentWriteKey = SegmentService.PRODUCTION_WRITE_KEY;
+        }
+        return new SegmentService(segmentWriteKey, context, apiClientProvider, urlProvider, oAuth2, trackingIdGenerator, null);
+    }
+
+
+    @Provides
+    @Singleton
+    Toaster provideToaster(SdkClient sdkClient) {
+        return new Toaster(sdkClient);
+    }
+
+    @Provides
+    @Singleton
+    Sanitizer provideSanitizer() {
+        return new Sanitizer(false);
+    }
+    @Provides
+    @Singleton
+    SnapshotManager provideSnapshotManager(Injector injector, KeyManager keyManager,
+                                           OperationQueue operationQueue, FileLoader fileLoader, EventBus bus, Context context,
+                                           WhiteboardService whiteboardService, ContentManager contentManager, ContentResolver contentResolver) {
+        return new SnapshotManager(injector, keyManager, operationQueue, fileLoader, bus, context, whiteboardService, contentManager, contentResolver);
+    }
+
+    @Provides
+    @Singleton
+    AnnotationCreator provideAnnotationCreator(ApiClientProvider apiClientProvider, WhiteboardService whiteboardService,
+                                               SchedulerProvider schedulerProvider, SnapshotManager snapshotManager,
+                                               CallControlService callControlService, LocusDataCache locusDataCache,
+                                               CoreFeatures coreFeatures, KeyManager keyManager, SdkClient sdkClient, Context context,
+                                               EventBus bus, FileLoader fileLoader) {
+        return new AnnotationCreator(apiClientProvider, whiteboardService, schedulerProvider, snapshotManager, callControlService,
+                locusDataCache, coreFeatures, keyManager, sdkClient, context, bus, fileLoader);
+    }
+
+    @Provides
+    @Singleton
+    WhiteboardRenderer provideWhiteboardRenderer(Gson gson, SdkClient sdkClient, WhiteboardService whiteboardService, ApiTokenProvider apiTokenProvider, EventBus bus, SchedulerProvider schedulerProvider, WhiteboardCache whiteboardCache, Clock clock, Context context) {
+        return new WhiteboardRenderer(gson, sdkClient, whiteboardService, apiTokenProvider, bus, schedulerProvider, whiteboardCache, clock, context);
     }
 }

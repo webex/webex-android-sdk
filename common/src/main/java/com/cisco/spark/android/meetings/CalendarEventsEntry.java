@@ -9,7 +9,8 @@ public enum CalendarEventsEntry {
     TITLE(CalendarContract.Events.TITLE),
     DESCRIPTION(CalendarContract.Events.DESCRIPTION),
     ORGANIZER(CalendarContract.Events.ORGANIZER),
-    EVENT_LOCATION(CalendarContract.Events.EVENT_LOCATION);
+    EVENT_LOCATION(CalendarContract.Events.EVENT_LOCATION),
+    CALENDAR_COLOR(CalendarContract.Events.CALENDAR_COLOR);
 
     private String name;
 

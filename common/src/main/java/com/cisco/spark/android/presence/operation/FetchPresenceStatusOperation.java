@@ -13,8 +13,6 @@ import com.cisco.spark.android.sync.operationqueue.core.RetryPolicy;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -23,7 +21,7 @@ import de.greenrobot.event.EventBus;
 import retrofit2.Response;
 
 public class FetchPresenceStatusOperation extends Operation {
-    private static final int MAX_SUBJECTS = 10;
+    private static final int MAX_SUBJECTS = 50;
     private PresenceStatusRequest request;
 
     @Inject
@@ -31,6 +29,8 @@ public class FetchPresenceStatusOperation extends Operation {
 
     @Inject
     transient EventBus bus;
+
+    transient Object syncObject = new Object();
 
     public FetchPresenceStatusOperation(Injector injector, String subjectUuid) {
         this(injector, Arrays.asList(subjectUuid));
@@ -81,15 +81,19 @@ public class FetchPresenceStatusOperation extends Operation {
 
         FetchPresenceStatusOperation presenceStatusOperation = (FetchPresenceStatusOperation) newOperation;
 
-        if (getState().isPreExecute()) {
-            for (String subject : presenceStatusOperation.request.getSubjects()) {
-                this.request.removeSubject(subject);
-                this.request.addSubject(subject);
 
-                if (this.request.subjectCount() > MAX_SUBJECTS) {
-                    this.request.removeFirstSubject();
+        if (getState().isPreExecute()) {
+            synchronized (syncObject) {
+                for (String subject : presenceStatusOperation.request.getSubjects()) {
+                    this.request.removeSubject(subject);
+                    this.request.addSubject(subject);
+
+                    if (this.request.subjectCount() > MAX_SUBJECTS) {
+                        this.request.removeFirstSubject();
+                    }
                 }
             }
+
         }
 
         return getState().isPreExecute();
@@ -112,12 +116,5 @@ public class FetchPresenceStatusOperation extends Operation {
     @Override
     public boolean shouldPersist() {
         return false;
-    }
-
-    private Date getExpireTime(int ttlInSeconds) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        calendar.add(Calendar.SECOND, ttlInSeconds);
-        return calendar.getTime();
     }
 }

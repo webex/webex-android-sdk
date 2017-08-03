@@ -58,14 +58,11 @@ public class ShellsTask extends IncrementalSyncTask {
             }
         };
 
-        // If 'full shells', we're setting the HWM so we should get all the acks. Otherwise just get our own
-        String ackFilter = getMaxConversations() == MAX_CONVERSATIONS ? "all" : "myack";
-
         return apiClientProvider.getConversationClient().getShells(
                 getMaxConversations(),
                 getMaxParticipants(),
                 Math.max(0, sinceTime - FUDGE_FACTOR),
-                ackFilter)
+                "myack")
                 .flatMap(new ConversationStreamObservableMapper(gson, transform));
     }
 

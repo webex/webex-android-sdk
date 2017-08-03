@@ -18,11 +18,13 @@ import com.google.gson.reflect.TypeToken;
 import com.webex.wme.TraceServerSink;
 import com.webex.wme.WmeStunTraceResult;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Date;
 import java.util.Map;
 
 import de.greenrobot.event.EventBus;
+import retrofit2.Response;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -113,20 +115,25 @@ public class LinusReachabilityService implements Component, TraceServerSink {
         clearLinusReachabilityData();
 
         lastReachabilityCheckTime = new Date();
-        CalliopeClusterResponse clusters = apiClientProvider.getCalliopeClient().getClusters();
-        Ln.d("getCalliopeClusterDetails - string" + gson.toJson(clusters));
+        try {
+            Response<CalliopeClusterResponse> response = apiClientProvider.getCalliopeClient().getClusters().execute();
+            if (response.isSuccessful()) {
+                Ln.d("getCalliopeClusterDetails - string" + gson.toJson(response.body()));
 
-        maxAge = MILLISECONDS.convert(7200, SECONDS);
-        Ln.i("getCalliopeClusterDetails - maxAge" + maxAge);
-
-        return clusters;
+                maxAge = MILLISECONDS.convert(7200, SECONDS);
+                Ln.i("getCalliopeClusterDetails - maxAge" + maxAge);
+            }
+            return response.body();
+        } catch (IOException e) {
+            Ln.e(e);
+        }
+        return null;
     }
 
     public void performStunTraceCheck(String clusters) {
         if (clusters != null && clusters.length() > 0) {
             mediaEngine.startTraceServer(clusters);
         }
-
     }
 
     @Override
@@ -172,6 +179,12 @@ public class LinusReachabilityService implements Component, TraceServerSink {
 
     }
 
+    @Override
+    public void OnTraceServerEarlyResult(WmeStunTraceResult wmeStunTraceResult, String s) {
+        ln.d("LinusReachabilityService.onTraceServerEarlyResult, detail = " + s);
+        OnTraceServerResult(wmeStunTraceResult, s);
+    }
+
     public void uninitialize() {
         Ln.d("LinusReachabilityService:uninitialize(), initialized = " + initialized);
         initialized = false;
@@ -182,7 +195,10 @@ public class LinusReachabilityService implements Component, TraceServerSink {
     }
 
     public Map<String, Object> getLatestLinusReachabilityResults() {
-        return this.reachabilityResults;
+        if (isCalliopeDiscoveryFeatureToggleEnabled() && mediaEngine.isLastTraceServerUsable()) {
+            return this.reachabilityResults;
+        }
+        return null;
     }
 
     private boolean hasRechabilityCheckMaxTimeElapsed() {

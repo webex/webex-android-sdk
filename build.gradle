@@ -1,5 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+//old
+/*
 buildscript {
     repositories {
         jcenter()
@@ -9,7 +11,32 @@ buildscript {
         classpath 'me.tatarka:gradle-retrolambda:3.5.0'
     }
 }
+*/
 
+//new commonlib
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url 'https://maven.fabric.io/public'
+        }
+    }
+
+    ext.gradleVersion = System.env.GRADLE_VERSION == null ? '2.2.0' : System.env.GRADLE_VERSION
+
+    dependencies {
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.12.0'
+        classpath 'com.jakewharton.sdkmanager:gradle-plugin:0.12.+'
+        // Hardcode 1.20.0. 1.21.0 crashes the app.
+        classpath 'io.fabric.tools:gradle:1.20.0'
+        classpath "com.android.tools.build:gradle:$gradleVersion"
+        classpath 'com.github.triplet.gradle:play-publisher:1.1.5'
+        classpath 'me.tatarka:gradle-retrolambda:3.5.0'
+    }
+}
+
+//old
+/*
 allprojects {
     repositories {
         jcenter()
@@ -30,8 +57,33 @@ allprojects {
         }
     }
 }
+*/
 
+//new commonlib
+allprojects {
+    repositories {
+        mavenLocal()
+        jcenter()
+        maven {
+            url 'https://maven.fabric.io/public'
+        }
+        maven {
+            url 'http://engci-maven.cisco.com/artifactory/webex-cca-thirdparty'
+        }
+        maven {
+            url 'http://engci-maven.cisco.com/artifactory/webex-cca-release'
+        }
+        maven {
+            url 'http://engci-maven.cisco.com/artifactory/webex-cca-group'
+        }
+        maven {
+            url 'http://engci-maven.cisco.com/artifactory/androidwb-group/'
+        }
+    }
+}
 
+//old
+/*
 ext {
     versions = [
             wme : System.env.WME_VERSION == null ? '7.0.0' : System.env.WME_VERSION,
@@ -97,7 +149,75 @@ ext {
             joda: 'joda-time:joda-time:2.9.2'
     ]
 }
+*/
 
+//new
+ext {
+    versions = [
+            wme : System.env.WME_VERSION == null ? '7.7.0' : System.env.WME_VERSION,
+            support : '25.3.1',
+            okhttp: '3.5.0',
+            retrofit: '2.0.2'
+    ]
+
+    libs = [
+            supportv13 : "com.android.support:support-v13:$versions.support",
+            supportannotation : "com.android.support:support-annotations:$versions.support",
+            appcompatv7 : "com.android.support:appcompat-v7:$versions.support",
+            recyclerviewv7 : "com.android.support:recyclerview-v7:$versions.support",
+            cardviewv7 : "com.android.support:cardview-v7:$versions.support",
+            supportdesign : "com.android.support:design:$versions.support",
+            gridlayout : "com.android.support:gridlayout-v7:$versions.support",
+            percent : "com.android.support:percent:$versions.support",
+
+            gson : 'com.google.code.gson:gson:2.6.2',
+
+            dagger : 'com.squareup.dagger:dagger:1.2.2',
+            daggercompiler : 'com.squareup.dagger:dagger-compiler:1.2.2',
+
+            retrofit : "com.squareup.retrofit2:retrofit:$versions.retrofit",
+            retrofit_gsonconverter : "com.squareup.retrofit2:converter-gson:$versions.retrofit",
+            retrofit_rxjava: "com.squareup.retrofit2:adapter-rxjava:$versions.retrofit",
+
+            okhttp : "com.squareup.okhttp3:okhttp:$versions.okhttp",
+            okhttp_logging : "com.squareup.okhttp3:logging-interceptor:$versions.okhttp",
+
+            eventbus : 'de.greenrobot:eventbus:2.4.0',
+            ln : 'com.github.benoitdion.ln:ln:0.1.2',
+
+            wmeaar: "com.webex:wme4android-release:${versions.wme}@aar",
+
+            spongycastle_prov: "com.madgag.spongycastle:prov:1.54.0.0",
+            spongycastle_core: "com.madgag.spongycastle:core:1.54.0.0",
+            kms: "com.cisco.wx2:cloud-apps-sdk-kms:1.0.17991",
+
+            rxjava :'io.reactivex:rxjava:1.1.1',
+            rxandroid: "io.reactivex:rxandroid:1.1.0",
+            rxrelay: "com.jakewharton.rxrelay:rxrelay:1.2.0",
+
+            will: "com.wacom.ink.library:willSDK:1.7.0@aar",
+
+            leak_canary: "com.squareup.leakcanary:leakcanary-android:1.5",
+            leak_canary_disabled: "com.squareup.leakcanary:leakcanary-android-no-op:1.5",
+
+            sqlcipher: "net.zetetic:android-database-sqlcipher:3.5.4@aar",
+
+            // Required for LocusSequenceInfo (and dependent classes) copied from cloud-apps-common
+            fasterxml_annotations : 'com.fasterxml.jackson.core:jackson-annotations:2.6.3',
+            fasterxml_databind : 'com.fasterxml.jackson.core:jackson-databind:2.6.3',
+            fasterxml_core : 'com.fasterxml.jackson.core:jackson-core:2.6.3',
+
+            // Test libs
+            junit: 'junit:junit:4.+',
+            robolectric: 'org.robolectric:robolectric:3.0',
+            robolectric_support: 'org.robolectric:shadows-support-v4:3.0',
+            robolectric_httpclient: 'org.robolectric:shadows-httpclient:3.0',
+            robolectric_multidex: "org.robolectric:shadows-multidex:3.0",
+            mockito: 'org.mockito:mockito-core:2.0.7-beta',
+
+            joda: 'joda-time:joda-time:2.9.9'
+    ]
+}
 
 task clean(type: Delete) {
     delete rootProject.buildDir

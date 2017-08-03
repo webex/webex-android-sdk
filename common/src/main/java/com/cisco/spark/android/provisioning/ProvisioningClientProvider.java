@@ -1,6 +1,7 @@
 package com.cisco.spark.android.provisioning;
 
 import android.content.Context;
+import android.net.Uri;
 
 import com.cisco.spark.android.client.TrackingIdGenerator;
 import com.cisco.spark.android.client.UrlProvider;
@@ -20,22 +21,18 @@ import javax.inject.Provider;
 import dagger.Lazy;
 import de.greenrobot.event.EventBus;
 import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
 
 public class ProvisioningClientProvider extends BaseApiClientProvider {
+    private UrlProvider urlProvider;
+    private ProvisioningClient provisioningClient;
 
     protected String accessToken;
-
-    private UrlProvider urlProvider;
-
-    private ProvisioningClient provisioningClient;
 
     public ProvisioningClientProvider(UserAgentProvider userAgentProvider, TrackingIdGenerator trackingIdGenerator, Gson gson, EventBus bus, Settings settings, Context context, Ln.Context lnContext, Provider<OkHttpClient.Builder> okHttpClientBuilderProvider, Lazy<OperationQueue> operationQueue, UrlProvider urlProvider) {
         super(userAgentProvider, trackingIdGenerator, gson, bus, settings, context, lnContext, okHttpClientBuilderProvider, operationQueue, new SquaredCertificatePinner(context, new HashSet<>(Arrays.asList(urlProvider.getAtlasUrl())), bus, urlProvider));
 
         this.urlProvider = urlProvider;
     }
-
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
@@ -51,8 +48,10 @@ public class ProvisioningClientProvider extends BaseApiClientProvider {
         }
 
         if (provisioningClient == null) {
-            Retrofit retrofit = retrofit(buildOkHttpClient(null)).baseUrl(urlProvider.getAtlasUrl()).build();
-            provisioningClient = retrofit.create(ProvisioningClient.class);
+            provisioningClient = retrofit(buildOkHttpClient(Uri.parse(urlProvider.getAtlasUrl()), null))
+                    .baseUrl(urlProvider.getAtlasUrl())
+                    .build()
+                    .create(ProvisioningClient.class);
         }
 
         return provisioningClient;
@@ -67,6 +66,5 @@ public class ProvisioningClientProvider extends BaseApiClientProvider {
     protected boolean shouldRefreshTokensNow() {
         return false;
     }
-
 
 }

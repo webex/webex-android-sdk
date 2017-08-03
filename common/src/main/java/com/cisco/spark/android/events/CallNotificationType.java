@@ -9,4 +9,5 @@ public enum CallNotificationType {
     MUTE_STATE,
     MEDIA_STATE,
     PROXIMITY_MUTE_STATE,
+    STOP_SCREEN_SHARING
 }

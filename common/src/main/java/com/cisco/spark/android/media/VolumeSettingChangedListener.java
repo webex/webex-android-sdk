@@ -39,7 +39,7 @@ public class VolumeSettingChangedListener extends ContentObserver {
         } else {
             return;
         }
-        int volSetting = 65535 >> (maxVol - vol);
+        int volSetting = (65535 * vol) / maxVol;
         if (0 == vol) {
             volSetting = 0;
         }

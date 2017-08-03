@@ -23,4 +23,7 @@ public class DirectorySearchQuery {
         this.queryString = queryString;
     }
 
+    public String getQueryString() {
+        return queryString;
+    }
 }

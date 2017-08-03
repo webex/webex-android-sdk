@@ -44,4 +44,14 @@ public class SquaredUrlProvider implements UrlProvider {
     public String getMetricsApiUrl() {
         return BuildConfig.METRICS_API_URL;
     }
+
+    @Override
+    public String getIdbrokerTokenUrl() {
+        return BuildConfig.IDBROKER_TOKEN_URL;
+    }
+
+    @Override
+    public String getIdentityApiUrl() {
+        return BuildConfig.IDENTITY_API_URL;
+    }
 }

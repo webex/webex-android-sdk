@@ -6,12 +6,11 @@ import android.text.TextUtils;
 
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.Injector;
-import com.cisco.spark.android.whiteboard.WhiteboardError;
 import com.cisco.spark.android.whiteboard.persistence.model.ContentItems;
+import com.cisco.spark.android.whiteboard.util.WhiteboardConstants;
 import com.cisco.spark.android.whiteboard.util.WhiteboardUtils;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 
 import javax.inject.Inject;
 
@@ -52,15 +51,13 @@ public class LoadWhiteboardContentTask extends AsyncTask<Void, Void, Void> {
             try {
                 response =  call.execute();
             } catch (IOException e) {
-                callback.onFailure(channelId, WhiteboardError.ErrorData.NETWORK_ERROR);
+                callback.onFailure(channelId, WhiteboardConstants.LOAD_BOARD_CONTENT_NETWORK_ISSUE);
                 return null;
             }
 
-            if (!response.isSuccessful() && response.code() != HttpURLConnection.HTTP_NOT_FOUND) {
-                callback.onFailure(channelId, WhiteboardError.ErrorData.LOAD_BOARD_LIST_ERROR);
+            if (!response.isSuccessful()) {
+                callback.onFailure(channelId, WhiteboardConstants.LOAD_BOARD_CONTENT_FAILURE);
                 return null;
-            } else if (response.code() == HttpURLConnection.HTTP_NOT_FOUND) {
-                // There are not contents for this board, contentItems should be empty
             } else {
                 contentItems.getItems().addAll(response.body().getItems());
             }
@@ -84,6 +81,6 @@ public class LoadWhiteboardContentTask extends AsyncTask<Void, Void, Void> {
 
     public interface Callback {
         void onSuccess(String channelId, ContentItems contentItems);
-        void onFailure(String channelId, WhiteboardError.ErrorData errorData);
+        void onFailure(String channelId, String errorMessage);
     }
 }

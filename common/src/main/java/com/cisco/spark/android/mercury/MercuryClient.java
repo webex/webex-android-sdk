@@ -3,89 +3,84 @@ package com.cisco.spark.android.mercury;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
-import com.cisco.spark.android.authenticator.ApiTokenProvider;
-import com.cisco.spark.android.authenticator.NotAuthenticatedException;
-import com.cisco.spark.android.client.TrackingIdGenerator;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.core.Component;
-import com.cisco.spark.android.core.Settings;
+import com.cisco.spark.android.core.ServiceHosts;
 import com.cisco.spark.android.locus.events.ResetEvent;
-import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
 import com.cisco.spark.android.mercury.events.ConversationActivityEvent;
-import com.cisco.spark.android.mercury.events.LocusChangedEvent;
 import com.cisco.spark.android.mercury.events.WhiteboardActivityEvent;
 import com.cisco.spark.android.processing.ActivityListener;
-import com.cisco.spark.android.util.DiagnosticModeChangedEvent;
-import com.cisco.spark.android.util.Sanitize;
+import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
+import com.cisco.spark.android.util.Sanitizer;
 import com.cisco.spark.android.util.Strings;
-import com.cisco.spark.android.util.UserAgentProvider;
+import com.cisco.spark.android.util.TestUtils;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.spark.android.whiteboard.WhiteboardService;
 import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.NaturalLog;
 import com.google.gson.Gson;
 
-import org.java_websocket.WebSocket;
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.drafts.Draft_17;
-import org.java_websocket.exceptions.WebsocketNotConnectedException;
-import org.java_websocket.framing.Framedata;
-import org.java_websocket.handshake.ServerHandshake;
-
-import java.net.URI;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
+import java.util.ArrayList;
 
 import de.greenrobot.event.EventBus;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocketListener;
+import okio.ByteString;
 
 public class MercuryClient implements Component {
-    private static final int SOCKET_TIMEOUT_MS = 15000; // 15s, same as server
-
     private final ApiClientProvider apiClientProvider;
-    private final ApiTokenProvider apiTokenProvider;
     private final Gson gson;
     private final EventBus bus;
     private final DeviceRegistration deviceRegistration;
-    private final Settings settings;
-    private final UserAgentProvider userAgentProvider;
-    private final TrackingIdGenerator trackingIdGenerator;
     private final ActivityListener activityListener;
     protected final NaturalLog ln;
     protected final WhiteboardService whiteboardService;
+    protected final Sanitizer sanitizer;
 
-    protected MercuryWebSocketClient webSocketClient;
+    private final OperationQueue operationQueue;
+
+    protected MercuryWebsocketListener websocketListener;
+    protected okhttp3.WebSocket webSocket;
     private final Object syncLock = new Object();
     protected ApplicationController applicationController;
     private long lastPing;
     protected boolean forcedStop;
-    private String verboseLoggingToken;
     private Uri uriOverride;
     private Uri mercuryConnectionServiceClusterUrl;
 
-    private final boolean isPrimary;
+    private ServiceHosts serviceHosts;
 
-    public MercuryClient(boolean primary, ApiClientProvider apiClientProvider, ApiTokenProvider apiTokenProvider, Gson gson, EventBus bus,
-                         DeviceRegistration deviceRegistration, Settings settings, UserAgentProvider userAgentProvider,
-                         TrackingIdGenerator trackingIdGenerator, ActivityListener activityListener, Ln.Context lnContext,
-                         WhiteboardService whiteboardService) {
+    private final boolean isPrimary;
+    private boolean isConnected;
+
+    public MercuryClient(boolean primary, ApiClientProvider apiClientProvider, Gson gson, EventBus bus,
+                         DeviceRegistration deviceRegistration, ActivityListener activityListener, Ln.Context lnContext,
+                         WhiteboardService whiteboardService, OperationQueue operationQueue, Sanitizer sanitizer) {
 
         this.apiClientProvider = apiClientProvider;
-        this.apiTokenProvider = apiTokenProvider;
         this.gson = gson;
         this.bus = bus;
         this.deviceRegistration = deviceRegistration;
-        this.settings = settings;
-        this.userAgentProvider = userAgentProvider;
-        this.trackingIdGenerator = trackingIdGenerator;
         this.activityListener = activityListener;
         this.ln = Ln.get(lnContext, getName());
         this.whiteboardService = whiteboardService;
-
-        bus.register(this);
+        this.operationQueue = operationQueue;
+        this.sanitizer = sanitizer;
 
         this.isPrimary = primary;
+
+        if (this.deviceRegistration.getServiceHostMap() != null) {
+            Uri mercuryLink = deviceRegistration.getServiceHostMap().getServiceLink("mercuryConnection");
+
+            this.serviceHosts = new ServiceHosts(deviceRegistration.getServiceHostMap().getServiceHost(mercuryLink.getHost()));
+        } else {
+            this.serviceHosts = new ServiceHosts(new ArrayList<>());
+        }
     }
 
     @NonNull
@@ -105,11 +100,6 @@ public class MercuryClient implements Component {
         return deviceRegistration.getWebSocketUrl();
     }
 
-    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
-    public void onEvent(DiagnosticModeChangedEvent event) {
-        verboseLoggingToken = event.getVerboseLoggingToken();
-    }
-
     @Override
     public boolean shouldStart() {
         return true;
@@ -117,53 +107,60 @@ public class MercuryClient implements Component {
 
     @Override
     public void start() {
-        ln.i("Starting mercury");
+        ln.i("Starting " + getName());
 
-        try {
-            synchronized (syncLock) {
-                forcedStop = false;
+        synchronized (syncLock) {
+            forcedStop = false;
 
-                if (isRunning()) {
-                    Ln.w(new RuntimeException("Mercury is already running"));
-                    return;
-                }
-
-                HashMap<String, String> headers = new HashMap<String, String>();
-                headers.put("Authorization", apiTokenProvider.getAuthenticatedUser().getConversationAuthorizationHeader());
-                headers.put("User-Agent", userAgentProvider.get());
-                String trackingID = trackingIdGenerator.nextTrackingId();
-                ln.d("Mercury tracking id " + trackingID);
-
-                headers.put("TrackingID", trackingID);
-                // Avoid race where the token gets reset to null on the event bus.
-                String localToken = verboseLoggingToken;
-                if (localToken != null)
-                    headers.put("LogLevelToken", localToken);
-
-                Uri webSocketUri;
-
-                if (uriOverride != null) {
-                    webSocketUri = uriOverride;
-                } else {
-                    webSocketUri = deviceRegistration.getWebSocketUrl();
-                }
-
-                webSocketClient = buildMercuryWebSocketClient(webSocketUri, headers);
-                if (!settings.allowUnsecuredConnection() || isSecuredWebSocketUri(webSocketUri)) {
-                    webSocketClient.setSocket(apiClientProvider.buildSSLSocket());
-                }
-                webSocketClient.connect();
+            if (isRunning()) {
+                Ln.w(new RuntimeException("Mercury is already running"));
+                return;
             }
-        } catch (NotAuthenticatedException ex) {
-            ln.i("No authenticated user. Mercury did not start.");
-        } catch (Exception e) {
-            ln.e(e);
+
+            Uri webSocketUri;
+            Request request;
+
+            if (uriOverride != null) {
+                webSocketUri = uriOverride;
+                ln.d("webSocketUri (override): %s", webSocketUri);
+            } else {
+                webSocketUri = deviceRegistration.getWebSocketUrl();
+                ln.d("webSocketUri: %s", webSocketUri);
+            }
+
+            request = buildMercuryWebSocketRequest(webSocketUri);
+
+            websocketListener = buildMercuryWebSocketListener();
+            OkHttpClient client = apiClientProvider.buildOkHttpClient(null, deviceRegistration, null);
+            webSocket = client.newWebSocket(request, websocketListener);
+            client.dispatcher().executorService().shutdown();
         }
     }
 
     @NonNull
-    protected MercuryWebSocketClient buildMercuryWebSocketClient(Uri webSocketUri, HashMap<String, String> headers) {
-        return new MercuryWebSocketClient(webSocketUri, headers);
+    protected Request buildMercuryWebSocketRequest(Uri webSocketUri) {
+        Uri updatedWebSocketUri = webSocketUri;
+
+        if (uriOverride == null && serviceHosts != null && serviceHosts.getHost() != null) {
+            String originalWebSocketUri = webSocketUri.toString();
+            String newHost = serviceHosts.getHost();
+            String newWebSocketUri = originalWebSocketUri.replace(webSocketUri.getHost(), newHost);
+
+            updatedWebSocketUri = Uri.parse(newWebSocketUri);
+        }
+
+        if (deviceRegistration.getFeatures().isBufferedMercuryEnabled())
+            updatedWebSocketUri = updatedWebSocketUri.buildUpon()
+                    .appendQueryParameter("mercuryRegistrationStatus", "true")
+                    .appendQueryParameter("isAckSupported", "true")
+                    .build();
+
+        return new Request.Builder().url(updatedWebSocketUri.toString()).build();
+    }
+
+    @NonNull
+    protected MercuryWebsocketListener buildMercuryWebSocketListener() {
+        return new MercuryWebsocketListener();
     }
 
     private boolean isSecuredWebSocketUri(Uri uri) {
@@ -174,22 +171,17 @@ public class MercuryClient implements Component {
     public void stop() {
         synchronized (syncLock) {
             forcedStop = true;
-            if (webSocketClient != null) {
-                ln.i("Stopping Mercury client.");
-                try {
-                    webSocketClient.close();
-                } catch (Exception ex) {
-                    ln.e(ex);
-                } finally {
-                    webSocketClient = null;
-                }
+            if (webSocket != null) {
+                ln.i("Stopping %s client.", getName());
+                webSocket.close(1000, "Component Stopping");
+                webSocket = null;
             }
         }
     }
 
     public boolean isRunning() {
         synchronized (syncLock) {
-            return webSocketClient != null && webSocketClient.isOpen();
+            return webSocket != null && isConnected;
         }
     }
 
@@ -199,25 +191,15 @@ public class MercuryClient implements Component {
     }
 
     public void logState() {
-        ln.v("WebSocketClient is null: %b", webSocketClient == null);
-        if (webSocketClient != null) {
-            ln.v("WebSocketClient is connecting: %b", webSocketClient.isConnecting());
-            ln.v("WebSocketClient is closed: %b", webSocketClient.isClosed());
-            ln.v("WebSocketClient is open: %b", webSocketClient.isOpen());
-        }
+        ln.v("WebSocket is null: %b", webSocket == null);
+        ln.v("WebSocket is connected: %b", isConnected);
         ln.v("WebSocket uri: %s", deviceRegistration.getWebSocketUrl());
     }
 
     public void send(String message) {
-        if (webSocketClient != null) {
+        if (webSocket != null) {
             Ln.d("Send " + message);
-            try {
-                webSocketClient.send(message);
-            } catch (WebsocketNotConnectedException ex) {
-                ln.d(ex);
-            } catch (Throwable ex) {
-                ln.e(ex, "Failed to parse the message correctly");
-            }
+            webSocket.send(message);
         }
     }
 
@@ -229,78 +211,72 @@ public class MercuryClient implements Component {
         return lastPing;
     }
 
-    protected class MercuryWebSocketClient extends WebSocketClient {
-        public MercuryWebSocketClient(Uri serverURI, HashMap<String, String> headers) {
-            // Draft_17 implements Hybi 17 / RFC 6455 which corresponds to the server's WebSocket implementation.
-            // See https://github.com/TooTallNate/Java-WebSocket/wiki/Drafts for more details.
-            super(URI.create(serverURI.toString()), new Draft_17(), headers, SOCKET_TIMEOUT_MS);
+    public boolean isPrimary() {
+        return isPrimary;
+    }
+
+    protected class MercuryWebsocketListener extends WebSocketListener {
+        private String trackingId;
+
+        @Override
+        public void onOpen(okhttp3.WebSocket webSocket, Response response) {
+            trackingId = response.header("TrackingID");
+            ln.i("Mercury connection opened. handshake: %s - %s TrackingId: %s", response.code(), response.message(), trackingId);
+            bus.post(new MercuryClient.MercuryConnectedEvent());
+            isConnected = true;
         }
 
         @Override
-        public void onOpen(ServerHandshake handshakeData) {
-            ln.d("Mercury connection opened.");
-            bus.post(new MercuryConnectedEvent());
-        }
-
-        @Override
-        public void onMessage(String message) {
-            ln.d("Received message: %s", Sanitize.sanitize(message));
-            try {
-                MercuryEnvelope envelope = gson.fromJson(message, MercuryEnvelope.class);
-                if (envelope != null) {
-                    if (envelope.getData() != null && !Strings.isEmpty(envelope.getData().getEventType().toString())) {
-                        if (envelope.getData() instanceof ConversationActivityEvent) {
-                            ConversationActivityEvent activityEvent = (ConversationActivityEvent) envelope.getData();
-                            activityEvent.patch(envelope.getHeaders());
-                            activityListener.setActivityMetadata(activityEvent.getActivity().getId(), envelope.getAlertType(), envelope.isDeliveryEscalation());
-                            bus.post(activityEvent);
-                        } else if (envelope.getData() instanceof WhiteboardActivityEvent) {
-                            whiteboardService.mercuryEvent((WhiteboardActivityEvent) envelope.getData());
-                        } else if (envelope.getData() instanceof MercuryRegistration) {
-                            MercuryRegistration event = (MercuryRegistration) envelope.getData();
-                            MercuryClient.this.mercuryConnectionServiceClusterUrl = event
-                                    .getLocalClusterServiceUrls()
-                                    .getMercuryConnectionServiceClusterUrl();
-                        } else if (envelope.getData() instanceof LocusChangedEvent) {
-                            LocusChangedEvent locusChangedEvent = ((LocusChangedEvent) envelope.getData());
-
-                            if (envelope.getAlertType() == AlertType.NONE && locusChangedEvent.getLocus().getSelf() != null && !locusChangedEvent.getLocus().getSelf().getAlertType().getAction().equals(LocusSelfRepresentation.AlertType.ALERT_NONE)) {
-                                locusChangedEvent.getLocus().getSelf().getAlertType().setAction(LocusSelfRepresentation.AlertType.ALERT_NONE);
-                            }
-
-                            bus.post(locusChangedEvent);
-                        } else {
-                            bus.post(envelope.getData());
-                        }
+        public void onMessage(okhttp3.WebSocket webSocket, String message) {
+            ln.d("Received message: %s", sanitizer.sanitize(message));
+            lastPing = SystemClock.elapsedRealtime();
+            MercuryEnvelope envelope = gson.fromJson(message, MercuryEnvelope.class);
+            if (envelope != null) {
+                if (envelope.getData() != null && !Strings.isEmpty(envelope.getData().getEventType().toString())) {
+                    if (envelope.getData() instanceof ConversationActivityEvent) {
+                        handleConversationActivityEvent(envelope);
+                    } else if (envelope.getData() instanceof WhiteboardActivityEvent) {
+                        WhiteboardActivityEvent whiteboardActivityEvent = getWhiteboardActivityEnvent(envelope);
+                        whiteboardService.mercuryEvent(whiteboardActivityEvent);
+                    } else if (envelope.getData() instanceof MercuryRegistration) {
+                        handleRegistrationEvent(envelope);
                     } else {
-                        ln.w("Invalid message envelope.");
+                        bus.post(envelope.getData());
                     }
-                    getConnection().send(gson.toJson(new AckMessage(envelope.getId())));
+                } else {
+                    ln.w("Invalid message envelope.");
                 }
-            } catch (WebsocketNotConnectedException ex) {
-                ln.d(ex);
-                if (!forcedStop)
-                    bus.post(new ResetEvent(WebSocketStatusCodes.CLOSE_LOCAL_ERROR));
-            } catch (Throwable ex) {
-                ln.e(ex, "Failed to parse the message correctly");
+                webSocket.send(gson.toJson(new AckMessage(envelope.getId())));
             }
         }
 
         @Override
-        public void onWebsocketPing(WebSocket conn, Framedata f) {
-            super.onWebsocketPing(conn, f);
-            ln.d("received ping");
-            lastPing = SystemClock.elapsedRealtime();
+        public void onMessage(okhttp3.WebSocket webSocket, ByteString bytes) {
+            onMessage(webSocket, new String(bytes.toByteArray()));
         }
 
         @Override
-        public void onClose(int code, String reason, boolean remote) {
-            ln.i("Connection closed. Reason: %s, code: %d (%s), remote: %b, last ping :%d", reason, code,
-                 WebSocketStatusCodes.valueForCode(code).name(), remote, lastPing);
+        public void onClosing(okhttp3.WebSocket webSocket, int code, String reason) {
+            ln.i("Connection closing. Reason: \"%s\", code: %d (%s), last ping: %d TrackingId: %s", reason, code,
+                    MercuryClient.WebSocketStatusCodes.valueForCode(code).name(), lastPing, trackingId);
+            webSocket.close(code, reason);
+        }
 
-            if (applicationController.isStarted() && !forcedStop) {
+        @Override
+        public void onClosed(okhttp3.WebSocket webSocket, int code, String reason) {
+            super.onClosed(webSocket, code, reason);
+
+            ln.i("Connection closed. Reason: \"%s\", code: %d (%s), last ping: %d TrackingId: %s", reason, code,
+                    MercuryClient.WebSocketStatusCodes.valueForCode(code).name(), lastPing, trackingId);
+
+            isConnected = false;
+
+            if (forcedStop)
+                return;
+
+            if (shouldConsiderRetry()) {
                 // Status Code Definitions: https://tools.ietf.org/html/rfc6455#section-7.4.1
-                switch (WebSocketStatusCodes.valueForCode(code)) {
+                switch (MercuryClient.WebSocketStatusCodes.valueForCode(code)) {
                     case CLOSE_REPLACED:
                         ln.w("Connection was replaced, safe to ignore");
                         break;
@@ -318,28 +294,74 @@ public class MercuryClient implements Component {
                     case CLOSE_TO_LARGE:
                     case CLOSE_EXTENSION_NEGOTIATION:
                     case CLOSE_REQUEST_UNFULLABLE:
-                        if (deviceRegistration.getFeatures().isWhiteboardEnabled()) {
-                            if (whiteboardService.usePrimaryMercury()) {
-                                Ln.e("WhiteboardService: Mercury: onClose()");
-                                whiteboardService.mercuryErrorEvent(new ResetEvent(WebSocketStatusCodes.valueForCode(code)));
-                            }
-                        }
-                        bus.post(new ResetEvent(WebSocketStatusCodes.valueForCode(code)));
+                        serviceHosts.markHostFailed(webSocket.request().url().host());
+                        Ln.i("Connection closed, reset to try again.");
+                        bus.post(new ResetEvent(MercuryClient.WebSocketStatusCodes.valueForCode(code)));
                         break;
                 }
             }
         }
 
         @Override
-        public void onError(Exception ex) {
-            ln.i(ex, "Web socket error. Restarting the Mercury client.");
-            bus.post(new ResetEvent(WebSocketStatusCodes.CLOSE_LOCAL_ERROR));
+        public void onFailure(okhttp3.WebSocket webSocket, Throwable t, Response response) {
+            ln.d(t);
+            if (!forcedStop) {
+
+                if (response != null && response.request() != null && response.request().url() != null) {
+                    serviceHosts.markHostFailed(response.request().url().host());
+                }
+
+                bus.post(new ResetEvent(MercuryClient.WebSocketStatusCodes.CLOSE_LOCAL_ERROR));
+            }
+
+            isConnected = false;
         }
 
-        @Override
-        public void onMessage(ByteBuffer bytes) {
-            String message = new String(bytes.array());
-            onMessage(message);
+        private void handleRegistrationEvent(MercuryEnvelope envelope) {
+            MercuryRegistration event = (MercuryRegistration) envelope.getData();
+            MercuryClient.this.mercuryConnectionServiceClusterUrl = event
+                    .getLocalClusterServiceUrls()
+                    .getMercuryConnectionServiceClusterUrl();
+
+            if (deviceRegistration.getFeatures().isBufferedMercuryEnabled() && !event.getBufferState().isConversationBuffered()) {
+                operationQueue.catchUpSync();
+            }
+        }
+
+        private void handleConversationActivityEvent(MercuryEnvelope envelope) {
+            ConversationActivityEvent activityEvent = (ConversationActivityEvent) envelope.getData();
+            activityEvent.patch(envelope.getHeaders());
+            activityListener.setActivityMetadata(activityEvent.getActivity().getId(), activityEvent.getActivity().getClientTempId(), envelope.getAlertType(), envelope.isDeliveryEscalation());
+            bus.post(activityEvent);
+        }
+    }
+
+    private WhiteboardActivityEvent getWhiteboardActivityEnvent(MercuryEnvelope envelope) {
+        MercuryEnvelope.Headers headers = envelope.getHeaders();
+        WhiteboardActivityEvent whiteboardActivityEvent = (WhiteboardActivityEvent) envelope.getData();
+        if (null != headers && !TextUtils.isEmpty(headers.getChannelId())) {
+            whiteboardActivityEvent.setChannelId(headers.getChannelId());
+        }
+        return whiteboardActivityEvent;
+    }
+
+    private boolean shouldConsiderRetry() {
+        if (TestUtils.isInstrumentation()) {
+            boolean retryCondition = applicationController.isRegistered();
+            ln.i("shouldRetry(testing) startInProgress ? %s state = %s", retryCondition, applicationController.getState());
+            // To address the issue with quick local handshake failures in integration (-intb)
+            // We need to be able to consider a retry while we are in the process of starting
+            // the applicationController.  isRegistered, considers STARTING and STARTED and REGISTERING
+            // as valid states to retry.
+            return retryCondition;
+        } else {
+            // This is the current check, this will fail if application controller is not starting or started
+            // We should consider using isRegistered() and look at how we retry, do we need a
+            // backoff algorithm, or a maximum number of retries.
+            // This only considers STARTED or STARTING as a valid state for resetting the process.
+            boolean retryCondition = applicationController.isStarted() || applicationController.isStarting();
+            ln.i("shouldRetry ? %s state = %s ", retryCondition, applicationController.getState());
+            return retryCondition;
         }
     }
 
@@ -379,6 +401,6 @@ public class MercuryClient implements Component {
         }
     }
 
-    public class MercuryConnectedEvent {
+    public static class MercuryConnectedEvent {
     }
 }

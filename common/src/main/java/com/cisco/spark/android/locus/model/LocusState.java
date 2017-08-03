@@ -8,7 +8,6 @@ public class LocusState {
     private int count;
     private Date lastActive;
     private State state;
-    private boolean startingSoon;
     private Type type;
 
     public enum State {
@@ -21,7 +20,8 @@ public class LocusState {
     public enum Type {
         CALL,
         MEETING,
-        SIP_BRIDGE
+        SIP_BRIDGE,
+        IVR
     }
 
     public LocusState(boolean active, int count, State state) {
@@ -67,14 +67,6 @@ public class LocusState {
 
     public void setLastActive(Date lastActive) {
         this.lastActive = lastActive;
-    }
-
-    /**
-     *
-     * @return boolean value representing if the associated meeting is starting soon or not
-     */
-    public boolean isStartingSoon() {
-        return startingSoon;
     }
 
     public Type getType() {

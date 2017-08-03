@@ -2,13 +2,16 @@ package com.cisco.spark.android.locus.requests;
 
 import android.net.Uri;
 
-public class MigrateRequest {
+import com.cisco.spark.android.features.CoreFeatures;
+
+public class MigrateRequest extends DeltaRequest {
     private LocusInvitee invitee;
     private boolean isMigrateSelf;
     private Uri deviceUrl;
 
-    public MigrateRequest(String invitee, boolean isMigrateSelf, Uri deviceUrl) {
-        LocusInvitee li = new LocusInvitee();
+    public MigrateRequest(CoreFeatures coreFeatures, String invitee, boolean isMigrateSelf, Uri deviceUrl) {
+        super(coreFeatures);
+        LocusInvitee li = new LocusInvitee(coreFeatures);
         li.setInvitee(invitee);
 
         this.invitee = li;

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 import okhttp3.Connection;
 import okhttp3.Headers;
@@ -33,11 +32,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-
-
-import okhttp3.internal.Platform;
-
-
+import okhttp3.internal.platform.Platform;
 import okio.Buffer;
 import okio.BufferedSource;
 
@@ -120,7 +115,7 @@ public final class LoggingInterceptor implements Interceptor {
         Logger DEFAULT = new Logger() {
             @Override
             public void log(String message) {
-                Platform.get().log(message);
+                Platform.get().log(Platform.INFO, message, null);
             }
         };
     }
@@ -183,6 +178,10 @@ public final class LoggingInterceptor implements Interceptor {
                 // them to be included (when available) so there values are known.
                 if (requestBody.contentType() != null) {
                     logger.log("Content-Type: " + requestBody.contentType());
+
+                    if (!isLoggableContentType(requestBody.contentType().toString())) {
+                        logBody = false;
+                    }
                 }
                 if (requestBody.contentLength() != -1) {
                     logger.log("Content-Length: " + requestBody.contentLength());

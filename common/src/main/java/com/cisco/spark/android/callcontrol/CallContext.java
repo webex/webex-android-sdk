@@ -6,7 +6,7 @@ import android.os.Parcelable;
 
 import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.media.MediaEngine;
-import com.cisco.spark.android.media.MediaSession;
+
 
 // https://code.google.com/p/android/issues/detail?id=6822
 // Need to put this Parcelable in a bundle before passing it on to avoid the
@@ -21,7 +21,6 @@ public class CallContext implements Parcelable {
 
     private LocusKey locusKey;
     private String invitee;
-    private String usingResource;
     private String conversationId;
     private String conversationTitle;
     private boolean isOneOnOne;
@@ -35,16 +34,16 @@ public class CallContext implements Parcelable {
     private boolean fromNotification;
     private boolean isAudioCall;
     private boolean isCrossLaunch;
+    private boolean isMeeting;
+    private int numberOfInvalidPinInputed;
 
     // These are not marshalled, should they be?
-    private MediaSession mediaSession;
     private Boolean moderator;
     private String pin;
 
     protected CallContext(Parcel in) {
         locusKey = in.readParcelable(getClass().getClassLoader());
         invitee = in.readString();
-        usingResource = in.readString();
         conversationId = in.readString();
         conversationTitle = in.readString();
         isOneOnOne = in.readByte() != 0;
@@ -56,6 +55,8 @@ public class CallContext implements Parcelable {
         isCrossLaunch = in.readByte() != 0;
         useRoomPreference = UseRoomPreference.values()[in.readInt()];
         isAudioCall = in.readByte() != 0;
+        isMeeting = in.readByte() != 0;
+        numberOfInvalidPinInputed = in.readInt();
 
         int callInitiationOriginInt = in.readInt();
         if (callInitiationOriginInt >= 0) {
@@ -93,7 +94,6 @@ public class CallContext implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(locusKey, flags);
         dest.writeString(invitee);
-        dest.writeString(usingResource);
         dest.writeString(conversationId);
         dest.writeString(conversationTitle);
         dest.writeByte((byte) (isOneOnOne ? 1 : 0));
@@ -105,6 +105,9 @@ public class CallContext implements Parcelable {
         dest.writeByte((byte) (isCrossLaunch ? 1 : 0));
         dest.writeInt(useRoomPreference.ordinal());
         dest.writeByte((byte) (isAudioCall ? 1 : 0));
+        dest.writeByte((byte) (isMeeting ? 1 : 0));
+        dest.writeInt(numberOfInvalidPinInputed);
+
         if (callInitiationOrigin == null) {
             dest.writeInt(-1);
         } else {
@@ -131,14 +134,6 @@ public class CallContext implements Parcelable {
 
     public String getInvitee() {
         return invitee;
-    }
-
-    public String getUsingResource() {
-        return usingResource;
-    }
-
-    public void setUsingResource(String usingResource) {
-        this.usingResource = usingResource;
     }
 
     public String getConversationId() {
@@ -185,14 +180,6 @@ public class CallContext implements Parcelable {
         return isCrossLaunch;
     }
 
-    public MediaSession getMediaSession() {
-        return mediaSession;
-    }
-
-    public void setMediaSession(MediaSession mediaSession) {
-        this.mediaSession = mediaSession;
-    }
-
     public void setModerator(Boolean moderator) {
         this.moderator = moderator;
     }
@@ -217,8 +204,23 @@ public class CallContext implements Parcelable {
         isAudioCall = audioCall;
     }
 
+    public int getNumberOfInvalidPinInputed() {
+        return numberOfInvalidPinInputed;
+    }
+
+    public void setNumberOfInvalidPinInputed(int numberOfInvalidPinInputed) {
+        this.numberOfInvalidPinInputed = numberOfInvalidPinInputed;
+    }
+
     public void setUseRoomPreference(UseRoomPreference useRoomPreference) {
         this.useRoomPreference = useRoomPreference;
+
+
+
+    }
+
+    public boolean isMeeting() {
+        return isMeeting;
     }
 
     public static class Builder {
@@ -243,11 +245,6 @@ public class CallContext implements Parcelable {
             callContext.isOneOnOne = true;
             callContext.isAudioCall = false;
             callContext.showFullScreen = true;
-        }
-
-        public Builder setUsingResource(String usingResource) {
-            callContext.usingResource = usingResource;
-            return this;
         }
 
         public Builder setIsOneOnOne(boolean isOneOnOne) {
@@ -275,7 +272,6 @@ public class CallContext implements Parcelable {
             return this;
         }
 
-
         public Builder setCallInitiationOrigin(CallInitiationOrigin callInitiationOrigin) {
             callContext.callInitiationOrigin = callInitiationOrigin;
             return this;
@@ -301,9 +297,25 @@ public class CallContext implements Parcelable {
             return this;
         }
 
+        public Builder setIsMeeting(boolean isMeeting) {
+            callContext.isMeeting = isMeeting;
+            return this;
+        }
+
+        public Builder setModerator(boolean isModerator) {
+            callContext.moderator = isModerator;
+            return this;
+        }
+
+        public Builder setPin(String pin) {
+            callContext.pin = pin;
+            return this;
+        }
+
         public CallContext build() {
             return callContext;
         }
+
     }
 
     @Override
@@ -311,7 +323,6 @@ public class CallContext implements Parcelable {
         return "CallContext{" +
                 "locusKey=" + locusKey +
                 ", invitee='" + invitee + '\'' +
-                ", usingResource='" + usingResource + '\'' +
                 ", conversationId='" + conversationId + '\'' +
                 ", conversationTitle='" + conversationTitle + '\'' +
                 ", isOneOnOne=" + isOneOnOne +
@@ -325,7 +336,7 @@ public class CallContext implements Parcelable {
                 ", fromNotification=" + fromNotification +
                 ", isAudioCall=" + isAudioCall +
                 ", isCrossLaunch=" + isCrossLaunch +
-                ", mediaSession=" + mediaSession +
+                ", isMeeting=" + isMeeting +
                 ", moderator=" + moderator +
                 ", pin='" + pin + '\'' +
                 '}';

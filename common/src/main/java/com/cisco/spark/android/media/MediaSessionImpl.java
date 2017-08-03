@@ -11,10 +11,10 @@ import android.util.SparseArray;
 import android.view.View;
 
 import com.cisco.spark.android.core.Settings;
+import com.cisco.spark.android.media.events.AvailableMediaChangeEvent;
 import com.cisco.spark.android.media.events.DeviceCameraUnavailable;
-import com.cisco.spark.android.media.events.FirstAudioPacketReceivedEvent;
-import com.cisco.spark.android.media.events.ICEConnectionFailedEvent;
 import com.cisco.spark.android.media.events.MediaActiveSpeakerChangedEvent;
+import com.cisco.spark.android.media.events.MediaBlockedChangeEvent;
 import com.cisco.spark.android.media.events.NetworkCongestionEvent;
 import com.cisco.spark.android.media.events.NetworkDisableVideoEvent;
 import com.cisco.spark.android.media.events.NetworkDisconnectEvent;
@@ -23,6 +23,7 @@ import com.cisco.spark.android.media.events.NetworkReconnectEvent;
 import com.cisco.spark.android.media.statistics.MediaStats;
 import com.cisco.spark.android.media.statistics.PacketStats;
 import com.cisco.spark.android.room.audiopairing.AudioDataListener;
+import com.cisco.spark.android.util.ImageUtils;
 import com.cisco.spark.android.util.SafeAsyncTask;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.wme.appshare.ScreenShareContext;
@@ -37,14 +38,17 @@ import com.webex.wme.MediaTrack;
 import com.webex.wme.WmeError;
 import com.webex.wme.WmeSdpParsedInfo;
 import com.webex.wseclient.WseEngine;
+import com.webex.wseclient.WseSurfaceView;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -64,8 +68,9 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
 
     // video SCRs for typical 360p and 720p video
     // VideoSCRParams(int fs, int fps, int br, int dpb, int mbps, int priority, int grouping, boolean duplicate)
-    private static final MediaEngine.VideoSCRParams videoScr360p = new MediaEngine.VideoSCRParams(920, 3000, 600000, 891, 27600, 255, 0, false);
-    private static final MediaEngine.VideoSCRParams videoScr720p = new MediaEngine.VideoSCRParams(3600, 3000, 1500000, 1782, 108000, 255, 0, false);
+    private static final MediaEngine.VideoSCRParams videoScr180p = new MediaEngine.VideoSCRParams(396, 3000, 256000, 0, 7200, 255, 0, false);
+    private static final MediaEngine.VideoSCRParams videoScr360p = new MediaEngine.VideoSCRParams(920, 3000, 640000, 0, 27600, 255, 0, false);
+    private static final MediaEngine.VideoSCRParams videoScr720p = new MediaEngine.VideoSCRParams(3600, 3000, 1792000, 0, 108000, 255, 0, false);
 
     private static final int CONGESTION_THRESHOLD_LO_AUDIO_RTT = 600;
     private static final int CONGESTION_THRESHOLD_HI_AUDIO_RTT = 2000;
@@ -74,12 +79,13 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
     private static final int MIN_VIDEO_WIDTH = 160;
     private static final int MIN_VIDEO_HEIGHT = 90;
     private static final int MIN_ADAPTATION_BITRATE = 100000;
-    private static final int NETWORK_RECONNECT_STABILITY = 2000;
 
     private static final String HEADSET_PLUGIN_NOTIFICATION = "WmeAudioAndroid_HeadsetPlugin";
     private static final String HEADSET_PLUGOUT_NOTIFICATION = "WmeAudioAndroid_HeadsetPlugout";
 
+    private static final long MAIN_VIDEO_ID = 0L;
 
+    private final String callId;
     private final DeviceManager deviceManager;
     private final EventBus bus;
     private final DeviceRegistration deviceRegistration;
@@ -89,8 +95,8 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
     private final NaturalLog ln;
 
     private String deviceSettings;
-    private MediaCallbackObserver mediaCallbackObserver;
-    private ScreenShareCallback screenShareCallback;
+    private SdpReadyCallback sdpReadyCallback;
+    private MediaSessionCallbacks mediaSessionCallbacks;
 
 
     private MediaConnection mediaConnection;
@@ -105,6 +111,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
 
     private View shareView;
     private View previewWindow;
+    private View activeSpeakerView;
 
     private Date firstAudioPacketReceivedTime;
     private Date firstVideoPacketReceivedTime;
@@ -130,6 +137,26 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
             + "\"mediaCodec\":true,"
             + "\"yv12Capture\":false"
             + "}}}}";
+
+    public String sw720pSetting = "{\n" +
+            "    \"enable_sw720p\":{\n" +
+            "        \"send\": {\n" +
+            "            \"720p\": {\n" +
+            "                \"general\": {}\n" +
+            "            }\n" +
+            "        },\n" +
+            "        \"receive\": {\n" +
+            "            \"720p\": {\n" +
+            "                \"general\": {}\n" +
+            "            }\n" +
+            "        },\n" +
+            "        \"simul\": {\n" +
+            "            \"4l\": {\n" +
+            "              \"general\": {}\n" +
+            "            }\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
 
     private boolean hardwareCodecEnabled;
     private boolean usedTcpFallback;
@@ -180,8 +207,14 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
     // incoming stream is composed from multiple video streams into a single video stream
     private boolean isCompositedVideoStream;
 
+    private File lastShareContentFrame;
 
-    public MediaSessionImpl(DeviceManager deviceManager, EventBus bus, DeviceRegistration deviceRegistration, Settings settings, Gson gson, Context context, Ln.Context lnContext) {
+    enum MediaType {
+        VIDEO, SHARING, AUDIO
+    };
+
+    public MediaSessionImpl(String callId, DeviceManager deviceManager, EventBus bus, DeviceRegistration deviceRegistration, Settings settings, Gson gson, Context context, Ln.Context lnContext) {
+        this.callId = callId;
         this.deviceManager = deviceManager;
         this.bus = bus;
         this.deviceRegistration = deviceRegistration;
@@ -193,12 +226,14 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
 
 
     @Override
-    public void startSession(final String deviceSettings, final MediaEngine.MediaDirection mediaDirection, MediaCallbackObserver mediaCallbackObserver) {
+    public void startSession(final String deviceSettings, final MediaEngine.MediaDirection mediaDirection,
+                             MediaSessionCallbacks mediaSessionCallbacks, SdpReadyCallback sdpReadyCallback) {
         Ln.d("MediaSessionImpl.startSession(), mediaDirection= " + mediaDirection + ", this = " + this);
         endingSession = false;
 
         this.deviceSettings = deviceSettings;
-        this.mediaCallbackObserver = mediaCallbackObserver;
+        this.mediaSessionCallbacks = mediaSessionCallbacks;
+        this.sdpReadyCallback = sdpReadyCallback;
 
         mediaSessionStarted = true;
         mediaStarted = false;
@@ -215,8 +250,13 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         mediaConnection = new MediaConnection();
         mediaConnection.setListener(this);
 
-        if (deviceSettings != null && deviceSettings.trim().length() > 0) {
-            mediaConnection.GetGlobalConfig().SetDeviceMediaSettings(deviceSettings);
+
+        if (settings.isSw720pEnabed()) {
+            mediaConnection.GetGlobalConfig().SetDeviceMediaSettings(sw720pSetting);
+        } else {
+            if (deviceSettings != null && deviceSettings.trim().length() > 0) {
+                mediaConnection.GetGlobalConfig().SetDeviceMediaSettings(deviceSettings);
+            }
         }
 
         boolean enableTcAec = deviceRegistration.getFeatures().isTcAecEnabled() || settings.isTcAecEnabled();
@@ -240,9 +280,9 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
 
 
     @Override
-    public void updateSession(MediaCallbackObserver mediaCallbackObserver, final MediaEngine.MediaDirection mediaDirection) {
+    public void updateSession(final MediaEngine.MediaDirection mediaDirection, SdpReadyCallback sdpReadyCallback) {
         Ln.d("MediaSessionImpl.updateSession(), mediaDirection= " + mediaDirection + ", this = " + this);
-        this.mediaCallbackObserver = mediaCallbackObserver;
+        this.sdpReadyCallback = sdpReadyCallback;
         updateMedia(mediaDirection);
         createOffer();
     }
@@ -350,12 +390,12 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         boolean isMuted = false;
         long retValue = 0;
         if (mid == MediaEngine.VIDEO_MID) {
+            MediaConfig.VideoConfig videoConfigInst = mediaConnection.GetVideoConfig(MediaEngine.VIDEO_MID);
+            if (videoConfigInst != null) {
+                checkHardwareCodecSettings(videoConfigInst);
+            }
             if (dir == MediaConnection.MediaDirection.SendOnly) {
                 trackVideoLocal = track;
-                if (previewWindow != null) {
-                    trackVideoLocal.addRenderWindow(previewWindow);
-                    trackVideoLocal.SetRenderMode(MediaTrack.ScalingMode.CropFill);
-                }
 
                 // select front camera by default
                 if (deviceManager != null) {
@@ -366,6 +406,11 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
                 }
                 retValue = track.Start(isMuted);
 
+                if (previewWindow != null) {
+                    trackVideoLocal.addRenderWindow(previewWindow);
+                    trackVideoLocal.SetRenderMode(MediaTrack.ScalingMode.CropFill);
+                }
+
             } else if (dir == MediaConnection.MediaDirection.RecvOnly) {
                 Ln.d("MediaSessionImpl.onMediaReady, (MediaDirection.RecvOnly) (VIDEO_MID) track, vid  = " + track.getVID() + ", csi = " + Arrays.toString(track.getCSI()));
                 Long vid = track.getVID();
@@ -374,21 +419,20 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
                 View view = vidViewMap.get(vid);
                 if (view != null) {
                     track.addRenderWindow(view);
-                    setRemoteRenderMode(track);
+                    setRemoteRenderMode(track, MediaEngine.VIDEO_MID);
                 }
                 //single video video shared between active video and share
-                if (isSharingAsViewer() && vid == 0)
+                if (isSharingAsViewer() && vid == MAIN_VIDEO_ID) {
                     switchSingleVideoViewToShare(true);
+                }
 
                 track.Start(isMuted);
-                if (hardwareCodecEnabled) {
+                if (hardwareCodecEnabled || settings.isSw720pEnabed()) {
                     requestRemoteVideo(track, videoScr720p);
                 } else {
                     requestRemoteVideo(track, videoScr360p);
                 }
             }
-
-
         } else if (mid == MediaEngine.AUDIO_MID) {
             if (dir == MediaConnection.MediaDirection.SendOnly) {
                 trackAudioLocal = track;
@@ -402,11 +446,12 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
                 shareTrack = track;
                 if (shareView != null) {
                     shareTrack.addRenderWindow(shareView);
-                    setRemoteRenderMode(shareTrack);
+                    setRemoteRenderMode(shareTrack, MediaEngine.SHARE_MID);
                 }
                 //single video video shared between active video and share
-                if (isSharingAsViewer())
+                if (isSharingAsViewer()) {
                     switchSingleVideoViewToShare(true);
+                }
 
                 //send SCR first to reduce delay.
                 shareTrack.Start();
@@ -425,7 +470,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         if (retValue == WmeError.E_VIDEO_CAMERA_FAIL || retValue == WmeError.E_VIDEO_CAMERA_NO_DEVICE || retValue == WmeError.E_VIDEO_RENDERTHREAD_GL) {
             cameraFailed = true;
             Ln.e("camera error (%d) when starting video track", retValue);
-            bus.post(new DeviceCameraUnavailable());
+            bus.post(new DeviceCameraUnavailable(callId));
         }
 
     }
@@ -436,12 +481,19 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         mediaConnection.createOffer();
     }
 
+    @Override
+    public void createAnswer(SdpReadyCallback sdpReadyCallback) {
+        Ln.d("MediaSessionImpl.createAnswer");
+        this.sdpReadyCallback = sdpReadyCallback;
+        mediaConnection.createAnswer();
+    }
+
 
     @Override
     public void onSDPReady(MediaConnection.SDPType type, String sdp) {
         Ln.v("MediaSessionImpl.onSDPReady, typ=" + type + ", sdp=" + sdp);
-        if (mediaCallbackObserver != null) {
-            mediaCallbackObserver.onSDPReady(this, sdp);
+        if (sdpReadyCallback != null) {
+            sdpReadyCallback.onSDPReady(sdp);
         }
         localSdp = sdp;
     }
@@ -466,6 +518,16 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         }
     }
 
+
+    @Override
+    public void offerReceived(final String sdp) {
+        Ln.v("MediaSessionImpl.offerReceived: " + sdp);
+        if (!sdp.isEmpty()) {
+            if (mediaConnection != null) {
+                mediaConnection.setReceivedSDP(MediaConnection.SDPType.Offer, sdp);
+            }
+        }
+    }
 
     @Override
     public void updateSDP(final String sdp) {
@@ -563,7 +625,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         // set encoder codec params
         String profileID;
         int maxMbps, maxFs, maxBr, maxFps;
-        if (hardwareCodecEnabled) { //720p
+        if (hardwareCodecEnabled || settings.isSw720pEnabed())  { //720p
             profileID = "420014";
             maxMbps = 108000;
             maxFs = 3600;
@@ -716,8 +778,8 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
             // get packet stats
             MediaStatistics.AudioStatistics audioStats = mediaConnection.getAudioStatistics(MediaEngine.AUDIO_MID);
             MediaStatistics.VideoStatistics videoStats = mediaConnection.getVideoStatistics(MediaEngine.VIDEO_MID);
-            packetStats = new PacketStats(audioStats.mLocalSession.uPackets, audioStats.mRemoteSession.uPackets,
-                    videoStats.mLocalSession.uPackets, videoStats.mRemoteSession.uPackets);
+            packetStats = new PacketStats(audioStats.mConnection.uRTPSent, audioStats.mConnection.uRTPReceived,
+                    videoStats.mConnection.uRTPSent, videoStats.mConnection.uRTPReceived);
 
             if (trackVideoLocal != null) {
                 Ln.d("MediaSessionImpl.stopMedia(), stopping local video track");
@@ -842,13 +904,19 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
     }
 
 
-
     @Override
     public void onMediaBlocked(int mid, int vid, boolean blocked) {
         Ln.d("MediaSessionImpl.onMediaBlocked, mid=" + mid + ", vid = " + vid + ", blocked=" + blocked);
-        if ((isVideo(mid) || isShare(mid)) && isActiveSpeaker(vid) && mediaCallbackObserver != null) {
-            mediaCallbackObserver.onVideoBlocked(blocked);
+        if ((isVideo(mid) || isShare(mid)) && isActiveSpeaker(vid) && mediaSessionCallbacks != null) {
+            com.cisco.spark.android.media.MediaType mediaType;
+            if (isVideo(mid)) {
+                mediaType = com.cisco.spark.android.media.MediaType.VIDEO;
+            } else {
+                mediaType = com.cisco.spark.android.media.MediaType.CONTENT_SHARE;
+            }
+            mediaSessionCallbacks.onMediaBlocked(callId, mediaType, blocked);
         }
+        bus.post(new MediaBlockedChangeEvent(mid, vid, blocked));
     }
 
 
@@ -872,7 +940,14 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
     @Override
     public void onAvailableMediaChanged(int mid, int count) {
         Ln.d("MediaSessionImpl.onAvailableMediaChanged, mid = " + mid + ", count = " + count);
-
+        if (mid == MediaEngine.SHARE_MID) {
+            if (count == 0) {
+                saveShareFrame();
+            } else {
+                cleanShareFrame();
+            }
+        }
+        bus.post(new AvailableMediaChangeEvent(mid, count));
     }
 
 
@@ -895,7 +970,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         if (isVideo(mid)) {
             MediaTrack remoteTrack = remoteVideoTracks.get(vid);
             Ln.d("MediaSessionImpl.OnCSIsChanged (VIDEO), vid = " + vid + ", oldCSIs = " + Arrays.toString(oldCSIs) + ", newCSIs = " + Arrays.toString(newCSIs)
-                    + " track = " , MediaHelper.formatMediaTrack(remoteTrack));
+                    + " track = ", MediaHelper.formatMediaTrack(remoteTrack));
 
             if (oldCSIs.length > 0) {
                 long oldVideoCSI = oldCSIs[0];
@@ -914,7 +989,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
                 View view = csiViewMap.get(videoCSI);
                 if (view != null) {
                     remoteTrack.addRenderWindow(view);
-                    setRemoteRenderMode(remoteTrack);
+                    setRemoteRenderMode(remoteTrack, MediaEngine.VIDEO_MID);
                 }
             }
         } else if (mid == MediaEngine.SHARE_MID) {
@@ -935,7 +1010,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         }
 
 
-        bus.post(new MediaActiveSpeakerChangedEvent(mid, vid, oldCSIs, newCSIs));
+        bus.post(new MediaActiveSpeakerChangedEvent(callId, mid, vid, oldCSIs, newCSIs));
     }
 
 
@@ -951,12 +1026,12 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
             case bad:
                 if (!alreadyWarnedNetworkCongestion) {
                     alreadyWarnedNetworkCongestion = true;
-                    bus.post(new NetworkCongestionEvent());
+                    bus.post(new NetworkCongestionEvent(callId));
                 }
                 break;
             case videoOff:
                 if (networkDirection.equals(MediaConnection.NetworkDirection.Uplink) && !isVideoMuted()) {
-                    bus.post(new NetworkDisableVideoEvent());
+                    bus.post(new NetworkDisableVideoEvent(callId));
                 }
                 break;
             case recovered:
@@ -967,20 +1042,32 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
 
     @Override
     public void onSessionStatus(int mid, MediaConnection.MediaType mediaType, MediaConnection.ConnectionStatus status) {
-        Ln.v("MediaSessionImpl.onSessionStatus, ConnectionStatus=" + status);
+        Ln.v("MediaSessionImpl.onSessionStatus: mid=" + mid + ", mediaType=" + mediaType + ", ConnectionStatus=" + status);
         if (status == MediaConnection.ConnectionStatus.Sent) {
             if (mediaType == MediaConnection.MediaType.Audio)
                 setFirstAudioPacketSent(new Date());
             else if (mediaType == MediaConnection.MediaType.Video) {
                 setFirstVideoPacketSent(new Date());
+            } else if (mediaType == MediaConnection.MediaType.Sharing) {
+                if (mediaSessionCallbacks != null) {
+                    mediaSessionCallbacks.onFirstPacketTx(callId, com.cisco.spark.android.media.MediaType.CONTENT_SHARE);
+                }
             }
         } else if (status == MediaConnection.ConnectionStatus.Received) {
             if (mediaType == MediaConnection.MediaType.Audio)
                 setFirstAudioPacketReceived(new Date());
             else if (mediaType == MediaConnection.MediaType.Video) {
                 setFirstVideoPacketReceived(new Date());
+            } else if (mediaType == MediaConnection.MediaType.Sharing) {
+                if (mediaSessionCallbacks != null) {
+                    mediaSessionCallbacks.onFirstPacketRx(callId, com.cisco.spark.android.media.MediaType.CONTENT_SHARE);
+                }
             }
         } else if (status == MediaConnection.ConnectionStatus.Connected) {
+            if (!connected && mediaSessionCallbacks != null) {
+                mediaSessionCallbacks.onICEComplete(callId);
+            }
+
             connected = true;
             checkTcpFallback();
         } else if (status == MediaConnection.ConnectionStatus.Disconnected) {
@@ -990,7 +1077,10 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
             // this indicates an ICE connection error
             if (!connected && !iceFailed) {
                 iceFailed = true;
-                bus.post(new ICEConnectionFailedEvent());
+
+                if (mediaSessionCallbacks != null) {
+                    mediaSessionCallbacks.onICEFailed(callId);
+                }
             } else {
                 isNetworkConnected.set(false);
 
@@ -1000,7 +1090,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
                     // switching from one network to another; or a permanent loss.  Time(r's) will tell...
                     int mediaReconnectTimeout = deviceRegistration.getFeatures().getMediaReconnectTimeout();
                     Ln.d("NetworkDisconnectEvent: Waiting %d secs for reconnection.", mediaReconnectTimeout);
-                    bus.post(new NetworkDisconnectEvent());
+                    bus.post(new NetworkDisconnectEvent(callId, getMediaTypeString(mediaType)));
 
                     networkConnectionHandler = new Handler(Looper.getMainLooper());
                     networkConnectionHandler.postDelayed(networkConnectionRunnable, mediaReconnectTimeout * 1000);
@@ -1013,7 +1103,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
                 networkConnectionHandler = null;
             }
             isNetworkConnected.set(true);
-            bus.post(new NetworkReconnectEvent());
+            bus.post(new NetworkReconnectEvent(callId, getMediaTypeString(mediaType)));
             checkTcpFallback();
         } else if (status == MediaConnection.ConnectionStatus.FileCaptureEnded) {
 
@@ -1057,17 +1147,10 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         public Boolean call() throws Exception {
             if (!isNetworkConnected.get()) {
                 Ln.i("NetworkLostEvent: No reconnect detected.");
-                bus.post(new NetworkLostEvent());
+                bus.post(new NetworkLostEvent(callId));
             } else {
-                Ln.i("Network reconnected. Waiting %d msec to verify it's stable.", NETWORK_RECONNECT_STABILITY);
-                Thread.sleep(NETWORK_RECONNECT_STABILITY);  // TODO - is this needed?
-                if (isNetworkConnected.get()) {
-                    Ln.i("NetworkReconnectEvent: Reconnect is stable.");
-                    bus.post(new NetworkReconnectEvent());
-                } else {
-                    Ln.i("NetworkLostEvent: Reconnect was not stable.");
-                    bus.post(new NetworkLostEvent());
-                }
+                Ln.i("NetworkReconnectEvent: Network is reconnected.");
+                bus.post(new NetworkReconnectEvent(callId));
             }
             networkConnectionHandler = null;
             return true;
@@ -1076,7 +1159,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         @Override
         public void onException(Exception ex) {
             Ln.i("NetworkLostEvent: Some error occurred waiting for stability.");
-            bus.post(new NetworkLostEvent());
+            bus.post(new NetworkLostEvent(callId));
         }
     }
 
@@ -1093,19 +1176,19 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
 
                 // Don't update active speaker due to unavailable media.
                 if (hasCSI && mediaStatus != MediaConnection.MediaStatus.ERR_TEMP_UNAVAIL_NO_MEDIA) {
-                    bus.post(new MediaActiveSpeakerChangedEvent(mid, vid, new long[]{}, new long[]{csi}));
+                    bus.post(new MediaActiveSpeakerChangedEvent(callId, mid, vid, new long[]{}, new long[]{csi}));
                 }
 
                 switch (mediaStatus) {
                     case ERR_TEMP_UNAVAIL_NO_MEDIA: {
                         // Active speaker muted video
-                        bus.post(newVideoMuteWithCsiEvent(csi, vid));
+                        bus.post(newVideoMuteWithCsiEvent(callId, csi, vid));
                         onMediaBlocked(mid, vid, true);
                         break;
                     }
                     case Available: {
                         // Active speaker turned on video
-                        bus.post(newVideoOnWithCsiEvent(csi, vid));
+                        bus.post(newVideoOnWithCsiEvent(callId, csi, vid));
                         break;
                     }
                     default: {
@@ -1128,7 +1211,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
 
             MediaTrack remoteTrack = remoteVideoTracks.get((long) vid);
             if (remoteTrack != null) {
-                setRemoteRenderMode(remoteTrack);
+                setRemoteRenderMode(remoteTrack, MediaEngine.VIDEO_MID);
             }
 
             if (!isSharingAsViewer()) {
@@ -1153,7 +1236,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         if (isSharingAsViewer()) {
             return decodeSizeShare;
         }
-        return getVideoSize(0);
+        return getVideoSize((int) MAIN_VIDEO_ID);
     }
 
 
@@ -1161,24 +1244,81 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
     // Rendering
     // ***************************************
 
+    private MediaTrack.ScalingMode getShareScreenVideoRenderMode(MediaTrack track) {
+        if (!isDisplayActiveSpeakerWindow() || shareView == null) {
+            return getRemoteVideoRenderMode(track);
+        }
 
-    public synchronized void setRemoteRenderMode(MediaTrack track) {
+        View containerView = shareView;
+        if (containerView == null || track == null) {
+            return MediaTrack.ScalingMode.CropFill;
+        }
+
+        long containerViewWidth  = containerView.getWidth();
+        long containerViewHeight = containerView.getHeight();
+        boolean isContainerViewPortrait = containerViewHeight > containerViewWidth;
+
+        long decodedWidth  = decodeSizeShare.width();
+        long decodedHeight = decodeSizeShare.height();
+        boolean receivingPortrait = decodedHeight > decodedWidth;
+
+        if ((isContainerViewPortrait && receivingPortrait) || (!isContainerViewPortrait && !receivingPortrait)) {
+            Ln.d("getShareScreenVideoRenderMode, mode = CROP_FILL");
+            return MediaTrack.ScalingMode.CropFill;
+        }
+
+        Ln.d("getShareScreenVideoRenderMode, mode = LETTER_BOX");
+        return MediaTrack.ScalingMode.LetterBox;
+    }
+
+    private MediaTrack.ScalingMode getRemoteVideoRenderMode(MediaTrack track) {
+        View containerView = vidViewMap.get(MAIN_VIDEO_ID);
+        if (containerView == null || track == null) {
+            return MediaTrack.ScalingMode.CropFill;
+        }
+
+        long decodedHeight = track.getVideoTrackStatistics().uHeight;
+        long decodedWidth  = track.getVideoTrackStatistics().uWidth;
+        boolean receivingPortrait = decodedHeight > decodedWidth;
+
+        int orientation = context.getResources().getConfiguration().orientation;
+        if (deviceRegistration.getFeatures().isActiveSpeakerViewEnabled()) {
+            if ((orientation == Configuration.ORIENTATION_PORTRAIT && receivingPortrait) ||
+                    (orientation == Configuration.ORIENTATION_LANDSCAPE && !receivingPortrait)) {
+                Ln.d("getRemoteVideoRenderMode, mode = CROP_FILL");
+                return MediaTrack.ScalingMode.CropFill;
+            }
+        } else {
+            if (orientation == Configuration.ORIENTATION_PORTRAIT && receivingPortrait) {
+                Ln.d("getRemoteVideoRenderMode, mode = CROP_FILL");
+                return MediaTrack.ScalingMode.CropFill;
+            }
+        }
+        Ln.d("getRemoteVideoRenderMode, mode = LETTER_BOX");
+        return MediaTrack.ScalingMode.LetterBox;
+    }
+
+    private MediaTrack.ScalingMode getActiveSpeakerVideoRenderMode() {
+        // display the active speaker video with cropfill mode.
+        return MediaTrack.ScalingMode.CropFill;
+    }
+
+    public synchronized void setRemoteRenderMode(MediaTrack track, int mediaType) {
+        Ln.d("setRemoteRenderMode, mediaType = " + mediaType);
         if (track != null) {
             try {
-                long decodedHeight = track.getVideoTrackStatistics().uHeight;
-                long decodedWidth = track.getVideoTrackStatistics().uWidth;
-                boolean receivingPortrait = decodedHeight > decodedWidth;
-
                 MediaTrack.ScalingMode mode;
-
                 if (!deviceRegistration.getFeatures().isMultistreamEnabled()) {
-                    // check orientation of device.  If it's portrait and incoming video is portrait then select CropFill render mode
-                    // for remote video..otherwise select LetterBox
-                    int orientation = context.getResources().getConfiguration().orientation;
-                    if (orientation == Configuration.ORIENTATION_PORTRAIT && receivingPortrait) {
-                        mode = MediaTrack.ScalingMode.CropFill;
+                    if (isDisplayActiveSpeakerWindow()) {
+                        if (mediaType == MediaEngine.VIDEO_MID) {
+                            mode = getActiveSpeakerVideoRenderMode();
+                        } else if (mediaType == MediaEngine.SHARE_MID) {
+                            mode = getShareScreenVideoRenderMode(track);
+                        } else {
+                            mode = MediaTrack.ScalingMode.CropFill;
+                        }
                     } else {
-                        mode = MediaTrack.ScalingMode.LetterBox;
+                        mode = getRemoteVideoRenderMode(track);
                     }
                 } else {
                     mode = MediaTrack.ScalingMode.CropFill;
@@ -1196,15 +1336,32 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
     @Override
     public synchronized void setRemoteWindow(View view) {
         // set window handle for main video stream
-        setRemoteWindowForVid(0, view);
+        setRemoteWindowForVid(MAIN_VIDEO_ID, view);
     }
 
     @Override
     public synchronized void removeRemoteWindow(View view) {
         // remove window handle for main video stream
-        removeRemoteWindowForVid(0, view);
+        removeRemoteWindowForVid(MAIN_VIDEO_ID, view);
     }
 
+    @Override
+    public synchronized void setActiveSpeakerWindow(View view) {
+        Ln.d("MediaSessionImpl.setActiveSpeakerWindow");
+        // set window handle for active speaker video stream
+        activeSpeakerView = view;
+
+        if (isDisplayActiveSpeakerWindow()) {
+            switchSingleVideoViewToShare(asShareViewer);
+        }
+    }
+
+    @Override
+    public synchronized void removeActiveSpeakerWindow() {
+        Ln.d("MediaSessionImpl.removeActiveSpeakerWindow() : asShareViewer = " + asShareViewer);
+        switchSingleVideoViewToShare(asShareViewer);
+        activeSpeakerView = null;
+    }
 
     public synchronized void setRemoteWindowForVid(long vid, View view) {
         Ln.d("MediaSessionImpl.setRemoteWindowForVid(), vid = " + vid + ", handle = " + view);
@@ -1223,7 +1380,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         if (remoteVideoTrack != null) {
             Ln.d("MediaSessionImpl.setRemoteWindowForVid(), to remoteVideoTrack, view = " + view);
             remoteVideoTrack.addRenderWindow(view);
-            setRemoteRenderMode(remoteVideoTrack);
+            setRemoteRenderMode(remoteVideoTrack, MediaEngine.VIDEO_MID);
         }
     }
 
@@ -1264,7 +1421,7 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         if (remoteVideoTrack != null) {
             Ln.d("MediaSessionImpl.setRemoteWindow(), to remoteVideoTrack, view = " + view);
             remoteVideoTrack.addRenderWindow(view);
-            setRemoteRenderMode(remoteVideoTrack);
+            setRemoteRenderMode(remoteVideoTrack, MediaEngine.VIDEO_MID);
         }
     }
 
@@ -1276,6 +1433,61 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         if (shareTrack != null) {
             shareTrack.addRenderWindow(view);
         }
+    }
+
+    @Override
+    public void grabShareView(WseSurfaceView.FrameSaved callback) {
+        Ln.d("MediaSessionImpl.grabShareView()");
+        if (!isSharingAsViewer()) {
+            Ln.w("MediaSessionImpl.grabShareView() no sharing now");
+            callback.Done(null);
+            return;
+        }
+
+        View currentShareView = null;
+        if (shareView != null) {
+            currentShareView = shareView;
+        } else if (!deviceRegistration.getFeatures().isMultistreamEnabled()) {
+            currentShareView = vidViewMap.get(MAIN_VIDEO_ID);
+        }
+
+        if (currentShareView != null && currentShareView instanceof WseSurfaceView) {
+            WseSurfaceView wseSurfaceView = (WseSurfaceView) currentShareView;
+            wseSurfaceView.saveFrame(callback);
+        } else {
+            callback.Done(null);
+        }
+    }
+
+    @Override
+    public File getLastShareFrame() {
+        return lastShareContentFrame;
+    }
+
+    private void saveShareFrame() {
+        grabShareView(bitmap -> {
+            File tmpFile = null;
+            try {
+                tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".png");
+                tmpFile.deleteOnExit();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (ImageUtils.writeBitmap(tmpFile, bitmap)) {
+                ln.d("MediaSessionImpl.saveShareFrame success");
+                lastShareContentFrame = tmpFile;
+            } else {
+                ln.d("MediaSessionImpl.saveShareFrame failure");
+            }
+        });
+    }
+
+    private void cleanShareFrame() {
+        if (lastShareContentFrame == null) {
+            return;
+        }
+        lastShareContentFrame.delete();
+        lastShareContentFrame = null;
     }
 
     @Override
@@ -1370,32 +1582,93 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
     // Sharing
     // ***************************************
 
+    void setupTracks(boolean isSharing) {
+        Ln.i("MediaSessionImpl.setupTracks isSharing = " + isSharing);
+        if (deviceRegistration.getFeatures().isMultistreamEnabled() ||
+            !deviceRegistration.getFeatures().isActiveSpeakerViewEnabled()) {
+            Ln.w("MediaSessionImpl.setupTracks, Either multi stream is enabled or active speaker view is disabled");
+            return;
+        }
+
+        View viewSingleVideo = vidViewMap.get(MAIN_VIDEO_ID);
+        MediaTrack remoteTrack = remoteVideoTracks.get(MAIN_VIDEO_ID);
+
+        // When sharing is started or stopped, the destination views for remote tracks should be changed.
+        // 1. Stop the remote track.
+        // 2. Change the destination view
+        //    - if sharing started, switch from video view to active speaker view.
+        //    - if sharing stopped, switch back to video view from active speaker view.
+        // 3. Restart the remote track.
+        // 4. Set the display mode of the destination view.
+        if (remoteTrack != null) {
+            remoteTrack.Stop();
+
+            View currentView = isSharing ? viewSingleVideo : activeSpeakerView;
+            if (currentView != null) {
+                remoteTrack.removeRenderWindow(currentView);
+            }
+
+            View nextView = isSharing ? activeSpeakerView : viewSingleVideo;
+            if (nextView != null) {
+                remoteTrack.addRenderWindow(nextView);
+            }
+
+            remoteTrack.Start();
+            setRemoteRenderMode(remoteTrack, MediaEngine.VIDEO_MID);
+        }
+
+        // When sharing started, start the share track and set shareView as the dest view.
+        // When sharing stopped, stop the share track and remove shareView as the dest view.
+        if (shareTrack != null) {
+            if (isSharing) {
+                shareTrack.Start();
+                if (shareView != null) {
+                    shareTrack.addRenderWindow(shareView);
+                }
+                setRemoteRenderMode(shareTrack, MediaEngine.SHARE_MID);
+            } else {
+                shareTrack.Stop();
+                if (shareView != null) {
+                    shareTrack.removeRenderWindow(shareView);
+                }
+            }
+        }
+
+        // reset the video resolution of the active speaker video after stopping screen sharing
+        if (!isSharing && remoteTrack != null) {
+            setRemoteVideoResolution(remoteTrack);
+        }
+    }
 
     void switchSingleVideoViewToShare(boolean bShare) {
         Ln.i("MediaSessionImpl.switchSingleVideoViewToShare bShare=%s", bShare);
+        if (deviceRegistration.getFeatures().isActiveSpeakerViewEnabled()) {
+            setupTracks(bShare);
+            return;
+        }
+
         if (deviceRegistration.getFeatures().isMultistreamEnabled()) {
             Ln.w("MediaSessionImpl.switchSingleVideoViewToShare media-enable-filmstrip-android is enabled");
             return;
         }
 
-        View viewSingleVideo = vidViewMap.get(0L);
+        View viewSingleVideo = vidViewMap.get(MAIN_VIDEO_ID);
         if (viewSingleVideo == null) {
             Ln.w("MediaSessionImpl.switchSingleVideoViewToShare viewSingleVideo is null");
             return;
         }
 
-        MediaTrack remoteTrack = remoteVideoTracks.get(0L);
-        //single video video shared between active video and share
+        MediaTrack remoteTrack = remoteVideoTracks.get(MAIN_VIDEO_ID);
+
         if (bShare) {
             if (remoteTrack != null) {
                 remoteTrack.removeRenderWindow(viewSingleVideo);
                 remoteTrack.Stop();
             }
-
             if (shareTrack != null) {
                 shareTrack.Start();
                 shareTrack.addRenderWindow(viewSingleVideo);
-                setRemoteRenderMode(shareTrack);
+                setRemoteRenderMode(shareTrack, MediaEngine.SHARE_MID);
             }
         } else {
             if (shareTrack != null) {
@@ -1406,8 +1679,24 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
             if (remoteTrack != null) {
                 remoteTrack.Start();
                 remoteTrack.addRenderWindow(viewSingleVideo);
-                setRemoteRenderMode(remoteTrack);
+                setRemoteRenderMode(remoteTrack, MediaEngine.VIDEO_MID);
+
+                // reset the video resolution of the active speaker video after stopping screen sharing
+                setRemoteVideoResolution(remoteTrack);
             }
+        }
+    }
+
+    void setRemoteVideoResolution(MediaTrack remoteTrack) {
+        if (remoteTrack == null) {
+            return;
+        }
+
+        // reset the video resolution of the active speaker video after stopping screen sharing
+        if (hardwareCodecEnabled || settings.isSw720pEnabed()) {
+            requestRemoteVideo(remoteTrack, videoScr720p);
+        } else {
+            requestRemoteVideo(remoteTrack, videoScr360p);
         }
     }
 
@@ -1428,13 +1717,9 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
     }
 
     @Override
-    public void startScreenShare(ScreenShareCallback screenShareCallback, String shareId) {
+    public void startScreenShare(String shareId) {
         if (screenTrack != null) {
-            this.screenShareCallback = screenShareCallback;
             screenTrack.Start();
-            if (trackVideoLocal != null) {
-                trackVideoLocal.Stop();
-            }
             screenSharing = true;
         }
     }
@@ -1447,9 +1732,6 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
                 ScreenShareContext.getInstance().finit();
             }
             screenSharing = false;
-            if (trackVideoLocal != null) {
-                trackVideoLocal.Start(isVideoMuted());
-            }
         }
     }
 
@@ -1474,8 +1756,8 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
 
     @Override
     public void onShareStopped() {
-        if (screenShareCallback != null) {
-            screenShareCallback.onShareStopped();
+        if (mediaSessionCallbacks != null) {
+            mediaSessionCallbacks.onShareStopped(callId);
         }
     }
 
@@ -1542,8 +1824,8 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         if (mediaConnection != null && mediaStarted) {
             MediaStatistics.AudioStatistics audioStats = mediaConnection.getAudioStatistics(MediaEngine.AUDIO_MID);
             MediaStatistics.VideoStatistics videoStats = mediaConnection.getVideoStatistics(MediaEngine.VIDEO_MID);
-            packetStats = new PacketStats(audioStats.mLocalSession.uPackets, audioStats.mRemoteSession.uPackets,
-                    videoStats.mLocalSession.uPackets, videoStats.mRemoteSession.uPackets);
+            packetStats = new PacketStats(audioStats.mConnection.uRTPSent, audioStats.mConnection.uRTPReceived,
+                    videoStats.mConnection.uRTPSent, videoStats.mConnection.uRTPReceived);
         }
 
         if (packetStats != null) {
@@ -1582,35 +1864,47 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         return mediaStats;
     }
 
-
-
-
-
-
-
-
+    private boolean isDisplayActiveSpeakerWindow() {
+        // show active speaker view during the screen share
+        return (deviceRegistration.getFeatures().isActiveSpeakerViewEnabled() && activeSpeakerView != null && isSharingAsViewer());
+    }
 
     public void setFirstAudioPacketSent(Date date) {
-        Ln.i("MediaSessionImpl.setFirstAudioPacketSent, date = " + date.getTime());
+        Ln.i("MediaSessionImpl.setFirstAudioPacketSent, date = " + date.getTime() + ", this = " + this);
         sentFirstAudioPacket = true;
+
+        if (mediaSessionCallbacks != null) {
+            mediaSessionCallbacks.onFirstPacketTx(callId, com.cisco.spark.android.media.MediaType.AUDIO);
+        }
     }
 
     public void setFirstAudioPacketReceived(Date date) {
         Ln.i("MediaSessionImpl.setFirstAudioPacketReceived date = " + date.getTime());
         firstAudioPacketReceivedTime = date;
         receivedFirstAudioPacket = true;
-        bus.post(new FirstAudioPacketReceivedEvent());
+
+        if (mediaSessionCallbacks != null) {
+            mediaSessionCallbacks.onFirstPacketRx(callId, com.cisco.spark.android.media.MediaType.AUDIO);
+        }
     }
 
     public void setFirstVideoPacketSent(Date date) {
         Ln.i("MediaSessionImpl.setFirstVideoPacketSent date = " + date.getTime());
         sentFirstVideoPacket = true;
+
+        if (mediaSessionCallbacks != null) {
+            mediaSessionCallbacks.onFirstPacketTx(callId, com.cisco.spark.android.media.MediaType.VIDEO);
+        }
     }
 
     public void setFirstVideoPacketReceived(Date date) {
         Ln.i("MediaSessionImpl.setFirstVideoPacketReceived date = " + date.getTime());
         firstVideoPacketReceivedTime = date;
         receivedFirstVideoPacket = true;
+
+        if (mediaSessionCallbacks != null) {
+            mediaSessionCallbacks.onFirstPacketRx(callId, com.cisco.spark.android.media.MediaType.VIDEO);
+        }
     }
 
 
@@ -1873,14 +2167,9 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
         WseEngine.setDisplayRotation(screenRotation);
     }
 
-
-
-
     // ***************************************
     // Audio Devices
     // ***************************************
-
-
     @Override
     public void headsetPluggedIn() {
         Ln.d("MediaSessionImpl.headsetPluggedIn");

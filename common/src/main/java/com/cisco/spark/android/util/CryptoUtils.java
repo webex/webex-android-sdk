@@ -59,7 +59,6 @@ import org.spongycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -78,7 +77,6 @@ import java.util.List;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Provider;
 
-import retrofit.RetrofitError;
 import retrofit2.Response;
 
 public class CryptoUtils {
@@ -232,6 +230,9 @@ public class CryptoUtils {
     }
 
     public static String decryptFromJwe(KeyObject key, String message) throws IOException, ParseException, NullPointerException {
+        if (Strings.isEmpty(message)) {
+            return message;
+        }
         try {
             JWEObject jwe = JWEObject.parse(message);
             jwe.decrypt(new DirectDecrypter(new SecretKeySpec(key.getKeyBytes(), "AES")));
@@ -386,31 +387,6 @@ public class CryptoUtils {
         return false;
     }
 
-    public static KmsResponseBody extractKmsResponseBody(RetrofitError error, Gson gson, OctetSequenceKey sharedKeyWithKMSAsJWK) {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        try {
-            FileUtils.streamCopy(error.getResponse().getBody().in(), os);
-            String body = new String(os.toByteArray());
-            ErrorDetail errorDetail = gson.fromJson(body, ErrorDetail.class);
-            if (errorDetail == null)
-                return null;
-
-            ErrorDetail.CustomErrorCode errorCode = ErrorDetail.CustomErrorCode.fromErrorCode(errorDetail.getErrorCode());
-            if (errorCode == ErrorDetail.CustomErrorCode.KmsMessageOperationFailed) {
-                if (errorDetail.getMessage() != null) {
-                    KmsResponseBody errorMessage = CryptoUtils.decryptKmsMessage(errorDetail.getMessage(), sharedKeyWithKMSAsJWK);
-                    return errorMessage;
-                }
-            }
-        } catch (IOException e) {
-            Ln.w(e, "Failed reading response");
-            throw error;
-        } catch (Exception e) {
-            Ln.w(e, "Failure while decrypting Kms Error Message");
-        }
-        return null;
-    }
-
     public static KmsResponseBody extractKmsResponseBody(Response response, Gson gson, OctetSequenceKey sharedKeyWithKMSAsJWK) {
         try {
             String body = response.errorBody().string();
@@ -418,7 +394,7 @@ public class CryptoUtils {
             if (errorDetail == null)
                 return null;
 
-            ErrorDetail.CustomErrorCode errorCode = ErrorDetail.CustomErrorCode.fromErrorCode(errorDetail.getErrorCode());
+            ErrorDetail.CustomErrorCode errorCode = errorDetail.extractCustomErrorCode();
             if (errorCode == ErrorDetail.CustomErrorCode.KmsMessageOperationFailed) {
                 if (errorDetail.getMessage() != null) {
                     KmsResponseBody errorMessage = CryptoUtils.decryptKmsMessage(errorDetail.getMessage(), sharedKeyWithKMSAsJWK);
@@ -513,16 +489,6 @@ public class CryptoUtils {
         return kmsRequest;
     }
 
-
-    public static String getKmsErrorMessage(RetrofitError error, Gson gson, OctetSequenceKey sharedKeyWithKMSAsJWK) {
-
-        KmsResponseBody errorMessage = CryptoUtils.extractKmsResponseBody(error, gson, sharedKeyWithKMSAsJWK);
-        String message = "Encryption service error: ";
-        if (errorMessage != null) {
-            message += errorMessage.getReason();
-        }
-        return message;
-    }
 
     public static String getKmsErrorMessage(Response response, Gson gson, OctetSequenceKey sharedKeyWithKMSAsJWK) {
 

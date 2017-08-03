@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 
 import com.cisco.spark.android.BuildConfig;
@@ -18,6 +17,8 @@ import com.cisco.spark.android.callcontrol.events.CallControlAudioOnlyStateChang
 import com.cisco.spark.android.callcontrol.events.CallControlCallCancelledEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlCallConnectedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlCallJoinErrorEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlCallJoinErrorEvent.JoinType;
+import com.cisco.spark.android.callcontrol.events.CallControlCallStartedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlDisableVideoEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlDisconnectedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlEndLocusEvent;
@@ -27,7 +28,7 @@ import com.cisco.spark.android.callcontrol.events.CallControlFloorReleasedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlHeldEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlInvalidLocusEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlJoinedLobbyEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlJoinedMeetingEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlJoinedMeetingFromLobbyEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLeaveLocusEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocalAudioMutedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocalVideoMutedEvent;
@@ -35,19 +36,23 @@ import com.cisco.spark.android.callcontrol.events.CallControlLocusChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocusCreatedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocusPmrChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLostEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlMediaDecodeSizeChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlMeetingControlsExpelEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlMeetingNotStartedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlModeratorMutedParticipantEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlNumericDialingPreventedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlParticipantChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantJoinedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantLeftEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlParticipantChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantVideoMutedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlPhoneStateChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlReconnectEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlResumedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlSelfParticipantLeftEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlUserIsNotAuthorized;
 import com.cisco.spark.android.callcontrol.events.CallControlViewDesktopShare;
 import com.cisco.spark.android.callcontrol.events.CallControlViewWhiteboardShare;
+import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.client.TrackingIdGenerator;
 import com.cisco.spark.android.core.PermissionsHelper;
 import com.cisco.spark.android.core.Settings;
@@ -56,30 +61,35 @@ import com.cisco.spark.android.events.CallNotificationRemoveEvent;
 import com.cisco.spark.android.events.CallNotificationType;
 import com.cisco.spark.android.events.CallNotificationUpdateEvent;
 import com.cisco.spark.android.events.RequestCallingPermissions;
+import com.cisco.spark.android.features.CoreFeatures;
 import com.cisco.spark.android.locus.events.AnsweredInactiveCallEvent;
+import com.cisco.spark.android.locus.events.CallControlLocusRequiresModeratorPINOrGuest;
+import com.cisco.spark.android.locus.events.CallControlLocusRequiresModeratorPINorGuestPIN;
 import com.cisco.spark.android.locus.events.ConflictErrorJoiningLocusEvent;
 import com.cisco.spark.android.locus.events.ErrorJoiningLocusEvent;
 import com.cisco.spark.android.locus.events.FloorGrantedEvent;
+import com.cisco.spark.android.locus.events.FloorLostEvent;
 import com.cisco.spark.android.locus.events.FloorReleasedEvent;
-import com.cisco.spark.android.locus.events.FloorRequestAcceptedEvent;
-import com.cisco.spark.android.locus.events.FloorRequestDeniedEvent;
 import com.cisco.spark.android.locus.events.HighVolumeErrorJoiningLocusEvent;
 import com.cisco.spark.android.locus.events.IncomingCallEvent;
+import com.cisco.spark.android.locus.events.InvalidLocusEvent;
 import com.cisco.spark.android.locus.events.JoinedLobbyEvent;
-import com.cisco.spark.android.locus.events.JoinedMeetingEvent;
+import com.cisco.spark.android.locus.events.JoinedMeetingFromLobbyEvent;
 import com.cisco.spark.android.locus.events.LocusDataCacheChangedEvent;
 import com.cisco.spark.android.locus.events.LocusDataCacheReplacesEvent;
-import com.cisco.spark.android.locus.events.InvalidLocusEvent;
 import com.cisco.spark.android.locus.events.LocusInviteesExceedMaxSizeEvent;
+import com.cisco.spark.android.locus.events.LocusLeaveFailedEvent;
 import com.cisco.spark.android.locus.events.LocusLeftEvent;
 import com.cisco.spark.android.locus.events.LocusMeetingLockedEvent;
 import com.cisco.spark.android.locus.events.LocusPmrChangedEvent;
 import com.cisco.spark.android.locus.events.LocusUrlUpdatedEvent;
+import com.cisco.spark.android.locus.events.LocusUserIsNotAuthorized;
 import com.cisco.spark.android.locus.events.ParticipantChangedEvent;
 import com.cisco.spark.android.locus.events.ParticipantDeclinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantJoinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantLeftEvent;
 import com.cisco.spark.android.locus.events.ParticipantSelfChangedEvent;
+import com.cisco.spark.android.locus.events.SuccessJoiningLocusEvent;
 import com.cisco.spark.android.locus.model.CalliopeSupplementaryInformation;
 import com.cisco.spark.android.locus.model.Floor;
 import com.cisco.spark.android.locus.model.Locus;
@@ -91,10 +101,11 @@ import com.cisco.spark.android.locus.model.LocusMeetingInfo;
 import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.cisco.spark.android.locus.model.LocusParticipantControls;
 import com.cisco.spark.android.locus.model.LocusParticipantDevice;
+import com.cisco.spark.android.locus.model.LocusRecordControl;
 import com.cisco.spark.android.locus.model.LocusReplaces;
-import com.cisco.spark.android.locus.model.LocusSdp;
 import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
 import com.cisco.spark.android.locus.model.MediaConnection;
+import com.cisco.spark.android.locus.model.MediaInfo;
 import com.cisco.spark.android.locus.model.MediaShare;
 import com.cisco.spark.android.locus.requests.LocusInvitee;
 import com.cisco.spark.android.locus.service.LocusService;
@@ -105,15 +116,14 @@ import com.cisco.spark.android.log.LogCallIndex;
 import com.cisco.spark.android.log.LogFilePrint;
 import com.cisco.spark.android.log.UploadLogsService;
 import com.cisco.spark.android.media.CallControlMediaSessionStoppedEvent;
-import com.cisco.spark.android.media.MediaCallbackObserver;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaRequestSource;
 import com.cisco.spark.android.media.MediaSession;
+import com.cisco.spark.android.media.MediaSessionCallbacks;
 import com.cisco.spark.android.media.MediaSessionUtils;
-import com.cisco.spark.android.media.ScreenShareCallback;
+import com.cisco.spark.android.media.MediaStartedEvent;
+import com.cisco.spark.android.media.MediaType;
 import com.cisco.spark.android.media.events.DeviceCameraUnavailable;
-import com.cisco.spark.android.media.events.FirstAudioPacketReceivedEvent;
-import com.cisco.spark.android.media.events.ICEConnectionFailedEvent;
 import com.cisco.spark.android.media.events.MediaActiveSpeakerChangedEvent;
 import com.cisco.spark.android.media.events.MediaActiveSpeakerVideoMuted;
 import com.cisco.spark.android.media.events.NetworkCongestionEvent;
@@ -123,9 +133,18 @@ import com.cisco.spark.android.media.events.NetworkLostEvent;
 import com.cisco.spark.android.media.events.NetworkReconnectEvent;
 import com.cisco.spark.android.media.events.StunTraceResultEvent;
 import com.cisco.spark.android.media.statistics.MediaStats;
+import com.cisco.spark.android.meetings.LocusMeetingInfoProvider;
 import com.cisco.spark.android.mercury.events.DeclineReason;
+import com.cisco.spark.android.mercury.events.RoapMessageEvent;
+import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.metrics.CallMetricsReporter;
+import com.cisco.spark.android.metrics.value.CallJoinMetricValue;
+import com.cisco.spark.android.model.ErrorDetail;
 import com.cisco.spark.android.model.Person;
+import com.cisco.spark.android.roap.model.RoapBaseMessage;
+import com.cisco.spark.android.roap.model.RoapOfferMessage;
+import com.cisco.spark.android.roap.model.RoapSession;
+import com.cisco.spark.android.roap.model.RoapSessionCallbacks;
 import com.cisco.spark.android.room.RoomUpdatedEvent;
 import com.cisco.spark.android.sdk.SdkClient;
 import com.cisco.spark.android.sync.Batch;
@@ -145,6 +164,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -158,13 +178,14 @@ import javax.inject.Provider;
 import de.greenrobot.event.EventBus;
 import retrofit2.Response;
 
-
 import static com.cisco.spark.android.callcontrol.CallEndReason.CallEndReasonType.CANCELLED_BY_LOCAL_ERROR;
 import static com.cisco.spark.android.callcontrol.CallEndReason.CallEndReasonType.CANCELLED_BY_LOCAL_USER;
 import static com.cisco.spark.android.callcontrol.CallEndReason.CallEndReasonType.DECLINED_BY_REMOTE_USER;
 import static com.cisco.spark.android.callcontrol.CallEndReason.CallEndReasonType.DIAL_TIMEOUT_REACHED;
 import static com.cisco.spark.android.callcontrol.CallEndReason.CallEndReasonType.ENDED_BY_LOCUS;
 import static com.cisco.spark.android.callcontrol.CallEndReason.CallEndReasonType.ENDED_BY_REMOTE_USER;
+import static com.cisco.spark.android.callcontrol.events.CallControlCallJoinErrorEvent.JOIN;
+import static com.cisco.spark.android.model.ErrorDetail.CustomErrorCode.LocusUserIsNotAuthorized;
 import static com.cisco.spark.android.sync.ConversationContentProviderOperation.updateConversationInActiveCall;
 import static com.cisco.spark.android.sync.ConversationContentProviderOperation.updateConversationLocusUrl;
 import static com.cisco.spark.android.util.UIUtils.autoRotationEnabled;
@@ -174,58 +195,63 @@ import static com.cisco.spark.android.whiteboard.util.WhiteboardUtils.getIdFromU
  * The purpose of this class is to provide a general call control abstraction that's responsible for orchestrating
  * the activities of the locus signalling and media engine components.
  */
-public class CallControlService implements MediaCallbackObserver {
+public class CallControlService implements MediaSessionCallbacks, RoapSessionCallbacks {
     public static final String AUDIO_TYPE = "AUDIO";
     public static final String VIDEO_TYPE = "VIDEO";
 
     protected final LocusService locusService;
     protected final CallMetricsReporter callMetricsReporter;
-    private final MediaEngine mediaEngine;
+    protected final CallAnalyzerReporter callAnalyzerReporter;
     protected final EventBus bus;
+    protected final LocusDataCache locusDataCache;
     protected final Context context;
+    protected final CallUi callUi;
+    protected final Settings settings;
+    protected final NaturalLog ln;
+    protected final Toaster toaster;
+
+    private final MediaEngine mediaEngine;
     private final TrackingIdGenerator trackingIdGenerator;
     private final DeviceRegistration deviceRegistration;
     private final LogFilePrint logFilePrint;
     private final Gson gson;
+    private final CoreFeatures coreFeatures;
     private final CallNotification callNotification;
-    protected final LocusDataCache locusDataCache;
     private final Provider<Batch> batchProvider;
-    protected final CallUi callUi;
     private final UploadLogsService uploadLogsService;
-    protected final Settings settings;
     private final PermissionsHelper permissionsHelper;
-    protected final NaturalLog ln;
     private final LinusReachabilityService linusReachabilityService;
     private final SdkClient sdkClient;
+    private final LocusMeetingInfoProvider locusMeetingInfoProvider;
     private final Object syncLock = new Object();
+    private boolean hideSpinner;
 
-    private CallContext callContext;
+    // joinedCalls we're actively joined to
+    private final Map<String, Call> joinedCalls = new HashMap<>();
+
     private boolean dtmfReceiveSupported;
-
     protected LocusKey locusKey;
-    protected String joinLocusTrackingID;
 
     private boolean wasAudioMuted;
     private MediaRequestSource wasVideoMuted;
 
     private Handler unansweredHandler;
-    private boolean requestingFloor;
     private boolean isCaller;
     private boolean audioMutedLocally;
-
-    private final ScreenShareCallback screenShareCallback;
 
     private boolean videoBlocked;
     private Action0 unblockedAction;
 
     private Timer lobbyKeepAliveTimer;
+    private final Object lobbyTimerLock = new Object();
 
     public CallControlService(LocusService locusService, final MediaEngine mediaEngine, CallMetricsReporter callMetricsReporter,
                               EventBus bus, Context context,
                               TrackingIdGenerator trackingIdGenerator, DeviceRegistration deviceRegistration, LogFilePrint logFilePrint,
                               Gson gson, UploadLogsService uploadLogsService, CallNotification callNotification, LocusDataCache locusDataCache,
                               Settings settings, Provider<Batch> batchProvider, Ln.Context lnContext, CallUi callUi,
-                              LinusReachabilityService linusReachabilityService, SdkClient sdkClient) {
+                              LinusReachabilityService linusReachabilityService, SdkClient sdkClient,
+                              CallAnalyzerReporter callAnalyzerReporter, Toaster toaster, CoreFeatures coreFeatures, LocusMeetingInfoProvider locusMeetingInfoProvider) {
         this.locusService = locusService;
         this.mediaEngine = mediaEngine;
         this.callMetricsReporter = callMetricsReporter;
@@ -241,29 +267,15 @@ public class CallControlService implements MediaCallbackObserver {
         this.callUi = callUi;
         this.uploadLogsService = uploadLogsService;
         this.settings = settings;
+        this.coreFeatures = coreFeatures;
         this.ln = Ln.get(lnContext, "CallControlService");
         this.permissionsHelper = new PermissionsHelper(context);
         this.linusReachabilityService = linusReachabilityService;
         this.sdkClient = sdkClient;
-        this.screenShareCallback = new ScreenShareCallback() {
-            @Override
-            public void onShareStopped() {
-                unshareScreen();
-            }
-        };
+        this.callAnalyzerReporter = callAnalyzerReporter;
+        this.toaster = toaster;
+        this.locusMeetingInfoProvider = locusMeetingInfoProvider;
         bus.register(this);
-    }
-
-    private void joinMeeting(final CallContext callContext) {
-        Ln.i("CallControlService.joinMeeting, locusKey = " + callContext.getLocusKey());
-        this.callContext = callContext;
-        this.locusKey = callContext.getLocusKey();
-
-        callUi.showInCallUi(callContext, false);
-
-        // kick off sdp offer/answer
-        setupCallSettings();
-        startMediaSession(this, callContext.getMediaDirection());
     }
 
     public void updateLocusWithPin(LocusKey locusKey, String pin) {
@@ -272,22 +284,33 @@ public class CallControlService implements MediaCallbackObserver {
         if (this.locusKey.equals(locusKey) && locusData != null && locusData.getLocus().isInLobbyFromThisDevice(deviceRegistration.getUrl())) {
             locusService.updateLocusWithMeetingPin(locusKey, pin);
         }
+
+        Call call = getCall(locusKey);
+
+        if (call != null) {
+            // Excluding any checks for if the user is actually in the lobby as this event is more concerned with
+            // if the user entered a PIN into the UI
+            callAnalyzerReporter.reportPinEntered(call);
+        }
     }
 
     /**
      * Join call.  This is used for joining an existing locus or  making 1:1 call
      * to user/endpoint using locus /call api.
+     * @param callContext callContext obect to start call with locus
      */
-    public void joinCall(final CallContext callContext) {
-        Ln.i("CallControlService.joinCall, locusKey = " + callContext.getLocusKey() + ", isOneOnOne = " + callContext.isOneOnOne());
+    public Call joinCall(final CallContext callContext) {
+        Ln.i("CallControlService.joinCall, -------------------------------------------------------------------------------------------------------");
+        Ln.i("CallControlService.joinCall, invitee = " + callContext.getInvitee() + ", locusKey = " + callContext.getLocusKey() + ", isOneOnOne = " + callContext.isOneOnOne());
+        Ln.i("CallControlService.joinCall, -------------------------------------------------------------------------------------------------------");
 
 
         // if making call to uri then don't allow dialing numeric uris if associated feature is not enabled
         if (!TextUtils.isEmpty(callContext.getInvitee())) {
-            if (!deviceRegistration.getFeatures().isNumericDialingEnabled() && Strings.isPhoneNumber(callContext.getInvitee())) {
+            if (!coreFeatures.isNumericDialingEnabled() && Strings.isPhoneNumber(callContext.getInvitee())) {
                 callMetricsReporter.reportCallNumericDialPrevented();
                 bus.post(new CallControlNumericDialingPreventedEvent());
-                return;
+                return null;
             }
         }
 
@@ -297,19 +320,35 @@ public class CallControlService implements MediaCallbackObserver {
             } else {
                 bus.post(new RequestCallingPermissions(callContext));
             }
-            return;
+            return null;
         }
 
-        this.callContext = callContext;
+        Call call = Call.createCall(callContext);
+        call.setActive(true);
+
+        synchronized (joinedCalls) {
+            joinedCalls.put(call.getCallId(), call);
+            Ln.i("CallControlService.joinCall, call ID = " + call.getCallId());
+        }
+
+        callAnalyzerReporter.reportCallInitiated(call);
+
+        // TODO remove need for this...still some uses as we transition
         this.locusKey = callContext.getLocusKey();
-        logCall(LogCallIndex.JOINING, getLocusData(locusKey));
 
-        setupCallSettings();
 
-        checkJoinRoomCall(callContext);
+        logCall(LogCallIndex.JOINING, call.getLocusData());
+
+        checkJoinRoomCall(call, callContext);
+
+        return call;
     }
 
-    public void joinDesktopShare() {
+//    public Call joinCall(final CallContext callContext) {
+//        return joinCall(callContext, true);
+//    }
+
+    public void joinDesktopShare(LocusKey locusKey) {
         CallContext callContext = new CallContext.Builder(locusKey)
                 .setShowFullScreen(true)
                 .setMediaDirection(MediaEngine.MediaDirection.SendReceiveShareOnly)
@@ -317,20 +356,21 @@ public class CallControlService implements MediaCallbackObserver {
 
         joinCall(callContext);
 
-        LocusData call = getLocusData(locusKey);
-        if (call == null || call.getLocus() == null) return;
+        Call call = getCall(locusKey);
+        if (call == null || call.getLocusData() == null || call.getLocusData().getLocus() == null) return;
 
-        MediaShare mediaShare = call.getLocus().getGrantedFloor();
+        LocusData locusData = call.getLocusData();
+        MediaShare mediaShare = locusData.getLocus().getGrantedFloor();
         if (mediaShare != null && mediaShare.isContent()) {
             bus.post(new CallControlViewDesktopShare(locusKey));
         }
 
         MediaSession mediaSession = call.getMediaSession();
         if (mediaSession != null) {
-            mediaSession.joinShare(call.getFloorGrantedId());
+            mediaSession.joinShare(locusData.getFloorGrantedId());
         } else {
             Floor floor = mediaShare != null ? mediaShare.getFloor() : null;
-            LocusParticipant selfParticipant = call.getLocus().getSelf();
+            LocusParticipant selfParticipant = locusData.getLocus().getSelf();
             if (floor != null && selfParticipant != null) {
                 floor.setBeneficiary(selfParticipant);
             }
@@ -340,55 +380,147 @@ public class CallControlService implements MediaCallbackObserver {
     /**
      * Check Join Room Call.  This decides if the call should use a room for media in SquaredCallControlService.
      */
-    public void checkJoinRoomCall(CallContext callContext) {
-        callUi.showInCallUi(callContext, false);
+//    public void checkJoinRoomCall(Call call, CallContext callContext, boolean showCallUI) {
+//        if (showCallUI) {
+//            callUi.showInCallUi(callContext, false);
+//        }
+//        startMediaSession(call, callContext.getMediaDirection());
+//    }
 
-        startMediaSession(this, callContext.getMediaDirection());
+    public void checkJoinRoomCall(Call call, CallContext callContext) {
+
+        callUi.showInCallUi(callContext, false);
+        startMediaSession(call, callContext.getMediaDirection());
     }
 
-    protected void startMediaSession(MediaCallbackObserver mediaCallbackObserver, MediaEngine.MediaDirection mediaDirection) {
-        if (callContext == null) {
-            Ln.w("startMediaSession() was called while callContext was null");
-            return;
-        } else if (mediaDirection == null) {
+    protected void startMediaSession(Call call, MediaEngine.MediaDirection mediaDirection) {
+        Ln.i("CallControlService.startMediaSession, call ID = " + call.getCallId());
+
+        if (mediaDirection == null) {
             mediaDirection = MediaEngine.MediaDirection.SendReceiveAudioVideoShare;
         }
 
         requestAudioFocus(mediaDirection);
 
-        MediaSession mediaSession = mediaEngine.startMediaSession(mediaCallbackObserver, mediaDirection);
-        callContext.setMediaSession(mediaSession);
-    }
+        MediaSession mediaSession = mediaEngine.createMediaSession(call.getCallId());
+        call.setMediaSession(mediaSession);
+        mediaSession.startSession(deviceRegistration.getDeviceSettingsString(), mediaDirection, this, sdp -> {
+            if (sdp != null) {
+                List<MediaConnection> mediaConnectionList = buildMediaConnectionList(call, sdp);
 
+                Ln.d("Session, call connected = " + call.isCallConnected() + ", call started = " + call.isCallStarted());
+                if (call.getLocusData() != null && call.getLocusData().getLocus().isJoinedFromThisDevice(deviceRegistration.getUrl())) {
+                    locusService.modifyMedia(call.getLocusKey(), mediaConnectionList, mediaSession.isAudioMuted());
+                } else {
+                    if (call.getLocusKey() != null) {
+                        locusService.joinLocus(call.getLocusKey(), call.getCallId(), mediaConnectionList, call.getUsingResource(), call.isMoveMediaToResource(), call.isAnsweringCall());
+                    } else {
+                        isCaller = true;
+                        locusService.call(call.getInvitee(), call.getCallId(), call.getModerator(), call.getHostPin(), mediaConnectionList, call.getUsingResource(), call.isAnsweringCall());
+                    }
+                }
+                String joinLocusTrackingID = trackingIdGenerator.currentTrackingId();
+                call.setJoinLocusTrackingID(joinLocusTrackingID);
 
-    protected void updateMediaSession(MediaEngine.MediaDirection mediaDirection) {
-        LocusData call = getLocusData(locusKey);
-        if (call != null) {
-            MediaSession mediaSession = call.getMediaSession();
-            if (mediaSession != null) {
-                mediaSession.updateSession(this, mediaDirection);
+                callAnalyzerReporter.reportLocalSdpGenerated(call);
             }
+        });
+    }
+
+
+    protected void updateMediaSession(Call call, MediaEngine.MediaDirection mediaDirection) {
+        Ln.i("CallControlService.updateMediaSession, call ID = " + call.getCallId() + ", media direction = " + mediaDirection + ", mediaSession = " + call.getMediaSession());
+
+        MediaSession mediaSession = call.getMediaSession();
+        if (mediaSession != null) {
+            mediaSession.updateSession(mediaDirection, sdp -> {
+                if (sdp != null) {
+                    Ln.i("CallControlService.updateMediaSession, onSDKReady");
+                    List<MediaConnection> mediaConnectionList = buildMediaConnectionList(call, sdp);
+
+                    LocusData locusData = call.getLocusData();
+                    if (call != null && isInPairedCall(call) && !TextUtils.isEmpty(call.getUsingResource())) {
+                        ln.i("CallControlService.onSDPReady, adding (share) media to existing paired call");
+                        locusService.createMedia(call.getLocusKey(), mediaConnectionList.get(0));
+                    } else if (call != null && locusData.getLocus().isJoinedFromThisDevice(deviceRegistration.getUrl()) && !isCopyingCallFromTp(call)) {
+                        ln.i("CallControlService.onSDPReady, modifying media for existing call");
+                        locusService.modifyMedia(call.getLocusKey(), mediaConnectionList, mediaSession.isAudioMuted());
+                    }
+
+                    callAnalyzerReporter.reportLocalSdpGenerated(call);
+                }
+            });
         }
     }
 
-    private void endMediaSession(boolean logMediaStats) {
-        Ln.d("CallControlService.endMediaSession, locusKey = %s", locusKey);
 
-        MediaSession mediaSession = null;
-        LocusData call = getLocusData(locusKey);
-        if (call != null) {
-            mediaSession = call.getMediaSession();
-        } else if (callContext != null) {
-            mediaSession = callContext.getMediaSession();
+    private List<MediaConnection> buildMediaConnectionList(Call call, String sdp) {
+        List<MediaConnection> mediaConnectionList = new ArrayList<>();
+        String calliopeSupplementaryInformationString = buildCalliopeSupplementaryInformation();
+
+        Map<String, Object> clusterInfo = linusReachabilityService.getLatestLinusReachabilityResults();
+
+        MediaInfo mediaInfo;
+        if (coreFeatures.isRoapEnabled()) {
+            // send ROAP OFFER message
+            mediaInfo = new MediaInfo(MediaEngine.SDP_TYPE, calliopeSupplementaryInformationString, clusterInfo);
+
+            int roapSequenceNumber = 1;
+            RoapSession roapSession = call.getRoapSession();
+            if (roapSession == null) {
+                roapSession = new RoapSession(roapSequenceNumber, RoapSession.SessionState.OFFER_SENT, this);
+                call.setRoapSession(roapSession);
+            } else {
+                roapSequenceNumber = roapSession.getSeq() + 1;
+                roapSession.setSeq(roapSequenceNumber);
+                roapSession.setState(RoapSession.SessionState.OFFER_SENT);
+            }
+
+            List<String> sdpList = new ArrayList<>();
+            sdpList.add(sdp);
+            RoapOfferMessage roapOfferMessage = new RoapOfferMessage(roapSequenceNumber, sdpList, 0L);
+            mediaInfo.setRoapMessage(roapOfferMessage);
+
+        } else {
+            // use traditional SDP offer/answer
+            mediaInfo = new MediaInfo(sdp, MediaEngine.SDP_TYPE, calliopeSupplementaryInformationString, clusterInfo);
         }
+        mediaInfo.setDtmfReceiveSupported(dtmfReceiveSupported);
 
+
+        // set audio/videoMuted to whatever they were previously set to so that locus does not interpret this
+        // as a toggle of those values (in which case it doesn't send updated SDP to Calliope)
+        mediaInfo.setVideoMuted(call.getMediaSession().isVideoMuted());
+        mediaInfo.setAudioMuted(call.getMediaSession().isAudioMuted());
+
+        MediaConnection mediaConnection = new MediaConnection();
+        if (call.getLocusData() != null && call.getLocusData().getLocus() != null) {
+            MediaConnection currentMediaConnection = getMediaConnection(call.getLocusData().getLocus());
+            if (currentMediaConnection != null)
+                mediaConnection.setMediaId(currentMediaConnection.getMediaId());
+            else
+                Ln.w("Could not set media ID from current connection.");
+        }
+        mediaConnection.setType("SDP");
+        mediaConnection.setLocalSdp(gson.toJson(mediaInfo));
+        mediaConnectionList.add(mediaConnection);
+        return mediaConnectionList;
+    }
+
+    private void endMediaSession(Call call, boolean logMediaStats) {
+        if (call == null) {
+            call = getActiveCall();
+        }
+        Ln.d("CallControlService.endMediaSession, locusKey = %s", call.getLocusKey());
+
+        MediaSession mediaSession = call.getMediaSession();
         if (mediaSession != null) {
             if (logMediaStats) {
                 // log media stats for ABC/ABS testing
                 logEndMediaStats(mediaSession);
             }
             if (mediaSession.isScreenSharing()) {
-                mediaSession.stopScreenShare(call != null ? call.getFloorGrantedId() : "");
+                mediaSession.stopScreenShare(call != null ? call.getLocusData().getFloorGrantedId() : "");
             }
 
             mediaSession.stopMedia();
@@ -396,10 +528,7 @@ public class CallControlService implements MediaCallbackObserver {
 
             // metrics reporting code will need access to media session info later on
             callMetricsReporter.setMediaSession(mediaSession);
-
-            if (call != null) {
-                call.setMediaSession(null);
-            }
+            call.setMediaSession(null);
 
             abandonAudioFocus();
 
@@ -407,55 +536,128 @@ public class CallControlService implements MediaCallbackObserver {
         }
     }
 
-    /**
-     * This will get called from media engine (in response to createOffer()) as part of SDP offer/answer flow.  The offer SDP provided here
-     * gets passed down to locus with the negotiated (answer) SDP in response (this then gets passed down to media engine answerReceived()
-     * which triggers appropriate media track logic)
-     */
+
     @Override
-    public void onSDPReady(MediaSession mediaSession, String sdp) {
-        if (sdp != null) {
-            List<MediaConnection> mediaConnectionList = new ArrayList<>();
-            String calliopeSupplementaryInformationString = buildCalliopeSupplementaryInformation();
+    public void onICEComplete(String callId) {
+        Ln.d("CallControlService.onICEComplete");
 
-            Map<String, Object> clusterInfo = linusReachabilityService.getLatestLinusReachabilityResults();
-            Ln.d("On SDP Ready, clusterInfo is " + clusterInfo);
-            LocusSdp locusSdp = new LocusSdp(sdp, MediaEngine.SDP_TYPE, calliopeSupplementaryInformationString, clusterInfo);
+        Call call = getCall(callId);
 
-            locusSdp.setDtmfReceiveSupported(dtmfReceiveSupported);
+        if (call != null) {
+            callAnalyzerReporter.reportIceEnd(call, true);
+        }
+    }
 
-            // set audio/videoMuted to whatever they were previously set to so that locus does not interpret this
-            // as a toggle of those values (in which case it doesn't send updated SDP to Calliope)
-            locusSdp.setVideoMuted(mediaSession.isVideoMuted());
-            locusSdp.setAudioMuted(mediaSession.isAudioMuted());
+    @Override
+    public void onICEFailed(String callId) {
+        Ln.d("CallControlService.onICEFailed");
 
-            MediaConnection mediaConnection = new MediaConnection();
-            mediaConnection.setType("SDP");
-            mediaConnection.setLocalSdp(gson.toJson(locusSdp));
-            mediaConnectionList.add(mediaConnection);
+        Call call = getCall(callId);
 
-            LocusData call = locusDataCache.getLocusData(locusKey);
+        if (call != null) {
+            callAnalyzerReporter.reportIceEnd(call, false);
 
-            // This is very hard to understand and maintain.
-            if (call != null && isInPairedCall(call) && !TextUtils.isEmpty(callContext.getUsingResource())) {
-                ln.i("CallControlService.onSDPReady, adding (share) media to existing paired call");
+            cancelCall(call.getLocusKey(), CancelReason.LOCAL_ICE_FAILURE);
 
-                // JOR TODO make sure we're handling creation/deletion of associated MediaSession
-                locusService.createMedia(locusKey, mediaConnection);
-            } else if (call != null && call.getLocus().isJoinedFromThisDevice(deviceRegistration.getUrl()) && !isCopyingCallFromTp(call)) {
-                ln.i("CallControlService.onSDPReady, modifying media for existing call");
-                locusService.modifyMedia(locusKey, mediaConnectionList);
-            } else {
-                ln.d("CallControlService.onSDPReady, %s", call == null ? "joining new call" : "transitioning call from remote media to local media");
-                // if bridge call (where locusKey already exists), use joinLocus; otherwise use call api
-                if (callContext.getLocusKey() != null) {
-                    locusService.joinLocus(locusKey, mediaConnectionList, callContext);
-                } else {
-                    isCaller = true;
-                    locusService.call(callContext.getInvitee(), mediaConnectionList, callContext);
-                }
-                joinLocusTrackingID = trackingIdGenerator.currentTrackingId();
+            Handler mainHandler = new Handler(context.getMainLooper());
+            mainHandler.post(() -> callUi.reportIceFailure(call));
+
+            bus.post(new CallControlCallJoinErrorEvent());
+        }
+    }
+
+    @Override
+    public void onFirstPacketRx(String callId, MediaType mediaType) {
+        Ln.d("CallControlService.onFirstPacketRx %s", mediaType);
+
+        Call call = getCall(callId);
+
+        if (call != null) {
+            callAnalyzerReporter.reportMediaRxStart(call, mediaType);
+
+            if (mediaType == MediaType.AUDIO) {
+                callUi.dismissRingback(call);
+
+                // also using this for now to indicate we've started rendering audio
+                callAnalyzerReporter.reportMediaRenderStart(call, mediaType);
             }
+        }
+    }
+
+    @Override
+    public void onFirstPacketTx(String callId, MediaType mediaType) {
+        Ln.d("CallControlService.onFirstPacketTx %s", mediaType);
+
+        Call call = getCall(callId);
+
+        if (call != null) {
+            callAnalyzerReporter.reportMediaTxStart(call, mediaType);
+        }
+    }
+
+    @Override
+    public void onMediaRxStop(String callId, MediaType mediaType) {
+        Ln.d("CallControlService.onMediaRxStop %s", mediaType);
+
+        Call call = getCall(callId);
+
+        if (call != null) {
+            callAnalyzerReporter.reportMediaRxStop(call, mediaType);
+        }
+    }
+
+    @Override
+    public void onMediaTxStop(String callId, MediaType mediaType) {
+        Ln.d("CallControlService.onMediaTxStop %s", mediaType);
+
+        Call call = getCall(callId);
+
+        if (call != null) {
+            callAnalyzerReporter.reportMediaTxStop(call, mediaType);
+        }
+    }
+
+    @Override
+    public void onScrRx(String callId, MediaType mediaType) {
+        Ln.d("CallControlService.onScrRx %s", mediaType);
+
+        Call call = getCall(callId);
+
+        if (call != null) {
+            callAnalyzerReporter.reportMultistreamScrRx(call, mediaType);
+        }
+    }
+
+    @Override
+    public void onScaRx(String callId, MediaType mediaType) {
+        Ln.d("CallControlService.onScaRx %s", mediaType);
+
+        Call call = getCall(callId);
+
+        if (call != null) {
+            callAnalyzerReporter.reportMultistreamScaRx(call, mediaType);
+        }
+    }
+
+    @Override
+    public void onScrTx(String callId, MediaType mediaType) {
+        Ln.d("CallControlService.onScrTx %s", mediaType);
+
+        Call call = getCall(callId);
+
+        if (call != null) {
+            callAnalyzerReporter.reportMultistreamScrTx(call, mediaType);
+        }
+    }
+
+    @Override
+    public void onScaTx(String callId, MediaType mediaType) {
+        Ln.d("CallControlService.onScaTx %s", mediaType);
+
+        Call call = getCall(callId);
+
+        if (call != null) {
+            callAnalyzerReporter.reportMultistreamScaTx(call, mediaType);
         }
     }
 
@@ -465,11 +667,25 @@ public class CallControlService implements MediaCallbackObserver {
      * versus others is, full frame live video is available this action is called.
      */
     @Override
-    public void onVideoBlocked(boolean blocked) {
+    public void onMediaBlocked(String callId, MediaType mediaType, boolean blocked) {
         Ln.d("CallControlService.onVideoBlocked(%b), videoBlocked=%b, unblockedAction=%s", blocked, videoBlocked, unblockedAction == null ? "null" : "non-null");
         if (videoBlocked && !blocked && unblockedAction != null)
             unblockedAction.call();
         videoBlocked = blocked;
+
+        Call call = getCall(callId);
+        if (call != null) {
+            if (!blocked) {
+                callAnalyzerReporter.reportMediaRenderStart(call, mediaType);
+            } else {
+                callAnalyzerReporter.reportMediaRenderStop(call, mediaType);
+            }
+        }
+    }
+
+    @Override
+    public void onShareStopped(String callId) {
+        Ln.d("CallControlService.onShareStopped");
     }
 
     public void registerVideoUnblockedAction(Action0 action) {
@@ -482,8 +698,8 @@ public class CallControlService implements MediaCallbackObserver {
         unblockedAction = null;
     }
 
-    private boolean isCopyingCallFromTp(LocusData call) {
-        return isInPairedCall(call) && !TextUtils.isEmpty(call.getObservingResource()) && callContext.getUsingResource() == null;
+    private boolean isCopyingCallFromTp(Call call) {
+        return isInPairedCall(call) && !TextUtils.isEmpty(call.getLocusData().getObservingResource()) && call.getUsingResource() == null;
     }
 
     /**
@@ -512,7 +728,7 @@ public class CallControlService implements MediaCallbackObserver {
     public void holdCall(LocusKey locusKey) {
         ln.i("CallControlService.holdCall");
 
-        LocusData call = getLocusData(locusKey);
+        Call call = getCall(locusKey);
         if (call != null) {
             call.setOnHold(true);
             //locusService.holdLocus(locusKey);
@@ -528,7 +744,7 @@ public class CallControlService implements MediaCallbackObserver {
     public void resumeCall(LocusKey locusKey) {
         ln.i("CallControlService.resumeCall");
 
-        LocusData call = getLocusData(locusKey);
+        Call call = getCall(locusKey);
         if (call != null) {
             call.setOnHold(false);
             //locusService.resumeLocus(locusKey);
@@ -544,7 +760,7 @@ public class CallControlService implements MediaCallbackObserver {
     public void mergeCalls(LocusKey currentLocusKey, LocusKey secondLocusKey) {
         ln.i("CallControlService.mergeCalls");
 
-        LocusData secondCall = getLocusData(secondLocusKey);
+        Call secondCall = getCall(secondLocusKey);
         MediaSession mediaSession = secondCall.getMediaSession();
         if (secondCall != null) {
             if (mediaSession != null) {
@@ -561,7 +777,7 @@ public class CallControlService implements MediaCallbackObserver {
         holdCall(currentLocusKey);
         resumeCall(secondLocusKey);
 
-        LocusData secondCall = getLocusData(secondLocusKey);
+        Call secondCall = getCall(secondLocusKey);
         if (secondCall != null) {
             MediaSession mediaSession = secondCall.getMediaSession();
             if (mediaSession != null) {
@@ -575,23 +791,21 @@ public class CallControlService implements MediaCallbackObserver {
 
         List<LocusInvitee> invitees = new ArrayList<>();
         for (Person person : people) {
-            LocusInvitee locusInvitee = new LocusInvitee();
-            locusInvitee.setInvitee(person.getEmail());
+            LocusInvitee locusInvitee = new LocusInvitee(coreFeatures);
+            locusInvitee.setInvitee(person.getEmailOrUUID());
             invitees.add(locusInvitee);
 
         }
         locusService.addUsersToLocus(locusKey, invitees);
     }
 
-
-
-    private void endCallAndLeaveLocusSync() throws Exception {
-        requestingFloor = false;
+    public void endCallAndLeaveLocusSync() {
         locusService.setSharingWhiteboard(false);
 
-        LocusData call = getLocusData(locusKey);
-        if (call != null) {
-            callUi.dismissRingback(locusKey);
+        Call call = getCall(locusKey);
+        if (call != null && call.getLocusData() != null) {
+            LocusData locusData = call.getLocusData();
+            callUi.dismissRingback(call);
             stopUnansweredHandler();
 
             MediaSession mediaSession = call.getMediaSession();
@@ -599,7 +813,7 @@ public class CallControlService implements MediaCallbackObserver {
                 call.setWasMediaFlowing(mediaSession.wasMediaFlowing());
             }
             call.setCallStarted(false);
-            endMediaSession(true);
+            endMediaSession(call, true);
 
             handleRoomCallEnd();
 
@@ -608,48 +822,56 @@ public class CallControlService implements MediaCallbackObserver {
 
             // If self where set to a left state remotely, this happens when we leave with observing
             // resource, do not attempt to leave again, as we are already left.
-            LocusSelfRepresentation self = call.getLocus().getSelf();
+            LocusSelfRepresentation self = locusData.getLocus().getSelf();
             Ln.i("endCall, self state = " + (self != null ? self.getState() : "<not present>"));
             if ((self == null || self.getState() != LocusParticipant.State.LEFT)) {
-                locusService.leaveLocusSync(locusKey, call.getObservingResource());
+                locusService.leaveLocusSync(locusKey, locusData.getObservingResource());
             } else {
                 ln.i("Not leaving as self is missing or self state != LEFT");
                 call.setMediaSession(null);
+                call.setActive(false);
             }
         }
     }
 
 
+    public synchronized void endCall(LocusKey locusKey) {
+        ln.i("CallControlService.endCall, locus = " + locusKey);
+        endCall(locusKey, false);
+    }
+
+
     /**
      * End Call
+     * @param keepObservingResourceInCall keep the observing resource in call or not if have
      */
-    public synchronized void endCall() {
-        ln.i("CallControlService.endCall, locus = " + locusKey);
-
-        requestingFloor = false;
+    public synchronized void endCall(LocusKey locusKey, boolean keepObservingResourceInCall) {
+        ln.i("CallControlService.endCall, locus = %s keepObservingResourceInCall = ? %b", locusKey, keepObservingResourceInCall);
         locusService.setSharingWhiteboard(false);
 
-        LocusData call = getLocusData(locusKey);
-        if (call != null) {
-            callUi.dismissRingback(locusKey);
+        Call call = getCall(locusKey);
+        if (call != null && call.getLocusData() != null) {
+            LocusData locusData = call.getLocusData();
+            callUi.dismissRingback(call);
             stopUnansweredHandler();
 
             MediaSession mediaSession = call.getMediaSession();
+            ln.i("CallControlService.endCall, call id = " + call.getCallId() + ", mediaSession = " + mediaSession);
             if (mediaSession != null) {
                 call.setWasMediaFlowing(mediaSession.wasMediaFlowing());
             }
             call.setCallStarted(false);
-            endMediaSession(true);
+            endMediaSession(call, true);
 
             handleRoomCallEnd();
 
             // If self where set to a left state remotely, this happens when we leave with observing
             // resource, do not attempt to leave again, as we are already left.
-            LocusSelfRepresentation self = call.getLocus().getSelf();
+            LocusSelfRepresentation self = locusData.getLocus().getSelf();
             Ln.i("endCall, self state = " + (self != null ? self.getState() : "<not present>"));
             if ((self == null || self.getState() != LocusParticipant.State.LEFT)) {
-                String observingResource = call.getObservingResource();
-                if (observingResource != null) {
+                String observingResource = locusData.getObservingResource();
+                if (observingResource != null && !keepObservingResourceInCall) {
                     locusService.leaveLocus(locusKey, observingResource);
                 } else {
                     locusService.leaveLocus(locusKey);
@@ -657,52 +879,10 @@ public class CallControlService implements MediaCallbackObserver {
             } else {
                 ln.i("Not leaving as self is missing or self state != LEFT");
                 call.setMediaSession(null);
+                call.setActive(false);
             }
             ln.i("CallControlService.endCall, post CallControlEndLocusEvent");
             bus.post(new CallControlEndLocusEvent(locusKey));
-        }
-    }
-
-    /**
-     * Share Screen
-     */
-    public void shareScreen() {
-        LocusData call = getLocusData(locusKey);
-        if (call != null) {
-            MediaSession mediaSession = call.getMediaSession();
-            if (mediaSession != null && !requestingFloor) {
-                requestingFloor = true;
-                if (mediaSession.isMediaStarted()) {
-                    locusService.shareScreen(locusKey);
-                } else {
-                    mediaEngine.startMediaSession(this, MediaEngine.MediaDirection.SendReceiveShareOnly);
-                }
-            }
-        }
-    }
-
-    public void unshareScreen() {
-        LocusData call = getLocusData(locusKey);
-        if (call != null) {
-            MediaSession mediaSession = call.getMediaSession();
-            if (mediaSession != null && mediaSession.isScreenSharing()) {
-                mediaSession.stopScreenShare(call.getFloorGrantedId());
-                locusService.unshareScreen(locusKey);
-            }
-        }
-    }
-
-    public void shareWhiteboard(String whiteboardUrl) {
-        if (!requestingFloor) {
-            requestingFloor = true;
-            locusService.shareWhiteboard(locusKey, whiteboardUrl);
-        }
-    }
-
-    public void unshareWhiteboard() {
-        if (locusService.isSharingWhiteboard()) {
-            locusService.unshareWhiteboard(locusKey);
-            requestingFloor = false;
         }
     }
 
@@ -716,31 +896,56 @@ public class CallControlService implements MediaCallbackObserver {
     }
 
     final Object leaveCallSyncLock = new Object();
+
     /**
      * Leave Call
+     * Will hang up on observing TP too if is currently in observing state
      */
     public void leaveCall(LocusKey locusKey) {
+        boolean keepObservingResourceInCall = false;
+        leaveCall(locusKey, keepObservingResourceInCall);
+    }
+
+    /**
+     * Leave Call
+     * @param locusKey call to leave
+     * @param keepObservingResourceInCall if true leaves without bringing down the observing resource
+     */
+    public void leaveCall(LocusKey locusKey, boolean keepObservingResourceInCall) {
         // TODO we need to move away from CCS having locusKey state and where possible pass it
         // in to all methods (like we do in most cases right now)...this is temporary change in meantime
         this.locusKey = locusKey;
-        leaveCall();
+        leaveCall(keepObservingResourceInCall);
     }
 
-
+    /**
+     * Leave Call
+     * Will hang up on observing TP too if have
+     */
     public void leaveCall() {
-        ln.i("CallControlService.leaveCall, locus = " + locusKey);
+        boolean keepObservingResourceInCall = false;
+        leaveCall(keepObservingResourceInCall);
+    }
+
+    /**
+     * Leave Call
+     * @param keepObservingResourceInCall keep the observing resource in call or not if have
+     */
+    public void leaveCall(boolean keepObservingResourceInCall) {
+        ln.i("CallControlService.leaveCall, locus = %s keepObservingResourceInCall ? %b", locusKey, keepObservingResourceInCall);
         new SafeAsyncTask<Void>() {
             @Override
             public Void call() throws Exception {
                 // protecting this code path so it is only called by one thread at a time.
                 // When you get access verify that self is still JOINED before ending call
                 synchronized (leaveCallSyncLock) {
-                    LocusData call = getLocusData(locusKey);
-                    if (call != null && call.getLocus().getSelf() != null) {
-                        LocusParticipant.State state = call.getLocus().getSelf().getState();
+
+                    Call call = getCall(locusKey);
+                    if (call != null && call.getLocusData() != null && call.getLocusData().getLocus() != null && call.getLocusData().getLocus().getSelf() != null) {
+                        LocusParticipant.State state = call.getLocusData().getLocus().getSelf().getState();
                         Ln.d("leaveCall, self state = " + state);
-                        if (state == LocusParticipant.State.JOINED || call.getLocus().isInLobbyFromThisDevice(deviceRegistration.getUrl())) {
-                            endCall(); // endCall will set self state to LEAVING
+                        if (state == LocusParticipant.State.JOINED || call.getLocusData().getLocus().isInLobbyFromThisDevice(deviceRegistration.getUrl())) {
+                            endCall(locusKey, keepObservingResourceInCall); // endCall will set self state to LEAVING
 
                             // TODO: if we leave the call while the app is in the background - this can throw an exception:
                             // Caused by: java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState
@@ -766,45 +971,70 @@ public class CallControlService implements MediaCallbackObserver {
      * @param postLeave if this is an actual leave, we will fi. show the MOS dialog, otherwise this
      *                  is a copy/move to device, and we only remove the paired device from the call
      */
-    public void leaveCall(String resource, boolean postLeave) {
+    public void leaveCall(LocusKey locusKey, String resource, boolean postLeave) {
         ln.i("CallControlService.leaveCall, resource = %s, do postLeave work = %b", resource, postLeave);
         locusService.leaveLocus(locusKey, resource);
         if (postLeave) {
-            LocusData call = getLocusData(locusKey);
-            sendLeaveLocusEvent(call);
+            Call call = getCall(locusKey);
+            if (call != null) {
+                sendLeaveLocusEvent(call);
+            }
+        }
+    }
+
+    private void reportCallLeaveMetricsAndLogs(Call call) {
+        // If 'auto-upload' is on and not on a debug build, then upload our logs to
+        // admin service for diagnosis and analysis
+        boolean uploadCallLogs = coreFeatures.uploadCallLogs();
+        boolean releaseBuild = !BuildConfig.DEBUG;
+
+        if (shouldReportCallLogs(call)) {
+            if (!isInCall(call)) {
+                call.setCallConnected(false);
+            }
+
+            callMetricsReporter.reportLeaveMetrics(call);
+
+            if (uploadCallLogs && releaseBuild) {
+                uploadLogsService.uploadLogs(call);
+            } else if (!call.wasMediaFlowing() && releaseBuild) {
+                // If some media failure occurred and we're not automatically uploading logs,
+                // then warn/prompt/'ask to auto-upload' according to setting.
+                callUi.requestUserToUploadLogs(call);
+            } else {
+                Ln.i("Skipping post-call upload.");
+            }
         }
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventMainThread(LocusLeftEvent event) {
-        ln.i("CallControlService.onEvent(LocusLeftEvent)");
+        ln.i("CallControlService.onEvent(LocusLeftEvent), locus = " + event.getLocusKey());
 
-        LocusData call = getLocusData(locusKey);
+        Call call = getCall(event.getLocusKey());
         if (call != null) {
-            ln.i("CallControlService.onEvent(LocusLeftEvent), callConnected = " + call.isCallConnected());
+            ln.i("CallControlService.onEvent(LocusLeftEvent), callConnected = " + call.isCallConnected() + ", call id = " + call.getCallId());
 
-            // If 'auto-upload' is on and not on a debug build, then upload our logs to
-            // admin service for diagnosis and analysis
-            boolean uploadCallLogs = deviceRegistration.getFeatures().uploadCallLogs();
-            boolean releaseBuild = !BuildConfig.DEBUG;
+            reportCallLeaveMetricsAndLogs(call);
 
-            if (shouldReportCallLogs(call)) {
-                if (!isInCall(call)) {
-                    call.setCallConnected(false);
-                }
-
-                callMetricsReporter.reportLeaveMetrics(locusKey, joinLocusTrackingID);
-
-                if (uploadCallLogs && releaseBuild) {
-                    uploadLogsService.uploadLogs(call);
-                } else if (!call.wasMediaFlowing() && releaseBuild) {
-                    // If some media failure occurred and we're not automatically uploading logs,
-                    // then warn/prompt/'ask to auto-upload' according to setting.
-                    callUi.requestUserToUploadLogs(locusKey);
-                } else {
-                    Ln.i("Skipping post-call upload.");
-                }
+            if (!call.getLocusData().getLocus().isJoinedFromThisDevice(deviceRegistration.getUrl())) {
+                call.setActive(false);
             }
+
+            if (coreFeatures.isCallSpinnerEnabled()) {
+                setSpinnerHideState(false);
+            }
+        }
+    }
+
+    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
+    public void onEvent(LocusLeaveFailedEvent event) {
+        ln.i("CallControlService.onEvent(LocusLeaveFailedEvent), locus = " + event.getLocusKey());
+
+        Call call = getCall(event.getLocusKey());
+        if (call != null) {
+            ln.i("CallControlService.onEvent(LocusLeaveFailedEvent), callConnected = " + call.isCallConnected() + ", call id = " + call.getCallId());
+            call.setActive(false);
         }
     }
 
@@ -814,15 +1044,15 @@ public class CallControlService implements MediaCallbackObserver {
         locusService.new GetOrCreateMeetingInfoTask(locusKey, successCallback, failureCallback).execute();
     }
 
-    private void logStartMediaStats(Locus locus) {
+    private void logStartMediaStats(Call call) {
         // Log locus ID, locus lastActive timestamp, and trackingID for media troubleshooting
-        String callID = locus.getUniqueCallID();
+        String callID = call.getLocusData().getLocus().getUniqueCallID();
         if (callID.isEmpty()) {
             Ln.i("Unable to retrieve locusID and locus lastActive.");
             callID = "";
         }
         float timezoneOffset = TimeZone.getDefault().getOffset(System.currentTimeMillis()) / (float) (1000 * 3600); // in hours
-        Ln.i("SQMedia Statistics for call ID - %s,%s,%.2f", callID, joinLocusTrackingID, timezoneOffset);
+        Ln.i("SQMedia Statistics for call ID - %s,%s,%.2f", callID, call.getJoinLocusTrackingID(), timezoneOffset);
     }
 
     // log the current snapshot of media statistics.
@@ -849,36 +1079,78 @@ public class CallControlService implements MediaCallbackObserver {
         ln.i("=ABC Metrics Report={%s, \"locusTimestamp\": \"%s\", \"locusId\": \"%s\"}=End ABC Metrics Report=", statsStr, locusTimestamp, locusID);
     }
 
+    public enum CancelReason {
+        LOCAL_ICE_FAILURE,
+        UNANSWERED_TIMEOUT,
+        LOCAL_CANCELLED,
+        REMOTE_CANCELLED
+    }
 
     /**
-     * Cancel Call
+     * Cancel a call that hasn't connected yet, with the option to let the observed resource stay in the call
+     * @param locusKey
+     * @param reason what is the reason for the cancel
+     * @param keepObservingResourceInCall whether to let the observed resource remain in the call
      */
-    public synchronized void cancelCall(final boolean userCancelled) {
+    public void cancelCall(final LocusKey locusKey, final CancelReason reason, final boolean keepObservingResourceInCall) {
         ln.i("CallControlService.cancelCall");
         new SafeAsyncTask<Void>() {
             @Override
             public Void call() throws Exception {
-                endMediaSession(false);
-                locusService.leaveLocus(locusKey);
 
-                LocusData call = getLocusData(locusKey);
-                if (call != null) {
+                Call call;
+                if (locusKey != null) {
+                    call = getCall(locusKey);
+                } else {
+                    call = getActiveCall();
+                }
+                endMediaSession(call, false);
+                String observingResource = call.getLocusData().getObservingResource();
+                if (observingResource != null) {
+                    // We have an observing resource
+                    if (keepObservingResourceInCall) {
+                        ln.i("CallControlService.cancelCall leave without observing resource");
+                        locusService.leaveLocus(locusKey);
+                    } else {
+                        ln.i("CallControlService.cancelCall leave with observing resource");
+                        locusService.leaveLocus(locusKey, observingResource);
+                    }
+                } else {
+                    // no observing resource
+                    ln.i("CallControlService.cancelCall none observing resources");
+                    locusService.leaveLocus(locusKey);
+                }
+
+                if (call.getLocusData() != null) {
                     call.setCallStarted(false);
-                    if (userCancelled)
+
+                    if (reason == CancelReason.LOCAL_CANCELLED)
                         call.setCallEndReason(new CallEndReason(CANCELLED_BY_LOCAL_USER));
+                    else if (reason == CancelReason.LOCAL_ICE_FAILURE)
+                        call.setCallEndReason(new CallEndReason(CANCELLED_BY_LOCAL_ERROR, "ICE connection failure"));
 
-                    logCall(LogCallIndex.CANCELED, call);
+                    logCall(LogCallIndex.CANCELED, call.getLocusData());
 
-                    callUi.dismissRingback(locusKey);
+                    callUi.dismissRingback(call);
                     stopUnansweredHandler();
 
-                    reportCallCancelledMetrics(locusKey);
+                    reportCallCancelledMetrics(call);
 
+                    bus.post(new CallControlCallCancelledEvent(locusKey, reason));
                     bus.post(new CallNotificationRemoveEvent(locusKey));
                 }
                 return null;
             }
         }.execute();
+
+    }
+
+    /**
+     * Cancel Call
+     * Default behavior is to let the observed resource stay in the call
+     */
+    public synchronized void cancelCall(LocusKey locusKey, CancelReason cancelReason) {
+        cancelCall(locusKey, cancelReason, true);
     }
 
     /**
@@ -886,9 +1158,9 @@ public class CallControlService implements MediaCallbackObserver {
      */
     public void declineCall(LocusKey locusKey) {
         ln.i("CallControlService.declineCall");
+
         LocusData locusData = getLocusData(locusKey);
         if (locusData != null) {
-            locusData.setCallEndReason(new CallEndReason(CANCELLED_BY_LOCAL_USER));
             locusService.declineLocus(locusKey, DeclineReason.UNKNOWN);
             callNotification.dismiss(locusKey);
             bus.post(new CallNotificationRemoveEvent(locusKey));
@@ -920,27 +1192,24 @@ public class CallControlService implements MediaCallbackObserver {
         return null;
     }
 
-    private void setupCallSettings() {
-        // set device specific media settings (this is json string returned from WDM based on user agent info provided)
-        mediaEngine.setDeviceSettings(deviceRegistration.getDeviceSettingsString());
-    }
 
     public void muteAudio(LocusKey locusKey) {
-        // Mute/un-mute audio in the local media session. (Call WME api to mute local device)
+        // Mute/un-mute audio in the local media session. (Call WME API to mute local device)
         muteAudioInMediaSession(locusKey, true);
 
         // signal audio mute status to the locus.
-        // Call Locus api /locus/api/v1/loci/{lid}/participant/{pid}/media
+        // Call Locus API /locus/api/v1/loci/{lid}/participant/{pid}/media
         // to notify server local-mute action happened on this device.
-        modifyMedia(AUDIO_TYPE, true);
+        modifyMedia(locusKey, AUDIO_TYPE, true);
 
         audioMutedLocally = true;
+        callAnalyzerReporter.reportMuted(getCall(locusKey), MediaType.AUDIO);
         bus.post(new CallControlLocalAudioMutedEvent(locusKey, true));
         bus.post(new CallNotificationUpdateEvent(CallNotificationType.MUTE_STATE, locusKey, true));
     }
 
     public void unmuteAudio(LocusKey locusKey) {
-        // Un-mute audio in the local media session. (Call WME api to unmute local device)
+        // Un-mute audio in the local media session. (Call WME API to unmute local device)
         boolean localMuted  = isAudioMuted(locusKey); // Indication of a local mute
         muteAudioInMediaSession(locusKey, false);
         audioMutedLocally = false;
@@ -973,8 +1242,10 @@ public class CallControlService implements MediaCallbackObserver {
         // If self was local-muted, do local unmute.
         // Reference: Case B-a in https://wiki.cisco.com/pages/viewpage.action?pageId=60770064
         if (localMuted) {
-            modifyMedia(AUDIO_TYPE, false);
+            modifyMedia(locusKey, AUDIO_TYPE, false);
         }
+
+        callAnalyzerReporter.reportUnmuted(getCall(locusKey), MediaType.AUDIO);
 
         bus.post(new CallControlLocalAudioMutedEvent(locusKey, false));
         bus.post(new CallNotificationUpdateEvent(CallNotificationType.MUTE_STATE, locusKey, false));
@@ -1020,9 +1291,15 @@ public class CallControlService implements MediaCallbackObserver {
 
     /**
      * Mute audio in the local media session as a result of mute action from another user (remote muting)
-     * This would also result in modify media local api call.
+     * This would also result in modify media local API call.
      */
     public void muteAudioFromRemote(LocusKey locusKey, boolean muted) {
+        // In multidevice scenario, if one device is in call and other device with the same user has
+        // not joined the call, do nothing for that device.
+        Call call = getCall(locusKey);
+        if (call != null && !isInCall(call)) {
+            return;
+        }
         // If the local audio mute status is not different from the indicated status, do nothing.
         boolean audioSessionMuted = isAudioMuted(locusKey);
         if (audioSessionMuted == muted) {
@@ -1037,7 +1314,7 @@ public class CallControlService implements MediaCallbackObserver {
             return;
         }
 
-        // Mute audio in the local media session. (Call WME api to mute local device)
+        // Mute audio in the local media session. (Call WME API to mute local device)
         muteAudioInMediaSession(locusKey, muted);
 
         bus.post(new CallNotificationUpdateEvent(CallNotificationType.MUTE_STATE, locusKey, muted));
@@ -1051,11 +1328,9 @@ public class CallControlService implements MediaCallbackObserver {
                 mediaSession.muteVideo(source);
                 locusService.callFlowTrace("App", "WME", "sendVideo(false)", locusKey);
                 // signal video mute status
-                modifyMedia(VIDEO_TYPE, true);
+                modifyMedia(locusKey, VIDEO_TYPE, true);
+                callAnalyzerReporter.reportMuted(getCall(locusKey), MediaType.VIDEO);
                 bus.post(new CallControlLocalVideoMutedEvent(locusKey, true, source));
-                
-                //lm
-                Log.i("CallControlService", "muteVideo: ->end");
             }
         }
     }
@@ -1087,7 +1362,8 @@ public class CallControlService implements MediaCallbackObserver {
                 locusService.callFlowTrace("App", "WME", "sendVideo(true)", locusKey);
 
                 // signal video mute status
-                modifyMedia(VIDEO_TYPE, false);
+                modifyMedia(locusKey, VIDEO_TYPE, false);
+                callAnalyzerReporter.reportUnmuted(getCall(locusKey), MediaType.VIDEO);
                 bus.post(new CallControlLocalVideoMutedEvent(locusKey, false, source));
                 return true;
             } else {
@@ -1113,35 +1389,30 @@ public class CallControlService implements MediaCallbackObserver {
         return locus.getControls().getLock().isLocked();
     }
 
+    public boolean isAbleToRecordMeeting(LocusKey locusKey) {
+        Locus locus = getLocus(locusKey);
+        LocusRecordControl recordControl = locus != null ? locus.getRecordControl() : null;
+        return recordControl != null && recordControl.isAbleToRecord() && isModerator(locusKey);
+    }
+
     public boolean isMeetingRecording(LocusKey locusKey) {
-        LocusData locusData = getLocusData(locusKey);
+        Locus locus = getLocus(locusKey);
+        LocusRecordControl recordControl = locus != null ? locus.getRecordControl() : null;
+        return recordControl != null && recordControl.isRecording();
+    }
 
-        if (locusData == null)
-            return false;
-
-        Locus locus = locusData.getLocus();
-
-        if (locus == null || locus.getControls() == null)
-            return false;
-
-        return locus.getControls().getRecord().isRecording();
+    public boolean isMeetingRecordingPaused(LocusKey locusKey) {
+        Locus locus = getLocus(locusKey);
+        LocusRecordControl recordControl = locus != null ? locus.getRecordControl() : null;
+        return recordControl != null && recordControl.isPaused();
     }
 
     public boolean isModerator(LocusKey locusKey) {
-        LocusData locusData = getLocusData(locusKey);
-
-        if (locusData == null)
-            return false;
-
-        Locus locus = locusData.getLocus();
-
-        if (locus == null || locus.getSelf() == null)
-            return false;
-
-        return locus.getSelf().isModerator();
+        Locus locus = getLocus(locusKey);
+        return locus != null && locus.getSelf() != null && locus.getSelf().isModerator();
     }
 
-    private void muteAudioInMediaSession(@NonNull LocusKey locusKey, boolean muted) {
+    public void muteAudioInMediaSession(@NonNull LocusKey locusKey, boolean muted) {
         MediaSession mediaSession = getMediaSession(locusKey);
         if (mediaSession == null) {
             return;
@@ -1156,36 +1427,36 @@ public class CallControlService implements MediaCallbackObserver {
         }
     }
 
-    private void modifyMedia(final String mediaType, final boolean muted) {
-        LocusData call = getLocusData(locusKey);
-        if (call != null) {
+    private void modifyMedia(LocusKey locusKey, final String mediaType, final boolean muted) {
+
+        Call call = getCall(locusKey);
+        if (call != null && call.getLocusData() != null) {
             MediaSession mediaSession = call.getMediaSession();
             if (mediaSession != null) {
                 String currentLocalSdp = mediaSession.getLocalSdp();
                 String calliopeSupplementaryInformationString = buildCalliopeSupplementaryInformation();
                 Map<String, Object> clusterInfo = linusReachabilityService.getLatestLinusReachabilityResults();
                 Ln.d("modifyMedia, clusterInfo is " + clusterInfo);
-                LocusSdp locusSdp = new LocusSdp(currentLocalSdp, MediaEngine.SDP_TYPE, calliopeSupplementaryInformationString, clusterInfo);
+                MediaInfo mediaInfo = new MediaInfo(currentLocalSdp, MediaEngine.SDP_TYPE, calliopeSupplementaryInformationString, clusterInfo);
 
                 if (mediaType.equals(AUDIO_TYPE)) {
-                    locusSdp.setAudioMuted(muted);
-                    locusSdp.setVideoMuted(mediaSession.isVideoMuted());
+                    mediaInfo.setAudioMuted(muted);
+                    mediaInfo.setVideoMuted(mediaSession.isVideoMuted());
                 } else {
-                    locusSdp.setVideoMuted(muted);
-                    locusSdp.setAudioMuted(mediaSession.isAudioMuted());
+                    mediaInfo.setVideoMuted(muted);
+                    mediaInfo.setAudioMuted(mediaSession.isAudioMuted());
                 }
 
-                MediaConnection currentMediaConnection = getMediaConnection(call.getLocus());
+                MediaConnection currentMediaConnection = getMediaConnection(call.getLocusData().getLocus());
                 if (currentMediaConnection != null) {
                     List<MediaConnection> mediaConnectionList = new ArrayList<MediaConnection>();
                     MediaConnection mediaConnection = new MediaConnection();
                     mediaConnection.setType("SDP");
-                    mediaConnection.setMediaUrl(currentMediaConnection.getMediaUrl());
                     mediaConnection.setMediaId(currentMediaConnection.getMediaId());
-                    mediaConnection.setLocalSdp(gson.toJson(locusSdp));
+                    mediaConnection.setLocalSdp(gson.toJson(mediaInfo));
                     mediaConnectionList.add(mediaConnection);
 
-                    locusService.modifyMedia(call.getKey(), mediaConnectionList);
+                    locusService.modifyMedia(locusKey, mediaConnectionList, mediaSession.isAudioMuted());
                 }
             }
         }
@@ -1222,18 +1493,19 @@ public class CallControlService implements MediaCallbackObserver {
     Runnable cancelCall = new Runnable() {
         @Override
         public void run() {
-            final LocusData call = getLocusData(locusKey);
+            final Call call = getCall(locusKey);
             if (call != null) {
                 ln.d("Unanswered call timeout occured (timeout %d secs)", callUi.getRingbackTimeout());
                 Lns.ux().i("Unanswered timeout occurred (after %d secs)", callUi.getRingbackTimeout());
-                if (sdkClient.toastsEnabled()) {
-                    Toaster.showLong(context, context.getString(R.string.name_was_unavailable, NameUtils.getFirstName(call.getRemoteParticipantName())));
-                }
+
+                toaster.showLong(context, context.getString(R.string.name_was_unavailable, NameUtils.getFirstName(call.getLocusData().getRemoteParticipantName())));
+                bus.post(new CallControlCallCancelledEvent(locusKey, CancelReason.UNANSWERED_TIMEOUT));
+
                 new SafeAsyncTask<Void>() {
                     @Override
                     public Void call() throws Exception {
                         call.setCallEndReason(new CallEndReason(DIAL_TIMEOUT_REACHED));
-                        endCall();
+                        endCall(locusKey);
                         return null;
                     }
                 }.execute();
@@ -1246,48 +1518,52 @@ public class CallControlService implements MediaCallbackObserver {
     public void onEventMainThread(ParticipantDeclinedEvent event) {
         Ln.i("CallControlService.onEvent(ParticipantDeclinedEvent)");
 
-        LocusData call = getLocusData(locusKey);
-        if (call != null) {
-            Locus locus = call.getLocus();
+        Call call = getCall(event.getLocusKey());
+        if (call != null && call.getLocusData() != null) {
+            LocusData locusData = call.getLocusData();
+            Locus locus = locusData.getLocus();
 
             // Only end call when we get a decline if we're in 1:1 and the other person has declined
-            if (call.onlyMeJoined() && !call.isBridge()) {
+            if (locusData.onlyMeJoined() && !locusData.isBridge()) {
                 call.setCallStarted(false);
                 call.setCallEndReason(new CallEndReason(DECLINED_BY_REMOTE_USER));
 
-                callUi.dismissRingback(locusKey);
+                callUi.dismissRingback(call);
                 stopUnansweredHandler();
 
-                endMediaSession(false);
+                endMediaSession(call, false);
 
-                // for 1:1 calls, show message that other person has declined
+                // for 1:1 joinedCalls, show message that other person has declined
                 if (event.getReason() != null && event.getReason().equals(DeclineReason.BUSY)) {
-                    if (sdkClient.toastsEnabled()) {
-                        Toaster.showLong(context, R.string.call_other_person_busy);
-                    }
-                    logCall(LogCallIndex.BUSY, call);
+                    toaster.showLong(context, R.string.call_other_person_busy);
+                    logCall(LogCallIndex.BUSY, call.getLocusData());
                 } else {
-                    if (sdkClient.toastsEnabled()) {
-                        Toaster.showLong(context, R.string.call_other_person_declined);
-                    }
-                    logCall(LogCallIndex.DECLINED, call);
+                    toaster.showLong(context, R.string.call_other_person_declined);
+                    logCall(LogCallIndex.DECLINED, call.getLocusData());
                 }
 
                 locusService.leaveLocus(event.getLocusKey());
-                bus.post(CallControlLeaveLocusEvent.callDeclined(call));
+                bus.post(CallControlLeaveLocusEvent.callDeclined(locusData));
             }
         }
     }
 
-    public void copyCall() {
-        Ln.i("CallControlService.copyCall");
+    public void copyCall(LocusKey locusKey) {
+        Ln.i("CallControlService.copyCall, locusKey = " + locusKey);
 
-        // end current media session, for new start in join
-        endMediaSession(false);
+        Call call = getCall(locusKey);
+        if (call == null) {
+            call = getActiveCall();
+        }
 
-        LocusData call = getLocusData(locusKey);
         if (call != null) {
-            call.setMediaSession(null);
+            MediaSession mediaSession = call.getMediaSession();
+            Ln.i("CallControlService.copyCall, call id = " + call.getCallId() + ", media session = " + mediaSession);
+
+            // end current media session, for new start in join
+            endMediaSession(call, false);
+            call.setActive(false);
+
 
             RoomUpdatedEvent.RoomState roomState;
             boolean isObserving = isInPairedCall(call);
@@ -1303,10 +1579,10 @@ public class CallControlService implements MediaCallbackObserver {
                         .setPromptLeaveRoom(true)
                         .setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioVideoShare)
                         .setShowFullScreen(true).build();
-                joinCall(callContext);
+                call = joinCall(callContext);
 
                 // start copied call in muted state
-                MediaSession mediaSession = call.getMediaSession();
+                mediaSession = call.getMediaSession();
                 if (mediaSession != null) {
                     mediaSession.muteAudio();
                     mediaSession.muteRemoteAudio();
@@ -1320,7 +1596,7 @@ public class CallControlService implements MediaCallbackObserver {
                 CallContext callContext = new CallContext.Builder(locusKey)
                         .setMoveMediaToResource(true)
                         .setMediaDirection(MediaEngine.MediaDirection.SendReceiveShareOnly)
-                        .setIsOneOnOne(call.isOneOnOne())
+                        .setIsOneOnOne(call.getLocusData().isOneOnOne())
                         .setShowFullScreen(true).build();
                 joinCall(callContext);
             }
@@ -1341,7 +1617,7 @@ public class CallControlService implements MediaCallbackObserver {
         ln.i("%s, joined participant count = %d, state = %s", methodTag, numberParticipants, selfState);
         for (LocusParticipant participant : locus.getParticipants()) {
             if (participant.getState().equals(LocusParticipant.State.JOINED)) {
-                ln.v("%s,   %s", methodTag, participant.getPerson());
+                ln.v("%s,   %s", methodTag, participant.getPerson().getDisplayName());
             }
         }
 
@@ -1358,11 +1634,15 @@ public class CallControlService implements MediaCallbackObserver {
             String methodTag = "CallControlService.onEvent(ParticipantJoinedEvent)";
             logCallInfo(methodTag, event.getLocus());
 
+            dumpJoinedCalls();
+
+
             // The LocusKey from the event should be used for work within this method, but it should NOT update this.locusKey yet!
             LocusKey localLocusKey = event.getLocusKey();
-            LocusData call = getLocusData(event.getLocusKey());
-            if (call != null) {
-                Locus locus = call.getLocus();
+            Call call = getCall(event.getLocusKey());
+            if (call != null && call.getLocusData() != null) {
+                LocusData locusData = call.getLocusData();
+                Locus locus = locusData.getLocus();
                 int numberJoinedParticipants = locus.getFullState().getCount();
 
                 if (locusDataCache.isInCall(localLocusKey)) { // only handle this event if we're actually joined on this device
@@ -1370,17 +1650,14 @@ public class CallControlService implements MediaCallbackObserver {
                     callNotification.dismiss(localLocusKey);
 
                     // check if we're in observing state (joined but with media on room endpoint)
-                    boolean isObserving = call.isObserving(deviceRegistration.getUrl());
+                    boolean isObserving = locusData.isObserving(deviceRegistration.getUrl());
                     Ln.i("%s, joined on this device, observing = %b, mediaStarted = %b", methodTag, isObserving, isMediaStarted(locusKey));
 
                     if (!isObserving) {
                         // if not in observing state then start local media
                         if (!isMediaStarted(locusKey)) {
-                            if (callContext != null) {
-                                call.setAudioCall(callContext.isAudioCall());
-                            }
                             startMedia(call);
-                            call.setActiveSpeakerId(null);
+                            locusData.setActiveSpeakerId(null);
                         }
                     } else {
                         if (!isMediaStarted(locusKey)) {
@@ -1391,6 +1668,7 @@ public class CallControlService implements MediaCallbackObserver {
 
                     if (!call.isCallStarted()) {
                         call.setCallStarted(true);
+                        bus.post(new CallControlCallStartedEvent(localLocusKey));
 
                         if (isObserving) {
                             setRoomCallNotifying();
@@ -1400,11 +1678,8 @@ public class CallControlService implements MediaCallbackObserver {
                     // check if we're now "connected" i.e. other participant(s) now joined (note that room counts as participant
                     // when we're in observing data). Alternatively we could be in the lobby of the webex meeting waiting for the host
                     // and need to check for that
-                    int callConnectParticipantCount = call.isObservingNotMoving(deviceRegistration.getUrl()) ? 3 : 2;
-                    if (numberJoinedParticipants >= callConnectParticipantCount || call.getLocus().isInLobbyFromThisDevice(deviceRegistration.getUrl())) {
-                        if (sdkClient.toastsEnabled()) {
-                            Toaster.showShort(context, R.string.call_participant_joined);
-                        }
+                    int callConnectParticipantCount = locusData.isObservingNotMoving(deviceRegistration.getUrl()) ? 3 : 2;
+                    if (numberJoinedParticipants >= callConnectParticipantCount || locusData.getLocus().isInLobbyFromThisDevice(deviceRegistration.getUrl())) {
 
                         // callConnected flag is only used when we have media on local device (i.e.
                         if (!isObserving && !call.isCallConnected()) {
@@ -1415,26 +1690,26 @@ public class CallControlService implements MediaCallbackObserver {
 
                             handleMediaDeviceRegistration();
 
-                            callMetricsReporter.reportJoinMetrics(localLocusKey);
-                            logCall(LogCallIndex.CONNECTED, call);
+                            callMetricsReporter.reportJoinMetrics(call);
+                            logCall(LogCallIndex.CONNECTED, call.getLocusData());
                         }
 
 
                         if (isObserving) {
-                            String remoteParticipantName = call.getRemoteParticipantName();
+                            String remoteParticipantName = locusData.getRemoteParticipantName();
                             // TODO check this logic....is here to handle case where calling sip endpoint....can we check for no covnersation url?
                             String conversationTitle = locus.getParticipants().size() > 3 ? null : remoteParticipantName; // passing null will keep the original name of the room.
                             setRoomCallConnected(conversationTitle);
-                            logCall(LogCallIndex.CONNECTED, call);
+                            logCall(LogCallIndex.CONNECTED, call.getLocusData());
                         }
 
 
-                        callUi.dismissRingback(localLocusKey);
+                        callUi.dismissRingback(call);
                         stopUnansweredHandler();
 
                         // Make sure whiteboard share flag is correct due to Floor event can't be received when call is left in current design.
                         // Need to work with Server team to see if they can send this event in this case
-                        if (call.isFloorGranted()) {
+                        if (locusData.isFloorGranted()) {
                             if (locus.getWhiteboardMedia() != null) {
                                 locusService.setSharingWhiteboard(true);
                             } else {
@@ -1442,16 +1717,16 @@ public class CallControlService implements MediaCallbackObserver {
                             }
                         }
                         bus.post(new CallControlParticipantJoinedEvent(localLocusKey, event.getJoinedParticipants()));
-                        bus.post(new CallNotificationEvent(CallNotificationType.ONGOING, localLocusKey, call.isOneOnOne(), isMediaStarted(locusKey)));
+                        bus.post(new CallNotificationEvent(CallNotificationType.ONGOING, localLocusKey, locusData.isOneOnOne(), isMediaStarted(locusKey)));
                     } else {
-                        if (call.isOneOnOne() && !call.getLocus().isJoinedFromOtherDevice(deviceRegistration.getUrl())) {
-                            callUi.startRingback(locusKey);
+                        if (locusData.isOneOnOne() && !locusData.isMeeting() && !locusData.getLocus().isJoinedFromOtherDevice(deviceRegistration.getUrl())) {
+                            callUi.startRingback(call);
                             startUnansweredHandler();
                         }
 
                         bus.post(new CallControlLocusCreatedEvent(localLocusKey));
 
-                        sendCallNotificationEvent(localLocusKey, call);
+                        sendCallNotificationEvent(localLocusKey, locusData);
                     }
                 } else {
                     Ln.i("%s, not joined on this device - ignore", methodTag);
@@ -1471,59 +1746,64 @@ public class CallControlService implements MediaCallbackObserver {
     protected void handleEventParticipantLeft(ParticipantLeftEvent event) {
         String methodTag = "CallControlService.onEvent(ParticipantLeftEvent)";
         logCallInfo(methodTag, event.getLocus());
-        LocusData call = getLocusData(event.getLocusKey());
 
-        if (call != null) {
-            Locus locus = call.getLocus();
+        dumpJoinedCalls();
+
+        // Use LocusData rather than Call because in ParticipantLeftEvent we may not have an active Call
+        //  1. if we are yet to join the call, and the far end 'cancels'
+        //  2. if we are the one leaving - the Call object will have already been set to inactive in CallControlSelfParticipantLeftEvent
+        LocusData locusData = locusDataCache.getLocusData(event.getLocusKey());
+        if (locusData != null) {
+            Locus locus = locusData.getLocus();
             int remainingParticipants = locus.getFullState().getCount();
 
             // check if this is indication that user cancelled call
-            if (call.isOneOnOne() && remainingParticipants == 0 && locus.getSelf() != null && locus.getSelf().getState().equals(LocusParticipant.State.NOTIFIED)) {
-                if (sdkClient.toastsEnabled()) {
-                    Toaster.showLong(context, R.string.call_participant_cancelled);
-                }
-                bus.post(new CallControlCallCancelledEvent(call.getKey()));
+            if (locusData.isOneOnOne() && remainingParticipants == 0 && locus.getSelf() != null && locus.getSelf().getState().equals(LocusParticipant.State.NOTIFIED)) {
+                toaster.showLong(context, R.string.call_participant_cancelled);
+                bus.post(new CallControlCallCancelledEvent(locusData.getKey(), CancelReason.REMOTE_CANCELLED));
             } else {
-
-                if (isInCall(call)) {
-                    int self = call.isObserving(deviceRegistration.getUrl()) ? 2 : 1;
-                    if (call.isOneOnOne() && remainingParticipants == self && !call.isMeeting()) {
+                Call call = getCall(event.getLocusKey());
+                if (call != null && isInCall(call)) {
+                    int self = locusData.isObserving(deviceRegistration.getUrl()) ? 2 : 1;
+                    if (locusData.isOneOnOne() && remainingParticipants == self && !locusData.isMeeting()) {
                         // One-on-one and we are still in the call
-                        if (sdkClient.toastsEnabled()) {
-                            Toaster.showLong(context, R.string.call_participant_left);
-                        }
+                        toaster.showLong(context, R.string.call_participant_left);
                         call.setCallEndReason(new CallEndReason(ENDED_BY_REMOTE_USER));
-                        leaveCall();
+                        leaveCall(event.getLocusKey());
+                    } else {
+                        ln.d("skip leaveCall() because: isOneOnOne=%b, remainingParticipants=%d, self=%d, !isMeeting=%b",
+                                locusData.isOneOnOne(), remainingParticipants, self, !locusData.isMeeting());
                     }
                 }
-                bus.post(new CallControlParticipantLeftEvent(call.getKey(), event.getLeftParticipants()));
+                bus.post(new CallControlParticipantLeftEvent(locusData.getKey(), event.getLeftParticipants()));
             }
+
         } else {
-            ln.i("%s, no call found for key", methodTag);
+            ln.i("%s, no locus data found for key", methodTag);
         }
     }
 
-    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
-    public void onEvent(FirstAudioPacketReceivedEvent event) {
-        Ln.i("CallControlService.onEvent(FirstAudioPacketReceivedEvent)");
-        callUi.dismissRingback(locusKey);
+    private boolean isInCall(Call call) {
+        return locusDataCache.isInCall(call.getLocusData().getKey());
     }
 
-    private boolean isInCall(LocusData call) {
-        return locusDataCache.isInCall(call.getKey());
-    }
+    protected boolean isInPairedCall(Call call) {
+        if (call == null)
+            return false;
 
-    protected boolean isInPairedCall(LocusData call) {
-        return call.isObserving(deviceRegistration.getUrl());
+        LocusData ld = call.getLocusData();
+        if (ld == null)
+            return false;
+        return ld.isObserving(deviceRegistration.getUrl());
     }
 
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventMainThread(AnsweredInactiveCallEvent event) {
         Ln.i("CallControlService.onEvent(AnsweredInactiveCallEvent)");
-        LocusData call = getLocusData(event.getLocusKey());
+        Call call = getCall(event.getLocusKey());
         if (call != null) {
-            endMediaSession(false);
+            endMediaSession(call, false);
             locusService.leaveLocus(event.getLocusKey());
         }
     }
@@ -1562,20 +1842,30 @@ public class CallControlService implements MediaCallbackObserver {
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEvent(CallControlSelfParticipantLeftEvent event) {
         ln.i("CallControlService.onEvent(CallControlSelfParticipantLeftEvent)");
-        LocusData call = getLocusData(event.getLocusKey());
-        if (call != null) {
-            call.setCallEndReason(new CallEndReason(ENDED_BY_LOCUS));
-            if (call.isCallStarted()) {
-                endCall();
-            }
-            if (call.getLocus().getSelf().getReason() == LocusParticipant.Reason.FORCED) {
-                Toaster.showLong(context, R.string.call_participant_expelled);
-            }
-        }
 
-        if (call.getLocus().getSelf().getReason() == LocusParticipant.Reason.FORCED) {
-            Toaster.showLong(context, R.string.call_participant_expelled);
-            bus.post(new CallControlMeetingControlsExpelEvent(event.getLocusKey(), true));
+        Call call = getCall(event.getLocusKey());
+        if (call != null && call.getLocusData() != null) {
+            // If !call.isCallStarted then this occurs as a result of us leaving the call
+            // by hitting the /leave Locus endpoint
+            // If call.isCallStarted then it is due to Locus 'booting us out' the call
+            if (call.isCallStarted()) {
+                call.setCallEndReason(new CallEndReason(ENDED_BY_LOCUS));
+                // Important: this won't hit the Locus server /leave because we are already LEFT
+                // Therefore, LocusLeftEvent won't fire, so anything in that handler won't execute
+                endCall(event.getLocusKey());
+
+                // Do some of the CallLeftEvent handler here. Should it all just be moved though?
+                reportCallLeaveMetricsAndLogs(call);
+            }
+
+            if (call.getLocusData().getLocus().getSelf().getReason() == LocusParticipant.Reason.FORCED) {
+                toaster.showLong(context, R.string.call_participant_expelled);
+            }
+
+            if (call.getLocusData().getLocus().getSelf().getReason() == LocusParticipant.Reason.FORCED) {
+                toaster.showLong(context, R.string.call_participant_expelled);
+                bus.post(new CallControlMeetingControlsExpelEvent(event.getLocusKey(), true));
+            }
         }
     }
 
@@ -1598,44 +1888,54 @@ public class CallControlService implements MediaCallbackObserver {
         }
     }
 
-    private void startMedia(LocusData call) {
-        MediaConnection mediaConnection = getMediaConnection(call.getLocus());
+    private void startMedia(Call call) {
+        MediaConnection mediaConnection = getMediaConnection(call.getLocusData().getLocus());
         if (mediaConnection != null) {
             String remoteSdpString = mediaConnection.getRemoteSdp();
-            LocusSdp remoteSdp = gson.fromJson(remoteSdpString, LocusSdp.class);
+            MediaInfo remoteSdp = gson.fromJson(remoteSdpString, MediaInfo.class);
 
-            ln.d("startMedia, callContext = " + callContext);
-            if (callContext != null && callContext.getMediaSession() != null && call.getMediaSession() == null) {
-                Ln.d("Setting MediaSession for locus = %s", call.getKey());
-                call.setMediaSession(callContext.getMediaSession());
-            }
+            // remote sdp will only be included in locus DTO if we're doing legacy sdp offer/answer.  For
+            // new ROAP flows, the Answer SDP will be included in it's own mercury event
+            if (remoteSdp.getSdp() != null) {
 
-            MediaSession mediaSession = call.getMediaSession();
-            if (mediaSession != null) {
-                mediaSession.startMedia();
+                MediaSession mediaSession = call.getMediaSession();
+                if (mediaSession != null) {
+                    mediaSession.startMedia();
 
-                String sdp = remoteSdp.getSdp();
-                if (sdp != null && !sdp.isEmpty()) {
+                    String sdp = remoteSdp.getSdp();
+                    if (sdp != null && !sdp.isEmpty()) {
 
-                    // check if wme feature toggles are present in self device info
-                    Map<String, String> featureToggles = null;
-                    LocusSelfRepresentation self = call.getLocus().getSelf();
-                    if (self.getDevices().size() > 0) {
-                        featureToggles = self.getDevices().get(0).getFeatureToggles();
+                        // check if wme feature toggles are present in self device info
+                        Map<String, String> featureToggles = null;
+                        LocusSelfRepresentation self = call.getLocusData().getLocus().getSelf();
+                        if (self.getDevices().size() > 0) {
+                            featureToggles = self.getDevices().get(0).getFeatureToggles();
+                        }
+
+                        mediaSession.answerReceived(sdp, featureToggles);
+
+                        // No discernable difference with these two as far as I am aware
+                        // Perhaps the latter report was intended for something like WME's onMediaReady?
+                        // TODO: Ask someone who knows...
+                        callAnalyzerReporter.reportRemoteSdpReceived(call);
+                        callAnalyzerReporter.reportMediaEngineReady(call);
+
+                        // This is getting a bit silly now but I guess we can assume that ICE is started
+                        // upon receipt of the remote SDP?
+                        callAnalyzerReporter.reportIceStart(call);
                     }
-
-                    mediaSession.answerReceived(sdp, featureToggles);
+                    logStartMediaStats(call);
                 }
-                logStartMediaStats(call.getLocus());
             }
         }
     }
 
-    private void updateMedia(LocusData call) {
-        MediaConnection mediaConnection = getMediaConnection(call.getLocus());
+
+    private void updateMedia(Call call) {
+        MediaConnection mediaConnection = getMediaConnection(call.getLocusData().getLocus());
         if (mediaConnection != null) {
             String remoteSdpString = mediaConnection.getRemoteSdp();
-            LocusSdp remoteSdp = gson.fromJson(remoteSdpString, LocusSdp.class);
+            MediaInfo remoteSdp = gson.fromJson(remoteSdpString, MediaInfo.class);
 
             MediaSession mediaSession = call.getMediaSession();
             if (mediaSession != null) {
@@ -1649,8 +1949,8 @@ public class CallControlService implements MediaCallbackObserver {
     }
 
 
-    private void logCall(String msg, LocusData call) {
-        logFilePrint.getCallIndex().addCall(msg, call, trackingIdGenerator.currentTrackingId());
+    private void logCall(String msg, LocusData locusData) {
+        logFilePrint.getCallIndex().addCall(msg, locusData, trackingIdGenerator.currentTrackingId());
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
@@ -1740,19 +2040,19 @@ public class CallControlService implements MediaCallbackObserver {
     public void onEventMainThread(MediaUpdatedEvent event) {
         ln.i("CallControlService.onEventMainThread(MediaUpdatedEvent)");
         // Only handle this event when media hasn't been initialized for the call yet.
-        LocusData call = getLocusData(locusKey);
+        Call call = getCall(event.getLocusKey());
         if (call != null) {
             ln.d("CallControlService.onEventMainThread(MediaUpdatedEvent) mediaSessionInEndingState ? %s isMediaStarted ? %s", mediaSessionInEndingState(locusKey), isMediaStarted(locusKey));
-            if (!mediaSessionInEndingState(locusKey)) {
-                if (!isMediaStarted(locusKey)) {
-                    ln.d("CallControlService.onEventMainThread(MediaUpdatedEvent) self state = %s %s", call.getLocus().getSelf().getState(), MediaSessionUtils.toString(getMediaSession(locusKey)));
+            if (!mediaSessionInEndingState(call.getLocusKey())) {
+                if (!isMediaStarted(call.getLocusKey())) {
+                    ln.d("CallControlService.onEventMainThread(MediaUpdatedEvent) self state = %s %s", call.getLocusData().getLocus().getSelf().getState(), MediaSessionUtils.toString(getMediaSession(locusKey)));
                     startMedia(call);
                 } else {
                     updateMedia(call);
                 }
             }
         } else {
-            ln.w("Could not find Locus DTO for key: %s", locusKey);
+            ln.w("Could not find Call data key: %s", event.getLocusKey());
         }
     }
 
@@ -1767,40 +2067,11 @@ public class CallControlService implements MediaCallbackObserver {
         ln.i("CallControlService.onEventMainThread(MediaCreatedEvent)");
 
         /* Only handle this event when media hasn't been initialized for the call yet. */
-        LocusData call = getLocusData(locusKey);
-        if (call != null && !isMediaStarted(locusKey))
+        Call call = getCall(event.getLocusKey());
+        if (call != null && !isMediaStarted(event.getLocusKey()))
             startMedia(call);
         else
-            ln.w("Could not find Locus DTO for key: %s", locusKey);
-
-        if (requestingFloor) {
-            //Media is created so we can finally start the share
-            locusService.shareScreen(locusKey);
-        }
-    }
-
-    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
-    public void onEventMainThread(FloorRequestAcceptedEvent event) {
-        LocusData call = locusDataCache.getLocusData(locusKey);
-        if (call != null) {
-            MediaSession mediaSession = call.getMediaSession();
-            if (mediaSession != null && !mediaSession.isScreenSharing() && event.isContent()) {
-                mediaSession.startScreenShare(screenShareCallback, call.getFloorGrantedId());
-            }
-        }
-        requestingFloor = false;
-    }
-
-    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
-    public void onEventMainThread(FloorRequestDeniedEvent event) {
-        LocusData call = locusDataCache.getLocusData(locusKey);
-        if (call != null) {
-            if (isInPairedCall(call) && !call.isFloorGranted() && event.isContent() && call.getMediaSession() != null) {
-                call.getMediaSession().endSession();
-                locusService.deleteMedia(locusKey, getMediaConnection(call.getLocus()));
-            }
-        }
-        requestingFloor = false;
+            ln.w("Could not find Locus DTO for key: %s", event.getLocusKey());
     }
 
     /**
@@ -1810,55 +2081,64 @@ public class CallControlService implements MediaCallbackObserver {
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventMainThread(NetworkCongestionEvent event) {
         Ln.i("CallControlService.onEvent(NetworkCongestionEvent)");
-
-        if (sdkClient.toastsEnabled()) {
-            Toaster.showLong(context, R.string.poor_network_quality);
-        }
+        toaster.showLong(context, R.string.poor_network_quality);
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventMainThread(NetworkDisableVideoEvent event) {
         Ln.i("CallControlService.onEvent(NetworkDisableVideoEvent)");
 
-        if (sdkClient.toastsEnabled()) {
-            Toaster.showLong(context, R.string.video_disabled_due_to_network_conditions);
+        Call call = getCall(event.getCallId());
+        if (call != null) {
+
+            toaster.showLong(context, R.string.video_disabled_due_to_network_conditions);
+            Ln.w("Disable sending video due to poor network conditions");
+            call.setVideoDisabled(true);
+
+            muteVideo(call.getLocusKey(), MediaRequestSource.NETWORK);
+
+            // notify UI that video has been disabled
+            bus.post(new CallControlDisableVideoEvent());
         }
-        Ln.w("Disable sending video due to poor network conditions");
-        LocusData locusData = getLocusData(locusKey);
-        locusData.setVideoDisabled(true);
-
-        muteVideo(locusKey, MediaRequestSource.NETWORK);
-
-        // notify UI that video has been disabled
-        bus.post(new CallControlDisableVideoEvent());
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEvent(NetworkDisconnectEvent event) {
         Ln.i("CallControlService.onEvent(NetworkDisconnectEvent)");
-        locusService.callFlowTrace("App", "WME", "NetworkDisconnectEvent: pause call", locusKey);
-        bus.post(new CallControlDisconnectedEvent());
+        Call call = getCall(event.getCallId());
+        String disconnectedMedia = event.getMediaType();
+        if (call != null && disconnectedMedia.equalsIgnoreCase(AUDIO_TYPE)) {
+            locusService.callFlowTrace("App", "WME", "NetworkDisconnectEvent: audio was disconnected, so pause call", call.getLocusKey());
+            bus.post(new CallControlDisconnectedEvent());
+        }
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEvent(NetworkReconnectEvent event) {
         Ln.i("CallControlService.onEvent(NetworkReconnectEvent)");
-        locusService.callFlowTrace("App", "WME", "NetworkReconnectEvent: resume call", locusKey);
-        bus.post(new CallControlReconnectEvent());
+        Call call = getCall(event.getCallId());
+        if (call != null) {
+            locusService.callFlowTrace("App", "WME", "NetworkReconnectEvent: resume call", call.getLocusKey());
+            bus.post(new CallControlReconnectEvent());
+        }
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEvent(NetworkLostEvent event) {
         Ln.i("CallControlService.onEvent(NetworkLostEvent)");
-        locusService.callFlowTrace("App", "WME", "NetworkLostEvent: end call", locusKey);
-        bus.post(new CallControlLostEvent());
+        Call call = getCall(event.getCallId());
+        if (call != null) {
+            locusService.callFlowTrace("App", "WME", "NetworkLostEvent: end call", call.getLocusKey());
+            bus.post(new CallControlLostEvent());
+        }
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventMainThread(DeviceCameraUnavailable event) {
         Ln.w("CallControlService.onEvent(DeviceCameraUnavailable)");
-        if (sdkClient.toastsEnabled()) {
-            Toaster.showLong(context, R.string.camera_unavailable);
+        Call call = getCall(event.getCallId());
+        if (call != null) {
+            toaster.showLong(context, R.string.camera_unavailable);
         }
     }
 
@@ -1866,43 +2146,36 @@ public class CallControlService implements MediaCallbackObserver {
     public void onEventMainThread(StunTraceResultEvent event) {
         Ln.w("CallControlService.onEvent(StunTraceResultEvent)");
 
-        LocusData locusData = getLocusData(locusKey);
-        if (locusData != null && deviceRegistration.getFeatures().isTeamMember()) {
-            callMetricsReporter.reportCallStunTraceMetrics(locusKey, event.getDetail());
+        Call call = getCall(locusKey);
+        if (call != null) {
+            if (call != null && call.getLocusData() != null) {
+                callMetricsReporter.reportCallStunTraceMetrics(call, event.getDetail());
+            }
         }
     }
-
-
-    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
-    public void onEventMainThread(ICEConnectionFailedEvent event) {
-        Ln.w("CallControlService.onEvent(ICEConnectionFailedEvent)");
-        LocusData call = getLocusData(locusKey);
-        if (call != null)
-            call.setCallEndReason(new CallEndReason(CANCELLED_BY_LOCAL_ERROR, "ICE connection failure"));
-        cancelCall(false);
-
-        callUi.reportIceFailure(locusKey);
-
-        bus.post(new CallControlCallJoinErrorEvent());
-    }
-
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventMainThread(ErrorJoiningLocusEvent event) {
         Ln.i("CallControlService.onEvent(ErrorJoiningLocusEvent)");
-        handleJoinError(R.string.call_error_joining, event.getErrorMessage(), event.getErrorCode());
+        handleJoinError(R.string.call_error_joining, event.getErrorMessage(), event.getErrorCode(), event.Error, event.getUsingResource(), event.getLocusKey(), event.getJoinType());
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventMainThread(ConflictErrorJoiningLocusEvent event) {
         Ln.i("CallControlService.onEvent(ConflictErrorJoiningLocusEvent)");
-        handleJoinError(R.string.call_error_joining_conflict, event.getErrorMessage(), event.getErrorCode());
+        handleJoinError(R.string.call_error_joining_conflict, event.getErrorMessage(), event.getErrorCode(), event.Error, event.getUsingResource(), event.getLocusKey(), event.getJoinType());
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventMainThread(HighVolumeErrorJoiningLocusEvent event) {
         Ln.i("CallControlService.onEvent(HighVolumeErrorJoiningLocusEvent)");
-        handleJoinError(R.string.call_error_joining_high_volume, event.getErrorMessage(), event.getErrorCode());
+        handleJoinError(R.string.call_error_joining_high_volume, event.getErrorMessage(), event.getErrorCode(), event.Error, event.getUsingResource(), event.getLocusKey(), event.getJoinType());
+    }
+
+    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
+    public void onEventMainThread(SuccessJoiningLocusEvent event) {
+        Ln.i("CallControlService.onEvent(SuccessJoiningLocusEvent)");
+        reportJoinLocusMetrics(event.getLocusKey(), event.getUsingResource(), CallJoinMetricValue.SUCCESS, null);
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
@@ -1912,7 +2185,7 @@ public class CallControlService implements MediaCallbackObserver {
         // Indication that we exceeded max number of invitees allowed when this participant initiates or adds guests to a meeting. (403)
 
         String message = "";
-        int maxRosterSize = deviceRegistration.getFeatures().getMaxRosterSize();
+        int maxRosterSize = coreFeatures.getMaxRosterSize();
         if (event.isJoin()) { // starting call
             switch (event.getErrorCode()) {
                 case LocusExceededMaxNumberParticipantsFreeUser:
@@ -1938,25 +2211,57 @@ public class CallControlService implements MediaCallbackObserver {
             }
         }
 
-        if (!message.isEmpty() && sdkClient.toastsEnabled()) {
-            Toaster.showLong(context, message);
+        if (!message.isEmpty()) {
+            toaster.showLong(context, message);
         }
 
         if (event.isJoin()) {
-            endMediaSession(false);
+            Call call = getCall(locusKey);
+            if (call == null) {
+                call = getActiveCall();
+            }
+            endMediaSession(call, false);
             bus.post(new CallControlCallJoinErrorEvent());
+            reportJoinLocusMetrics(locusKey, event.getUsingResource(), event.Error + event.getErrorCode(), event.getErrorMessage());
         }
     }
 
+    public void onEventMainThread(LocusUserIsNotAuthorized event) {
+        // Indicate that we received a forbidden (403) response from locus.
+        ErrorDetail.CustomErrorCode errorCode =  event.getErrorCode();
+        Ln.i("CallControlService.onEventMainThread(LocusForbiddenEvent), code = " + errorCode);
+        String errorMessage = "";
+        if (event.isJoin()) {
+            Call call = getCall(locusKey);
+            if (call == null) {
+                call = getActiveCall();
+            }
+            endMediaSession(call, false);
+            bus.post(new CallControlCallJoinErrorEvent());
+            reportJoinLocusMetrics(locusKey, event.getUsingResource(), event.Error + event.getErrorCode(), event.getErrorMessage());
+        }
+
+        if (errorCode == LocusUserIsNotAuthorized) {
+            bus.post(new CallControlUserIsNotAuthorized(event.getErrorCode()));
+        } else {
+            // should never get to here.
+            errorMessage = context.getString(R.string.call_error_joining);
+            Ln.w("Unable to handle error code = " + errorCode);
+        }
+
+        if (!errorMessage.isEmpty()) {
+            toaster.showLong(context, errorMessage);
+        }
+    }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventMainThread(LocusMeetingLockedEvent event) {
-        Ln.i("CallControlService.onEvent(LocusMeetingLockedEvent), code = " + event.getErrorCode());
+        Ln.i("CallControlService.onEventMainThread(LocusMeetingLockedEvent), code = " + event.getErrorCode());
 
         // Indication that we received a locked (423) response from Locus.
 
         String message = "";
-        int maxBridgeSize = deviceRegistration.getFeatures().getMaxBridgeSize();
+        int maxBridgeSize = coreFeatures.getMaxBridgeSize();
         if (event.getErrorCode() != null) {
             switch (event.getErrorCode()) {
                 case LocusExceededMaxRosterSizeFreePaidUser:
@@ -1973,35 +2278,53 @@ public class CallControlService implements MediaCallbackObserver {
                     bus.post(new CallControlMeetingNotStartedEvent(event.getErrorCode()));
                     break;
                 case LocusRequiresModeratorPINOrGuest:
+                    bus.post(new CallControlLocusRequiresModeratorPINOrGuest());
                     break;
                 case LocusRequiresModeratorPINorGuestPIN:
+                    bus.post(new CallControlLocusRequiresModeratorPINorGuestPIN());
                     break;
             }
         } else {
             message = context.getString(R.string.call_error_joining);
         }
 
-        if (!message.isEmpty() && sdkClient.toastsEnabled()) {
-            Toaster.showLong(context, message);
+        if (!message.isEmpty()) {
+            toaster.showLong(context, message);
         }
 
         if (event.isJoin()) {
-            endMediaSession(false);
-            bus.post(new CallControlCallJoinErrorEvent());
+            Call call = getCall(locusKey);
+            if (call == null) {
+                call = getActiveCall();
+            }
+            endMediaSession(call, false);
+
+            if (event.getErrorCode() != null &&
+                    event.getErrorCode() != ErrorDetail.CustomErrorCode.LocusRequiresModeratorPINOrGuest &&
+                    event.getErrorCode() != ErrorDetail.CustomErrorCode.LocusRequiresModeratorPINorGuestPIN) {
+                bus.post(new CallControlCallJoinErrorEvent());
+                reportJoinLocusMetrics(locusKey, event.getUsingResource(), event.Error + event.getErrorCode(), event.getErrorMessage());
+            }
         }
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEvent(JoinedLobbyEvent event) {
-        Ln.i("CallControlService.onEvent(JoinedLobbyEvent");
+        Ln.i("CallControlService.onEvent(JoinedLobbyEvent) Joining Meeting Lobby with LocusKey=%s", event.getLocusKey());
         LocusKey locusKey = event.getLocusKey();
         if (locusKey == null) {
-            Toaster.showLong(context, context.getString(R.string.call_error_joining));
+            toaster.showLong(context, context.getString(R.string.call_error_joining));
             return;
         }
 
-        if (mediaEngine.getActiveMediaSession() != null) {
-            mediaEngine.getActiveMediaSession().endSession();
+        MediaSession activeMediaSession = mediaEngine.getActiveMediaSession();
+        if (activeMediaSession != null) {
+            activeMediaSession.endSession();
+        }
+
+        Call call = getCall(locusKey);
+        if (call != null) {
+            callAnalyzerReporter.reportMeetingLobbyEntered(call);
         }
 
         startLobbyKeepAlive(locusKey);
@@ -2010,49 +2333,72 @@ public class CallControlService implements MediaCallbackObserver {
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
-    public void onEvent(JoinedMeetingEvent event) {
-        Ln.i("CallControlService.onEvent(JoinedMeetingEvent, LocusKey=" + event.getLocusKey());
+    public void onEvent(JoinedMeetingFromLobbyEvent event) {
+        Ln.i("CallControlService.onEvent(JoinedMeetingFromLobbyEvent): Joining Meeting with LocusKey=%s", event.getLocusKey());
+        if (locusService.isJoiningLocus()) {
+            Ln.i("CallControlService.onEvent(JoinedMeetingFromLobbyEvent): Exiting. Already joining Locus " + event.getLocusKey());
+            return;
+        }
 
-        // TODO: A user could be on another call while waiting in the lobby. Need to handle this scenario just as when a call is incoming while on another call. for now, just exit.
         LocusKey activeLocusKey = locusDataCache.getActiveLocus();
         if (activeLocusKey != null && !activeLocusKey.equals(event.getLocusKey())) {
-            Ln.w("CallControlService.onEvent(JoinedMeetingEvent):" +
-                            "LocusKey %s in the event does not match the currently active LocusKey of %s",
+            Ln.w("CallControlService.onEvent(JoinedMeetingFromLobbyEvent):" +
+                    "LocusKey %s in the event does not match the currently active LocusKey of %s",
                     event.getLocusKey().toString(),
-                    this.locusKey.toString());
+                    event.getLocusKey().toString());
             return;
         }
 
-        if (locusService.isJoiningLocus()) {
-            Ln.i("CallControlService.onEvent(JoinedMeetingEvent): Exiting. Already joining Locus " + event.getLocusKey());
+        bus.post(new CallControlJoinedMeetingFromLobbyEvent(event.getLocusKey()));
+
+        Call call = getCall(activeLocusKey);
+
+        // Fairly certain this can't be null due to above key check, but for completeness
+        if (call == null) {
+            Ln.w("CallControlService.onEvent(JoinedMeetingFromLobbyEvent):" +
+                    "Call for LocusKey %s is null", activeLocusKey);
             return;
         }
+
+        callAnalyzerReporter.reportMeetingLobbyExited(call);
+        boolean isPaired = isInPairedCall(call);
 
         CallContext updatedCallContext = new CallContext.Builder(event.getLocusKey())
                 .setIsAnsweringCall(false)
                 .setIsOneOnOne(false)
                 .setShowFullScreen(true)
                 .setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioVideoShare)
-                .setUseRoomPreference(CallContext.UseRoomPreference.DontUseRoom)
-                .setCallInitiationOrigin(CallInitiationOrigin.CallOriginationToast).build();
+                .setUseRoomPreference((isPaired ? CallContext.UseRoomPreference.UseRoom : CallContext.UseRoomPreference.DontUseRoom))
+                .setCallInitiationOrigin(call.getCallInitiationOrigin())
+                .setIsMeeting(true).build();
 
-        bus.post(new CallControlJoinedMeetingEvent(event.getLocusKey()));
-        joinMeeting(updatedCallContext);
+        checkJoinRoomCall(call, updatedCallContext);
     }
 
-    private void handleJoinError(int messageId, String errorMessage, int errorCode) {
-        if (sdkClient.toastsEnabled()) {
-            Toaster.showLong(context, messageId);
+    private void handleJoinError(int messageId, String errorMessage, int errorCode, String error, String usingResource, LocusKey locusKey, @JoinType int joinType) {
+        toaster.showLong(context, messageId);
+
+        Call call = getCall(locusKey);
+        if (call == null) {
+            call = getActiveCall();
         }
-        endMediaSession(false);
-        bus.post(new CallControlCallJoinErrorEvent());
+
+        // cater for case where we got here as a result of error getting locus in response to GCM incoming call notification....this is still
+        // considered join failure but we don't have call object in this case
+        if (call != null && joinType == JOIN) {
+            endMediaSession(call, false);
+            call.setActive(false);
+        }
+
+        bus.post(new CallControlCallJoinErrorEvent(joinType));
+        reportJoinLocusMetrics(locusKey, usingResource, error + errorCode, errorMessage);
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventBackgroundThread(LocusDataCacheChangedEvent event) {
         ln.i("CallControlService.onEvent(LocusDataCacheChangedEvent): %s was %s", event.getLocusKey().toString(), event.getLocusChange().toString());
         updateLocusKeyAndActiveCall(event.getLocusKey());
-        if (!locusDataCache.isCallActive(locusKey)) {
+        if (!locusDataCache.isCallActive(event.getLocusKey())) {
             isCaller = false;
         }
     }
@@ -2060,22 +2406,58 @@ public class CallControlService implements MediaCallbackObserver {
     @SuppressWarnings("UnusedDeclaration") // called by the event bus.
     public void onEventBackgroundThread(LocusDataCacheReplacesEvent event) {
         ln.i("CallControlService.onEvent(LocusDataCacheReplacesEvent: %s with %s)", event.getReplacedLocusKey(), event.getLocusKey());
-        if (locusKey.equals(event.getReplacedLocusKey()))
-            updateLocusKeyAndActiveCall(event.getLocusKey());
-        else
-            ln.w(false, "CallControlService.onEvent(LocusDataCacheReplacesEvent) LocusKey does not match current key: %s", locusKey);
+
+        dumpJoinedCalls();
+
+        Call call = getCall(event.getReplacedLocusKey());
+        if (call != null) {
+            ln.i("CallControlService.onEvent(LocusDataCacheReplacesEvent, updating locus key/data in existing call = " + call.getCallId());
+            call.setLocusKey(event.getLocusKey());
+            call.setLocusData(getLocusData(event.getLocusKey()));
+        }
+        updateLocusKeyAndActiveCall(event.getLocusKey());
+
+//        if (locusKey.equals(event.getReplacedLocusKey())) {
+//            updateLocusKeyAndActiveCall(event.getLocusKey());
+//        } else
+//            ln.w(false, "CallControlService.onEvent(LocusDataCacheReplacesEvent) LocusKey does not match current key: %s", locusKey);
     }
 
     private void updateLocusKeyAndActiveCall(LocusKey newLocusKey) {
         // Update local DB flag of Locus joined state
-        LocusData call = locusDataCache.getLocusData(newLocusKey);
-        if (call != null) {
+        LocusData locusData = locusDataCache.getLocusData(newLocusKey);
+        Ln.d("updateLocusKeyAndActiveCall, locusKey = " + newLocusKey + ", locusData = " + locusData);
+        if (locusData != null) {
             if (locusKey == null) {
                 locusKey = newLocusKey;
-            } else if (!locusKey.equals(newLocusKey) && locusKeyIsReplacement(call)) {
+            } else if (!locusKey.equals(newLocusKey) && locusKeyIsReplacement(locusData)) {
                 locusKey = newLocusKey;
             }
-            setActiveCall(newLocusKey, call.getLocus().getFullState().isActive());
+
+            Call call = getCall(newLocusKey);
+            Ln.d("updateLocusKeyAndActiveCall, call for this locus = " + call);
+            if (call == null) {
+                LocusParticipantDevice locusParticipantDevice = locusData.getLocus().getMyDevice(deviceRegistration.getUrl());
+                Ln.d("updateLocusKeyAndActiveCall, my device = " + locusParticipantDevice);
+
+                if (locusParticipantDevice != null) {
+                    Ln.d("updateLocusKeyAndActiveCall, correlation id = " + locusParticipantDevice.getCorrelationId());
+                }
+
+                if (locusParticipantDevice != null && locusParticipantDevice.getCorrelationId() != null) {
+                    call = getCall(locusParticipantDevice.getCorrelationId());
+
+                    Ln.d("updateLocusKeyAndActiveCall, call for this correlation id = " + call);
+                    if (call != null) {
+                        call.setLocusKey(newLocusKey);
+                    }
+                }
+            }
+            if (call != null) {
+                call.setLocusData(locusData);
+            }
+
+            setActiveCall(newLocusKey, locusData.getLocus().getFullState().isActive());
         }
         // Might need this after setActiveCall to avoid room less call scenario
         ln.i("CallControlService.onEvent(LocusDataCacheChangedEvent), post CallControlLocusChangedEvent");
@@ -2095,11 +2477,12 @@ public class CallControlService implements MediaCallbackObserver {
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEvent(MediaActiveSpeakerChangedEvent event) {
-        LocusData call = locusDataCache.getLocusData(locusKey);
-        if (call != null) {
+
+        Call call = getCall(event.getCallId());
+        if (call != null && call.getLocusData() != null) {
             // check if new CSI (capture source identifier) represents a video source and, if so,
             // check if it matches CSI for one of the participants in roster
-            Locus locus = call.getLocus();
+            Locus locus = call.getLocusData().getLocus();
             if (event.videoChanged()) {
                 boolean foundActiveSpeaker = false;
                 for (LocusParticipant locusParticipant : locus.getParticipants()) {
@@ -2108,8 +2491,8 @@ public class CallControlService implements MediaCallbackObserver {
                         long activeCSI = event.getNewCSIs()[i];
                         if (participantCSIs.contains(activeCSI)) {
                             Ln.d("CallControlService.onEvent(MediaActiveSpeakerChangedEvent), active speaker = " + locusParticipant.getPerson().getDisplayName());
-                            call.setActiveSpeakerId(locusParticipant.getId());
-                            bus.post(new CallControlActiveSpeakerChangedEvent(call, locusParticipant, event.getVideoId()));
+                            call.getLocusData().setActiveSpeakerId(locusParticipant.getId());
+                            bus.post(new CallControlActiveSpeakerChangedEvent(call.getLocusData(), locusParticipant, event.getVideoId()));
                             foundActiveSpeaker = true;
                             break;
                         }
@@ -2127,19 +2510,37 @@ public class CallControlService implements MediaCallbackObserver {
     public void onEvent(MediaActiveSpeakerVideoMuted event) {
         Ln.i("CallControlService.onEvent(MediaActiveSpeakerVideoMuted): mutedCsi" + event.getCsi());
 
-        LocusData call = locusDataCache.getLocusData(locusKey);
-        if (call != null) {
+        Call call = getCall(event.getCallId());
+        if (call != null && call.getLocusData() != null) {
             Long mutedCsi = event.getCsi();
 
-            LocusParticipant participant = findParticipantFromCsi(call.getLocus().getParticipants(), mutedCsi);
+            LocusParticipant participant = findParticipantFromCsi(call.getLocusData().getLocus().getParticipants(), mutedCsi);
             if (participant == null) { // this will potentially be the case when getting unmuted notification from linus
-                participant = call.getActiveSpeaker();
+                participant = call.getLocusData().getActiveSpeaker();
+            } else {
+                // set active speaker id, if the active speaker video is muted, MediaActiveSpeakerChangedEvent will not be received.
+                if (call.getLocusData().getActiveSpeaker() == null)
+                    call.getLocusData().setActiveSpeakerId(participant.getId());
             }
 
             if (participant != null) {
-                bus.post(new CallControlParticipantVideoMutedEvent(locusKey, participant, event.isMuted()));
+                bus.post(new CallControlParticipantVideoMutedEvent(call.getLocusKey(), participant, event.isMuted()));
             }
         }
+    }
+
+    public void onEvent(MediaStartedEvent event) {
+        if (coreFeatures.isCallSpinnerEnabled() && locusDataCache != null && locusDataCache.isInCall()) {
+            setSpinnerHideState(true);
+        }
+    }
+
+    public boolean getSpinnerHideState() {
+        return hideSpinner;
+    }
+
+    public void setSpinnerHideState(boolean shouldHide) {
+        this.hideSpinner = shouldHide;
     }
 
     private LocusParticipant findParticipantFromCsi(List<LocusParticipant> participants, Long mutedCsi) {
@@ -2156,163 +2557,24 @@ public class CallControlService implements MediaCallbackObserver {
         return null;
     }
 
-
-
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
-    public void onEvent(FloorGrantedEvent event) {
-        ln.i("CallControlService.onEvent(FloorGrantedEvent): %s", locusKey);
-        LocusData call = locusDataCache.getLocusData(locusKey);
-        if (call != null) {
-            /* TODO: 9/2/2016 Decided to disable joining call and viewing shared screen (on mobile devices) until
-                (a) the feature is deemed desirable; (b) UI/UX is defined; and (c) testing resources are available
-            if (!locusDataCache.isInCall() && locusDataCache.isZtmCall(locusKey)) {
-                CallContext callContext = new CallContext.Builder(locusKey)
-                        .setIsOneOnOne(call.isOneOnOne())
-                        .setIsAnsweringCall(true)
-                        .setShowFullScreen(false)
-                        .setMediaDirection(MediaEngine.MediaDirection.SendReceiveShareOnly)
-                        .setUseRoomPreference(CallContext.UseRoomPreference.DontUseRoom)
-                        .setCallInitiationOrigin(CallInitiationOrigin.CallOriginationZTM).build();
-                ln.i("CallControlService.onEvent(FloorGrantedEvent), join ztm call for share");
-                joinCall(callContext);
-
-                MediaShare mediaShare = call.getLocus().getGrantedFloor();
-                if (mediaShare.isContent()) {
-                    bus.post(new CallControlViewDesktopShare(locusKey));
-                } else if (mediaShare.isWhiteboard()) {
-                    locusService.setSharingWhiteboard(true);
-                    bus.post(new CallControlViewWhiteboardShare(locusKey));
-                }
-
-            } else */ if (!locusDataCache.isInCall()) {
-                ln.i("CallControlService.onEvent(FloorGrantedEvent), not joined from this device, so ignore");
-                return;
-
-            } else if (isInPairedCall(call)) {
-                startMediaSession(this, MediaEngine.MediaDirection.SendReceiveShareOnly);
-            }
-
-            MediaShare share = call.getLocus().getGrantedFloor();
-            if ((share != null) && (share.isWhiteboard())) {
-                locusService.setSharingWhiteboard(true);
-                fireWhiteboardShareEvent(call);
-            }
-            bus.post(new CallControlFloorGrantedEvent(locusKey));
-
-            // If we join the call (ztm) media session is set on callContext in joinCall
-            MediaSession mediaSession = null;
-            if (call.getMediaSession() != null) {
-                mediaSession = call.getMediaSession();
-            } else if (callContext != null) {
-                mediaSession = callContext.getMediaSession();
-            }
-
-            if (mediaSession != null && call.getLocus() != null) {
-
-                MediaShare mediaShare = call.getLocus().getGrantedFloor();
-                if (mediaShare == null) {
-                    ln.w("CallControlService.onEvent(FloorGrantedEvent), null media share");
-                    return;
-                }
-
-                if (mediaShare.isContent()) {
-                    mediaSession.updateShareId(call.getFloorGrantedId());
-                }
-
-                if (!call.isFloorMine()) {
-                    if (mediaSession.isScreenSharing()) {
-                        mediaSession.stopScreenShare(call.getFloorGrantedId());
-                    }
-
-                    ln.i("CallControlService.onEvent(FloorGrantedEvent), join share");
-                    if (mediaShare.isContent())
-                        mediaSession.joinShare(call.getFloorGrantedId());
-                    else if (mediaShare.isWhiteboard()) {
-                        locusService.setSharingWhiteboard(true);
-                        fireWhiteboardShareEvent(call);
-                    }
-                } else {
-                    mediaSession.leaveShare(call.getFloorGrantedId());
-                }
-            } else {
-                ln.w("CallControlService.onEvent(FloorGrantedEvent), unable to join share, no media session");
-            }
-        }
-    }
-
-    private void fireWhiteboardShareEvent(LocusData call) {
-        Uri whiteboardUrl = getWhiteboardMediaShareUrlFromLocus(call);
-        if (whiteboardUrl != null) {
-            bus.post(new CallControlViewWhiteboardShare(locusKey, whiteboardUrl));
-        }
-    }
-
-    private Uri getWhiteboardMediaShareUrlFromLocus(LocusData locus) {
-        ////TODO: find a more elegant way to do the chained null check
-        if (locus == null
-                || locus.getLocus() == null
-                || locus.getLocus().getWhiteboardMedia() == null
-                || locus.getLocus().getWhiteboardMedia().getUrl() == null) {
-
-            return null;
-        }
-
-        return locus.getLocus().getWhiteboardMedia().getUrl();
-    }
-
-
-    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
-    public void onEvent(FloorReleasedEvent event) {
-        ln.i("CallControlService.onEvent(FloorReleasedEvent): %s", event.getLocusKey());
-        LocusData call = locusDataCache.getLocusData(event.getLocusKey());
-        if (call != null && locusDataCache.isInCall()) {
-            bus.post(new CallControlFloorReleasedEvent(event.getLocusKey()));
-
-            //
-            MediaSession mediaSession = call.getMediaSession();
-            if (mediaSession != null) {
-                MediaShare mediaShare = call.getLocus().getReleasedFloor();
-                if (mediaShare.isContent()) {
-                    mediaSession.updateShareId("");
-                }
-            }
-
-            /* TODO: 9/2/2016 Decided to disable joining call and viewing shared screen (on mobile devices) until
-                (a) the feature is deemed desirable; (b) UI/UX is defined; and (c) testing resources are available
-            if (locusKey != null && locusKey.equals(event.getLocusKey()) && locusDataCache.isZtmCall(locusKey)) {
-                leaveCall();
-            } else */ {
-                if (mediaSession != null) {
-                    mediaSession.leaveShare(call.getFloorGrantedId());
-
-                    if (mediaSession.isScreenSharing()) {
-                        mediaSession.stopScreenShare(call.getFloorGrantedId());
-                    } else {
-                        Uri whiteboardUrl = getWhiteboardMediaShareUrlFromLocus(call);
-                        if (whiteboardUrl != null) {
-                            locusService.setSharingWhiteboard(false);
-                            bus.post(new CallControlEndWhiteboardShare(locusKey, whiteboardUrl));
-                        }
-                    }
-
-                    if (isInPairedCall(call)) {
-                        mediaSession.endSession();  // TODO should we also need to call mediaSession.stopMedia() as well?
-                        locusService.deleteMedia(locusKey, getMediaConnection(call.getLocus()));
-                    }
-                }
-            }
-        } else {
-            ln.i("CallControlService.onEvent(FloorReleasedEvent): ignored because call is null, or not joined from this device");
-        }
+    public void onEvent(MediaSession.MediaDecodeSizeChangedEvent event) {
+        bus.post(new CallControlMediaDecodeSizeChangedEvent(event.vid, event.size));
     }
 
     public LocusData getLocusData(LocusKey locusKey) {
         return locusService.getLocusData(locusKey);
     }
 
+    public Locus getLocus(LocusKey locusKey) {
+        LocusData locusData = getLocusData(locusKey);
+        return locusData == null ? null : locusData.getLocus();
+    }
+
     public String getCallOrigin() {
-        if (callContext != null) {
-            CallInitiationOrigin origin = callContext.getCallInitiationOrigin();
+        Call call = getCall(locusKey);
+        if (call != null) {
+            CallInitiationOrigin origin = call.getCallInitiationOrigin();
             return origin != null ? origin.getValue() : null;
         }
 
@@ -2339,7 +2601,13 @@ public class CallControlService implements MediaCallbackObserver {
             Batch batch = batchProvider.get();
             batch.add(updateConversationLocusUrl(event.getConversationUrl(), event.getNewLocusKey()));
             batch.apply();
+
             locusKey = event.getNewLocusKey();
+            Call call = getCall(event.getOldLocusKey());
+            if (call != null) {
+                call.setLocusKey(event.getNewLocusKey());
+            }
+
         } catch (Exception ex) {
             Ln.e(ex, "Failed to updated locus url for conversation");
         }
@@ -2401,26 +2669,33 @@ public class CallControlService implements MediaCallbackObserver {
     }
 
     public void onEventMainThread(InvalidLocusEvent event) {
-        endMediaSession(false);
+        Call call = getCall(locusKey);
+        if (call == null) {
+            call = getActiveCall();
+        }
+
+        if (event.getJoinType() == JOIN) {
+            endMediaSession(call, false);
+        }
+
         bus.post(new CallControlCallJoinErrorEvent());
         bus.post(new CallControlInvalidLocusEvent(event.getErrorCode(), event.getInvitee()));
+        reportJoinLocusMetrics(locusKey, event.getUsingResource(), event.Error + event.getErrorCode(), event.getErrorMessage());
+    }
+
+    public void onEventMainThread(CallControlModeratorMutedParticipantEvent event) {
+        Ln.d("CallControlService.onEvent(CallControlModeratorMutedParticipantEvent), muted = %s remoteParticipant = %s",
+                event.isMuted(), event.getParticipant().getPerson().getEmail());
+        muteAudioFromRemote(locusKey, event.isMuted());
     }
 
     @Nullable
     private MediaSession getMediaSession(LocusKey locusKey) {
-        MediaSession mediaSession = null;
-        if (locusKey != null) {
-            LocusData call = getLocusData(locusKey);
-            if (call != null) {
-                mediaSession = call.getMediaSession();
-            }
+        Call call = getCall(locusKey);
+        if (call != null) {
+            return call.getMediaSession();
         }
-        // at call initiation time we may not have LocusData instance at this point
-        // e.g. when needing to start self preview.
-        if (mediaSession == null && callContext != null) {
-            mediaSession = callContext.getMediaSession();
-        }
-        return mediaSession;
+        return null;
     }
 
     public boolean isMediaStarted(LocusKey locusKey) {
@@ -2456,6 +2731,25 @@ public class CallControlService implements MediaCallbackObserver {
 
     public void clearPreviewWindow(LocusKey locusKey) {
         setPreviewWindow(locusKey, null);
+    }
+
+    public void setActiveSpeakerWindow(LocusKey locusKey, View view) {
+        MediaSession mediaSession = getMediaSession(locusKey);
+        if (mediaSession != null) {
+            mediaSession.setActiveSpeakerWindow(view);
+        }
+    }
+
+    public void removeActiveSpeakerWindow(LocusKey locusKey) {
+        MediaSession mediaSession = getMediaSession(locusKey);
+        if (mediaSession != null) {
+            mediaSession.removeActiveSpeakerWindow();
+        }
+    }
+
+    public boolean isScreenSharing(LocusKey locusKey) {
+        MediaSession mediaSession = getMediaSession(locusKey);
+        return mediaSession != null && mediaSession.isScreenSharing();
     }
 
     public void startSelfView(LocusKey locusKey) {
@@ -2545,20 +2839,37 @@ public class CallControlService implements MediaCallbackObserver {
     }
 
     private void startLobbyKeepAlive(final LocusKey locusKey) {
-        if (locusKey != null && locusDataCache.exists(locusKey) && getLocusData(locusKey).getLocus().isInLobbyFromThisDevice(deviceRegistration.getUrl())) {
-            if (lobbyKeepAliveTimer != null) {
-                lobbyKeepAliveTimer.cancel();
-                lobbyKeepAliveTimer.purge();
-                lobbyKeepAliveTimer = null;
+
+        if (locusKey == null) {
+            ln.d("CallControlService.startLobbyKeepAlive, did not start keep-alive for LocusKey %s as it is NULL");
+            return;
+        }
+
+        if (!locusDataCache.exists(locusKey)) {
+            ln.d("CallControlService.startLobbyKeepAlive, did not start keep-alive for LocusKey %s as it is not in the cache", locusKey);
+            return;
+        }
+
+        Locus locus = getLocusData(locusKey).getLocus();
+
+        if (locus != null && locus.isInLobbyFromThisDevice(deviceRegistration.getUrl())) {
+            synchronized (lobbyTimerLock) {
+                if (lobbyKeepAliveTimer != null) {
+                    lobbyKeepAliveTimer.cancel();
+                    lobbyKeepAliveTimer.purge();
+                    lobbyKeepAliveTimer = null;
+                }
             }
 
             LocusParticipantDevice currentDevice = locusService.getCurrentDevice(locusDataCache.getLocusData(locusKey));
-            int keepAliveInSeconds = (currentDevice.getKeepAliveSecs() / 2);
+            int keepAliveInSeconds = currentDevice != null ? (currentDevice.getKeepAliveSecs() / 2) : 0;
             int keepAliveInMillis = keepAliveInSeconds * 1000;
             if (keepAliveInSeconds > 0) {
                 ln.d("CallControlService.startLobbyKeepAlive, starting Lobby keep-alive for PMR %s with value of %s seconds.", locusKey.toString(), keepAliveInSeconds);
-                lobbyKeepAliveTimer = new Timer();
-                lobbyKeepAliveTimer.schedule(new LobbyKeepAliveTimerTask(locusKey), keepAliveInMillis, keepAliveInMillis);
+                synchronized (lobbyTimerLock) {
+                    lobbyKeepAliveTimer = new Timer();
+                    lobbyKeepAliveTimer.schedule(new LobbyKeepAliveTimerTask(locusKey), keepAliveInMillis, keepAliveInMillis);
+                }
             }
         } else {
             ln.d("CallControlService.startLobbyKeepAlive, did not start keep-alive for LocusKey %s as it is either NULL, not in the cache, or is not a PMR.", locusKey);
@@ -2588,17 +2899,17 @@ public class CallControlService implements MediaCallbackObserver {
 
     public void toggleAudioCall(LocusKey locusKey) {
         ln.d("CallControlService.toggleAudioCall, locus = %s", locusKey);
-        LocusData call = getLocusData(locusKey);
+        Call call = getCall(locusKey);
         if (call != null) {
             call.setAudioCall(!call.isAudioCall());
 
             if (call.isAudioCall()) {
-                updateMediaSession(MediaEngine.MediaDirection.SendReceiveAudioOnly);
+                updateMediaSession(call, MediaEngine.MediaDirection.SendReceiveAudioOnly);
             } else {
-                updateMediaSession(MediaEngine.MediaDirection.SendReceiveAudioVideoShare);
+                updateMediaSession(call, MediaEngine.MediaDirection.SendReceiveAudioVideoShare);
             }
 
-            callMetricsReporter.reportCallAudioToggleMetrics(locusKey, call.isAudioCall());
+            callMetricsReporter.reportCallAudioToggleMetrics(call);
 
             bus.post(new CallControlAudioOnlyStateChangedEvent(locusKey));
         }
@@ -2610,10 +2921,112 @@ public class CallControlService implements MediaCallbackObserver {
     }
 
 
+
+    public synchronized void onEvent(RoapMessageEvent event) {
+        Ln.d("CallControlService.onEvent(RoapMessageEvent), type = " + event.getMessage().getMessageType());
+
+        // look up call that this ROAP event is for (using correlation id).  Delegate to ROAP session
+        // state machine to process event.
+        Call call = getCall(event.getCorrelationId());
+        if (call != null) {
+            RoapSession roapSession = call.getRoapSession();
+            roapSession.processRoapMessage(event.getMessage());
+        }
+    }
+
+
+    @Override
+    public void sendRoapMessage(RoapBaseMessage roapMessage) {
+        Ln.d("CallControlService.send(RoapBaseMessage), type = " + roapMessage.getMessageType());
+
+        // send locus modifyMedia request with this ROAP message (this method will be called by RoapSession
+        // state machine when it needs to send a ROAP message.
+        Call call = getActiveCall();
+        if (call != null) {
+            List<MediaConnection> mediaConnectionList = new ArrayList<>();
+            MediaInfo mediaInfo = new MediaInfo(roapMessage);
+
+            MediaSession mediaSession = call.getMediaSession();
+
+            // set audio/videoMuted to whatever they were previously set to so that locus does not interpret this
+            // as a toggle of those values (in which case it doesn't send updated SDP to Calliope)
+            mediaInfo.setVideoMuted(mediaSession.isVideoMuted());
+            mediaInfo.setAudioMuted(mediaSession.isAudioMuted());
+
+            MediaConnection mediaConnection = new MediaConnection();
+            if (call.getLocusData() != null) {
+                // set media ID
+                MediaConnection currentMediaConnection = getMediaConnection(call.getLocusData().getLocus());
+                if (currentMediaConnection != null) {
+                    mediaConnection.setMediaId(currentMediaConnection.getMediaId());
+                }
+            }
+
+            mediaConnection.setLocalSdp(gson.toJson(mediaInfo));
+            mediaConnectionList.add(mediaConnection);
+            locusService.modifyMedia(call.getLocusKey(), mediaConnectionList, mediaSession.isAudioMuted());
+        }
+    }
+
+    @Override
+    public void receivedRoapAnswer(List<String> sdpList) {
+        Ln.d("CallControlService.receivedRoapAnswer");
+
+        // received ROAP ANSWER....send OK response and update WME
+        Call call = getActiveCall();
+        if (call != null) {
+            MediaSession mediaSession = call.getMediaSession();
+            if (mediaSession != null && sdpList != null && sdpList.size() > 0) {
+
+                RoapSession roapSession = call.getRoapSession();
+                roapSession.sendOK();
+
+                String sdp = sdpList.get(0);
+                if (!isMediaStarted(locusKey)) {
+                    Ln.d("CallControlService.receivedRoapAnswer, calling startMedia/answerReceived");
+                    mediaSession.startMedia();
+                    mediaSession.answerReceived(sdp, null);
+                    logStartMediaStats(call);
+                } else {
+                    Ln.d("CallControlService.receivedRoapAnswer, calling updateSDP");
+                    mediaSession.updateSDP(sdp);
+                }
+            }
+        }
+    }
+
+
+    @Override
+    public void receivedRoapOffer(List<String> sdpList) {
+        Ln.d("CallControlService.receivedRoapOffer");
+
+        // received ROAP OFFER request....reply with ANSWER
+        Call call = getActiveCall();
+        if (call != null) {
+            MediaSession mediaSession = call.getMediaSession();
+
+            if (mediaSession != null && sdpList != null & sdpList.size() > 0) {
+                String offerSdp = sdpList.get(0);
+                mediaSession.offerReceived(offerSdp);
+
+                mediaSession.createAnswer(sdp -> {
+                    RoapSession roapSession = call.getRoapSession();
+                    roapSession.sendRoapMessage(sdp, 0L);
+
+                    // I'm not sure the call-analyzer folks have considered offer/answer.
+                    // Let's just call this local SDP for now
+                    callAnalyzerReporter.reportLocalSdpGenerated(call);
+                });
+            }
+        }
+    }
+
+
+
     // These methods are implemented by each of the clients
 
     // Default base implementation
-    public boolean shouldReportCallLogs(LocusData call) {
+    public boolean shouldReportCallLogs(Call call) {
         return call.isCallConnected();
     }
 
@@ -2622,15 +3035,59 @@ public class CallControlService implements MediaCallbackObserver {
         return locusService.isJoiningLocus();
     }
 
+
+
+    public Call getCall(String callId) {
+        synchronized (joinedCalls) {
+            return joinedCalls.get(callId);
+        }
+    }
+
+    public Call getCall(LocusKey locusKey) {
+        synchronized (joinedCalls) {
+            for (Call call : joinedCalls.values()) {
+                if (call.isActive() && call.getLocusKey() != null && call.getLocusKey().equals(locusKey)) {
+                    return call;
+                }
+            }
+        }
+        return null;
+    }
+
+    public void dumpJoinedCalls() {
+        Ln.v("----------------------------------------------------------------------------------------------------------------------");
+        Ln.v("JoinedCalls:");
+        synchronized (joinedCalls) {
+            for (Call call : joinedCalls.values()) {
+                Ln.v(call.getCallId() + ", mediaSession = " + call.getMediaSession() + ", locus = " + call.getLocusKey() + ", active = " + call.isActive());
+            }
+        }
+        Ln.v("----------------------------------------------------------------------------------------------------------------------");
+    }
+
+
+
+    public Call getActiveCall() {
+        synchronized (joinedCalls) {
+            for (Call call : joinedCalls.values()) {
+                if (call.isActive()) {
+                    return call;
+                }
+            }
+        }
+        return null;
+    }
+
+
     public void requestAudioFocus(MediaEngine.MediaDirection mediaDirection) { }
 
     public void abandonAudioFocus() { }
 
     public void handleRoomCallEnd() { }
 
-    public void sendLeaveLocusEvent(LocusData call) { }
+    public void sendLeaveLocusEvent(Call call) { }
 
-    public void reportCallCancelledMetrics(LocusKey locusKey) { }
+    public void reportCallCancelledMetrics(Call call) { }
 
     public void updateRoomCopyCall(boolean isObserving, RoomUpdatedEvent.RoomState roomState, boolean localMedia) { }
 
@@ -2643,4 +3100,191 @@ public class CallControlService implements MediaCallbackObserver {
     public void setRoomCallConnected(String conversationTitle) { }
 
     public void sendCallNotificationEvent(LocusKey localLocusKey, LocusData call) { }
+
+    private void reportJoinLocusMetrics(LocusKey locusKey, String usingResource, String result, String detailErrorMessage) {
+        callMetricsReporter.reportJoinLocusMetrics(locusKey, usingResource, result, detailErrorMessage);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // MediaShare (Share, Unshare, FloorGranted, FloorReleasedEvent, FloorLostEvent)
+    // ---------------------------------------------------------------------------------------------
+
+    public void shareScreen(LocusKey locusKey) {
+        Call call = getCall(locusKey);
+        if (call != null) {
+            locusService.shareScreen(locusKey);
+            callAnalyzerReporter.reportShareInitiated(call, MediaType.CONTENT_SHARE);
+        }
+    }
+
+    public void unshareScreen(LocusKey locusKey) {
+        Call call = getCall(locusKey);
+        if (call != null) {
+            locusService.unshareScreen(locusKey);
+            callAnalyzerReporter.reportShareStopped(call, MediaType.CONTENT_SHARE);
+        }
+    }
+
+    public void shareWhiteboard(String whiteboardUrl) {
+        locusService.shareWhiteboard(locusKey, whiteboardUrl);
+        callAnalyzerReporter.reportShareInitiated(getCall(locusKey), MediaType.WHITEBOARD);
+    }
+
+    public void unshareWhiteboard() {
+        if (locusService.isSharingWhiteboard()) {
+            locusService.unshareWhiteboard(locusKey);
+            callAnalyzerReporter.reportShareStopped(getCall(locusKey), MediaType.WHITEBOARD);
+        }
+    }
+
+    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
+    public void onEvent(FloorGrantedEvent event) {
+        if (!isValidFloorEvent(event.getLocusKey(), event.getClass().getSimpleName())) return;
+
+        Call call = getCall(event.getLocusKey());
+        MediaShare mediaShare = call.getLocusData().getLocus().getGrantedFloor();
+        startMediaShare(call, mediaShare);
+    }
+
+    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
+    public void onEvent(FloorLostEvent event) {
+        if (!isValidFloorEvent(event.getLocusKey(), event.getClass().getSimpleName())) return;
+        // stop previous sharing
+        stopMediaShare(getCall(event.getLocusKey()), event.getLocalMediaShare(), event.getRemoteMediaShare());
+        // post FloorGrantedEvent to init new sharing
+        Ln.i("CallControlService.onEvent(FloorLostEvent): post FloorGrantedEvent");
+        bus.post(new FloorGrantedEvent(event.getLocusKey()));
+    }
+
+    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
+    public void onEvent(FloorReleasedEvent event) {
+        if (!isValidFloorEvent(event.getLocusKey(), event.getClass().getSimpleName())) return;
+        Call call = getCall(event.getLocusKey());
+        MediaShare mediaShare = null;
+        if (MediaShare.SHARE_CONTENT_TYPE.equals(event.getShareType())) {
+            mediaShare = call.getLocusData().getLocus().getShareContentMedia();
+        } else if (MediaShare.SHARE_WHITEBOARD_TYPE.equals(event.getShareType())) {
+            mediaShare = call.getLocusData().getLocus().getWhiteboardMedia();
+        }
+        stopMediaShare(call, mediaShare, null);
+    }
+
+    private boolean isValidFloorEvent(LocusKey locusKey, String floorType) {
+        ln.i("CallControlService.onEvent(%s): %s", floorType, locusKey);
+
+        if (!locusDataCache.isInCall()) {
+            ln.i("CallControlService.onEvent(%s), not joined from this device, so ignore", floorType);
+            return false;
+        }
+
+        Call call = getCall(locusKey);
+        if (call == null) {
+            ln.w("CallControlService.onEvent(%s), could not find call with locusKey: %s", floorType, locusKey);
+            return false;
+        }
+
+        if (call.getLocusData() == null) {
+            ln.e("CallControlService.onEvent(%s), LocusData in Call is null with locusKey: %s", floorType, locusKey);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void stopMediaShare(Call call, MediaShare local, MediaShare remote) {
+        if (local == null) {
+            ln.e("CallControlService.stopMediaShare, mediaShare is null");
+            return;
+        }
+        if (local.isContent()) {
+            stopContentShare(call, remote);
+        } else if (local.isWhiteboard()) {
+            stopWhiteboardShare(call, local.getUrl());
+        } else {
+            ln.e("CallControlService.stopMediaShare, mediaShare's type in Call is unknown with locusKey: %s", call.getLocusKey());
+        }
+    }
+
+    private void stopContentShare(Call call, MediaShare remote) {
+        // Set MediaSession State
+        MediaSession mediaSession = call.getMediaSession();
+        if (mediaSession != null) {
+            mediaSession.updateShareId("");
+            mediaSession.leaveShare(call.getLocusData().getFloorGrantedId());
+
+            boolean sharingContentFromMine = remote != null
+                    && remote.isContent()
+                    && remote.getFloor().getBeneficiary().getDeviceUrl().equals(deviceRegistration.getUrl());
+
+            // When some else is sharing his/her screen and I start sharing screen,
+            // Don't stop screen sharing here.
+            if (!sharingContentFromMine) {
+                if (mediaSession.isScreenSharing()) {
+                    mediaSession.stopScreenShare(null);
+                }
+
+                if (isInPairedCall(call)) {
+                    mediaSession.endSession();
+                    locusService.deleteMedia(call.getLocusKey(), getMediaConnection(call.getLocusData().getLocus()));
+                    call.setMediaSession(null);
+                }
+            }
+            bus.post(new CallControlFloorReleasedEvent(call.getLocusKey()));
+        }
+    }
+
+    private void stopWhiteboardShare(Call call, Uri uri) {
+        if (uri != null) {
+            // set false to help Whiteboard UI elements set their states
+            locusService.setSharingWhiteboard(false);
+            bus.post(new CallControlEndWhiteboardShare(call.getLocusKey(), uri));
+            ln.e("CallControlService.stopWhiteboardShare, mediaShare(Whiteboard)'s url in Call is null with locusKey: %s", call.getLocusKey());
+        }
+    }
+
+    private void startMediaShare(Call call, MediaShare remote) {
+        if (remote == null) {
+            ln.e("CallControlService.startMediaShare, mediaShare is null");
+            return;
+        }
+        if (remote.isContent()) {
+            startContentShare(call, remote);
+        } else if (remote.isWhiteboard()) {
+            startWhiteboardShare(call, remote.getUrl());
+        } else {
+            ln.e("CallControlService.startMediaShare, mediaShare's type in Call is unknown with locusKey: %s", call.getLocusKey());
+        }
+    }
+
+    private void startContentShare(Call call, MediaShare remote) {
+        MediaSession mediaSession = call.getMediaSession();
+        if (isInPairedCall(call) && mediaSession == null) {
+            startMediaSession(call, MediaEngine.MediaDirection.SendReceiveShareOnly);
+            mediaSession = call.getMediaSession();
+        }
+
+        boolean sharingContentFromMine = remote != null
+                && remote.isContent()
+                && remote.getFloor().getBeneficiary().getDeviceUrl().equals(deviceRegistration.getUrl());
+
+        String grantedId = DateUtils.formatUTCDateString(remote.getFloor().getGranted());
+
+        if (!sharingContentFromMine) {
+            mediaSession.joinShare(grantedId);
+        } else {
+            mediaSession.startScreenShare(grantedId);
+        }
+        mediaSession.updateShareId(grantedId);
+        bus.post(new CallControlFloorGrantedEvent(call.getLocusKey()));
+    }
+
+    private void startWhiteboardShare(Call call, Uri uri) {
+        if (uri != null) {
+            // set true to help Whiteboard UI elements set their states
+            locusService.setSharingWhiteboard(true);
+            bus.post(new CallControlViewWhiteboardShare(call.getLocusKey(), uri));
+        } else {
+            ln.e("CallControlService.startWhiteboardShare, mediaShare(Whiteboard)'s url in Call is null with locusKey: %s", call.getLocusKey());
+        }
+    }
 }

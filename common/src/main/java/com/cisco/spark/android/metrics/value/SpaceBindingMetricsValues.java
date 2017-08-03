@@ -4,20 +4,22 @@ public class SpaceBindingMetricsValues {
 
     public static class BindingMetricValue {
         public static final String BIND = "bind";
-        public static final String UNBIND = "unbind";
         private String lyraBindingType;
-        private boolean success;
+        private String result;
+        private String message;
 
-        public BindingMetricValue(String lyraBindingType, boolean success) {
+        public BindingMetricValue(String lyraBindingType, String result, String message) {
             this.lyraBindingType = lyraBindingType;
-            this.success = success;
+            this.result = result;
+            this.message = message;
         }
 
         @Override
         public String toString() {
-            return "BindingMetricValue{" +
+            return "SpaceBindingMetricsValues{" +
                     "lyraBindingType='" + lyraBindingType + '\'' +
-                    "success=" + success +
+                    "result=" + result +
+                    "message=" + message +
                     '}';
         }
 

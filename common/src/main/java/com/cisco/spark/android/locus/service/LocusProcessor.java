@@ -14,11 +14,12 @@ import com.cisco.spark.android.callcontrol.events.CallControlResumedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlSelfParticipantLeftEvent;
 import com.cisco.spark.android.callcontrol.events.DismissCallNotificationEvent;
 import com.cisco.spark.android.core.ApiClientProvider;
+import com.cisco.spark.android.features.CoreFeatures;
 import com.cisco.spark.android.locus.events.FloorGrantedEvent;
+import com.cisco.spark.android.locus.events.FloorLostEvent;
 import com.cisco.spark.android.locus.events.FloorReleasedEvent;
 import com.cisco.spark.android.locus.events.IncomingCallEvent;
-import com.cisco.spark.android.locus.events.JoinedLobbyEvent;
-import com.cisco.spark.android.locus.events.JoinedMeetingEvent;
+import com.cisco.spark.android.locus.events.JoinedMeetingFromLobbyEvent;
 import com.cisco.spark.android.locus.events.LocusDataCacheChangedEvent;
 import com.cisco.spark.android.locus.events.LocusDataCacheReplacesEvent;
 import com.cisco.spark.android.locus.events.LocusPmrChangedEvent;
@@ -29,6 +30,7 @@ import com.cisco.spark.android.locus.events.ParticipantJoinedLobbyEvent;
 import com.cisco.spark.android.locus.events.ParticipantLeftEvent;
 import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
 import com.cisco.spark.android.locus.events.ParticipantPairedWithRoomSystemEvent;
+import com.cisco.spark.android.locus.events.ParticipantSelfChangedEvent;
 import com.cisco.spark.android.locus.events.ParticipantUnPairedWithRoomSystemEvent;
 import com.cisco.spark.android.locus.model.Locus;
 import com.cisco.spark.android.locus.model.LocusControl;
@@ -43,6 +45,8 @@ import com.cisco.spark.android.locus.model.LocusReplaces;
 import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
 import com.cisco.spark.android.locus.model.LocusSequenceInfo;
 import com.cisco.spark.android.locus.model.MediaDirection;
+import com.cisco.spark.android.meetings.LocusMeetingInfoProvider;
+import com.cisco.spark.android.mercury.MercuryEventType;
 import com.cisco.spark.android.mercury.events.DeclineReason;
 import com.cisco.spark.android.mercury.events.LocusChangedEvent;
 import com.cisco.spark.android.mercury.events.LocusDeltaEvent;
@@ -53,39 +57,114 @@ import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.NaturalLog;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Provider;
 
 import de.greenrobot.event.EventBus;
+import retrofit2.Response;
 
 import static com.cisco.spark.android.sync.ConversationContentProviderOperation.updateConversationLocusUrl;
 
-public class LocusProcessor {
+public class LocusProcessor implements Runnable {
+    public enum EventType {
+        SELF_CHANGED,
+        CHANGED,
+        DELTA
+    }
+
     private final EventBus bus;
     private final LocusDataCache locusDataCache;
     private final ApiClientProvider apiClientProvider;
     private final NaturalLog ln;
     private final DeviceRegistration deviceRegistration;
     private final Provider<Batch> batchProvider;
+    private final CoreFeatures coreFeatures;
+    private final LocusProcessorReporter locusProcessorReporter;
+    private final LocusMeetingInfoProvider locusMeetingInfoProvider;
     private Calendar utcCalendar;
+    private LinkedBlockingQueue<EventQueueItem> locusEventQueue;
+    private Thread consumer;
 
-    public LocusProcessor(final ApiClientProvider apiClientProvider, final EventBus bus, final LocusDataCache locusDataCache, Ln.Context lnContext, DeviceRegistration deviceRegistration, Provider<Batch> batchProvider) {
+    public LocusProcessor(final ApiClientProvider apiClientProvider, final EventBus bus, final LocusDataCache locusDataCache, Ln.Context lnContext,
+                          DeviceRegistration deviceRegistration, Provider<Batch> batchProvider, CoreFeatures coreFeatures, LocusProcessorReporter locusProcessorReporter, LocusMeetingInfoProvider locusMeetingInfoProvider) {
         this.apiClientProvider = apiClientProvider;
         this.bus = bus;
         this.locusDataCache = locusDataCache;
         this.batchProvider = batchProvider;
         this.ln = Ln.get(lnContext, "LocusProcessor");
         this.deviceRegistration = deviceRegistration;
+        this.coreFeatures = coreFeatures;
+        this.locusProcessorReporter = locusProcessorReporter;
+        this.locusMeetingInfoProvider = locusMeetingInfoProvider;
 
         utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+
+        locusEventQueue = new LinkedBlockingQueue<>(20);
+        consumer = new Thread(this);
+        consumer.start();
+    }
+
+    public synchronized void postLocusChangedEvent(LocusChangedEvent event) {
+        if (event.getEventType().equals(MercuryEventType.LOCUS_SELF_CHANGED)) {
+            postEvent(EventType.SELF_CHANGED, event.getLocus(), event.getId().toString());
+        } else {
+            postEvent(EventType.CHANGED, event.getLocus(), event.getId().toString());
+        }
+    }
+
+    public synchronized void postLocusDeltaEvent(Locus locus, String eventId) {
+        postEvent(EventType.DELTA, locus, eventId);
+    }
+
+    private synchronized void postEvent(LocusProcessor.EventType type, Locus locus, String label) {
+        try {
+            String msg = String.format("type=%s, label=%s (queue size=%d)", type == EventType.CHANGED ? "CHANGED" : type == EventType.DELTA ? "DELTA" : "unknown", label, locusEventQueue.size());
+            ln.d("postEvent(): %s", msg);
+            locusProcessorReporter.reportNewEvent(msg);
+            locusEventQueue.put(new EventQueueItem(type, locus, label));
+        } catch (InterruptedException ex) {
+            ln.e(ex, "Error posting event");
+        }
+    }
+
+    @Override
+    public void run() {
+        ln.d("event queue worker thread started");
+
+        try {
+            EventQueueItem event;
+            while ((event = locusEventQueue.take()) != null) {
+                ln.d("processing event label: %s (queue size=%d)", event.label, locusEventQueue.size());
+
+                if (event.type == EventType.DELTA) {
+                    processLocusUpdate(event.locus, new LocusDeltaEvent());
+                } else {
+                    processLocusUpdate(event.locus);
+
+                    // There are a number of integration tests that have sensitive timing on this event occurring AFTER processLocusUpdate()
+                    // The event itself is not comparing or reflecting any particular change in the self state; rather it is used to
+                    // trigger reactions in mocked CCS components and gating waitForEvents in tests.
+                    if (event.type == EventType.SELF_CHANGED) {
+                        bus.post(new ParticipantSelfChangedEvent(event.locus.getKey(), event.locus));
+                    }
+                }
+            }
+        } catch (InterruptedException ex) {
+            ln.e(ex, "Error getting or processing event");
+        }
+
+        ln.d("event queue worker thread stopped");
     }
 
     /**
@@ -94,8 +173,9 @@ public class LocusProcessor {
      *
      * @param remoteLocus
      */
-    public synchronized void processLocusUpdate(Locus remoteLocus) {
-        processLocusUpdate(remoteLocus, new LocusChangedEvent());
+    // TODO: CAN THIS BE private, EVERYTHING GO THROUGH post?  OR DO WE NEED A BLOCKING post, EQUIVALENT TO THIS?
+    public void processLocusUpdate(Locus remoteLocus) {
+        processLocusUpdate(remoteLocus, null);
     }
 
     /**
@@ -106,7 +186,7 @@ public class LocusProcessor {
      * @Param LocusEvent. a)LocusChangedEvent: Locus non-delta event, that means client receives the Locus whole DTO,
      *                    b)LocusDeltaEvent: Locus delta event, that means client receives the Locus Delta DTO.
      */
-    public synchronized void processLocusUpdate(Locus remoteLocus, LocusEvent locusEvent) {
+    private void processLocusUpdate(Locus remoteLocus, LocusEvent locusEvent) {
 
         boolean processLocus = false;
         LocusData call = locusDataCache.getLocusData(remoteLocus.getKey());
@@ -114,67 +194,54 @@ public class LocusProcessor {
         if (call != null) {
             localLocus = call.getLocus();
 
-            LocusSequenceInfo.OverwriteWithResult overwriteWithResult = localLocus.getSequence().overwriteWith(remoteLocus.getSequence());
-            if (overwriteWithResult.equals(LocusSequenceInfo.OverwriteWithResult.FALSE) &&
-                    localLocus.getFullState().isStartingSoon() != remoteLocus.getFullState().isStartingSoon()) {
-                // Due to an issue in Locus at the moment where the sequence information is not incremented when
-                // startingSoon is updated, we need to manually detect that change and force the overwrite value to
-                // true so we process the update when we otherwise would not.
-                Ln.d("Overwrite was FALSE, but startingSoon flags do not match so forcing overwrite to TRUE");
-                overwriteWithResult = LocusSequenceInfo.OverwriteWithResult.TRUE;
+            LocusSequenceInfo.OverwriteWithResult overwriteWithResult;
+            boolean isDelta = false;
+            if (locusEvent instanceof LocusDeltaEvent) {
+                ln.d("processLocusUpdate() processing with delta sequence information");
+                overwriteWithResult = localLocus.getSequence().overwriteWith(remoteLocus.getBaseSequence(), remoteLocus.getSequence());
+                isDelta = true;
+            } else {
+                ln.d("processLocusUpdate() processing with full DTO");
+                overwriteWithResult = localLocus.getSequence().overwriteWith(remoteLocus.getSequence());
             }
 
             if (overwriteWithResult.equals(LocusSequenceInfo.OverwriteWithResult.TRUE)) {
-                if (deviceRegistration.getFeatures().isDeltaEventEnabled() && (locusEvent instanceof LocusDeltaEvent)) {
-                    ln.i("processLocusUpdate() receive a delta event, local locus sequence %s, remote locus sequence %s, remote locus base sequence %s.", localLocus.getSequence(), remoteLocus.getSequence(), remoteLocus.getBaseSequence());
-
-                    // if the local locus copying was more recent or the same as the base locus, but less recent than the target locus, apply the Locus Delta DTO
-                    // otherwise, call SyncURL to get new Locus Delta DTO
-                    LocusSequenceInfo.OverwriteWithResult overwriteWithResult4BaseSeq = localLocus.getSequence().overwriteWithBaseSequence(remoteLocus.getBaseSequence());
-                    ln.i("processLocusUpdate() local locus sequence compare with remote locus base sequence, result is" + overwriteWithResult4BaseSeq);
-
-                    if (overwriteWithResult4BaseSeq.equals(LocusSequenceInfo.OverwriteWithResult.TRUE)) {
-                        // Merge the locus delta DTO(participants info) instead of replacing the whole locus
-                        Locus locusDelta = mergeLocusDelta(localLocus, remoteLocus);
-                        call.setLocus(locusDelta);
-                        processLocus = true;
-
-                        ln.i("Updating locus DTO and notifying listeners of data change for: %s", call.getKey().toString());
-                        if (isMyPmrChanged(call)) {
-                            bus.post(new LocusPmrChangedEvent());
-                        }
-                        bus.post(new LocusDataCacheChangedEvent(remoteLocus.getKey(), LocusDataCacheChangedEvent.Type.MODIFIED));
-                    } else if (overwriteWithResult4BaseSeq.equals(LocusSequenceInfo.OverwriteWithResult.DESYNC)) {
-                        ln.i("local locus sequence is less than remote locus base sequence, call SyncUrl");
-                        //we've detected de-sync state so re-fetch Locus DTO
-                        Locus newDeltaLocus = apiClientProvider.getHypermediaLocusClient().getLocusSync(remoteLocus.getSyncUrl().toString());
-                        if (newDeltaLocus != null) {
-                            processLocusUpdate(newDeltaLocus, new LocusDeltaEvent());
-                        }
-                    }
+                if (isDelta) {
+                    Locus locusDelta = mergeLocusDelta(localLocus, remoteLocus);
+                    call.setLocus(locusDelta);
                 } else {
                     call.setLocus(remoteLocus);
-                    processLocus = true;
-
-                    ln.i("Updating locus DTO and notifying listeners of data change for: %s", call.getKey().toString());
-                    if (isMyPmrChanged(call)) {
-                        bus.post(new LocusPmrChangedEvent());
-                    }
-                    bus.post(new LocusDataCacheChangedEvent(remoteLocus.getKey(), LocusDataCacheChangedEvent.Type.MODIFIED));
                 }
+                processLocus = true;
+
+                ln.i("Updating locus DTO and notifying listeners of data change for: %s", call.getKey().toString());
+                if (isMyPmrChanged(call)) {
+                    bus.post(new LocusPmrChangedEvent());
+                }
+                bus.post(new LocusDataCacheChangedEvent(remoteLocus.getKey(), LocusDataCacheChangedEvent.Type.MODIFIED));
+                locusProcessorReporter.reportProcessedEvent("OVERWRITE");
             } else if (overwriteWithResult.equals(LocusSequenceInfo.OverwriteWithResult.FALSE)) {
                 ln.i("Didn't overwrite locus DTO as new one was older version than one currently in memory.");
+                locusProcessorReporter.reportProcessedEvent("IGNORE");
             } else if (overwriteWithResult.equals(LocusSequenceInfo.OverwriteWithResult.DESYNC)) {
                 ln.i("Didn't overwrite locus DTO as new one was out of sync with one currently in memory.");
+                locusProcessorReporter.reportProcessedEvent("DESYNC");
 
                 // we've detected de-sync state so re-fetch locus dto
-                Locus newLocus = apiClientProvider.getHypermediaLocusClient().getLocusSync(call.getKey().getUrl().toString());
+                String url = isDelta ? localLocus.getSyncUrl() : call.getKey().getUrl().toString();
+                Locus newLocus = getLocusSync(url, localLocus.getSequence());
                 processLocusUpdate(newLocus);
             }
         } else {
             // locus doesn't exist already so store
             call = new LocusData(remoteLocus);
+            call.setUseNewBridgeTest(deviceRegistration.getFeatures().useBridgeTestV2());
             locusDataCache.putLocusData(call);
+            locusProcessorReporter.reportProcessedEvent("NEW");
+
+            // Attempt to cache associated LocusMeetingInfo
+            locusMeetingInfoProvider.cache(call.getLocus().getKey().getLocusId());
+
             processLocus = true;
 
             ln.i("LocusProcessor: Notifying listeners of new entry for: %s", call.getKey().toString());
@@ -200,7 +267,6 @@ public class LocusProcessor {
             // hangup endpoint.
             call.setObservingResource();
 
-
             // check for participant joins/leaves, lock/unlock, self start/stop recording
             if (localLocus != null) {
                 processSelfChanges(localLocus, remoteLocus);
@@ -209,14 +275,28 @@ public class LocusProcessor {
             }
 
             processImplicitBinding(localLocus, remoteLocus);
-            processMeeting(localLocus, remoteLocus);
             processLocusControlChanges(localLocus, remoteLocus);
             processFloorStateChange(localLocus, remoteLocus);
-            processMoveMediaWhileFloorGranted(localLocus, remoteLocus);
             processReplaces(remoteLocus);
         }
     }
 
+    private Locus getLocusSync(String url, LocusSequenceInfo locusSequenceInfo) {
+        try {
+            String syncDebug = null;
+            if (coreFeatures.isDeltaEventEnabled()) {
+                ln.d("sync_debug parameter is enabled: %s", syncDebug);
+                syncDebug = locusSequenceInfo.getSyncDebug();
+            }
+            Response<Locus> response = apiClientProvider.getHypermediaLocusClient().getLocus(url, syncDebug).execute();
+            if (response.isSuccessful()) {
+                return response.body();
+            }
+        } catch (IOException ex) {
+            ln.e(ex, "Error getting Locus sync");
+        }
+        return null;
+    }
 
     private void processImplicitBinding(Locus local, Locus remote) {
         if (!deviceRegistration.getFeatures().isImplicitBindingForCallEnabled() || remote == null)
@@ -271,16 +351,9 @@ public class LocusProcessor {
                         LocusData newLocusData = locusDataCache.getLocusData(locus.getKey());
 
                         if (newLocusData != null) {
-                            newLocusData.setEpochStartTime(oldLocusData.getEpochStartTime());
-                            newLocusData.setCallConnected(oldLocusData.isCallConnected());
-                            newLocusData.setCallStarted(oldLocusData.isCallStarted());
-                            newLocusData.setWasMediaFlowing(oldLocusData.wasMediaFlowing());
-                            newLocusData.setCallContext(oldLocusData.getCallContext());
                             newLocusData.setIsToasting(oldLocusData.isToasting());
-                            newLocusData.setCallInitiationOrigin(oldLocusData.getCallInitiationOrigin());
                             newLocusData.setActiveSpeakerId(oldLocusData.getActiveSpeaker() != null ? oldLocusData.getActiveSpeaker().getId() : null);
                             newLocusData.setRemoteParticipantDetails();
-                            newLocusData.setMediaSession(oldLocusData.getMediaSession());
                         }
                     }
 
@@ -309,7 +382,7 @@ public class LocusProcessor {
                     && !call.isToasting() && expiration.after(utcCalendar.getTime())
                     && !call.getLocus().isInLobbyFromThisDevice(deviceRegistration.getUrl())) {
                 shouldPostEvent = true;
-            } else if (local == null && selfState.equals(LocusParticipant.State.NOTIFIED)) {
+            } else if ((local == null || !local.getFullState().isActive()) && selfState.equals(LocusParticipant.State.NOTIFIED)) {
                 shouldPostEvent = true;
             }
 
@@ -328,7 +401,7 @@ public class LocusProcessor {
             localDevicesMap.put(device.getUrl(), device);
         }
 
-        for (LocusParticipantDevice remoteDevice: remoteParticipant.getDevices()) {
+        for (LocusParticipantDevice remoteDevice : remoteParticipant.getDevices()) {
             LocusParticipantDevice localDevice = localDevicesMap.get(remoteDevice.getUrl());
             if (localDevice != null) {
                 if (localDevice.getIntent() == null) {
@@ -356,8 +429,8 @@ public class LocusProcessor {
     }
 
     public void processParticipants(LocusData call, Locus local, Locus remote) {
-        Map<UUID, LocusParticipant> localParticipantsMap = participantsToMap(local.getParticipants());
-        List<LocusParticipant> remoteParticipants = remote.getParticipants();
+        Map<UUID, LocusParticipant> localParticipantsMap = participantsToMap(local.getRawParticipants());
+        List<LocusParticipant> remoteParticipants = remote.getRawParticipants();
 
         List<LocusParticipant> joined = new ArrayList<LocusParticipant>();
         List<LocusParticipant> left = new ArrayList<LocusParticipant>();
@@ -368,7 +441,9 @@ public class LocusProcessor {
                 LocusParticipant localParticipant = localParticipantsMap.get(participant.getId());
 
                 // check change in participant display name
-                if (!localParticipant.getPerson().getDisplayName().equals(participant.getPerson().getDisplayName())) {
+                if ((localParticipant.getPerson() != null && participant.getPerson() != null) &&
+                        (localParticipant.getPerson().getDisplayName() != null && participant.getPerson().getDisplayName() != null) &&
+                        !localParticipant.getPerson().getDisplayName().equals(participant.getPerson().getDisplayName())) {
                     Ln.d("Change to participant display name, new name = " + participant.getPerson().getDisplayName());
                     if (call.isOneOnOne()) {
                         call.setRemoteParticipantDetails();
@@ -405,9 +480,6 @@ public class LocusProcessor {
             bus.post(new ParticipantJoinedEvent(remote.getKey(), remote, joined));
         if (!left.isEmpty()) {
             bus.post(new ParticipantLeftEvent(remote.getKey(), remote, left));
-            if (deviceRegistration.getFeatures().isImplicitBindingForCallEnabled()) {
-                bus.post(new CallControlBindingEvent(CallControlBindingEvent.BindingEventType.UNBIND, remote, left));
-            }
         }
         if (!idle.isEmpty())
             bus.post(new ParticipantJoinedLobbyEvent());
@@ -441,23 +513,32 @@ public class LocusProcessor {
                 }
             }
         }
+
+        boolean localInLobby = local.isInLobbyFromThisDevice(deviceRegistration.getUrl());
+        boolean remoteIsJoined = remote.isJoinedFromThisDevice(deviceRegistration.getUrl());
+        if (localInLobby && remoteIsJoined) {
+            ln.d("Entering meeting from lobby, LocusKey=%s", remote.getKey());
+            bus.post(new JoinedMeetingFromLobbyEvent(remote.getKey()));
+        }
     }
 
-    // check if locus controls state was changed -> lock/unlock and start/stop recording
+    // check if locus controls state was changed -> lock/unlock and start/stop recording and pause/resume recording
     public void processLocusControlChanges(Locus local, Locus remote) {
         LocusControl remoteLocusControl = remote.getControls();
 
         if (remoteLocusControl != null) {
-            boolean localLocusControlLocked = local != null ? local.getControls().getLock().isLocked() : false;
-            boolean localLocusControlRecording = local != null ? local.getControls().getRecord().isRecording() : false;
+            boolean localLocusControlLocked = local != null && local.getControls().getLock().isLocked();
+            boolean localLocusControlRecording = local != null && local.getRecordControl().isRecording();
+            boolean localLocusControlRecordingPaused = local != null && local.getRecordControl().isPaused();
             boolean remoteLocusControlLocked = remoteLocusControl.getLock().isLocked();
 
             if (localLocusControlLocked != remoteLocusControlLocked) {
                 ln.d("processLocusControlChanges, meeting is locked: " + remoteLocusControlLocked);
                 bus.post(new CallControlMeetingControlsLockEvent(remote.getKey(), true, remoteLocusControlLocked));
             }
-            if (localLocusControlRecording != remote.getControls().getRecord().isRecording()) {
-                ln.d("processLocusControlChanges, meeting is being recorded: " + remote.getControls().getRecord().isRecording());
+            if (localLocusControlRecording != remote.getRecordControl().isRecording()
+                    || localLocusControlRecordingPaused != remote.getRecordControl().isPaused()) {
+                ln.d("processLocusControlChanges, meeting is being recorded: " + remote.getRecordControl().isRecording() + "; paused: " + remote.getRecordControl().isPaused());
                 bus.post(new CallControlMeetingRecordEvent());
             }
         }
@@ -513,79 +594,62 @@ public class LocusProcessor {
         }
     }
 
-
-    /**
-     * Compare old/new versions of locus dto for changes to floor granted/released
-     *
-     * @param local
-     * @param remote
-     */
-    public void processFloorStateChange(Locus local, Locus remote) {
-
-        boolean localFloorGranted = local != null ? local.isFloorGranted() : false;
-        boolean remoteFloorGranted = remote.isFloorGranted();
-        boolean beneficiariesChanged = false;
-        if (localFloorGranted && remoteFloorGranted) {
-            beneficiariesChanged = !local.getFloorBeneficiary().getId().equals(remote.getFloorBeneficiary().getId());
-        }
-        if (!localFloorGranted && remoteFloorGranted || beneficiariesChanged) {
-            bus.post(new FloorGrantedEvent(remote.getKey()));
+    private void processFloorStateChange(Locus local, Locus remote) {
+        if (remote == null) {
+            Ln.e("LocusProcessor(processFloorStateChanged): remote is null");
+            return;
         }
 
-        boolean localFloorReleased = local != null ? local.isFloorReleased() : false;
-        boolean remoteFloorReleased = remote.isFloorReleased();
-        if (!localFloorReleased && remoteFloorReleased) {
-            bus.post(new FloorReleasedEvent(remote.getKey()));
-        }
-    }
-
-    /**
-     * Compare old/new versions of locus dto for changes in local media, while in a floor granted state
-     *
-     * @param local
-     * @param remote
-     */
-    public void processMoveMediaWhileFloorGranted(Locus local, Locus remote) {
-        if ((isFloorGrantedAndIntentType(local, LocusParticipant.IntentType.MOVE_MEDIA) && isFloorGrantedAndIntentType(remote, LocusParticipant.IntentType.OBSERVE))
-                || (isFloorGrantedAndIntentType(local, LocusParticipant.IntentType.OBSERVE) && isFloorGrantedAndIntentType(remote, LocusParticipant.IntentType.NONE))) {
-            bus.post(new FloorGrantedEvent(remote.getKey()));
-        }
-    }
-
-    public void processMeeting(final Locus local, final Locus remote) {
-        if (remote != null && remote.isMeeting()) {
-            boolean localInLobby = local != null ? (local.isMeeting() && local.isInLobbyFromThisDevice(deviceRegistration.getUrl())) : false;
-            boolean localIsJoined = local != null ? (local.isMeeting() && local.isJoinedFromThisDevice(deviceRegistration.getUrl())) : false;
-            boolean remoteInLobby = remote.isInLobbyFromThisDevice(deviceRegistration.getUrl());
-            boolean remoteIsJoined = remote.isJoinedFromThisDevice(deviceRegistration.getUrl());
-
-            String logMessage;
-            if (local == null && remoteInLobby) {
-                logMessage = "entered lobby (local=null)";
-                bus.post(new JoinedLobbyEvent(remote.getKey()));
-            } else if (local == null && remoteIsJoined) {
-                logMessage = "enter meeting (local=null)";
-                bus.post(new JoinedMeetingEvent(remote.getKey()));
-            } else if (localInLobby && remoteIsJoined) {
-                logMessage = "enter meeting";
-                bus.post(new JoinedMeetingEvent(remote.getKey()));
-            } else if (!localInLobby && remoteInLobby) {
-                logMessage = "entered lobby";
-                bus.post(new JoinedLobbyEvent(remote.getKey()));
-            } else {
-                logMessage = "No meeting transition.";
+        if (remote.isFloorGranted()) {
+            // Join call
+            LocusParticipantDevice localCurrentDevice = local == null ? null : local.getMyDevice(deviceRegistration.getUrl());
+            LocusParticipantDevice remoteCurrentDevice = remote.getMyDevice(deviceRegistration.getUrl());
+            boolean localNotJoined = localCurrentDevice == null || !localCurrentDevice.getState().equals(LocusParticipant.State.JOINED);
+            boolean remoteJoined = remoteCurrentDevice != null && remoteCurrentDevice.getState().equals(LocusParticipant.State.JOINED);
+            if (localNotJoined && remoteJoined) {
+                Ln.i("LocusProcessor(processFloorStateChanged): join call when is FloorGranted. post FloorGrantedEvent");
+                bus.post(new FloorGrantedEvent(remote.getKey()));
+                return;
             }
 
-            StringBuilder builder = new StringBuilder()
-                    .append("localInLobby=")
-                    .append(localInLobby)
-                    .append(", localIsJoined=")
-                    .append(localIsJoined)
-                    .append(", remoteInLobby=")
-                    .append(remoteInLobby)
-                    .append(", remoteIsJoined=")
-                    .append(remoteIsJoined);
-            ln.d("processMeeting, %s, LocusKey=%s, %s", logMessage, remote.getKey(), builder.toString());
+            // Move media
+            boolean moveToLocalWhileGranted = isFloorGrantedAndIntentType(local, LocusParticipant.IntentType.OBSERVE)
+                    && isFloorGrantedAndIntentType(remote, LocusParticipant.IntentType.NONE);
+            boolean moveToRemoteWhileGranted = isFloorGrantedAndIntentType(local, LocusParticipant.IntentType.MOVE_MEDIA)
+                    && isFloorGrantedAndIntentType(remote, LocusParticipant.IntentType.OBSERVE);
+            if (moveToRemoteWhileGranted || moveToLocalWhileGranted) {
+                Ln.i("LocusProcessor(processFloorStateChanged): move media when is FloorGranted, moveToRemoteWhileGranted: %s, moveToLocalWhileGranted: %s. post FloorGrantedEvent",
+                        moveToRemoteWhileGranted, moveToLocalWhileGranted);
+                bus.post(new FloorGrantedEvent(remote.getKey()));
+                return;
+            }
+
+            // New Floor Granted
+            boolean isLocalFloorGranted = local != null && local.isFloorGranted();
+            if (isLocalFloorGranted) {
+                String localMediaShareType = local.getGrantedFloor().getName();
+                Uri localMediaShareDeviceUrl = local.getGrantedFloor().getFloor().getBeneficiary().getDeviceUrl();
+                String remoteMediaShareType = remote.getGrantedFloor().getName();
+                Uri remoteMediaShareDeviceUrl = remote.getGrantedFloor().getFloor().getBeneficiary().getDeviceUrl();
+                Ln.i("LocusProcessor(processFloorStateChanged): remote: %s %s, local: %s %s",
+                        remoteMediaShareType, remoteMediaShareDeviceUrl,
+                        localMediaShareType, localMediaShareDeviceUrl);
+                if (!localMediaShareType.equals(remoteMediaShareType)
+                        || !localMediaShareDeviceUrl.equals(remoteMediaShareDeviceUrl)) {
+                    Ln.i("LocusProcessor(processFloorStateChanged): post FloorLostEvent");
+                    bus.post(new FloorLostEvent(remote.getKey(), local.getGrantedFloor(), remote.getGrantedFloor()));
+                    return;
+                }
+            } else {
+                Ln.i("LocusProcessor(processFloorStateChanged): post FloorGrantedEvent");
+                bus.post(new FloorGrantedEvent(remote.getKey()));
+            }
+        } else if (remote.isFloorReleased()) {
+            boolean isLocalFloorGranted = local != null && local.isFloorGranted();
+            if (isLocalFloorGranted) {
+                Ln.i("LocusProcessor(processFloorStateChanged): post FloorReleasedEvent");
+                bus.post(new FloorReleasedEvent(remote.getKey(), local.getGrantedFloor().getName()));
+            }
         }
     }
 
@@ -595,18 +659,10 @@ public class LocusProcessor {
         else {
             LocusParticipant.Intent intent = locus.getIntent(deviceRegistration.getUrl());
             if (intent == null)
-                return (intentType == null || intentType.equals(LocusParticipant.IntentType.NONE)) ? true : false;
+                return intentType == null || intentType.equals(LocusParticipant.IntentType.NONE);
             else
                 return intent.getType().equals(intentType);
         }
-    }
-
-    private Map<UUID, LocusParticipant> participantsToMap(List<LocusParticipant> participants) {
-        Map<UUID, LocusParticipant> map = new HashMap<UUID, LocusParticipant>();
-        for (LocusParticipant participant : participants) {
-            map.put(participant.getId(), participant);
-        }
-        return map;
     }
 
     // Usage of this method will help to send events for subscribers who specifically care
@@ -618,7 +674,7 @@ public class LocusProcessor {
     }
 
     private Locus mergeLocusDelta(Locus localLocus, Locus remoteLocusDelta) {
-        List<LocusParticipant> mergedLocusPariticpants = mergeLocusPariticpants(localLocus.getParticipants(), remoteLocusDelta.getParticipants());
+        List<LocusParticipant> mergedLocusPariticpants = mergeLocusPariticpants(localLocus.getRawParticipants(), remoteLocusDelta.getRawParticipants());
         // Copy locus info to local locus from remote Locus Delta DTO
         Locus mergedLocus = (new Locus.Builder())
                 .setKey(remoteLocusDelta.getKey())
@@ -640,26 +696,28 @@ public class LocusProcessor {
         return mergedLocus;
     }
 
+    // TODO: Remove other references to this method (using HashSet logic below)
+    private Map<UUID, LocusParticipant> participantsToMap(List<LocusParticipant> participants) {
+        Map<UUID, LocusParticipant> map = new HashMap<UUID, LocusParticipant>();
+        for (LocusParticipant participant : participants) {
+            map.put(participant.getId(), participant);
+        }
+        return map;
+    }
+
     private List<LocusParticipant> mergeLocusPariticpants(List<LocusParticipant> localParticipants, List<LocusParticipant> remoteDeltaParticipants) {
         if (remoteDeltaParticipants == null || remoteDeltaParticipants.size() == 0)
             return localParticipants;
 
-        List<LocusParticipant> newParticipants = new ArrayList<>();
-        Map<UUID, LocusParticipant> remoteParticipantsMap = participantsToMap(remoteDeltaParticipants);
-        // add participant from local locus if it does not exist in remote locus delta
-        for (LocusParticipant participant : localParticipants) {
-            if (!remoteParticipantsMap.containsKey(participant.getId())) {
-                newParticipants.add(participant);
-            }
-        }
-        newParticipants.addAll(remoteDeltaParticipants);
-        return newParticipants;
+        HashSet<LocusParticipant> mergedParticipants = new HashSet<>(remoteDeltaParticipants);
+        mergedParticipants.addAll(localParticipants);
+        return new ArrayList<>(mergedParticipants);
     }
 
     private void processAudioControlChanges(LocusParticipant local, LocusParticipant remote, LocusKey key, boolean isSelf) {
         LocusParticipantControls localControls = local.getControls();
         LocusParticipantControls remoteControls = remote.getControls();
-        LocusParticipantAudioControl localAudioControl  = localControls  != null ? localControls.getAudio()  : null;
+        LocusParticipantAudioControl localAudioControl = localControls != null ? localControls.getAudio() : null;
         LocusParticipantAudioControl remoteAudioControl = remoteControls != null ? remoteControls.getAudio() : null;
 
         if (remoteAudioControl == null || localAudioControl == null) {
@@ -679,4 +737,15 @@ public class LocusProcessor {
         }
     }
 
+    private class EventQueueItem {
+        public EventType type;
+        public Locus locus;
+        public String label;
+
+        public EventQueueItem(EventType type, Locus locus, String label) {
+            this.type = type;
+            this.locus = locus;
+            this.label = label;
+        }
+    }
 }

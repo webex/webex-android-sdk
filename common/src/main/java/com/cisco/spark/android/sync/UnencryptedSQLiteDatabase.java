@@ -58,7 +58,7 @@ public class UnencryptedSQLiteDatabase implements SQLiteDatabaseInterface {
     @Override
     public int delete(String table, String selection, String[] selectionArgs) {
         if (database != null) {
-            database.delete(table, selection, selectionArgs);
+            return database.delete(table, selection, selectionArgs);
         }
         return 0;
     }
@@ -66,7 +66,7 @@ public class UnencryptedSQLiteDatabase implements SQLiteDatabaseInterface {
     @Override
     public int updateWithOnConflict(String tablename, ContentValues values, String selection, String[] argsArray, int conflictRule) {
         if (database != null) {
-            database.updateWithOnConflict(tablename, values, selection, argsArray, conflictRule);
+            return database.updateWithOnConflict(tablename, values, selection, argsArray, conflictRule);
         }
         return 0;
     }
@@ -74,7 +74,7 @@ public class UnencryptedSQLiteDatabase implements SQLiteDatabaseInterface {
     @Override
     public Cursor query(String tableName, String[] strings, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
         if (database != null) {
-            database.query(tableName, strings, selection, selectionArgs, groupBy, having, orderBy);
+            return database.query(tableName, strings, selection, selectionArgs, groupBy, having, orderBy);
         }
         return null;
     }

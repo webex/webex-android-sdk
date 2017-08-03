@@ -6,9 +6,14 @@
 
     <!-- Preference keys: do not translate -->
 
+    <!-- User level default Custom notifications -->
+
+    <!-- Always on proximity -->
 
     <!-- This is an android system preference key to get the whole preference screen. It\'s being used
          to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+
 
     <!-- Show if the user has ignored the pairing permission card in dev console  -->
     <string name="pref_key_title_ignore_permission_microphone">Proximity 権限カード</string>
@@ -57,11 +62,10 @@
     <string name="error_sending_sticker">スティッキーを送信できません。</string>
     <string name="error_new_conversation">スペースを作成できません。</string>
     <string name="error_org_invite">組織外のユーザーを Spark に招待することができません。この問題を解決するには、サポート チケットを開いてください。</string>
-    <string name="error_leave_conversation">スペースを作成できません。</string>
+    <string name="error_leave_conversation">スペースから退出できません。</string>
     <string name="error_remove_participant">スペースから参加者を削除することができません。</string>
     <string name="uploading_space_avatar">スペース画像をアップロード中</string>
     <string name="error_setting_space_avatar">スペース画像の設定に失敗しました。</string>
-    <string name="error_cropping_space_avatar">スペース画像のトリミングに失敗しました</string>
     <string name="file_too_large">画像が大きすぎます。別の画像を選択してください。</string>
 
     <string name="max_participants_warning_text">ユーザーが %d 人以上いる Spark スペースに発信することはできません。</string>
@@ -81,7 +85,7 @@
     <string name="camera_unavailable">Spark がカメラを使用できません。Spark を再起動してからもう一度試してください。</string>
     <string name="video_disabled_due_to_network_conditions">ネットワーク接続が良好でないため、ビデオがオフになっています。 </string>
     <string name="poor_network_quality">ネットワーク接続が不安定です。</string>
-    <string name="call_put_on_hold">通話を保留</string>
+    <string name="call_put_on_hold">通話を保留中</string>
     <string name="call_resumed">通話を再開</string>
 
     <string name="call_other_person_invited_others">他のユーザーに通知中</string>
@@ -89,22 +93,30 @@
     <string name="call_other_person_declined">他のユーザーは拒否しました</string>
     <string name="call_other_person_busy">他のユーザーは取り込み中です</string>
     <string name="call_participant_left">参加者が退出しました</string>
-    <string name="call_participant_joined">接続中</string>
     <string name="call_participant_cancelled">参加者がキャンセルしました</string>
-    <string name="call_participant_expelled">モデレーターが会議室からあなたを削除しました</string>
+    <string name="call_participant_expelled">モデレーターがミーティングからあなたを削除しました</string>
     <string name="name_was_unavailable">%s は応答しませんでした</string>
 
     <string name="error_file_not_found">選択されたファイルはストレージで見つかりませんでした。</string>
+
+    <!-- Spark Space URL -->
+    <string name="dial">ダイヤル:</string>
+    <string name="video_address">ビデオ アドレス</string>
+    <string name="meeting_number">ミーティング番号</string>
+    <string name="video_address_not_available">アドレスがありません</string>
+    <string name="meeting_number_not_available">ミーティング番号がありません</string>
+    <string name="show_additional_meeting_info">追加のミーティング情報を表示</string>
+    <string name="hide_additional_meeting_info">追加のミーティング情報を非表示</string>
 
     <!-- Search Modifiers -->
     <string name="search_hint_for_modifier">ユーザーの名前を入力</string>
     <string name="search_hint_with_modifier">ユーザーの名前を入力</string>
     <string name="search_hint_in_modifier">スペースの名前を入力</string>
-    <string name="search_modifier_list_header">修飾子を選択して検索結果を絞り込みます</string>
+    <string name="search_modifier_list_header">検索フィルター</string>
     <string name="search_modifier_option_from_keyword"><b>発信者:</b></string>
-    <string name="search_modifier_option_from"><b>メッセージ</b>と<b>ファイル</b>を表示 (発信者: <b>ユーザー)</b></string>
+    <string name="search_modifier_option_from"><i>メッセージとファイルを表示 (発信者: ユーザー)</i></string>
     <string name="search_modifier_option_in_keyword"><b>場所:</b></string>
-    <string name="search_modifier_option_in"><b>メッセージ</b>と<b>ファイル</b> を表示 (場所: <b>スペース)</b></string>
+    <string name="search_modifier_option_in"><i>メッセージとファイル を表示 (場所: スペース)</i></string>
 
     <!-- Presence Status Messages -->
     <string name="do_not_disturb">応答不可</string>
@@ -121,6 +133,7 @@
     <string name="presence_status_pending">アクティベーション待ち</string>
     <string name="presence_status_ooo">不在</string>
     <string name="presence_status_ooo_until">%s まで不在</string>
+    <string name="presence_status_unknown">不明なステータス</string>
 
     <plurals name="presence_status_inactive_hours">
         <item quantity="one">%d 時間前にアクティブ</item>
@@ -132,12 +145,14 @@
     <string name="contact_invite_to_spark">%s を Spark に招待</string>
     <string name="contact_view_space">%s とのスペース</string>
 
-    <string name="room_retention_policy_indefinite">永続的</string>
+    <string name="room_retention_policy_indefinite">永続的に</string>
     <string name="room_retention_policy_one_year">1 年間</string>
     <string name="room_retention_policy_for_days">%d 日間</string>
 
     <!-- Day Markers -->
     <string name="day_marker_today">今日</string>
     <string name="day_marker_yesterday">昨日</string>
+
+    <string name="message_failed_notification">メッセージを送信できませんでした。</string>
 
 </resources>

@@ -19,6 +19,7 @@ import com.cisco.spark.android.sync.ConversationContentProviderQueries;
 import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.EncryptedConversationProcessor;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
+
 import com.cisco.spark.android.util.Toaster;
 import com.github.benoitdion.ln.Ln;
 
@@ -39,8 +40,11 @@ import static com.cisco.spark.android.sync.ConversationContract.SyncOperationEnt
 public class AssignRoomAvatarOperation extends ActivityOperation {
     @Inject
     transient EncryptedConversationProcessor conversationProcessor;
+    @Inject
+    transient Toaster toaster;
 
     private File file;
+
 
     public AssignRoomAvatarOperation(Injector injector, String conversationId, File file) {
         super(injector, conversationId);
@@ -122,7 +126,7 @@ public class AssignRoomAvatarOperation extends ActivityOperation {
         List items = ((Content) activity.getObject()).getFiles().getItems();
 
         if (items.isEmpty()) {
-            Toaster.showLong(context, R.string.error_setting_space_avatar);
+            toaster.showLong(context, R.string.error_setting_space_avatar);
             cancel();
             return SyncState.FAULTED;
         }
@@ -137,7 +141,7 @@ public class AssignRoomAvatarOperation extends ActivityOperation {
             }
         } catch (FileNotFoundException e) {
             Ln.e(e, "Failed uploading avatar");
-            Toaster.showLong(context, R.string.error_file_not_found);
+            toaster.showLong(context, R.string.error_file_not_found);
             setErrorMessage("File not found");
             return SyncState.FAULTED;
         } catch (IOException e) {
@@ -186,7 +190,7 @@ public class AssignRoomAvatarOperation extends ActivityOperation {
                 case DEPENDENCY:
                     break;
                 default:
-                    Toaster.showLong(context, R.string.error_setting_space_avatar);
+                    toaster.showLong(context, R.string.error_setting_space_avatar);
             }
         }
     }

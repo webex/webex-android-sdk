@@ -156,10 +156,6 @@ public class ActivityObject {
         return this.objectType.equals(ObjectType.locusSessionSummary);
     }
 
-    public boolean isImageURI() {
-        return this.objectType.equals(ObjectType.imageURI);
-    }
-
     public String getClientTempId() {
         return clientTempId;
     }

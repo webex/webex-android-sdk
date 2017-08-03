@@ -9,12 +9,8 @@ public class GetAvatarUrlsRequest {
 
     private ItemCollection<SingleAvatarUrlRequestInfo> avatarsList = new ItemCollection<>();
 
-    public GetAvatarUrlsRequest(SingleAvatarUrlRequestInfo singleAvatarUrlRequestInfo) {
-        this.avatarsList.addItem(singleAvatarUrlRequestInfo);
-    }
-
-    public GetAvatarUrlsRequest(ItemCollection<SingleAvatarUrlRequestInfo> avatarsList) {
-        this.avatarsList = avatarsList;
+    public GetAvatarUrlsRequest(String uuidOrEmail) {
+        this.avatarsList.addItem(new SingleAvatarUrlRequestInfo(uuidOrEmail));
     }
 
     public ItemCollection<SingleAvatarUrlRequestInfo> getAvatarsList() {
@@ -32,29 +28,6 @@ public class GetAvatarUrlsRequest {
             this.sizes.add(AvatarProvider.AvatarSize.MEDIUM.getSize());
             this.sizes.add(AvatarProvider.AvatarSize.SMALL.getSize());
             this.sizes.add(AvatarProvider.AvatarSize.TINY.getSize());
-        }
-
-        public SingleAvatarUrlRequestInfo(String uuid, Long size) {
-            this.uuid = uuid;
-            this.sizes = new ArrayList<>();
-            this.sizes.add(size);
-        }
-
-        public SingleAvatarUrlRequestInfo(String uuid, List<Long> sizes) {
-            this.uuid = uuid;
-            this.sizes = sizes;
-        }
-
-        public void addSize(Long size) {
-            if (this.sizes == null) {
-                this.sizes = new ArrayList<>();
-            }
-
-            if (this.sizes.contains(size)) {
-                return;
-            }
-
-            this.sizes.add(size);
         }
 
         public String getUuid() {

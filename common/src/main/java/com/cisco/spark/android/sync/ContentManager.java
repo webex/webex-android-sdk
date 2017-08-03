@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Looper;
 import android.os.Process;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.cisco.crypto.scr.SecureContentReference;
@@ -19,10 +20,16 @@ import com.cisco.spark.android.authenticator.LogoutEvent;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.AvatarProvider;
 import com.cisco.spark.android.events.UIBackgroundTransition;
-import com.cisco.spark.android.metrics.ContentMetricsBuilder;
 import com.cisco.spark.android.metrics.MetricsReporter;
+import com.cisco.spark.android.metrics.model.GenericMetric;
 import com.cisco.spark.android.metrics.model.MetricsReportRequest;
+import com.cisco.spark.android.metrics.value.ClientMetricField;
+import com.cisco.spark.android.metrics.value.ClientMetricNames;
+import com.cisco.spark.android.metrics.value.ClientMetricTag;
 import com.cisco.spark.android.metrics.value.EncryptionMetrics;
+import com.cisco.spark.android.metrics.value.GenericMetricTagEnums;
+import com.cisco.spark.android.model.GetAvatarUrlsResponse;
+import com.cisco.spark.android.model.SingleUserAvatarUrlsInfo;
 import com.cisco.spark.android.sync.ConversationContract.ContentDataCacheEntry;
 import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
 import com.cisco.spark.android.ui.BitmapProvider;
@@ -48,15 +55,16 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -83,13 +91,12 @@ import static com.cisco.spark.android.ui.BitmapProvider.RETENTION_MODE_STANDARD;
 public class ContentManager {
     public static final String FILEPROVIDER_AUTHORITY = "com.cisco.wx2.android.fileprovider";
     private static final int THREAD_POOL_SIZE = 3;
-    public static final String CONTENTDIR = "content";
+    private static final String CONTENTDIR = "content";
 
     private static final int ONE_MEG = 1024 * 1024;
     private static final int MAX_CONTENT_CACHE_SIZE = 150 * ONE_MEG;
     private static final int MAX_THUMBNAIL_CACHE_SIZE = 50 * ONE_MEG;
     private static final int MAX_AVATAR_CACHE_SIZE = 50 * ONE_MEG;
-    private static final int MAX_IMAGE_URI_CACHE_SIZE = 10 * ONE_MEG;
 
     // To gracefully handle downloading (or uploading!) large files, do not let GC trim the cache to fewer than min elements
     private static final int MIN_ITEMS_IN_CACHE = 4;
@@ -114,12 +121,34 @@ public class ContentManager {
         public Cache getCacheType() {
             return cacheType;
         }
+
+        public void addRecord(@NonNull ContentDataCacheRecord cacheRecord) {
+            removeRecord(cacheRecord);
+
+            put(cacheRecord.getRemoteUri(), cacheRecord);
+            currentSize += cacheRecord.getDataSize();
+        }
+
+        public void updateRecord(@NonNull ContentDataCacheRecord cacheRecord) {
+            ContentDataCacheRecord record = remove(cacheRecord.getRemoteUri());
+            if (record != null) {
+                currentSize -= record.getDataSize();
+                put(cacheRecord.getRemoteUri(), cacheRecord);
+                currentSize += cacheRecord.getDataSize();
+            }
+        }
+
+        public void removeRecord(@NonNull ContentDataCacheRecord cacheRecord) {
+            ContentDataCacheRecord record = remove(cacheRecord.getRemoteUri());
+            if (record != null) {
+                currentSize -= record.getDataSize();
+            }
+        }
     }
 
     private ContentCache contentCache = new ContentCache(Cache.MEDIA, MAX_CONTENT_CACHE_SIZE);
     private ContentCache thumbnailCache = new ContentCache(Cache.THUMBNAIL, MAX_THUMBNAIL_CACHE_SIZE);
     private ContentCache avatarCache = new ContentCache(Cache.AVATAR, MAX_AVATAR_CACHE_SIZE);
-    private ContentCache imageURICache = new ContentCache(Cache.IMAGEURI, MAX_IMAGE_URI_CACHE_SIZE);
 
     public static class CacheRecordRequestParameters {
         private Uri remoteUri;
@@ -193,17 +222,7 @@ public class ContentManager {
         taskLock = new LoggingLock(BuildConfig.DEBUG, "ContentManager Tasks");
         dbLock = new LoggingLock(BuildConfig.DEBUG, "ContentManager DB");
 
-        if (!getContentDirectory(Cache.AVATAR).isDirectory()) {
-            Ln.i("Clearing content from cache to support new directory structure");
-            clear();
-            getContentDirectory(Cache.AVATAR).mkdirs();
-        }
-
-        if (!getContentDirectory(Cache.IMAGEURI).isDirectory()) {
-            Ln.i("Clearing content from cache to support new directory structure");
-            clear();
-            getContentDirectory(Cache.IMAGEURI).mkdirs();
-        }
+        createDirectories();
 
         initializeExecutors();
     }
@@ -214,25 +233,19 @@ public class ContentManager {
         executor = new ThreadPoolExecutor(
                 THREAD_POOL_SIZE, THREAD_POOL_SIZE, 30,
                 TimeUnit.SECONDS,
-                new LifoBlockingDeque<Runnable>(),
-                new ThreadFactory() {
-                    @Override
-                    public Thread newThread(Runnable runnable) {
-                        Thread ret = new Thread(runnable);
-                        ret.setName("ContentManager Executor " + workerThreadId++);
-                        ret.setDaemon(true);
-                        return ret;
-                    }
+                new LifoBlockingDeque<>(),
+                runnable -> {
+                    Thread ret = new Thread(runnable);
+                    ret.setName("ContentManager Executor " + workerThreadId++);
+                    ret.setDaemon(true);
+                    return ret;
                 });
 
-        remoteContentRefreshExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable runnable) {
-                Thread ret = new Thread(runnable);
-                ret.setName("ContentManager Refresh Executor");
-                ret.setDaemon(true);
-                return ret;
-            }
+        remoteContentRefreshExecutor = Executors.newSingleThreadExecutor(runnable -> {
+            Thread ret = new Thread(runnable);
+            ret.setName("ContentManager Refresh Executor");
+            ret.setDaemon(true);
+            return ret;
         });
     }
 
@@ -251,7 +264,6 @@ public class ContentManager {
             contentCache.clear();
             thumbnailCache.clear();
             avatarCache.clear();
-            imageURICache.clear();
 
             // Restart the executors for the next time we need them.
             initializeExecutors();
@@ -287,7 +299,7 @@ public class ContentManager {
      * Asynchronously fetch a ContentDataCacheRecord for a series of bitmaps. Safe to call from the
      * main thread.
      */
-    public void getCacheRecords(final Cache cacheType, final List<Uri> uris, final SecureContentReference secureContentReference, final Action<List<ContentDataCacheRecord>> callback) {
+    public void getCacheRecords(final Cache cacheType, @NonNull final List<Uri> uris, final Action<List<ContentDataCacheRecord>> callback) {
         final List<ContentDataCacheRecord> records = new ArrayList<>();
         final List<Uri> queue = new ArrayList<>(uris);
 
@@ -319,9 +331,6 @@ public class ContentManager {
         Cache cachetype;
 
         switch (bitmaptype) {
-            case IMAGE_URI:
-                cachetype = Cache.IMAGEURI;
-                break;
             case THUMBNAIL:
             case VIDEO_THUMBNAIL:
                 cachetype = Cache.THUMBNAIL;
@@ -379,31 +388,28 @@ public class ContentManager {
 
         ContentCache cache = getCache(cacheType);
         ContentDataCacheRecord record = cache.get(uri);
+        boolean hasQueriedDB = false;
 
-        if (record != null && !record.validate()) {
-            record = null;
-        }
-
-        if (record != null && !record.isStale() && record.hasValidLocalContent()) {
-            record.setLastAccessTime(System.currentTimeMillis());
-            if (callback != null)
-                callback.call(record);
-            return new CompletedFuture<>(record);
-        }
-
-        // If we're not on the main thread, query the DB synchronously
-        if (record == null && Looper.getMainLooper() != Looper.myLooper()) {
-            record = queryCacheRow(uri, cacheType);
-            if (record != null && record.validate() && record.hasValidLocalContent()) {
-                // TODO: do we need to check if the record is stale or not here?
-                // or another question, what's the purpose for stale? background refresh data or mandatory refresh record when needed?
-                record.setNextCheckForUpdateTime();
+        if (record != null) {
+            if (!record.isStale() && record.hasValidLocalContent()) {
                 record.setLastAccessTime(System.currentTimeMillis());
-                cache.put(uri, record);
-
-                if (callback != null)
+                if (callback != null) {
                     callback.call(record);
+                }
                 return new CompletedFuture<>(record);
+            }
+        } else {
+            if (Looper.getMainLooper() != Looper.myLooper()) {
+                // don't want to query DB again in FetchContentTask
+                hasQueriedDB = true;
+                record = queryValidCacheRow(uri, cacheType);
+                if (record != null && record.hasValidLocalContent()) {
+                    if (callback != null) {
+                        callback.call(record);
+                    }
+                    cache.addRecord(record);
+                    return new CompletedFuture<>(record);
+                }
             }
         }
 
@@ -413,7 +419,7 @@ public class ContentManager {
             if (task == null) {
                 Ln.v("$BITMAP starting async task to fetch CDR for " + uri);
                 parameters.setFileName(filename);
-                task = new FetchContentTask(cacheType, parameters, secureContentReference, callback, false);
+                task = new FetchContentTask(record, cacheType, parameters, secureContentReference, callback, hasQueriedDB, false);
                 task.setFuture(executor.submit(task));
                 fetchesInProgress.put(uri, task);
             } else if (callback != null) {
@@ -464,11 +470,20 @@ public class ContentManager {
         }
     }
 
-    private void onFetchRealURIComplete(final CacheRecordRequestParameters parameters, final SecureContentReference secureContentReference) {
+    private void onRemoteBitmapUpdated(final Uri remoteUri, BitmapProvider.BitmapType bitmapType) {
         callContentListeners(new Action<ContentListener>() {
             @Override
             public void call(ContentListener item) {
-                item.onFetchRealURIComplete(parameters, secureContentReference);
+                item.onRemoteBitmapUpdated(remoteUri, bitmapType);
+            }
+        });
+    }
+
+    private void onFetchAvatarUrlComplete(final CacheRecordRequestParameters parameters) {
+        callContentListeners(new Action<ContentListener>() {
+            @Override
+            public void call(ContentListener item) {
+                item.onFetchAvatarUrlComplete(parameters);
             }
         });
     }
@@ -521,20 +536,25 @@ public class ContentManager {
     private class FetchContentTask implements Callable<ContentDataCacheRecord> {
         private final SecureContentReference secureContentReference;
         private CacheRecordRequestParameters parameters;
+        private ContentDataCacheRecord cacheRecord;
         final Uri uri;
         ContentDataCacheEntry.Cache cacheType;
         private boolean isRefreshTask;
-        ArrayList<Action<ContentDataCacheRecord>> actions = new ArrayList<Action<ContentDataCacheRecord>>();
+        private boolean hasQueriedDB;
+        ArrayList<Action<ContentDataCacheRecord>> actions = new ArrayList<>();
         private Future<ContentDataCacheRecord> future;
         private long createTime, startTime;
 
-        public FetchContentTask(Cache cacheType, CacheRecordRequestParameters parameters, SecureContentReference secureContentReference, Action<ContentDataCacheRecord> action, boolean isRefreshTask) {
+        public FetchContentTask(ContentDataCacheRecord cacheRecord, Cache cacheType, CacheRecordRequestParameters parameters,
+                                SecureContentReference secureContentReference, Action<ContentDataCacheRecord> action, boolean hasQueriedDB, boolean isRefreshTask) {
+            this.cacheRecord = cacheRecord;
             this.cacheType = cacheType;
             this.parameters = parameters;
             this.uri = parameters.getRemoteUri();
             this.secureContentReference = secureContentReference;
             if (action != null)
                 actions.add(action);
+            this.hasQueriedDB = hasQueriedDB;
             this.isRefreshTask = isRefreshTask;
 
             ++taskQueueSize;
@@ -566,59 +586,55 @@ public class ContentManager {
                 }
             });
 
-            ContentDataCacheRecord ret = null;
             try {
-                ret = getCache(cacheType).get(uri);
+                ContentCache cache = getCache(cacheType);
 
-                if (ret == null) {
-                    ret = queryCacheRow(uri, cacheType);
-                }
-
-                if (ret != null) {
-                    if (!ret.validate()) {
+                if (cacheRecord != null) {
+                    if (!cacheRecord.validate()) {
                         context.getContentResolver().delete(ContentUris.withAppendedId(ContentDataCacheEntry.CONTENT_URI,
-                                ret.getId()), null, null);
-                        getCache(cacheType).remove(uri);
-                        ret = null;
-                    } else if (!ret.isStale() && ret.hasValidLocalContent()) {
+                                cacheRecord.getId()), null, null);
+                        cacheRecord.deleteLocalFile();
+                        cache.removeRecord(cacheRecord);
+                        cacheRecord = null;
+                    } else if (!cacheRecord.isStale() && cacheRecord.hasValidLocalContent()) {
                         Ln.v("$BITMAP CDR is not stale yet. Aborting fetch " + uri);
-                        ret.setNextCheckForUpdateTime();
-                        ret.setLastAccessTime(System.currentTimeMillis());
-                        return ret;
+                        return cacheRecord;
                     }
+                } else if (!hasQueriedDB) {
+                    // don't want to query DB again.
+                    cacheRecord = queryValidCacheRow(uri, cacheType);
+                    if (cacheRecord != null && cacheRecord.hasValidLocalContent()) {
+                        Ln.v("$BITMAP Got record from db; skipping download " + uri);
+                        return cacheRecord;
+                    }
+                    Ln.v("$BITMAP ContentDataCacheRecord DB cache miss for " + uri + " or hasn't been downloaded");
                 }
 
-                if (ret == null && cacheType == Cache.AVATAR && !TextUtils.isEmpty(parameters.getUuidOrEmail())) {
-                    operationQueue.getAvatarUrls(parameters.getUuidOrEmail(), new Action<ContentDataCacheRecord>() {
-                        @Override
-                        public void call(ContentDataCacheRecord record) {
-                            onFetchRealURIComplete(parameters, secureContentReference);
-                        }
-                    });
+                if (cacheType == Cache.AVATAR && !TextUtils.isEmpty(parameters.getUuidOrEmail()) && (cacheRecord == null || cacheRecord.isStale())) {
+                    Ln.d("$BITMAP getAvatarUrls: " + parameters.getUuidOrEmail());
+                    if (cacheRecord != null) {
+                        Ln.v("$BITMAP CDR is stale remove from cache: " + uri);
+                        cache.removeRecord(cacheRecord);
+                        cacheRecord = null;
+                    }
+                    operationQueue.getAvatarUrls(parameters);
                     return null;
                 }
 
                 Ln.v("$BITMAP fetching content record for " + uri);
-                ret = fetchRemoteContent(cacheType, uri, secureContentReference, parameters.getFileName());
-
-                Ln.v("$BITMAP calling CDR callbacks for " + uri);
-                for (Action<ContentDataCacheRecord> action : actions) {
-                    action.call(ret);
-                }
-
-                return ret;
+                cacheRecord = fetchRemoteContent(cacheRecord, cacheType, uri, secureContentReference, parameters.getFileName(), parameters.getBitmapType());
+                return cacheRecord;
             } catch (Throwable e) {
                 Ln.e(e, "Failed getting content");
                 Ln.d(e, "Failed getting content for " + uri);
                 return null;
             } finally {
-                taskFinished(uri, ret);
+                taskFinished(uri, cacheRecord);
                 --taskQueueSize;
                 if (startTime - createTime > 1000 || System.currentTimeMillis() - startTime > 2000)
                     Ln.d("$PERF ContentManager task waited " + (startTime - createTime) + " ms and worked for " + (System.currentTimeMillis() - startTime) + " ms.  TIP=" + (taskQueueSize) + " " + uri);
             }
         }
-
 
         public void setFuture(Future<ContentDataCacheRecord> future) {
             this.future = future;
@@ -634,11 +650,19 @@ public class ContentManager {
                 Ln.v("$BITMAP CDR task finished for " + uri);
                 fetchesInProgress.remove(uri);
 
-                if (record == null || !record.validate())
+                if (record == null || !record.validate()) {
                     return;
+                }
+
+                record.setLastAccessTime(System.currentTimeMillis());
+
+                Ln.v("$BITMAP calling CDR callbacks for " + uri);
+                for (Action<ContentDataCacheRecord> action : actions) {
+                    action.call(record);
+                }
 
                 ContentCache cache = getCache(record.getCacheType());
-                cache.put(record.getRemoteUri(), record);
+                cache.addRecord(record);
             } finally {
                 taskLock.unlock();
             }
@@ -647,29 +671,106 @@ public class ContentManager {
         }
     }
 
-    private ContentDataCacheRecord fetchRemoteContent(Cache cacheType, Uri uri, SecureContentReference secureContentReference, String filename) {
-        Ln.d("fetchRemoteContent " + uri);
+    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
+    public void onEvent(GetAvatarUrlsResponse response) {
+        Ln.d("$BITMAP onEvent GetAvatarUrlsResponse begin");
 
-        ContentDataCacheRecord ret = getCache(cacheType).get(uri);
-
-        if (ret == null) {
-            ret = queryCacheRow(uri, cacheType);
-            if (ret != null && ret.hasValidLocalContent()) {
-                Ln.v("$BITMAP Got record from db; skipping download");
-                return ret;
-            }
-            Ln.v("$BITMAP ContentDataCacheRecord DB cache miss for " + uri);
-        } else {
-            Ln.v("$BITMAP Refreshing CDR for " + uri);
+        Map<String, Map<Integer, SingleUserAvatarUrlsInfo>> avatarUrlsResponseMap = response.getAvatarUrlsMap();
+        if (avatarUrlsResponseMap == null || avatarUrlsResponseMap.isEmpty()) {
+            Ln.i("invalid avatar urls response.");
+            return;
         }
+
+        Map<Uri, ContentManager.CacheRecordRequestParameters> parametersMap = response.getParametersMap();
+        Map<Uri, SingleUserAvatarUrlsInfo> avatarUrlsMap = new HashMap<>();
+        List<String> remoteUriList = new ArrayList<>();
+
+        for (String uuidOrEmail : avatarUrlsResponseMap.keySet()) {
+            Map<Integer, SingleUserAvatarUrlsInfo> oneUserAvatarInfoMap = avatarUrlsResponseMap.get(uuidOrEmail);
+            for (Integer size : oneUserAvatarInfoMap.keySet()) {
+                Uri remoteUri = avatarProvider.getUri(uuidOrEmail, String.valueOf(size));
+                avatarUrlsMap.put(remoteUri, oneUserAvatarInfoMap.get(size));
+                remoteUriList.add(remoteUri.toString());
+                Ln.d("$BITMAP remoteUri: " + remoteUri.toString() + "; realUri: " + (oneUserAvatarInfoMap.get(size).isDefaultAvatar() ? "defaultAvatar" : oneUserAvatarInfoMap.get(size).getUrl()));
+            }
+        }
+
+        if (remoteUriList.isEmpty()) {
+            Ln.i("no valid avatar urls response.");
+            return;
+        }
+
+        Cursor c = null;
+        Batch batch = batchProvider.get();
+        ContentCache cache = getCache(Cache.AVATAR);
+        List<ContentDataCacheRecord> cdrList = new ArrayList<>();
+        try {
+            if (remoteUriList.size() == 1) {
+                c = context.getContentResolver().query(ContentDataCacheEntry.CONTENT_URI,
+                        ContentDataCacheEntry.DEFAULT_PROJECTION,
+                        DATA_REMOTE_URI + "=? AND " + TYPE + "=" + String.valueOf(Cache.AVATAR.ordinal()),
+                        new String[]{remoteUriList.get(0)}, null);
+            } else {
+                c = context.getContentResolver().query(ContentDataCacheEntry.CONTENT_URI,
+                        ContentDataCacheEntry.DEFAULT_PROJECTION,
+                        DATA_REMOTE_URI + " IN (" + Strings.makeInClausePlaceholders(remoteUriList.size()) + ") AND " + TYPE + "=" + String.valueOf(Cache.AVATAR.ordinal()),
+                        remoteUriList.toArray(new String[0]), null);
+            }
+            while (c != null && c.moveToNext()) {
+                ContentDataCacheRecord ret = ContentDataCacheRecord.getCacheRecordFromCursor(c);
+                SingleUserAvatarUrlsInfo singleUserAvatarUrlsInfo = avatarUrlsMap.remove(ret.getRemoteUri());
+                if (singleUserAvatarUrlsInfo == null) {
+                    continue;
+                }
+                if (ret.updateRealUriByAvatarUrlsAPIResponse(singleUserAvatarUrlsInfo)) {
+                    cache.removeRecord(ret);
+                    batch.add(ret.getUpdate());
+
+                    CacheRecordRequestParameters parameters = parametersMap.get(ret.getRemoteUri());
+                    if (parameters != null) {
+                        onRemoteBitmapUpdated(ret.getRemoteUri(), parametersMap.get(ret.getRemoteUri()).getBitmapType());
+                    }
+                } else {
+                    if (cache.containsKey(ret.getRemoteUri())) {
+                        Ln.v("$BITMAP update cache: " + ret.getRemoteUri());
+                        // update stale info of data which is already in cache
+                        ret.setLastAccessTime(System.currentTimeMillis());
+                        ret.setNextCheckForUpdateTime();
+                        cache.updateRecord(ret);
+                    }
+                }
+            }
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+        batch.apply();
+
+        batch.clear();
+        for (Uri uri : avatarUrlsMap.keySet()) {
+            ContentDataCacheRecord record = ContentDataCacheRecord.getCacheRecordFromAvatarUrlsAPIResponse(avatarUrlsMap.get(uri), uri);
+            batch.add(ContentProviderOperation.newInsert(CONTENT_URI).withValues(record.getContentValues()).build());
+        }
+        batch.apply();
+
+
+        if (parametersMap != null && !parametersMap.isEmpty()) {
+            for (Uri remoteUri : parametersMap.keySet()) {
+                onFetchAvatarUrlComplete(parametersMap.get(remoteUri));
+            }
+        }
+        Ln.d("$BITMAP onEvent GetAvatarUrlsResponse end");
+    }
+
+    private ContentDataCacheRecord fetchRemoteContent(ContentDataCacheRecord ret, Cache cacheType, Uri uri, SecureContentReference secureContentReference, String filename, BitmapProvider.BitmapType bitmapType) {
+        Ln.d("fetchRemoteContent " + uri);
 
         if (ret == null || !ret.validate()) {
             ret = new ContentDataCacheRecord();
             ret.setRemoteUri(uri);
             ret.setCacheType(cacheType);
         }
-
-        ret.setNextCheckForUpdateTime();
 
         File outFile = getContentFile(cacheType, uri, filename);
 
@@ -680,9 +781,9 @@ public class ContentManager {
             } else {
                 if (ret.getRealUri() != null) {
                     // use real uri to download user's avatar.
-                    ret = downloadFile(ret, ret.getRealUri(), outFile, secureContentReference);
+                    ret = downloadFile(ret, ret.getRealUri(), outFile, secureContentReference, bitmapType);
                 } else {
-                    ret = downloadFile(ret, uri, outFile, secureContentReference);
+                    ret = downloadFile(ret, uri, outFile, secureContentReference, bitmapType);
                 }
             }
         } catch (Exception e) {
@@ -709,8 +810,9 @@ public class ContentManager {
         ret.setRemoteUri(uri);
         ret.setLocalUri(Uri.fromFile(outFile));
         ret.setDataSize(outFile.length());
-        ret.setLastAccessTime(System.currentTimeMillis());
         ret.setCacheType(cacheType);
+        ret.setLastAccessTime(System.currentTimeMillis());
+        ret.setNextCheckForUpdateTime();
 
         writeCacheRow(ret);
 
@@ -736,37 +838,76 @@ public class ContentManager {
         return contentDisposition != null && contentDisposition.contains("filename=\"page-");
     }
 
-    private ContentDataCacheRecord downloadFile(ContentDataCacheRecord ret, Uri url, File outFile, SecureContentReference secureContentReference) throws IOException {
-        boolean isEncrypted = (secureContentReference != null);
-        long startTime = System.currentTimeMillis();
+    private ContentDataCacheRecord downloadFile(ContentDataCacheRecord ret, Uri url, File outFile, SecureContentReference secureContentReference, BitmapProvider.BitmapType bitmapType) throws IOException {
+        GenericMetric metric = GenericMetric.buildOperationalMetric(ClientMetricNames.CLIENT_FILE_DOWNLOAD);
 
+        if (bitmapType != null) {
+            switch (bitmapType) {
+                case THUMBNAIL:
+                case VIDEO_THUMBNAIL:
+                    metric.addTag(ClientMetricTag.METRIC_TAG_DATA_TYPE, GenericMetricTagEnums.DataTypeMetricTagValue.DATA_TYPE_THUMBNAIL);
+                    break;
+                case AVATAR:
+                case AVATAR_READRECEIPT:
+                case AVATAR_NOTIFICATION:
+                case AVATAR_CALL_PARTICIPANT:
+                case SIDE_NAV_AVATAR:
+                case CHIP:
+                case SETTINGS_AVATAR:
+                case AVATAR_LARGE:
+                case AVATAR_ROOM_DETAILS_DIALOG:
+                case AVATAR_EDIT:
+                    metric.addTag(ClientMetricTag.METRIC_TAG_DATA_TYPE, GenericMetricTagEnums.DataTypeMetricTagValue.DATA_TYPE_AVATAR);
+                    break;
+                case MULTIPAGE_DOCUMENT:
+                    metric.addTag(ClientMetricTag.METRIC_TAG_DATA_TYPE, GenericMetricTagEnums.DataTypeMetricTagValue.DATA_TYPE_PREVIEW);
+                    break;
+                case LARGE:
+                default:
+                    metric.addTag(ClientMetricTag.METRIC_TAG_DATA_TYPE, GenericMetricTagEnums.DataTypeMetricTagValue.DATA_TYPE_FILE);
+                    break;
+
+            }
+        } else {
+            metric.addTag(ClientMetricTag.METRIC_TAG_DATA_TYPE, GenericMetricTagEnums.DataTypeMetricTagValue.DATA_TYPE_UNKNOWN);
+        }
 
         Response response;
+        long startTime = System.currentTimeMillis();
         response = apiClientProvider.getConversationClient().downloadFileIfModified(url.toString(), ret.getRemoteLastModifiedTime()).execute();
+        long time = System.currentTimeMillis() - startTime;
+        metric.addField(ClientMetricField.METRIC_FIELD_STORAGE_TRADCKING_ID, response.raw().header("X-Trans-Id"));
+        metric.addField(ClientMetricField.METRIC_FIELD_DURATION_TO_FIRST_RECORD, time);
+        metric.addNetworkStatus(response);
+
         if (response.code() == HttpURLConnection.HTTP_NOT_MODIFIED) {
+            metric.addField(ClientMetricField.METRIC_FIELD_DURATION_FROM_FIRST_RECORD_TO_END, time);
+            operationQueue.postGenericMetric(metric);
             return ret;
         }
 
         if (!response.isSuccessful()) {
             Ln.e("Failed download." + (Ln.isDebugEnabled() ? ret.getRemoteUri() : ""));
-            reportDownloadMetric(ret.getCacheType(), ret.getRemoteUri().toString(), isEncrypted, false, false);
+            metric.addTag(ClientMetricTag.METRIC_TAG_SUCCESS_TAG, false);
+            operationQueue.postGenericMetric(metric);
             return ret;
         }
 
         ret.setRemoteLastModifiedTime(response.headers().get("Last-Modified"));
 
-        InputStream is = null;
-
         Ln.v("$BITMAP Download succeeded for " + ret.getRemoteUri());
+        Ln.d("$BITMAP Download succeeded for " + ret.getRemoteUri() + "; realUri: " + ret.getRealUri());
 
-        is = ((ResponseBody) response.body()).byteStream();
+        long downloadStart = System.currentTimeMillis();
+        InputStream is = ((ResponseBody) response.body()).byteStream();
 
         if (is == null) {
             Ln.v("$BITMAP Failed downloading from uri " + ret.getRemoteUri() + " : " + response.code() + " " + response.errorBody().string());
-            reportDownloadMetric(ret.getCacheType(), ret.getRemoteUri().toString(), isEncrypted, isTranscoded(response), false);
+            metric.addField(ClientMetricField.METRIC_FIELD_DURATION_FROM_FIRST_RECORD_TO_END, time);
+            metric.addTag(ClientMetricTag.METRIC_TAG_SUCCESS_TAG, false);
+            metric.addField(ClientMetricField.METRIC_FIELD_ERROR_DESCRIPTION, "Failed to download due to null input stream");
+            operationQueue.postGenericMetric(metric);
             return ret;
-        } else {
-            reportDownloadMetric(ret.getCacheType(), ret.getRemoteUri().toString(), isEncrypted, isTranscoded(response), true);
         }
 
         try {
@@ -781,8 +922,11 @@ public class ContentManager {
             OutputStream out = new FileOutputStream(outFile);
             FileUtils.streamCopy(in, out);
 
+            metric.addField(ClientMetricField.METRIC_FIELD_DURATION_FROM_FIRST_RECORD_TO_END, System.currentTimeMillis() - downloadStart);
+            metric.addField(ClientMetricField.METRIC_FIELD_CONTENT_SIZE, outFile.length());
+
             if (secureContentReference != null) {
-                EncryptionMetrics.ContentMetric metric = new EncryptionMetrics.ContentMetric(
+                EncryptionMetrics.ContentMetric contentMetric = new EncryptionMetrics.ContentMetric(
                         EncryptionMetrics.ContentMetric.Direction.down,
                         outFile.length(),
                         System.currentTimeMillis() - startTime,
@@ -791,7 +935,7 @@ public class ContentManager {
                                 : EncryptionMetrics.ContentMetric.Kind.fromFilename(outFile.getName())
                 );
 
-                MetricsReportRequest request = metricsReporter.newEncryptionSplunkMetricsBuilder().reportValue(metric).build();
+                MetricsReportRequest request = metricsReporter.newEncryptionSplunkMetricsBuilder().reportValue(contentMetric).build();
                 metricsReporter.enqueueMetricsReport(request);
             }
 
@@ -809,14 +953,22 @@ public class ContentManager {
                 else
                     Ln.w("Failed parsing thumbnail");
             }
+
+            metric.addField(ClientMetricField.METRIC_FIELD_PERCIEVED_DURATION, System.currentTimeMillis() - startTime);
+            metric.addTag(ClientMetricTag.METRIC_TAG_SUCCESS_TAG, true);
+            operationQueue.postGenericMetric(metric);
         } catch (Exception e) {
             Ln.d(e, "Failed creating file " + outFile);
+            metric.addField(ClientMetricField.METRIC_FIELD_PERCIEVED_DURATION, System.currentTimeMillis() - startTime);
+            metric.addTag(ClientMetricTag.METRIC_TAG_SUCCESS_TAG, false);
+            metric.addField(ClientMetricField.METRIC_FIELD_ERROR_DESCRIPTION, "Failed creating output file for bitmap");
+            operationQueue.postGenericMetric(metric);
             Ln.e(e);
         }
         return ret;
     }
 
-    private ContentDataCacheRecord queryCacheRow(Uri uri, Cache cacheType) {
+    private ContentDataCacheRecord queryValidCacheRow(Uri uri, Cache cacheType) {
         if (uri == null)
             return null;
 
@@ -829,9 +981,14 @@ public class ContentManager {
 
             if (c != null && c.moveToNext()) {
                 ContentDataCacheRecord ret = ContentDataCacheRecord.getCacheRecordFromCursor(c);
-                if (ret.getCacheType() != Cache.AVATAR)
-                    ret.setNextCheckForUpdateTime(Long.MAX_VALUE);
-                return ret;
+                if (ret.validate()) {
+                    ret.setLastAccessTime(System.currentTimeMillis());
+                    ret.setNextCheckForUpdateTime();
+                    return ret;
+                } else {
+                    context.getContentResolver().delete(ContentUris.withAppendedId(ContentDataCacheEntry.CONTENT_URI,
+                            ret.getId()), null, null);
+                }
             }
         } finally {
             if (c != null)
@@ -860,8 +1017,6 @@ public class ContentManager {
 
         if (cache.currentSize > cache.maxSize)
             trimCache(cache);
-
-        return;
     }
 
     private void trimCache(ContentCache cache) {
@@ -929,8 +1084,7 @@ public class ContentManager {
 
                 while (c != null && c.moveToNext()) {
                     Cache cacheType = Cache.values()[c.getInt(vw_ContentCacheSize.TYPE.ordinal())];
-                    int size = c.getInt(vw_ContentCacheSize.DATA_SIZE.ordinal());
-                    getCache(cacheType).currentSize = size;
+                    getCache(cacheType).currentSize = c.getInt(vw_ContentCacheSize.DATA_SIZE.ordinal());
                 }
             } finally {
                 if (c != null)
@@ -1053,32 +1207,26 @@ public class ContentManager {
         batch.apply();
     }
 
-    public void touchCacheRecord(Uri uri, String uuidOrEmail) {
-        ContentDataCacheRecord record = avatarCache.get(uri);
-        if (record == null) {
-            record = thumbnailCache.get(uri);
+    public void touchCacheRecord(Uri uri, String uuidOrEmail, String fileName, BitmapProvider.BitmapType type) {
+        Cache cacheType = getCacheType(type);
+        if (Cache.AVATAR != cacheType || fetchesInProgress.containsKey(uri)) {
+            return;
         }
-        if (record == null) {
-            record = contentCache.get(uri);
-        }
-        if (record == null) {
-            record = imageURICache.get(uri);
-        }
-        if (record != null) {
-            record.setLastAccessTime(System.currentTimeMillis());
 
-            // Removed synchronization here because it impacts scroll performance. This function is
-            // (nearly?) always called from the main thread so synchronization should not be an issue.
-            // Downside risk is we might submit the refresh task more than needed and that's a fair trade anyway.
-            if (record.getCacheType() == Cache.AVATAR && record.isStale()
-                    && !fetchesInProgress.containsKey(uri)
-                    && record.getLocalUri() != null) {
-                // Note- NextCheckForUpdateTime will be overwritten by a Cache-Control header if we get one back.
-                CacheRecordRequestParameters parameters = new CacheRecordRequestParameters(uri, uuidOrEmail, record.getLocalUri().getLastPathSegment(), RETENTION_MODE_STANDARD, null);
-                FetchContentTask task = new FetchContentTask(record.getCacheType(), parameters, null, null, true);
-                task.setFuture(remoteContentRefreshExecutor.submit(task));
-                fetchesInProgress.put(uri, task);
+        ContentCache cache = getCache(cacheType);
+        ContentDataCacheRecord record = cache.get(uri);
+        if (record != null) {
+            if (!record.isStale() && record.hasValidLocalContent()) {
+                record.setLastAccessTime(System.currentTimeMillis());
+                return;
             }
+        }
+
+        if (!fetchesInProgress.containsKey(uri)) {
+            CacheRecordRequestParameters parameters = new CacheRecordRequestParameters(uri, uuidOrEmail, fileName, RETENTION_MODE_STANDARD, type);
+            FetchContentTask task = new FetchContentTask(record, cacheType, parameters, null, null, false, true);
+            task.setFuture(remoteContentRefreshExecutor.submit(task));
+            fetchesInProgress.put(uri, task);
         }
     }
 
@@ -1136,18 +1284,10 @@ public class ContentManager {
                 return thumbnailCache;
             case AVATAR:
                 return avatarCache;
-            case IMAGEURI:
-                return imageURICache;
             case MEDIA:
             default:
                 return contentCache;
         }
-    }
-
-    private void reportDownloadMetric(Cache cacheType, String fileext, boolean isEncrypted, boolean isTranscoded, boolean succeeded) {
-        ContentMetricsBuilder builder = metricsReporter.newContentMetricsBuilder();
-        builder.addDownloadMetrics(cacheType, fileext, isEncrypted, isTranscoded, succeeded);
-        metricsReporter.enqueueMetricsReport(builder.build());
     }
 
     public boolean isLoading(Uri uri) {
@@ -1160,12 +1300,25 @@ public class ContentManager {
 
     private ArrayList<WeakReference<ContentListener>> contentListeners = new ArrayList<>();
 
+    private void createDirectories() {
+        if (!getContentDirectory(Cache.AVATAR).isDirectory()) {
+            clear();
+        }
+        for (Cache cache : Cache.values()) {
+            if (!getContentDirectory(cache).isDirectory()) {
+                getContentDirectory(cache).mkdirs();
+            }
+        }
+    }
+
     public interface ContentListener {
         void onFetchStart(Uri uri);
 
         void onFetchComplete(ContentDataCacheRecord cdr);
 
-        void onFetchRealURIComplete(CacheRecordRequestParameters parameters, SecureContentReference secureContentReference);
+        void onFetchAvatarUrlComplete(CacheRecordRequestParameters parameters);
+
+        void onRemoteBitmapUpdated(Uri remoteUri, BitmapProvider.BitmapType bitmapType);
     }
 
     private void callContentListeners(Action<ContentListener> action) {

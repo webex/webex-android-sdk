@@ -1,12 +1,16 @@
 package com.cisco.spark.android.app;
 
+import android.os.Handler;
+
 import com.github.benoitdion.ln.Ln;
+import com.github.benoitdion.ln.NaturalLog;
 
 public class AndroidAudioManager implements AudioManager {
 
+    public static final NaturalLog lnAudio = Ln.get("audio_hw_primary_spark");
+
     private android.media.AudioManager delegate;
     private boolean hasAudioFocus;
-
 
     public AndroidAudioManager(android.media.AudioManager delegate) {
         this.delegate = delegate;
@@ -14,7 +18,7 @@ public class AndroidAudioManager implements AudioManager {
 
     @Override
     public void setSpeakerphoneOn(boolean on) {
-        Ln.i("AudioManager.setSpeakerphoneOn(%b)", on);
+        lnAudio.i("AudioManager.setSpeakerphoneOn(%b)", on);
         delegate.setSpeakerphoneOn(on);
     }
 
@@ -25,6 +29,7 @@ public class AndroidAudioManager implements AudioManager {
 
     @Override
     public void setMode(int mode) {
+        lnAudio.i("AudioManager.setMode(%d)", mode);
         delegate.setMode(mode);
     }
 
@@ -41,65 +46,56 @@ public class AndroidAudioManager implements AudioManager {
     @Override
     public boolean isWiredHeadsetOn() {
         boolean isWiredHeadsetOn = delegate.isWiredHeadsetOn();
-        Ln.i("AudioManager.isWiredHeadsetOn() = %b", isWiredHeadsetOn);
+        lnAudio.i("AudioManager.isWiredHeadsetOn() = %b", isWiredHeadsetOn);
         return isWiredHeadsetOn;
-    }
-
-    @Override
-    public void setBluetoothScoOn(boolean on) {
-        delegate.setBluetoothScoOn(on);
     }
 
     @Override
     public boolean isBluetoothScoOn() {
         boolean isBluetoothScoOn = delegate.isBluetoothScoOn();
-        Ln.i("AudioManager.isBluetoothScoOn() = %b", isBluetoothScoOn);
+        lnAudio.i("AudioManager.isBluetoothScoOn() = %b", isBluetoothScoOn);
         return isBluetoothScoOn;
     }
 
     @Override
-    public void setBluetoothA2dpOn(boolean on) {
-        delegate.setBluetoothA2dpOn(on);
-    }
-
-    @Override
-    public boolean isBluetoothA2dpOn() {
-        boolean isBluetoothA2dpOn = delegate.isBluetoothA2dpOn();
-        Ln.i("AudioManager.isBluetoothA2dpOn() = %b", isBluetoothA2dpOn);
-        return isBluetoothA2dpOn;
-    }
-
-
-    @Override
     public boolean isWiredHeadsetOrBluetoothConnected() {
-        return isBluetoothScoOn() || isBluetoothA2dpOn() || isWiredHeadsetOn();
+        boolean isWiredHeadsetOrBluetoothConnected = isBluetoothScoOn() || isWiredHeadsetOn();
+        lnAudio.i("AudioManager.isWiredHeadsetOrBluetoothConnected() = %b", isWiredHeadsetOrBluetoothConnected);
+        return isWiredHeadsetOrBluetoothConnected;
+    }
+
+    @Override
+    public boolean isBluetoothScoAvailableOffCall() {
+        boolean isBluetoothScoAvailableOffCall = delegate.isBluetoothScoAvailableOffCall();
+        lnAudio.i("AudioManager.isBluetoothScoAvailableOffCall() = %b", isBluetoothScoAvailableOffCall);
+        return isBluetoothScoAvailableOffCall;
     }
 
     @Override
     public int getStreamVolume(int streamType) {
         int volume = delegate.getStreamVolume(streamType);
-        Ln.i("AudioManager.getStreamVolume() type = %d, volume = %d", streamType, volume);
+        lnAudio.i("AudioManager.getStreamVolume() type = %d, volume = %d", streamType, volume);
         return volume;
     }
 
     @Override
     public int getStreamMaxVolume(int streamType) {
         int maxVolume = delegate.getStreamMaxVolume(streamType);
-        Ln.i("AudioManager.getStreamMaxVolume() type = %d, volume = %d", streamType, maxVolume);
+        lnAudio.i("AudioManager.getStreamMaxVolume() type = %d, volume = %d", streamType, maxVolume);
         return maxVolume;
     }
 
 
     @Override
     public int requestAudioFocus(android.media.AudioManager.OnAudioFocusChangeListener l, int streamType, int durationHint) {
-        Ln.i("AudioManager.requestAudioFocus()");
+        lnAudio.i("AudioManager.requestAudioFocus() streamType = %d", streamType);
         hasAudioFocus = true;
         return delegate.requestAudioFocus(l, streamType, durationHint);
     }
 
     @Override
     public int abandonAudioFocus(android.media.AudioManager.OnAudioFocusChangeListener l) {
-        Ln.i("AudioManager.abandonAudioFocus()");
+        lnAudio.i("AudioManager.AudioManager.abandonAudioFocus()");
         hasAudioFocus = false;
         return delegate.abandonAudioFocus(l);
     }
@@ -107,5 +103,30 @@ public class AndroidAudioManager implements AudioManager {
     @Override
     public boolean hasAudioFocus() {
         return hasAudioFocus;
+    }
+
+    @Override
+    public void startBluetoothSco() {
+        lnAudio.i("AudioManager.startBluetoothSco()");
+
+        // sleep 1 second to wait BT device is completely initialized.
+        new Handler().postDelayed(() -> {
+            lnAudio.i("AudioManager.startBluetoothSco() executes after 1 second");
+            delegate.startBluetoothSco();
+        }, 1000);
+    }
+
+    @Override
+    public void stopBluetoothSco() {
+        lnAudio.i("AudioManager.stopBluetoothSco()");
+        if (isBluetoothScoOn()) {
+            delegate.setBluetoothScoOn(false);
+            delegate.stopBluetoothSco();
+        }
+    }
+
+    @Override
+    public void setBluetoothScoAvailableOffCall(boolean bluetoothScoAvailableOffCall) {
+        lnAudio.d("AudioManager.setBluetoothScoAvailableOffCall() Wrong call! This is for test use.");
     }
 }

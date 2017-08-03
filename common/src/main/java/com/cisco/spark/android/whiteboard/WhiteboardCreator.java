@@ -1,84 +1,93 @@
 package com.cisco.spark.android.whiteboard;
 
-import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.CheckResult;
+import android.support.annotation.Nullable;
+import android.support.v4.util.Pair;
 import android.text.TextUtils;
 
 import com.cisco.spark.android.authenticator.AuthenticatedUserProvider;
+import com.cisco.spark.android.client.WhiteboardPersistenceClient;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.Component;
-import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.events.KmsKeyEvent;
-import com.cisco.spark.android.model.Conversation;
 import com.cisco.spark.android.model.KeyManager;
 import com.cisco.spark.android.model.KeyObject;
 import com.cisco.spark.android.sdk.SdkClient;
-import com.cisco.spark.android.sync.ConversationContentProviderQueries;
 import com.cisco.spark.android.sync.EncryptedConversationProcessor;
-import com.cisco.spark.android.ui.conversation.ConversationResolver;
-import com.cisco.spark.android.util.LoggingUtils;
 import com.cisco.spark.android.util.SchedulerProvider;
-import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.spark.android.whiteboard.persistence.model.Channel;
+import com.cisco.spark.android.whiteboard.persistence.model.ChannelType;
+import com.cisco.spark.android.whiteboard.persistence.model.Content;
+import com.cisco.spark.android.whiteboard.util.WhiteboardUtils;
+import com.cisco.spark.android.whiteboard.view.model.Stroke;
 import com.github.benoitdion.ln.Ln;
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import de.greenrobot.event.EventBus;
+import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 import rx.Observable;
 import rx.Subscription;
-import rx.functions.Action1;
-import rx.functions.Func1;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class WhiteboardCreator implements Component {
 
-    public static final int KEY_REQUEST_TIMEOUT = 10;
+    private static final Pair<Integer, TimeUnit> KEY_REQUEST_TIMEOUT = new Pair<>(10, SECONDS);
 
     private final EncryptedConversationProcessor conversationProcessor;
     private final AuthenticatedUserProvider authenticatedUserProvider;
-    private final DeviceRegistration deviceRegistration;
     private final ApiClientProvider apiClientProvider;
     private final WhiteboardService whiteboardService;
     private final SchedulerProvider schedulerProvider;
+    private final WhiteboardCache whiteboardCache;
+    private final JsonParser jsonParser;
     private final KeyManager keyManager;
     private final SdkClient sdkClient;
-    private final Injector injector;
-    private final Context context;
+
     private final EventBus bus;
+    private final Gson gson;
 
     private boolean running;
 
-    // FIXME This needs to be a queue
+    // FIXME These need to be re-worked to do multiple requests
     private CreateData currentCreateRequest;
+    @Nullable private CreateCallback createCallback;
 
-    private Executor singleThreadedExecutor = Executors.newSingleThreadExecutor();
+    private Executor createThread = Executors.newSingleThreadExecutor();
 
     private Subscription keyFetchTimer;
 
-    public WhiteboardCreator(DeviceRegistration deviceRegistration, ApiClientProvider apiClientProvider,
-                             WhiteboardService whiteboardService, SchedulerProvider schedulerProvider, KeyManager keyManager,
-                             SdkClient sdkClient, EventBus bus, EncryptedConversationProcessor conversationProcessor,
-                             Injector injector, Context context, AuthenticatedUserProvider authenticatedUserProvider) {
+    public WhiteboardCreator(ApiClientProvider apiClientProvider, WhiteboardService whiteboardService, SchedulerProvider schedulerProvider,
+                             WhiteboardCache whiteboardCache, KeyManager keyManager, SdkClient sdkClient, EventBus bus,
+                             EncryptedConversationProcessor conversationProcessor,
+                             AuthenticatedUserProvider authenticatedUserProvider, Gson gson) {
 
         this.apiClientProvider = apiClientProvider;
+        this.whiteboardCache = whiteboardCache;
         this.sdkClient = sdkClient;
 
         this.conversationProcessor = conversationProcessor;
-        this.deviceRegistration = deviceRegistration;
         this.whiteboardService = whiteboardService;
         this.schedulerProvider = schedulerProvider;
         this.keyManager = keyManager;
         this.bus = bus;
-        this.injector = injector;
-        this.context = context;
+        this.gson = gson;
+
         this.authenticatedUserProvider = authenticatedUserProvider;
+
+        this.jsonParser = new JsonParser();
     }
 
     @Override
@@ -102,14 +111,27 @@ public class WhiteboardCreator implements Component {
         }
     }
 
-    public synchronized void createBoard(CreateData createData) {
+    public synchronized boolean createBoard(CreateData createData, CreateCallback callback) {
 
         if (currentCreateRequest != null) {
             Ln.v("Already performing a create, refusing to do another");
-            return;
+            return false;
         }
 
+        createCallback = callback;
+
         create(createData);
+        return true;
+    }
+
+    public synchronized boolean createBoard(CreateData createData) {
+
+        if (currentCreateRequest != null) {
+            Ln.v("Already performing a create, refusing to do another");
+            return false;
+        }
+        create(createData);
+        return true;
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -117,28 +139,17 @@ public class WhiteboardCreator implements Component {
 
         currentCreateRequest = createData;
 
-        if (createData.conversationId != null) {
-            if (!aclWhiteboardEnabled()) {
-                createBoardWithConversationId(createData);
-            } else {
-                if (createData.aclUrlLink == null) {
-                    setupWhiteboardServiceByConversationId(createData, null);
-                    return;
-                }
-                createBoardWithAcl(createData);
-            }
-        } else if (createData.conversationId == null && sdkClient.supportsPrivateBoards()) {
-            createPrivateBoard(createData);
-        } else if (createData.conversationId == null && createData.aclUrlLink != null) {
+        if (createData.getAclUrlLink() != null) {
             createBoardWithAcl(createData);
+        } else if (sdkClient.supportsPrivateBoards()) {
+            createPrivateBoard(createData);
         } else {
             Ln.e("Unable to create non-private whiteboard with no conversation Id");
             currentCreateRequest = null;
+            if (createCallback != null) {
+                createCallback.onFail(createData.getId());
+            }
         }
-    }
-
-    private boolean aclWhiteboardEnabled() {
-        return deviceRegistration.getFeatures().isWhiteboardWithAclEnabled();
     }
 
     private void createPrivateBoard(final CreateData createData) {
@@ -150,97 +161,23 @@ public class WhiteboardCreator implements Component {
         }
 
         // Darling local case
-        Observable.just(unboundKey).subscribeOn(schedulerProvider.from(singleThreadedExecutor))
-                  .subscribe(new Action1<KeyObject>() {
-                      @Override
-                      public void call(KeyObject key) {
+        Observable.just(unboundKey).subscribeOn(schedulerProvider.from(createThread))
+                  .subscribe(key -> {
 
-                          final String userId = authenticatedUserProvider.getAuthenticatedUserOrNull().getUserId();
-                          List<String> userIds = new ArrayList<>();
-                          userIds.add(userId);
-                          boolean requestSent = createChannelHelper(userIds, key, createData, true, whiteboardService.getPrivateStore());
-                          if (!requestSent) {
-                              createFailed("Failed to send create private channel request");
-                          }
+                      final String userId = authenticatedUserProvider.getAuthenticatedUserOrNull().getUserId();
+                      List<String> userIds = new ArrayList<>();
+                      userIds.add(userId);
+                      boolean requestSent = createChannelHelper(userIds, key, createData, true);
+                      if (!requestSent) {
+                          createFailed("Failed to send create private channel request");
                       }
-                  }, new Action1<Throwable>() {
-                      @Override
-                      public void call(Throwable throwable) {
-                          Ln.e(throwable);
-                          createFailed("Exception thrown while trying to send create private channel request");
-                      }
+                  }, throwable -> {
+                      Ln.e(throwable);
+                      createFailed("Exception thrown while trying to send create private channel request");
                   });
     }
 
-    @Deprecated
-    public synchronized void createBoardWithConversationId(final CreateData createData) {
-
-        if (createData.keyUrl != null) {
-
-            Channel channelRequest = new Channel(createData.conversationId);
-            channelRequest.setDefaultEncryptionKeyUrl(createData.keyUrl);
-            whiteboardService.getRemoteStore().createChannel(channelRequest);
-
-        } else {
-
-            Observable.just(createData.conversationId).subscribeOn(schedulerProvider.from(singleThreadedExecutor))
-                      .map(new Func1<String, Uri>() {
-                          @Override
-                          public Uri call(String s) {
-                              return getConversationKeyUrl(createData.conversationId);
-                          }
-                      }).subscribe(new Action1<Uri>() {
-                @Override
-                public void call(Uri uri) {
-                    Channel channelRequest = new Channel(createData.conversationId);
-                    channelRequest.setDefaultEncryptionKeyUrl(uri);
-                    boolean requestSent = whiteboardService.getRemoteStore().createChannel(channelRequest);
-                    if (!requestSent) {
-                        createFailed("Failed to send create conversation channel request");
-                    }
-                }
-            }, new Action1<Throwable>() {
-                @Override
-                public void call(Throwable throwable) {
-                    Ln.e(throwable);
-                    createFailed("Exception thrown while trying to send create conversation channel request");
-                }
-            });
-        }
-    }
-
-    public ConversationResolver getConversationResolver(String conversationId) {
-        return ConversationContentProviderQueries.getConversationResolverById(context.getContentResolver(),
-                                                                              conversationId, injector);
-    }
-
-    protected Uri getConversationKeyUrl(String conversationId) {
-        if (conversationId == null) {
-            return null;
-        }
-
-        Uri keyUrl = null;
-        ConversationResolver resolver = getConversationResolver(conversationId);
-
-        if (resolver == null) {
-            try {
-                Response<Conversation> response = apiClientProvider.getConversationClient().getConversation(conversationId).execute();
-                if (response.isSuccessful()) {
-                    keyUrl = response.body().getDefaultActivityEncryptionKeyUrl();
-                } else {
-                    Ln.w("Failed getting key url " + LoggingUtils.toString(response));
-                }
-            } catch (IOException e) {
-                Ln.w(e);
-            }
-        } else {
-            keyUrl = resolver.getDefaultEncryptionKeyUrl();
-        }
-        return keyUrl;
-    }
-
-    private boolean createChannelHelper(List<String> userIds, KeyObject key, CreateData createData, boolean useAcl,
-                                        WhiteboardStore store) {
+    private boolean createChannelHelper(List<String> userIds, KeyObject key, CreateData createData, boolean useAcl) {
 
         String kmsMessage = conversationProcessor.createNewResource(userIds, Collections.singletonList(key.getKeyId()));
 
@@ -254,24 +191,19 @@ public class WhiteboardCreator implements Component {
             channelRequest.setDefaultEncryptionKeyUrl(key.getKeyUrl());
         }
         channelRequest.setKmsMessage(kmsMessage);
+        channelRequest.setChannelType(createData.type);
 
-        if (useAcl && createData.aclUrlLink != null) {
-            channelRequest.setAclUrlLink(createData.aclUrlLink);
+        if (useAcl && createData.getAclUrlLink() != null) {
+            channelRequest.setAclUrlLink(createData.getAclUrlLink());
         }
 
-        store.createChannel(channelRequest);
-        return true;
+        return createChannel(channelRequest, createData.getId());
     }
 
-    void createFailed(String message) {
-        Ln.e(message);
-        createComplete(WhiteboardError.ErrorData.CREATE_BOARD_ERROR);
-    }
+    private synchronized void createBoardWithAcl(final CreateData createData) {
 
-    public synchronized void createBoardWithAcl(final CreateData createData) {
-
-        if (createData.aclUrlLink != null) {
-            whiteboardService.setAclUrlLink(createData.aclUrlLink);
+        if (createData.getAclUrlLink() != null) {
+            whiteboardService.setAclUrlLink(createData.getAclUrlLink());
         } else {
             Ln.e("can't create acl board without acl url");
             return;
@@ -283,47 +215,34 @@ public class WhiteboardCreator implements Component {
             return;
         }
 
+        bus.post(new WhiteboardCreationStartEvent());
         Observable.just(unboundKey)
-                  .subscribeOn(schedulerProvider.from(singleThreadedExecutor))
-                  .subscribe(new Action1<KeyObject>() {
-                      @Override
-                      public void call(KeyObject key) {
-                          List<String> userIds = new ArrayList<>();
-                          Uri parentkmsResourceObjectUrl = whiteboardService.getParentkmsResourceObjectUrl();
-                          if (parentkmsResourceObjectUrl != null) {
-                              String kmsObjectUrl = parentkmsResourceObjectUrl.toString();
-                              userIds = Collections.singletonList(kmsObjectUrl);
-                          }
-                          boolean requestSent = createChannelHelper(userIds, key, createData, true,
-                                                                    whiteboardService.getRemoteStore());
-                          if (!requestSent) {
-                              createFailed("Failed to send create acl channel request");
-                          }
+                  .subscribeOn(schedulerProvider.from(createThread))
+                  .subscribe(key -> {
+                      List<String> userIds = new ArrayList<>();
+                      Uri parentkmsResourceObjectUrl = whiteboardService.getParentkmsResourceObjectUrl();
+                      if (parentkmsResourceObjectUrl != null) {
+                          String kmsObjectUrl = parentkmsResourceObjectUrl.toString();
+                          userIds = Collections.singletonList(kmsObjectUrl);
                       }
-                  }, new Action1<Throwable>() {
-                      @Override
-                      public void call(Throwable throwable) {
-                          Ln.e(throwable);
-                          createFailed("Exception thrown while trying to send create private channel request");
+                      boolean requestSent = createChannelHelper(userIds, key, createData, true);
+                      if (!requestSent) {
+                          createFailed("Failed to send create acl channel request");
                       }
+                  }, throwable -> {
+                      Ln.e(throwable);
+                      createFailed("Exception thrown while trying to send create private channel request");
                   });
     }
 
     private void startKeyFetchTimeout() {
         Ln.e("No unbound keys, retrying later");
-        keyFetchTimer = Observable.timer(KEY_REQUEST_TIMEOUT, TimeUnit.SECONDS, schedulerProvider.computation())
-                                  .subscribe(new Action1<Long>() {
-                                 @Override
-                                 public void call(Long aLong) {
-                                     createFailed("Create timer triggered before create complete");
-                                 }
-                             }, new Action1<Throwable>() {
-                                 @Override
-                                 public void call(Throwable throwable) {
-                                     Ln.e(throwable);
-                                     createFailed("Create cancel timer failed, aborting current create request");
-                                 }
-                             });
+        keyFetchTimer = Observable.timer(KEY_REQUEST_TIMEOUT.first, KEY_REQUEST_TIMEOUT.second, schedulerProvider.computation())
+                                  .subscribe(aLong -> createFailed("Create timer triggered before create complete"),
+                                             throwable -> {
+                                                 Ln.e(throwable);
+                                                 createFailed("Create cancel timer failed, aborting current create request");
+                                             });
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -341,19 +260,126 @@ public class WhiteboardCreator implements Component {
         return currentCreateRequest != null;
     }
 
-    public synchronized void setupWhiteboardServiceByConversationId(CreateData createData, final WhiteboardService.WhiteboardServiceAvailableHandler handler) {
-
-        whiteboardService.setAclId(createData.conversationId);
-        if (!aclWhiteboardEnabled()) {
-            handler.onWhiteboardServiceAvailable(createData.conversationId, createData.keyUrl, createData.aclUrlLink);
-            return;
-        }
-
-        UpdateWhiteboardServiceTask updateTask = new UpdateWhiteboardServiceTask(whiteboardService, handler, context, injector);
-        updateTask.execute(createData.conversationId);
+    @CheckResult
+    public boolean createChannel(Channel channelRequest, UUID channelCreationRequestId) {
+        return createChannel(channelRequest, channelCreationRequestId, null);
     }
 
-    public synchronized void createComplete() {
+    private Call<Channel> createCreateChannelCall(Channel channel) {
+
+        WhiteboardPersistenceClient whiteboardPersistenceClient = apiClientProvider.getWhiteboardPersistenceClient();
+
+        // Create whiteboard with OpenSpaceUrl and HiddenSpaceUrl
+        // Always create HiddenSpaceUrl
+        // Create OpenSpaceUrl according to the whiteboard type
+        boolean createOpenSpace = channel.getType() == ChannelType.ANNOTATION;
+
+        if (channel.isPrivateChannel() && sdkClient.supportsPrivateBoards()) {
+            Ln.d("Creating private channel");
+            return whiteboardPersistenceClient.createPrivateChannel(createOpenSpace, true, channel);
+        } else {
+            Ln.d("Creating conversation-backed channel");
+            return whiteboardPersistenceClient.createChannel(createOpenSpace, true, channel);
+        }
+    }
+
+    @CheckResult
+    public boolean createChannel(final Channel channel, final UUID channelCreationRequestId, @Nullable final List<Content> content) {
+
+        if (channel == null) {
+            return false;
+        }
+
+        if (channel.getDefaultEncryptionKeyUrl() == null) {
+            return false;
+        }
+
+        Call<Channel> call = createCreateChannelCall(channel);
+        call.enqueue(new Callback<Channel>() {
+            @Override
+            public void onResponse(Call<Channel> call, Response<Channel> response) {
+                if (response.isSuccessful()) {
+                    processCreateChannelResponse(response, content);
+                    whiteboardService.createBoardComplete(response.body(), channelCreationRequestId, channel.getDefaultEncryptionKeyUrl());
+
+                    if (createCallback != null) {
+                        createCallback.onSuccess(currentCreateRequest.getId(), response.body());
+                        createCallback = null;
+                    }
+                    createComplete();
+                } else {
+                    createFailed(WhiteboardError.ErrorData.NETWORK_ERROR, String.valueOf(response.code()));
+                    whiteboardService.boardReady();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Channel> call, Throwable t) {
+                createFailed(WhiteboardError.ErrorData.CREATE_BOARD_ERROR, WhiteboardError.ErrorData.NETWORK_ERROR.name());
+            }
+        });
+
+        return true;
+    }
+
+    protected void processCreateChannelResponse(Response<Channel> response, @Nullable List<Content> content) {
+        if (response.isSuccessful()) {
+            Channel channelResult = response.body();
+            Ln.d("Created board %s", channelResult.getChannelId());
+            whiteboardService.setCurrentChannel(channelResult);
+
+            if (channelResult.getAclUrl() != null && !whiteboardService.isLocal()) {
+                whiteboardService.loadBoard(channelResult.getChannelId(), false);
+            }
+
+            List<Stroke> strokeList = new ArrayList<>();
+            if (content != null) {
+                Observable.just(1)
+                        .subscribeOn(schedulerProvider.from(whiteboardService.getSaveContentExecutor()))
+                        .subscribe(integer -> {
+                            whiteboardService.getChannelWhiteboardStore(channelResult).saveContent(channelResult, content, null);
+                        }, Ln::e);
+                for (Content c : content) {
+                    Stroke stroke = WhiteboardUtils.createStroke(c, jsonParser, gson);
+                    if (stroke != null) {
+                        strokeList.add(stroke);
+                    }
+                }
+            }
+            whiteboardCache.initAndStartRealtimeForBoard(channelResult.getChannelId(), strokeList);
+        } else {
+            createFailed(WhiteboardError.ErrorData.CREATE_BOARD_ERROR, String.valueOf(response.code()));
+        }
+    }
+
+    private void createFailed(String message) {
+        Ln.e(message);
+        if (createCallback != null) {
+            createCallback.onFail(currentCreateRequest.getId());
+            createCallback = null;
+        }
+        createFailed(WhiteboardError.ErrorData.CREATE_BOARD_ERROR, message);
+    }
+
+
+    private void sendBoardError(WhiteboardError whiteboardError) {
+        WhiteboardService.OnWhiteboardEventListener boardListener = whiteboardService.getOnWhiteboardEventListener();
+
+        if (boardListener != null) {
+            boardListener.onBoardError(whiteboardError);
+        }
+    }
+
+    private void createFailed(WhiteboardError.ErrorData errorType, String errorMsg) {
+        WhiteboardOriginalData originalData = new WhiteboardOriginalData(errorType, null);
+        WhiteboardError whiteboardError = new WhiteboardError(errorType, originalData, errorMsg);
+        sendBoardError(whiteboardError);
+        bus.post(new WhiteboardError(errorType));
+        whiteboardService.boardReady();
+        createComplete();
+    }
+
+    private synchronized void createComplete() {
 
         if (keyFetchTimer != null && !keyFetchTimer.isUnsubscribed()) {
             // Kill the key fetch timer
@@ -363,21 +389,48 @@ public class WhiteboardCreator implements Component {
         currentCreateRequest = null;
     }
 
-    public void createComplete(WhiteboardError.ErrorData errorType) {
-        createComplete();
-        bus.post(new WhiteboardError(errorType));
-    }
-
     public static final class CreateData {
 
-        String conversationId;
-        Uri keyUrl;
-        Uri aclUrlLink;
+        final UUID uuid;
 
-        public CreateData(String conversationId, Uri keyUrl, Uri aclUrlLink) {
-            this.conversationId = conversationId;
-            this.keyUrl = keyUrl;
-            this.aclUrlLink = aclUrlLink;
+        final WhiteboardService.WhiteboardContext context;
+
+        ChannelType type;
+
+        public CreateData(WhiteboardService.WhiteboardContext context) {
+            this.uuid = UUID.randomUUID();
+            this.context = context;
+            this.type = ChannelType.WHITEBOARD;
         }
+
+        @Nullable
+        public Uri getAclUrlLink() {
+            return context == null ? null : context.getAclUrl();
+        }
+
+        public void setType(ChannelType type) {
+            this.type = type;
+        }
+
+        public boolean isAnnotation() {
+            return type == ChannelType.ANNOTATION;
+        }
+
+        public boolean isValid() {
+            return context != null && context.getAclUrl() == null && context.getAclId() == null;
+        }
+
+        public UUID getId() {
+            return uuid;
+        }
+
+        public String getConversationId() {
+            return context == null ? null : context.getAclId();
+        }
+    }
+
+    public interface CreateCallback {
+        void onSuccess(UUID createID, Channel channel);
+        void onFail(UUID uuid);
     }
 }

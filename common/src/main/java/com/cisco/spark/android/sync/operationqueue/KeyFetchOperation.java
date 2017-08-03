@@ -1,14 +1,18 @@
 package com.cisco.spark.android.sync.operationqueue;
 
+import android.content.ContentProviderOperation;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
+import com.cisco.spark.android.core.ForegroundActivity;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.metrics.EncryptionDurationMetricManager;
 import com.cisco.spark.android.model.KeyManager;
+import com.cisco.spark.android.sync.Batch;
+import com.cisco.spark.android.sync.ConversationContentProviderQueries;
 import com.cisco.spark.android.sync.KmsMessageRequestType;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
@@ -26,6 +30,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
+
+import de.greenrobot.event.EventBus;
 
 import static com.cisco.spark.android.sync.ConversationContract.EncryptionKeyEntry;
 import static com.cisco.spark.android.sync.ConversationContract.SyncOperationEntry.OperationType;
@@ -47,6 +53,9 @@ public class KeyFetchOperation extends PostKmsMessageOperation {
 
     @Inject
     transient KeyManager keyManager;
+
+    @Inject
+    transient EventBus bus;
 
     private final ArrayList<Uri> keyUris = new ArrayList<>();
     private final transient Object keyUrisLock = new Object();
@@ -189,6 +198,47 @@ public class KeyFetchOperation extends PostKmsMessageOperation {
         }
     }
 
+    @NonNull
+    @Override
+    public SyncState onPrepare() {
+        // If we get a new key request that hasn't previously failed, post a ForegroundActivity to
+        // wake up mercury.
+        for (Uri uri : getKeyUrisCopy()) {
+            if (!isFailedKeyRequest(uri)) {
+                bus.post(new ForegroundActivity());
+                break;
+            }
+        }
+        return super.onPrepare();
+    }
+
+    private boolean isFailedKeyRequest(Uri keyUri) {
+        long exp = ConversationContentProviderQueries.getOneLongValue(getContentResolver(),
+                EncryptionKeyEntry.CONTENT_URI,
+                EncryptionKeyEntry.ENCRYPTION_KEY_EXPIRY_TIME.toString(),
+                EncryptionKeyEntry.ENCRYPTION_KEY_URI + "=? AND "
+                        + EncryptionKeyEntry.ENCRYPTION_KEY + " IS NULL",
+                new String[]{keyUri.toString()});
+
+        return exp > System.currentTimeMillis();
+    }
+
+    private void setFailedKeyRequest(List<Uri> uris) {
+        Batch batch = newBatch();
+        for (Uri keyUri : uris) {
+            if (ConversationContentProviderQueries.getBoundKeyFromUri(getContentResolver(), keyUri) == null) {
+                // Write a record for the failed key fetch; this lets us optimize out some
+                // redundant failed fetches in the sync logic
+                batch.add(ContentProviderOperation.newInsert(EncryptionKeyEntry.CONTENT_URI)
+                        .withValue(EncryptionKeyEntry.ENCRYPTION_KEY_URI.toString(), keyUri.toString())
+                        .withValue(EncryptionKeyEntry.ENCRYPTION_KEY_EXPIRY_TIME.toString(),
+                                System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30))
+                        .build());
+            }
+        }
+        batch.apply();
+    }
+
     @Override
     protected void onNewOperationEnqueued(Operation newOperation) {
     }
@@ -245,9 +295,11 @@ public class KeyFetchOperation extends PostKmsMessageOperation {
     @Override
     protected void onStateChanged(SyncState oldState) {
         if (getState() == SyncState.FAULTED) {
-            for (Uri keyUri : getKeyUrisCopy()) {
+            List<Uri> keyUrisCopy = getKeyUrisCopy();
+            for (Uri keyUri : keyUrisCopy) {
                 encryptionDurationMetricManager.onKeyFetchFailed(keyUri);
             }
+            setFailedKeyRequest(keyUrisCopy);
         }
     }
 

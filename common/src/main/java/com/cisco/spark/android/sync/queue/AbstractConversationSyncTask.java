@@ -15,6 +15,7 @@ import com.cisco.spark.android.model.Activity;
 import com.cisco.spark.android.model.ActivityObject;
 import com.cisco.spark.android.model.ActivityReference;
 import com.cisco.spark.android.model.Conversation;
+import com.cisco.spark.android.model.EventObject;
 import com.cisco.spark.android.model.KeyManager;
 import com.cisco.spark.android.model.KeyObject;
 import com.cisco.spark.android.model.Person;
@@ -50,6 +51,8 @@ import javax.inject.Provider;
 
 import de.greenrobot.event.EventBus;
 
+import static com.cisco.spark.android.sync.ConversationContract.ActivityEntry.Type.ADD_PARTICIPANT;
+import static com.cisco.spark.android.sync.ConversationContract.ActivityEntry.Type.LEFT_CONVERSATION;
 import static com.cisco.spark.android.sync.ConversationContract.ConversationEntry;
 import static com.cisco.spark.android.sync.ConversationContract.TeamEntry;
 
@@ -92,7 +95,7 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
 
     protected final HashSet<ConversationRecord> updatedConversations = new HashSet<>();
     protected final HashSet<Uri> keysToFetch = new HashSet<>();
-    protected final ActivityDecryptedEvent activityDecryptedEvent = new ActivityDecryptedEvent();
+    protected ActivityDecryptedEvent activityDecryptedEvent = new ActivityDecryptedEvent();
     protected final HashMap<String, Long> activityPublishTimes = new HashMap<>();
 
     /**
@@ -117,6 +120,21 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
         ContentProviderOperation op = ContentProviderOperation.newUpdate(ActivityEntry.CONTENT_URI)
                 .withValue(ActivityEntry.ACTIVITY_DATA.name(), activity.getActivityData(getSelf(), gson))
                 .withSelection(ActivityEntry.CONTENT_DATA_ID + "=?", new String[]{activity.getContentDataId()})
+                .build();
+
+        batch.add(op);
+    }
+
+    protected void updateSparkMeetingWidget(Batch batch, Activity activity) {
+        if (activity.getSparkMeetingId() == null) {
+            Ln.e("Error, spark meeting update activity has no meeting id.");
+            return;
+        }
+        ContentProviderOperation op = ContentProviderOperation.newUpdate(ActivityEntry.CONTENT_URI)
+                .withValue(ActivityEntry.ACTIVITY_DATA.name(), activity.getActivityData(getSelf(), gson))
+                .withSelection(ActivityEntry.SPARK_WIDGET_MEETING_ID + "=?", new String[]{activity.getSparkMeetingId()})
+                .withValue(ActivityEntry.IS_ENCRYPTED.name(), activity.isEncrypted() ? 1 : 0)
+                .withValue(ActivityEntry.ENCRYPTION_KEY_URL.name(), activity.getEncryptionKeyUrl() != null ? activity.getEncryptionKeyUrl().toString() : null)
                 .build();
 
         batch.add(op);
@@ -155,7 +173,8 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
             activity.setEncrypted(activity.getEncryptionKeyUrl() != null);
         }
         if (!activity.isEncrypted()) {
-            activityDecryptedEvent.addActivity(activity);
+            if (!activity.isAcknowledgeActivity() || activity.isFromSelf(getSelf()))
+                activityDecryptedEvent.addActivity(activity);
         }
         final Uri keyUrl = activity.getEncryptionKeyUrl();
         if (keyUrl != null && activity.getSource() != ActivityEntry.Source.LOCAL) {
@@ -170,11 +189,17 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
             handleAcknowledgement(batch, activity, cr);
             return;
         } else if (activity.isDelete()) {
-            handleDeleteActivity(batch, activity, cr);
-            return;
+            if (activity.getObject() instanceof EventObject) {
+                handleDeleteEventActivity(batch, activity);
+            } else {
+                handleDeleteActivity(batch, activity, cr);
+                return;
+            }
         } else if (activity.isUpdateContent()) {
             updateContent(batch, activity);
             return;
+        } else if (activity.isUpdateSparkMeetingWidget()) {
+            updateSparkMeetingWidget(batch, activity);
         } else if (activity.isSetTeamColor()) {
             updateTeamColor(batch, activity);
             return;
@@ -210,6 +235,7 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
         }
 
         String activityData = activity.getActivityData(getSelf(), gson);
+        updateActivityTypeForBindingCase(activity);
         // insert then update. The insert may silently fail due to constraint violation if the row
         // is already there but we need to update the source, the activity data, and in the case
         // of provisional objects the activity id.
@@ -223,6 +249,7 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
                 .withValue(ActivityEntry.SYNC_OPERATION_ID.name(), activity.getClientTempId())
                 .withValue(ActivityEntry.SOURCE.name(), activity.getSource().ordinal())
                 .withValue(ActivityEntry.CONTENT_DATA_ID.name(), activity.getContentDataId())
+                .withValue(ActivityEntry.SPARK_WIDGET_MEETING_ID.name(), activity.getSparkMeetingId())
                 .withValue(ActivityEntry.IS_ENCRYPTED.name(), activity.isEncrypted() ? 1 : 0)
                 .withValue(ActivityEntry.IS_MENTION.name(), activity.isSelfMention(apiTokenProvider.getAuthenticatedUser()) ? 1 : 0)
                 .withValue(ActivityEntry.ENCRYPTION_KEY_URL.name(), keyUrl != null ? keyUrl.toString() : null)
@@ -241,6 +268,7 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
                 .withValue(ActivityEntry.SOURCE.name(), activity.getSource().ordinal())
                 .withValue(ActivityEntry.ACTIVITY_PUBLISHED_TIME.name(), activity.getPublished().getTime())      // in case our device's clock is off
                 .withValue(ActivityEntry.CONTENT_DATA_ID.name(), activity.getContentDataId())           // include for provisional object use case
+                .withValue(ActivityEntry.SPARK_WIDGET_MEETING_ID.name(), activity.getSparkMeetingId())  // include for provisional object use case
                 .withValue(ActivityEntry.IS_ENCRYPTED.name(), activity.isEncrypted() ? 1 : 0)
                 .withValue(ActivityEntry.IS_MENTION.name(), activity.isSelfMention(apiTokenProvider.getAuthenticatedUser()) ? 1 : 0)
                 .withValue(ActivityEntry.ENCRYPTION_KEY_URL.name(), keyUrl != null ? keyUrl.toString() : null)
@@ -263,6 +291,15 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
 
         if (activity.isCreateConversation()) {
             removeGapsBetween(batch, activity.getConversationId(), -1, activity.getPublished().getTime());
+        }
+    }
+
+    private void updateActivityTypeForBindingCase(Activity activity) {
+        if ((activity.getType() == LEFT_CONVERSATION || activity.getType() == ADD_PARTICIPANT) && activity.getObject() != null) {
+            Person objectPerson = (Person) activity.getObject();
+            if (Person.LYRA_SPACE.equals(objectPerson.getType())) {
+                activity.setActivityType(activity.getType().equals(ADD_PARTICIPANT) ? ActivityEntry.Type.ADD_LYRASPACE : ActivityEntry.Type.REMOVE_LYRASPACE);
+            }
         }
     }
 
@@ -308,16 +345,9 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
 
 
     private void handleLeaveActivity(final Batch batch, final Activity activity) {
-        //TODO there's some code in here to work around a server bug that leaves out the uuid for the leave object sometimes. Remove when fixed
         Person leftPerson = activity.getActor();
         if (activity.getObject() != null && activity.getObject().isPerson() && !leftPerson.equals(activity.getObject())) {
             leftPerson = (Person) activity.getObject();
-        }
-
-        if (leftPerson.getKey() == null) {
-            ActorRecord ar = actorRecordProvider.get(leftPerson.getId());
-            if (ar != null)
-                leftPerson.setUuid(ar.getKey().getUuid());
         }
 
         updateParticipantState(batch, activity.getConversationId(), leftPerson.getKey(), ParticipantEntry.MembershipState.LEFT);
@@ -410,7 +440,7 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
                 .withSelection(ActivityEntry.ACTIVITY_ID + " = ?", new String[]{tombstoneActivity.getId()})
                 .build();
 
-        batch.add(op);
+    batch.add(op);
 
         if (cr.getLastActivityId() != null && cr.getLastActivityId().equals(tombstoneActivity.getId())) {
             ActivityReference ref = ConversationContentProviderQueries.getPreviousPreviewActivity(getContentResolver(), cr.getId(), tombstoneActivity.getId());
@@ -418,6 +448,34 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
             cr.setPreviewActivityPublishedTime(ref.getPublishTime());
         }
         searchManager.deleteActivityFromSearch(tombstoneActivity.getId());
+    }
+
+
+    private void handleDeleteEventActivity(Batch batch, Activity activity) {
+        if (activity.getType() == ActivityEntry.Type.TOMBSTONE) // The activity is already in tombstone form, nothing to do.
+            return;
+        EventObject tombstoneActivityObject = (EventObject) activity.getObject();
+        Tombstone tombstone = new Tombstone(activity.getActor().getKey(),
+                                                                        activity.getActor().getKey(),
+                                                                        activity.getProvider(),
+                                                                        true);
+
+        ContentProviderOperation op = ContentProviderOperation.newUpdate(ActivityEntry.CONTENT_URI)
+                .withValue(ActivityEntry.ACTIVITY_TYPE.name(), ActivityEntry.Type.TOMBSTONE.ordinal())
+                .withValue(ActivityEntry.ACTIVITY_DATA.name(), gson.toJson(tombstone))
+                .withValue(ActivityEntry.CONTENT_DATA_ID.name(), null)
+                .withValue(ActivityEntry.SPARK_WIDGET_MEETING_ID.name(), null)
+                .withValue(ActivityEntry.ENCRYPTION_KEY_URL.name(), null)
+                .withValue(ActivityEntry.IS_ENCRYPTED.name(), activity.isEncrypted() ? 1 : 0)
+                .withValue(ActivityEntry.IS_MENTION.name(), 0)
+                .withSelection(ActivityEntry.SPARK_WIDGET_MEETING_ID + "=? AND "
+                                + ActivityEntry.ACTIVITY_TYPE + "!= ?",
+                        new String[]{tombstoneActivityObject.getId(),
+                                String.valueOf(ActivityEntry.Type.DELETE_SPARK_MEETING.ordinal())})
+                .build();
+
+        batch.add(op);
+        searchManager.deleteActivityFromSearch(activity.getId());
     }
 
     private void addAcknowledgement(Batch batch, ActorRecord.ActorKey actorKey,
@@ -604,12 +662,15 @@ public abstract class AbstractConversationSyncTask extends SyncTask {
                 } catch (IOException | ParseException e) {
                     Ln.d(e, "Failed decrypting title and/or summary");
                 }
-
             } else {
-                //TODO do we need keysToFetch anymore?
+                // make sure we request the key
                 keysToFetch.add(cr.getTitleKeyUrl());
                 cr.setAreTitleAndSummaryEncrypted(true);
             }
+        } else {
+            // Titles and summaries must be encrypted. Otherwise fall back to the defaults
+            cr.setTitle(null);
+            cr.setSummary(null);
         }
 
         if (cr.getAvatarEncryptionKeyUrl() != null) {

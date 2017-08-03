@@ -138,7 +138,6 @@ public class ConversationResolver {
             case TITLE_ENCRYPTION_KEY_URL:
             case CONVERSATION_AVATAR_ENCRYPTION_KEY_URL:
             case URL:
-            case RETENTION_URL:
                 cursorValues.put(col, UriUtils.parseIfNotNull(cursor.getString(colIndex)));
                 break;
 
@@ -227,8 +226,8 @@ public class ConversationResolver {
         return cursorValues.getString(vw_Conversation.CONVERSATION_ID);
     }
 
-    public String getAclUrl() {
-        return cursorValues.getString(vw_Conversation.ACL_URL);
+    public Uri getAclUrl() {
+        return UriUtils.parseIfNotNull(cursorValues.getString(vw_Conversation.ACL_URL));
     }
 
     /**
@@ -343,7 +342,7 @@ public class ConversationResolver {
     }
 
     public boolean isTeamConversation() {
-        return deviceRegistration.getFeatures().areTeamsEnabled() && !TextUtils.isEmpty(getParentTeamId());
+        return !TextUtils.isEmpty(getParentTeamId());
     }
 
     public boolean isTeamGuest() {
@@ -415,7 +414,7 @@ public class ConversationResolver {
     }
 
     public boolean hasAvatar() {
-        return deviceRegistration.getFeatures().hasCustomRoomAvatarsEnabled() && !TextUtils.isEmpty(cursorValues.getString(vw_Conversation.CONVERSATION_AVATAR_CONTENT_REFERENCE));
+        return !TextUtils.isEmpty(cursorValues.getString(vw_Conversation.CONVERSATION_AVATAR_CONTENT_REFERENCE));
     }
 
     public boolean isAvatarEncrypted() {
@@ -551,8 +550,12 @@ public class ConversationResolver {
         return cursorValues.getString(vw_Conversation.CUSTODIAN_ORG_NAME);
     }
 
-    public Uri getRetentionUrl() {
-        return cursorValues.getUri(vw_Conversation.RETENTION_URL);
+    public String getRetentionUrl() {
+        return cursorValues.getString(vw_Conversation.RETENTION_URL);
+    }
+
+    public long getLastRetentionSyncTimestamp() {
+        return cursorValues.getLong(vw_Conversation.LAST_RETENTION_SYNC_TIMESTAMP);
     }
 
     public void setExistsInDb(boolean existsInDb) {

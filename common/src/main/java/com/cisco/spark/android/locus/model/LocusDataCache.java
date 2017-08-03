@@ -20,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import de.greenrobot.event.EventBus;
 
+import static com.cisco.spark.android.locus.model.LocusSelfRepresentation.AlertType.ALERT_FULL;
+
 public class LocusDataCache {
     private volatile Map<LocusKey, LocusData> locusDataCache = new ConcurrentHashMap<LocusKey, LocusData>();
     private final EventBus bus;
@@ -217,6 +219,16 @@ public class LocusDataCache {
         return upcomingMeetingCalls;
     }
 
+    public Locus getLocus(LocusKey locusKey) {
+        LocusData locusData = getLocusData(locusKey);
+        if (locusData != null) {
+            Locus locus = locusData.getLocus();
+            if (locus != null)
+                return locus;
+        }
+        return null;
+    }
+
     public boolean isCallActive(LocusKey key) {
         if (key == null)
             return false;
@@ -234,9 +246,15 @@ public class LocusDataCache {
         if (locus == null) {
             return false;
         } else {
-            return locus.getFullState().getType().equals(LocusState.Type.MEETING) &&
-                    locus.getInfo().getOwner() != null &&
-                    locus.getInfo().getOwner().toString().equals(apiTokenProvider.getAuthenticatedUser().getUserId());
+            LocusState.Type type = locus.getFullState().getType();
+            LocusDescription info = locus.getInfo();
+            if (type == null || info == null) {
+                return false;
+            } else {
+                return type.equals(LocusState.Type.MEETING) &&
+                        info.getOwner() != null &&
+                        locus.getInfo().getOwner().toString().equals(apiTokenProvider.getAuthenticatedUser().getUserId());
+            }
         }
     }
 
@@ -255,7 +273,8 @@ public class LocusDataCache {
         for (LocusData locusData : locusDataCache.values()) {
             if (locusData.getLocus().getFullState().isActive()) {
                 LocusParticipant.State selfState = locusData.getLocus().getSelf().getState();
-                if (LocusParticipant.State.IDLE.equals(selfState) || LocusParticipant.State.NOTIFIED.equals(selfState)) {
+                if ((LocusParticipant.State.IDLE.equals(selfState) || LocusParticipant.State.NOTIFIED.equals(selfState)) &&
+                        ALERT_FULL.equals(locusData.getLocus().getSelf().getAlertType().getAction())) {
                     incomingCall = locusData.getKey();
                     break;
                 }
@@ -267,8 +286,22 @@ public class LocusDataCache {
     public long getStartTime(LocusKey key) {
         LocusData call = getLocusData(key);
 
-        if (call != null) {
+        if (call != null && call.getLocus() != null) {
             return call.getLocus().getFullState().getLastActive().getTime();
+        } else {
+            return 0;
+        }
+    }
+
+    public long getStartTimeForScheduledMeeting(LocusKey key) {
+        LocusData call = getLocusData(key);
+
+        if (call != null && call.getLocus() != null) {
+            if (call.getLocus().getMeeting() != null) {
+                return call.getLocus().getMeeting().getStartTime().getTime();
+            } else {
+                return getStartTime(key);
+            }
         } else {
             return 0;
         }

@@ -23,6 +23,7 @@ public enum MercuryEventType {
     LOCUS_UPDATED("locus.updated"),
     LOCUS_CONTROLS_UPDATED("locus.controls_updated"),
     LOCUS_DIFFERENCE("locus.difference"),
+    LOCUS_ROAP_MESSAGE("locus.message.roap"),
     START_TYPING("status.start_typing"),
     STOP_TYPING_EVENT("status.stop_typing"),
     BOARD_ACTIVITY("board.activity"),
@@ -36,7 +37,7 @@ public enum MercuryEventType {
     ROOM_BRING_ROOM_INTO_CALL("room.bring_room_into_call"),
     ROOM_REQUEST_LOGS("room.request_logs"),
     ROOM_SET_UPGRADE_CHANNEL("room.setUpgradeChannel"),
-    ROOM_RENEW_RSU("room.renew_rsu"),
+    ROOM_RENEW_RSU("room.renewRSU"),
     ROOM_SET_ROOM_CONTROL_USER("room.set_room_control_user"),
     ROOM_IDENTITY_CHANGED("room.identityDataChanged"),
     ROOM_IDENTITY_DELETED("room.identityDeleted"),
@@ -44,7 +45,11 @@ public enum MercuryEventType {
     PRESENCE_SUBSCRIPTION_UPDATE("apheleia.subscription_update"),
     USER_APP_ITEM("user.app_item"),
     LYRA_SPACE_UPDATE_EVENT("lyra.space_updated"),
-    MERCURY_REGISTRATION_STATUS("mercury.registration_status");
+    MERCURY_REGISTRATION_STATUS("mercury.registration_status"),
+    VOICEMAIL_INFO("voicemail.info"),
+    CALENDAR_MEETING_CREATE("calendar.meeting.create"),
+    CALENDAR_MEETING_UPDATE("calendar.meeting.update"),
+    CALENDAR_MEETING_DELETE("calendar.meeting.delete");
 
     private final String phrase;
 

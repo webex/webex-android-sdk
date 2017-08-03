@@ -7,6 +7,7 @@ public class Tombstone {
     private ActorRecord.ActorKey actor;
     private ActorRecord.ActorKey author;
     private Provider provider;
+    private boolean isSparkMeetingWidget;
 
     public Tombstone(Activity activity) {
         actor = activity.getActor().getKey();
@@ -22,6 +23,16 @@ public class Tombstone {
         this.provider = provider;
     }
 
+    public Tombstone(ActorRecord.ActorKey actor,
+                     ActorRecord.ActorKey author,
+                     Provider provider,
+                     boolean isSparkMeetingWidget) {
+        this.actor = actor;
+        this.author = author;
+        this.provider = provider;
+        this.isSparkMeetingWidget = isSparkMeetingWidget;
+    }
+
     public Tombstone() {
     }
 
@@ -31,5 +42,9 @@ public class Tombstone {
 
     public ActorRecord.ActorKey getAuthor() {
         return author;
+    }
+
+    public boolean isSparkMeetingWidget() {
+        return isSparkMeetingWidget;
     }
 }

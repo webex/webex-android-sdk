@@ -9,12 +9,18 @@ import com.cisco.spark.android.authenticator.LogoutEvent;
 import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.events.KmsKeyEvent;
+import com.cisco.spark.android.mercury.MercuryEventType;
+import com.cisco.spark.android.mercury.events.CalendarMeetingEvent;
 import com.cisco.spark.android.mercury.events.KeyPushEvent;
 import com.cisco.spark.android.model.Activity;
+import com.cisco.spark.android.model.CalendarMeeting;
+import com.cisco.spark.android.model.KeyManager;
 import com.cisco.spark.android.model.KeyObject;
+import com.cisco.spark.android.sync.Batch;
 import com.cisco.spark.android.util.LoggingLock;
 import com.cisco.spark.android.util.ThrottledAsyncTask;
 import com.github.benoitdion.ln.Ln;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,6 +36,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 
+import javax.inject.Provider;
+
 import de.greenrobot.event.EventBus;
 
 import static com.cisco.spark.android.sync.ConversationContract.ActivityEntry;
@@ -43,6 +51,9 @@ public class ConversationSyncQueue {
 
     private final ContentResolver contentResolver;
     private final ActivitySyncQueue activitySyncQueue;
+    private KeyManager keyManager;
+    private Gson gson;
+    private Provider<Batch> batchProvider;
     private ApplicationController applicationController;
     private final Injector injector;
 
@@ -53,9 +64,15 @@ public class ConversationSyncQueue {
     public ConversationSyncQueue(ContentResolver contentResolver,
                                  EventBus bus,
                                  ActivitySyncQueue activitySyncQueue,
+                                 KeyManager keyManager,
+                                 Gson gson,
+                                 Provider<Batch> batchProvider,
                                  Injector injector) {
         this.contentResolver = contentResolver;
         this.activitySyncQueue = activitySyncQueue;
+        this.keyManager = keyManager;
+        this.gson = gson;
+        this.batchProvider = batchProvider;
         this.injector = injector;
 
         synclock = new LoggingLock(BuildConfig.DEBUG, "ConversationSyncQueue Lock");
@@ -179,6 +196,32 @@ public class ConversationSyncQueue {
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventBackgroundThread(ActivitySyncQueue.ActivitySyncQueueUpdatedEvent event) {
         submitPriorityTask(getPushSyncTask());
+    }
+
+    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
+    public void onEventBackgroundThread(CalendarMeetingEvent event) {
+        Ln.d("Received calendar.meeting event");
+        if (event == null || event.getCalendarMeeting() == null) {
+            return;
+        }
+
+        CalendarMeeting calendarMeeting = event.getCalendarMeeting();
+        KeyObject key = keyManager.getBoundKey(calendarMeeting.getEncryptionKeyUrl());
+        if (key != null) {
+            calendarMeeting.decrypt(key);
+        }
+
+        Batch batch = batchProvider.get();
+        if (MercuryEventType.CALENDAR_MEETING_CREATE.equals(event.getEventType())) {
+            batch.add(calendarMeeting.getInsertOperation(gson).build());
+        } else if (MercuryEventType.CALENDAR_MEETING_UPDATE.equals(event.getEventType())) {
+            batch.add(calendarMeeting.getDeleteOperation().build());
+            batch.add(calendarMeeting.getInsertOperation(gson).build());
+        } else if (MercuryEventType.CALENDAR_MEETING_DELETE.equals(event.getEventType())) {
+            batch.add(calendarMeeting.getDeleteOperation().build());
+        }
+        batch.apply();
+        batch.clear();
     }
 
     LinkedBlockingQueue<KeyObject> incomingKeys = new LinkedBlockingQueue<>();
@@ -311,14 +354,15 @@ public class ConversationSyncQueue {
             synclock.unlock();
         }
 
-        setHighWaterMark(getHighWaterMark(contentResolver));
-
-        return highWaterMark;
+        long ret = getHighWaterMark(contentResolver);
+        setHighWaterMark(ret);
+        return ret;
     }
 
     public static long getHighWaterMark(ContentResolver contentResolver) {
-        if (contentResolver == null)
+        if (contentResolver == null) {
             return 0;
+        }
 
         Cursor cursor = null;
         try {
@@ -391,6 +435,9 @@ public class ConversationSyncQueue {
         this.applicationController = applicationController;
     }
 
+
+    public static class ConversationSyncStartedEvent {
+    }
 
     public static class ConversationListCompletedEvent {
     }

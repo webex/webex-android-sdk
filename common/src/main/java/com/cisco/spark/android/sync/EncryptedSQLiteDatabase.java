@@ -40,9 +40,9 @@ public class EncryptedSQLiteDatabase implements SQLiteDatabaseInterface {
             lock = (ReentrantLock) mLockField.get(sqLiteDatabase);
             mLockField.setAccessible(false);
         } catch (NoSuchFieldException e) {
-            Ln.e("getLockFromSQLiteDatabaseAndSetup NoSuchFieldException " + e.getStackTrace());
+            Ln.e(e, "getLockFromSQLiteDatabaseAndSetup NoSuchFieldException");
         } catch (IllegalAccessException e) {
-            Ln.e("getLockFromSQLiteDatabaseAndSetup IllegalAccessException " + e.getStackTrace());
+            Ln.e(e, "getLockFromSQLiteDatabaseAndSetup IllegalAccessException");
 
         }
     }
@@ -61,11 +61,11 @@ public class EncryptedSQLiteDatabase implements SQLiteDatabaseInterface {
             lockForced.invoke(sqLiteDatabase);
             lockForced.setAccessible(false);
         } catch (NoSuchMethodException e) {
-            Ln.e("beginTransaction NoSuchMethodException" + e.getStackTrace());
+            Ln.e(e, "beginTransaction NoSuchMethodException");
         } catch (InvocationTargetException e) {
-            Ln.e("beginTransaction InvocationTargetException" + e.getStackTrace());
+            Ln.e(e, "beginTransaction InvocationTargetException");
         } catch (IllegalAccessException e) {
-            Ln.e("beginTransaction IllegalAccessException" + e.getStackTrace());
+            Ln.e(e, "beginTransaction IllegalAccessException");
         }
 
         if (!sqLiteDatabase.isOpen()) {
@@ -88,9 +88,9 @@ public class EncryptedSQLiteDatabase implements SQLiteDatabaseInterface {
                     transactionListenerField.setAccessible(true);
 
                 } catch (NoSuchFieldException e) {
-                    Ln.e("beginTransaction NoSuchFieldException" + e.getStackTrace());
+                    Ln.e(e, "beginTransaction NoSuchFieldException");
                 } catch (IllegalAccessException e) {
-                    Ln.e("beginTransaction IllegalAccessException" + e.getStackTrace());
+                    Ln.e(e, "beginTransaction IllegalAccessException");
 
                 }
                 getLockFromSQLiteDatabaseAndSetup();
@@ -115,7 +115,7 @@ public class EncryptedSQLiteDatabase implements SQLiteDatabaseInterface {
                     transactionIsSuccessfulField.setAccessible(false);
                     transactionListenerField.setAccessible(false);
                 } catch (IllegalAccessException e) {
-                    Ln.e("beginTransaction IllegalAccessException" + e.getStackTrace());
+                    Ln.e(e, "beginTransaction IllegalAccessException");
                 }
                 ok = true;
             } finally {
@@ -127,11 +127,11 @@ public class EncryptedSQLiteDatabase implements SQLiteDatabaseInterface {
                         unlockForced.invoke(sqLiteDatabase);
                         unlockForced.setAccessible(false);
                     } catch (NoSuchMethodException e) {
-                        Ln.e("beginTransaction NoSuchMethodException" + e.getStackTrace());
+                        Ln.e(e, "beginTransaction NoSuchMethodException");
                     } catch (InvocationTargetException e) {
-                        Ln.e("beginTransaction InvocationTargetException" + e.getStackTrace());
+                        Ln.e(e, "beginTransaction InvocationTargetException");
                     } catch (IllegalAccessException e) {
-                        Ln.e("beginTransaction IllegalAccessException" + e.getStackTrace());
+                        Ln.e(e, "beginTransaction IllegalAccessException");
                     }
                 }
 
@@ -147,7 +147,25 @@ public class EncryptedSQLiteDatabase implements SQLiteDatabaseInterface {
     @Override
     public long insertWithOnConflict(String tablename, Object o, ContentValues values, int rule) {
         if (sqLiteDatabase != null) {
-            return sqLiteDatabase.insertWithOnConflict(tablename, null, values, rule);
+            long lastInsertRow = sqLiteDatabase.insertWithOnConflict(tablename, null, values, rule);
+            int lastChangeCount = 0;
+            try {
+                Method lastChangeCountMethod = SQLiteDatabase.class.getDeclaredMethod("lastChangeCount");
+                lastChangeCountMethod.setAccessible(true);
+                Integer lastChangeCountObject = (Integer) lastChangeCountMethod.invoke(sqLiteDatabase);
+                if (lastChangeCountObject != null) {
+                    lastChangeCount = lastChangeCountObject.intValue();
+                }
+                lastChangeCountMethod.setAccessible(false);
+            } catch (NoSuchMethodException e) {
+                Ln.e(e, "insertWithOnConflict NoSuchMethodException");
+            } catch (InvocationTargetException e) {
+                Ln.e(e, "insertWithOnConflict InvocationTargetException");
+            } catch (IllegalAccessException e) {
+                Ln.e(e, "insertWithOnConflict IllegalAccessException");
+            }
+            long insertRowId = lastChangeCount > 0 ? lastInsertRow : -1;
+            return insertRowId;
         }
         return 0;
     }

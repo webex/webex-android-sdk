@@ -1,14 +1,13 @@
 package com.cisco.spark.android.sync;
 
 import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.text.TextUtils;
 
 import com.cisco.spark.android.util.Strings;
 import com.github.benoitdion.ln.Ln;
-
-import net.sqlcipher.SQLException;
-import net.sqlcipher.database.SQLiteException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -179,7 +178,7 @@ public class DBHelperUtils {
     }
 
     protected void execSQL(SQLiteDatabaseInterface db, String sql) {
-        Ln.i("Execute SQL: " + sql);
+        Ln.i("Execute SQL: %s", sql);
         db.execSQL(sql);
     }
 
@@ -191,7 +190,7 @@ public class DBHelperUtils {
             }, "name like ?", new String[]{
                     table
             }, null, null, null);
-            if (c.moveToFirst()) {
+            if (c != null && c.moveToFirst()) {
                 return c.getInt(0) > 0;
             }
         } catch (Exception e) {
@@ -288,7 +287,105 @@ public class DBHelperUtils {
         }
     }
 
-    protected List<UpgradeModule> upgradeModules = Arrays.asList();
+    List<UpgradeModule> upgradeModules = Arrays.asList(
+            new UpgradeModule[]{
+                    new UpgradeModule(143) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            renameColumn(db, "CallHistory", "OTHER_CALLBACK_ADDRESS", "CALLBACK_ADDRESS");
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(144) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            addColumn(db, "ConversationEntry", "LAST_RETENTION_SYNC_TIMESTAMP", "INTEGER");
+                            execSQL(db, "UPDATE ConversationEntry SET retention_days = -1 WHERE retention_days IS NULL OR retention_days != 'for one year'");
+                            execSQL(db, "UPDATE ConversationEntry SET retention_days = 365 WHERE retention_days = 'for one year'");
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(145) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            // modified vw_Mentions view
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(146) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            // noop - remove NOT_NULL constraints on two columns of LocusMeetingInfo table
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(147) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            execSQL(db, "DROP TABLE IF EXISTS StickyEntry");
+                            // Delete Sticker entries fron ContentDataCacheEntry table
+                            execSQL(db, "DELETE FROM ContentDataCacheEntry WHERE TYPE = 3");
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(148) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            // Added vw_UniqueCallbackAddressCount
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(149) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            // add OrganizationEntry table, add several columns into vw_Activities for activity pruning
+                            createTable(db, ConversationContract.OrganizationEntry.values());
+                            // insert exist org info into OrganizationEntry
+                            execSQL(db, "INSERT OR IGNORE INTO OrganizationEntry(ORG_ID) SELECT DISTINCT ORG_ID FROM ActorEntry");
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(150) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            // Added CI_NOTFOUND to vw_ScoredActorSearch
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(151) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            // add CalendarMeetingInfoEntry table
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(152) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            // add new columns into CalendarMeetingInfoEntry table
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(153) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            addColumn(db, "CalendarMeetingInfoEntry", "LINKS", "TEXT");
+                            addColumn(db, "CalendarMeetingInfoEntry", "WEBEX_URI", "TEXT");
+                            addColumn(db, "CalendarMeetingInfoEntry", "WEBEX_URL", "TEXT");
+                            addColumn(db, "CalendarMeetingInfoEntry", "IS_DELETED", "INTEGER NOT NULL DEFAULT 0");
+                            addColumn(db, "CalendarMeetingInfoEntry", "LAST_MODIFIED_TIME", "INTEGER DEFAULT 0");
+                            return true;
+                        }
+                    },
+                    new UpgradeModule(154) {
+                        @Override
+                        protected boolean migrateFromPrevious(SQLiteDatabaseInterface db) {
+                            addColumn(db, "ActivityEntry", "SPARK_WIDGET_MEETING_ID", "TEXT");
+                            return true;
+                        }
+                    }
+            }
+    );
 
     public boolean runSanity() {
 
@@ -324,7 +421,7 @@ public class DBHelperUtils {
          * See if the schema has changed, and politely suggest double checking to see if an
          * ConversationContract.SCHEMA_VERSION increment is necessary.
          */
-        StringBuilder schemastring = new StringBuilder();
+        StringBuilder schemastring = new StringBuilder(String.valueOf(ConversationContract.SCHEMA_VERSION));
         for (ConversationContract.DbColumn[] table : ConversationContract.allTables) {
             schemastring.append(table[0].tablename());
             appendColumnsToStringBuilder(table, schemastring);
@@ -338,6 +435,7 @@ public class DBHelperUtils {
         for (ConversationContract.ViewColumn[] view : ConversationContract.allViews) {
             schemastring.append(view[0].tablename());
             appendColumnsToStringBuilder(view, schemastring);
+            schemastring.append(view[0].getViewSql());
         }
 
         String schemahash = Strings.md5(schemastring.toString());

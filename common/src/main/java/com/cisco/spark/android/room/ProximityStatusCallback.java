@@ -4,4 +4,6 @@ public interface ProximityStatusCallback {
 
     void newProximityStatus(FindRoomByDeviceResponse proximityStatus);
 
+    void onError();
+
 }

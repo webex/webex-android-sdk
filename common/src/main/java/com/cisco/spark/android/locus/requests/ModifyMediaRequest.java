@@ -1,15 +1,21 @@
 package com.cisco.spark.android.locus.requests;
 
 import android.net.*;
+
+import com.cisco.spark.android.features.CoreFeatures;
 import com.cisco.spark.android.locus.model.MediaConnection;
 
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ModifyMediaRequest {
+public class ModifyMediaRequest extends DeltaRequest {
     private Uri deviceUrl;
     private List<MediaConnection> localMedias;
+
+    public ModifyMediaRequest(CoreFeatures coreFeatures) {
+        super(coreFeatures);
+    }
 
     public Uri getDeviceUrl() {
         return deviceUrl;

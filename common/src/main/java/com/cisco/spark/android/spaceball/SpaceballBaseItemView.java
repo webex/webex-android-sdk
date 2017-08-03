@@ -130,7 +130,6 @@ public class SpaceballBaseItemView extends FrameLayout {
         setAppVisibility();
         imageButton.setImageDrawable(getIcon());
         imageButton.setBackground(getSpaceballDrawable());
-        spaceballView.refreshAppPositions();
     }
 
     public void setAppVisibility() {

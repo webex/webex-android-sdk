@@ -7,6 +7,7 @@ public final class PerformanceMetrics {
     public static final String ANDROID_PERFORMANCE_LOAD_WHITEBOARD_WEB_VIEW_DURATION = "android_performance_load_whiteboard_web_view_duration";
     public static final String ANDROID_PERFORMANCE_LOAD_WHITEBOARD_BOARD_CONTENT_DURATION = "android_performance_load_whiteboard_board_content_duration";
     public static final String ANDROID_PERFORMANCE_LOAD_WHITEBOARD_LIST_DURATION = "android_performance_load_whiteboard_list_duration";
+    public static final String ANDROID_PERFORMANCE_CREATE_WHITEBOARD_DURATION = "android_performance_create_whiteboard_duration";
 
     private PerformanceMetrics() {
     }

@@ -19,7 +19,6 @@ import com.cisco.spark.android.whiteboard.persistence.model.Channel;
 import com.github.benoitdion.ln.Ln;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -30,8 +29,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 
 public class WhiteboardSavingInConversationDelegate implements Component {
 
@@ -118,41 +115,31 @@ public class WhiteboardSavingInConversationDelegate implements Component {
     public void saveBoardInConversation(final Channel channel, final String conversationId, final WhiteboardStore store,
                                         final AbsRemoteWhiteboardStore.ClientCallback clientCallback) {
         Observable.just(conversationId).subscribeOn(schedulerProvider.from(singleThreadedExecutor))
-                .map(new Func1<String, Conversation>() {
-                    @Override
-                    public Conversation call(String s) {
-                        return getConversation(conversationId);
-                    }
-                }).subscribe(new Action1<Conversation>() {
-            @Override
-            public void call(Conversation conversation) {
+                  .map(s -> getConversation(conversationId))
+                  .subscribe(conversation -> {
 
-                List<String> convKroUrl = new ArrayList<>();
-                if (conversation.getKmsResourceObject() != null
-                        && conversation.getKmsResourceObject().getUri() != null) {
-                    String kmsObjectUrl = conversation.getKmsResourceObject().getUri().toString();
-                    convKroUrl = Collections.singletonList(kmsObjectUrl);
-                } else {
-                    clientCallback.onFailure("Couldn't save board in conversation, KRO mising");
-                    return;
-                }
+                      List<String> convKroUrl;
+                      if (conversation.getKmsResourceObject() != null
+                              && conversation.getKmsResourceObject().getUri() != null) {
+                          String kmsObjectUrl = conversation.getKmsResourceObject().getUri().toString();
+                          convKroUrl = Collections.singletonList(kmsObjectUrl);
+                      } else {
+                          clientCallback.onFailure("Couldn't save board in conversation, KRO mising");
+                          return;
+                      }
 
-                KmsResourceObject boardKro = new KmsResourceObject(channel.getKmsResourceUrl());
+                      KmsResourceObject boardKro = new KmsResourceObject(channel.getKmsResourceUrl());
 
-                Channel patchedChannel = new Channel();
-                patchedChannel.setChannelId(channel.getChannelId());
-                patchedChannel.setKmsMessage(conversationProcessor.authorizeNewParticipantsUsingKmsMessagingApi(boardKro, convKroUrl));
-                patchedChannel.setAclUrlLink(Uri.parse(conversation.getAclUrl()));
+                      Channel patchedChannel = new Channel();
+                      patchedChannel.setChannelId(channel.getChannelId());
+                      patchedChannel.setKmsMessage(conversationProcessor.authorizeNewParticipantsUsingKmsMessagingApi(boardKro, convKroUrl));
+                      patchedChannel.setAclUrlLink(conversation.getAclUrl());
 
-                store.patchChannel(patchedChannel, clientCallback);
+                      store.patchChannel(patchedChannel, clientCallback);
 
-            }
-        }, new Action1<Throwable>() {
-            @Override
-            public void call(Throwable throwable) {
-                Ln.e(throwable);
-                clientCallback.onFailure(throwable.getMessage());
-            }
+                  }, throwable -> {
+            Ln.e(throwable);
+            clientCallback.onFailure(throwable.getMessage());
         });
     }
 
@@ -170,7 +157,7 @@ public class WhiteboardSavingInConversationDelegate implements Component {
         String removeSelfKmsMessage = conversationProcessor.removeParticipantUsingKmsMessagingApi(boardKro, authenticatedUserId);
         WhiteboardKmsMessage kmsMessage = new WhiteboardKmsMessage(removeSelfKmsMessage);
 
-        Call call = apiClientProvider.getAclClient(aclServiceUrl).removeUserFromAcl(channel.getBoardAclId(), authenticatedUserId, kmsMessage);
+        Call<Void> call = apiClientProvider.getAclClient(aclServiceUrl).removeUserFromAcl(channel.getBoardAclId(), authenticatedUserId, kmsMessage);
         call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {

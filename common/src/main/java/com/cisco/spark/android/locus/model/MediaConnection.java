@@ -8,8 +8,8 @@ public class MediaConnection  {
     private String localSdp;
     private String remoteSdp;
     private String type;
-    private Uri mediaUrl;
     private UUID mediaId;
+    private Uri actionsUrl;
 
     public String getLocalSdp() {
         return localSdp;
@@ -35,19 +35,15 @@ public class MediaConnection  {
         this.type = type;
     }
 
-    public Uri getMediaUrl() {
-        return mediaUrl;
-    }
-
-    public void setMediaUrl(Uri mediaUrl) {
-        this.mediaUrl = mediaUrl;
-    }
-
     public UUID getMediaId() {
         return mediaId;
     }
 
     public void setMediaId(UUID mediaId) {
         this.mediaId = mediaId;
+    }
+
+    public Uri getActionsUrl() {
+        return actionsUrl;
     }
 }

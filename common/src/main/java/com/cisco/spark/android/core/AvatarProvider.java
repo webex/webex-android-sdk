@@ -6,14 +6,10 @@ import android.net.Uri;
 import com.cisco.spark.android.R;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-@Singleton
 public class AvatarProvider {
+
     private final DeviceRegistration deviceRegistration;
 
-    @Inject
     public AvatarProvider(DeviceRegistration deviceRegistration, Resources resources) {
         this.deviceRegistration = deviceRegistration;
 

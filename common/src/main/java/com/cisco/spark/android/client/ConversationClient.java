@@ -13,11 +13,13 @@ import com.cisco.spark.android.model.RetentionPolicy;
 import com.cisco.spark.android.model.Team;
 import com.cisco.spark.android.model.UrlResponse;
 import com.cisco.spark.android.model.UserPatchRequest;
+import com.cisco.spark.android.status.HealthCheckResponse;
 
 import java.util.HashMap;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
@@ -138,10 +140,15 @@ public interface ConversationClient {
     @Streaming
     Call<ResponseBody> downloadFileIfModified(@Url String url, @Header("If-Modified-Since") String sinceDate);
 
+    @GET
+    Call<RetentionPolicy> getRetentionPolicy(@Url String url);
     @GET("retention/self")
     Call<RetentionPolicy> getRetentionPolicyForOneOnOneConversation();
 
     @GET("retention/organization/{orgId}")
     Call<RetentionPolicy> getRetentionPolicyForGroupConversation(@Path("orgId") String orgId);
+
+    @GET("ping")
+    Observable<Response<HealthCheckResponse>> ping();
 
 }

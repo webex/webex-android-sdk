@@ -11,6 +11,8 @@ public interface UrlProvider {
     String getCalliopeRegistrarUrl();
     String getOauth2Url();
     String getAclServiceUrl();
+    String getIdbrokerTokenUrl();
+    String getIdentityApiUrl();
 
     @Nullable String getMetricsApiUrl();
 }

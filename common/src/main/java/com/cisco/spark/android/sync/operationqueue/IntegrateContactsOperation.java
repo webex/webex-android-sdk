@@ -16,6 +16,7 @@ import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.AuthenticatedUser;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.model.Person;
+import com.cisco.spark.android.sync.ActorRecordProvider;
 import com.cisco.spark.android.sync.Batch;
 import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
@@ -25,6 +26,7 @@ import com.github.benoitdion.ln.Ln;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -49,6 +51,9 @@ public class IntegrateContactsOperation extends Operation {
 
     @Inject
     transient ApiTokenProvider apiTokenProvider;
+
+    @Inject
+    transient ActorRecordProvider actorRecordProvider;
 
     public IntegrateContactsOperation(Injector injector, boolean enabled) {
         super(injector);
@@ -116,6 +121,7 @@ public class IntegrateContactsOperation extends Operation {
             // Iterate through both cursors in parallel looking for matches
             String actorEmail, contactEmail;
             int compare;
+            List<String> actorUuids = new ArrayList<>();
             Batch actorsBatch = newBatch();
             while (!contactsCursor.isAfterLast() && !actorCursor.isAfterLast()) {
                 actorEmail = actorCursor.getString(0);
@@ -133,9 +139,11 @@ public class IntegrateContactsOperation extends Operation {
                 compare = contactEmail.compareTo(actorEmail);
 
                 if (compare == 0) {
-                    contactsContractManager.addRawContact(actorCursor.getString(1), actorsBatch);
+                    String actorUuid = actorCursor.getString(1);
+                    contactsContractManager.addRawContact(actorUuid, actorsBatch);
                     contactsCursor.moveToNext();
                     actorCursor.moveToNext();
+                    actorUuids.add(actorUuid);
                 } else if (compare < 0) {
                     if (TextUtils.equals(selfDomain, NameUtils.getDomainFromEmail(contactEmail))) {
                         // We share an org, add to rawcontact candidates

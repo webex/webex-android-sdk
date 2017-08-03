@@ -15,7 +15,6 @@
     <dimen name="recents_avatar_size">45dp</dimen>
     <dimen name="space_detail_avatar_size_shrunken">64dp</dimen>
     <dimen name="chip_height">32dip</dimen>
-    <dimen name="image_uri_size">160dp</dimen>
     <dimen name="avatar_large_dim">360dp</dimen>
     <dimen name="avatar_edit_size">116dp</dimen>
     <dimen name="avatar_callparticipant_height">75dp</dimen>

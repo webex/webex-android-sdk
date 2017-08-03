@@ -4,12 +4,9 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.cisco.spark.android.callcontrol.CallContext;
-import com.cisco.spark.android.callcontrol.CallInitiationOrigin;
-import com.cisco.spark.android.media.MediaSession;
-import com.cisco.spark.android.callcontrol.CallEndReason;
 import com.cisco.spark.android.util.DateUtils;
 import com.cisco.spark.android.util.NameUtils;
+import com.github.benoitdion.ln.Ln;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,26 +14,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-public class LocusData {
+import static com.cisco.spark.android.locus.model.LocusParticipant.State.JOINED;
+import static com.cisco.spark.android.locus.model.LocusState.Type.MEETING;
 
+public class LocusData {
     private Locus locus;
     private LocusKey locusKey;
-    private long epochStartTime;
-
-    private MediaSession mediaSession;
-
-    private boolean isVideoDisabled;
-    private boolean isCallConnected;
-    private boolean isCallStarted;
-    private boolean wasMediaFlowing;
-    private CallContext callContext;
     private boolean isToasting;
-    private CallInitiationOrigin callInitiationOrigin;
-    private CallEndReason callEndReason;
     private UUID activeSpeakerId;
     private String observingResource;
-    private boolean onHold;
-    private boolean isAudioCall;
 
     // need to keep this state in client for now to know which media session to carry forward to new merged call
     // should no longer be needed once following has been added: https://sqbu-github.cisco.com/WebExSquared/cloud-apps/issues/2528
@@ -45,12 +31,16 @@ public class LocusData {
     private String remoteParticipantName;
     private String remoteParticipantEmail;
 
+    // TODO: REMOVED THIS BLOCK ONCE A/B TESTING IS COMPLETE ------
+    private boolean useNewBridgeTest;
+    public void setUseNewBridgeTest(boolean value) {
+        useNewBridgeTest = value;
+    }
+    // ------------------------------------------------------------
 
     public LocusData(Locus locus) {
         this.locus = locus;
         this.locusKey = locus.getKey();
-        this.callInitiationOrigin = CallInitiationOrigin.CallOriginationUnknown;
-        this.callEndReason = new CallEndReason();
     }
 
     public void reset() {
@@ -105,14 +95,6 @@ public class LocusData {
         return locus.getFullState().getLastActive();
     }
 
-    public long getEpochStartTime() {
-        return epochStartTime;
-    }
-
-    public void setEpochStartTime(long timestamp) {
-        this.epochStartTime = timestamp;
-    }
-
     public void setRemoteParticipantEmail(String remoteParticipantEmail) {
         this.remoteParticipantEmail = remoteParticipantEmail;
     }
@@ -121,35 +103,25 @@ public class LocusData {
         return remoteParticipantEmail;
     }
 
-    public CallContext getCallContext() {
-        return callContext;
-    }
-
-    public void setCallContext(CallContext callContext) {
-        this.callContext = callContext;
-    }
-
-    public void setVideoDisabled(boolean videoDisabled) {
-        isVideoDisabled = videoDisabled;
-    }
-
-    public CallInitiationOrigin getCallInitiationOrigin() {
-        return callInitiationOrigin;
-    }
-
-    public void setCallInitiationOrigin(CallInitiationOrigin callInitiationOrigin) {
-        this.callInitiationOrigin = callInitiationOrigin;
-    }
-
-    public CallEndReason getCallEndReason() {
-        return callEndReason;
-    }
-
-    public void setCallEndReason(CallEndReason reason) {
-        callEndReason = reason;
-    }
-
     public boolean isBridge() {
+        boolean oldResult = isBridgeOld();
+        boolean newResult = isBridgeNew();
+
+        if (oldResult == newResult) {
+            Ln.i("isBridge metric: results matched (old=%b, new=%b), returning:new (%b)", oldResult, newResult, newResult);
+            return newResult;
+        } else {
+            if (useNewBridgeTest) {
+                Ln.i("isBridge metric: results did not match (old=%b, new=%b), returning:new (%b)", oldResult, newResult, newResult);
+                return newResult;
+            } else {
+                Ln.i("isBridge metric: results did not match (old=%b, new=%b), returning:old (%b)", oldResult, newResult, oldResult);
+                return oldResult;
+            }
+        }
+    }
+
+    private boolean isBridgeOld() {
 
         if (locus == null || locus.getParticipants() == null) {
             return false;
@@ -164,7 +136,7 @@ public class LocusData {
         for (LocusParticipant ppt : locus.getParticipants()) {
 
             if (validTypes.contains(ppt.getType())) {
-                if (ppt.getState() != LocusParticipant.State.JOINED) {
+                if (ppt.getState() != JOINED) {
                     // Machines/bridges should never count if they aren't joined
                     continue;
                 }
@@ -184,7 +156,8 @@ public class LocusData {
                     devices++;
                 } else {
                     for (LocusParticipantDevice device : deviceList) {
-                        if (!isPaired(device)) {
+                        // If they have multiple devices, only count the unpaired, joined devices
+                        if (!isPaired(device) && isJoined(device)) {
                             devices++;
                         }
                     }
@@ -197,6 +170,21 @@ public class LocusData {
         }
 
         return false;
+    }
+
+    private boolean isJoined(LocusParticipantDevice device) {
+        return JOINED.equals(device.getState());
+    }
+
+    // TODO: Potential replacement, but needs significant testing!
+    // Current state types include: CALL, MEETING, SIP_BRIDGE, & IVR.
+    // Does SIP_BRIDGE == 1, or > 1?
+    private boolean isBridgeNew() {
+        LocusState fullState = locus.getFullState();
+        if (fullState == null)
+            return false;
+        else
+            return MEETING.equals(locus.getFullState().getType());
     }
 
     private boolean isPaired(LocusParticipantDevice device) {
@@ -212,6 +200,15 @@ public class LocusData {
 
     public boolean isMeeting() {
         return locus.isMeeting();
+    }
+
+    public String getMeetingBridgeName() {
+        for (LocusParticipant participant : locus.getParticipants()) {
+            if (participant.getType() == LocusParticipant.Type.MEETING_BRIDGE) {
+                return participant.getPerson().getDisplayName();
+            }
+        }
+        return "";
     }
 
     public boolean isEmptyMeeting() {
@@ -244,7 +241,7 @@ public class LocusData {
     public List<LocusParticipant> getJoinedParticipants() {
         List<LocusParticipant> joinedParticipants = new ArrayList<>();
         for (LocusParticipant participant : locus.getParticipants()) {
-            if (participant.getState() == LocusParticipant.State.JOINED) {
+            if (participant.getState() == JOINED) {
                 if (!participant.isObserving()) {
                     joinedParticipants.add(participant);
                 }
@@ -320,6 +317,14 @@ public class LocusData {
         return false;
     }
 
+    public boolean isFloorMineThisDevice(Uri deviceUrl) {
+        if (isFloorMine()) {
+            // Leveraging 'beneficiary != null' check in isFloorMine()
+            return getLocus().getFloorBeneficiary().getDeviceUrl().equals(deviceUrl);
+        }
+        return false;
+    }
+
     public LocusParticipant getParticipantSharing() {
         if (locus.isFloorGranted()) {
             for (MediaShare mediaShare : locus.getMediaShares()) {
@@ -381,6 +386,16 @@ public class LocusData {
                 }
             }
         }
+    }
+
+    @SuppressWarnings("unused")
+    public boolean isWaitingFromThisDevice(Uri deviceUrl) {
+        LocusParticipant.Intent intent = locus.getIntent(deviceUrl);
+        LocusState fullState = locus.getFullState();
+        return intent != null && intent.getType() != null &&
+               intent.getType().equals(LocusParticipant.IntentType.WAIT) &&
+               fullState != null && fullState.getState() != null &&
+               fullState.getState().equals(LocusState.State.INITIALIZING);
     }
 
     public String getObservingResource() {
@@ -461,7 +476,7 @@ public class LocusData {
             return false;
 
         LocusSelfRepresentation self = locus.getSelf();
-        if (self == null || self.getState() != LocusParticipant.State.JOINED)
+        if (self == null || self.getState() != JOINED)
             return false;
 
         if (self.isObserving()) {
@@ -516,30 +531,6 @@ public class LocusData {
         return null;
     }
 
-    public boolean isCallConnected() {
-        return isCallConnected;
-    }
-
-    public void setCallConnected(boolean isCallConnected) {
-        this.isCallConnected = isCallConnected;
-    }
-
-    public boolean isCallStarted() {
-        return isCallStarted;
-    }
-
-    public void setCallStarted(boolean isCallStarted) {
-        this.isCallStarted = isCallStarted;
-    }
-
-
-    public boolean wasMediaFlowing() {
-        return wasMediaFlowing;
-    }
-
-    public void setWasMediaFlowing(boolean wasMediaFlowing) {
-        this.wasMediaFlowing = wasMediaFlowing;
-    }
 
     public boolean isToasting() {
         return isToasting;
@@ -593,35 +584,11 @@ public class LocusData {
         }
     }
 
-    public boolean isOnHold() {
-        return onHold;
-    }
-
-    public void setOnHold(boolean onHold) {
-        this.onHold = onHold;
-    }
-
-    public MediaSession getMediaSession() {
-        return mediaSession;
-    }
-
-    public void setMediaSession(MediaSession mediaSession) {
-        this.mediaSession = mediaSession;
-    }
-
     public boolean isInitiatedMerge() {
         return initiatedMerge;
     }
 
     public void setInitiatedMerge(boolean initiatedMerge) {
         this.initiatedMerge = initiatedMerge;
-    }
-
-    public boolean isAudioCall() {
-        return isAudioCall;
-    }
-
-    public void setAudioCall(boolean audioCall) {
-        isAudioCall = audioCall;
     }
 }

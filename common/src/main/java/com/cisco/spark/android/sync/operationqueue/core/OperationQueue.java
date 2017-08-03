@@ -1,6 +1,6 @@
- package com.cisco.spark.android.sync.operationqueue.core;
+package com.cisco.spark.android.sync.operationqueue.core;
 
- import android.content.ContentProviderOperation;
+import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
@@ -12,10 +12,10 @@ import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.authenticator.AuthenticatedUserProvider;
 import com.cisco.spark.android.authenticator.LogoutEvent;
 import com.cisco.spark.android.core.Injector;
+import com.cisco.spark.android.events.UIForegroundTransition;
 import com.cisco.spark.android.flag.FlagOperation;
 import com.cisco.spark.android.locus.events.LocusDataCacheChangedEvent;
 import com.cisco.spark.android.locus.model.LocusDataCache;
-import com.cisco.spark.android.mercury.MercuryClient;
 import com.cisco.spark.android.metrics.model.GenericMetric;
 import com.cisco.spark.android.model.Comment;
 import com.cisco.spark.android.model.ConversationTag;
@@ -31,29 +31,25 @@ import com.cisco.spark.android.reachability.NetworkReachability;
 import com.cisco.spark.android.reachability.NetworkReachabilityChangedEvent;
 import com.cisco.spark.android.reachability.UIServiceAvailability;
 import com.cisco.spark.android.sdk.SdkClient;
-import com.cisco.spark.android.stickies.Sticky;
 import com.cisco.spark.android.sync.ActorRecord;
 import com.cisco.spark.android.sync.Batch;
-import com.cisco.spark.android.sync.ContentDataCacheRecord;
+import com.cisco.spark.android.sync.ContentManager;
 import com.cisco.spark.android.sync.ConversationContract.ActivityEntry;
 import com.cisco.spark.android.sync.ConversationContract.ConversationEntry;
 import com.cisco.spark.android.sync.ConversationContract.SyncOperationEntry;
 import com.cisco.spark.android.sync.ConversationContract.vw_PendingSyncOperations;
 import com.cisco.spark.android.sync.operationqueue.ActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.AddPersonOperation;
-import com.cisco.spark.android.sync.operationqueue.AliasPreloginMetricsUserIdOperation;
 import com.cisco.spark.android.sync.operationqueue.AssignRoomAvatarOperation;
 import com.cisco.spark.android.sync.operationqueue.AudioMuteOperation;
 import com.cisco.spark.android.sync.operationqueue.AudioVolumeOperation;
 import com.cisco.spark.android.sync.operationqueue.AvatarUpdateOperation;
 import com.cisco.spark.android.sync.operationqueue.CatchUpSyncOperation;
 import com.cisco.spark.android.sync.operationqueue.ContentUploadOperation;
-import com.cisco.spark.android.sync.operationqueue.CreateKmsResourceOperation;
 import com.cisco.spark.android.sync.operationqueue.CustomNotificationsTagOperation;
 import com.cisco.spark.android.sync.operationqueue.DeleteActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.FeatureToggleOperation;
 import com.cisco.spark.android.sync.operationqueue.FetchSpaceUrlOperation;
-import com.cisco.spark.android.sync.operationqueue.FetchStickyPackOperation;
 import com.cisco.spark.android.sync.operationqueue.FetchUnjoinedTeamRoomsOperation;
 import com.cisco.spark.android.sync.operationqueue.GetAvatarUrlsOperation;
 import com.cisco.spark.android.sync.operationqueue.GetRetentionPolicyInfoOperation;
@@ -69,7 +65,6 @@ import com.cisco.spark.android.sync.operationqueue.NewConversationOperation.Crea
 import com.cisco.spark.android.sync.operationqueue.NewConversationWithRepostedMessagesOperation;
 import com.cisco.spark.android.sync.operationqueue.PostCommentOperation;
 import com.cisco.spark.android.sync.operationqueue.PostGenericMetricOperation;
-import com.cisco.spark.android.sync.operationqueue.PostStickyActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.RemoteSearchOperation;
 import com.cisco.spark.android.sync.operationqueue.RemoveParticipantOperation;
 import com.cisco.spark.android.sync.operationqueue.RemoveRoomAvatarOperation;
@@ -87,11 +82,11 @@ import com.cisco.spark.android.sync.operationqueue.UpdateTeamColorOperation;
 import com.cisco.spark.android.sync.operationqueue.VideoThumbnailOperation;
 import com.cisco.spark.android.sync.queue.AbstractConversationSyncTask;
 import com.cisco.spark.android.sync.queue.SyncTaskOperation;
-import com.cisco.spark.android.util.Action;
 import com.cisco.spark.android.util.CollectionUtils;
 import com.cisco.spark.android.util.LoggingLock;
 import com.cisco.spark.android.util.SafeAsyncTask;
 import com.cisco.spark.android.util.ThrottledAsyncTask;
+import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.spark.android.wdm.Features;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
@@ -107,10 +102,8 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -159,10 +152,11 @@ public class OperationQueue {
     private RefWatcher refWatcher;
     private final SdkClient sdkClient;
     private final LocusDataCache locusDataCache;
+    private final DeviceRegistration deviceRegistration;
 
     public OperationQueue(Context context, Gson gson, EventBus bus, AuthenticatedUserProvider authenticatedUserProvider,
                           NetworkReachability networkReachability, Provider<Batch> batchProvider, Injector injector,
-                          RefWatcher refWatcher, SdkClient sdkClient, LocusDataCache locusDataCache) {
+                          RefWatcher refWatcher, SdkClient sdkClient, LocusDataCache locusDataCache, DeviceRegistration deviceRegistration) {
         this.context = context;
         this.gson = gson;
         this.authenticatedUserProvider = authenticatedUserProvider;
@@ -172,6 +166,7 @@ public class OperationQueue {
         this.refWatcher = refWatcher;
         this.sdkClient = sdkClient;
         this.locusDataCache = locusDataCache;
+        this.deviceRegistration = deviceRegistration;
         lock = new LoggingLock(BuildConfig.DEBUG, "OperationQueue");
         idle = lock.newCondition();
         bus.register(this);
@@ -193,23 +188,7 @@ public class OperationQueue {
     }
 
     /**
-     * Send a sticky to a conversation.
-     *
-     * @param conversationId Conversation that contains the ID or temp id if provisional
-     * @param sticky         File content, if any. Thumbnails will be generated as needed.
-     */
-
-    public ActivityOperation postSticker(String conversationId, Sticky sticky) {
-        PostStickyActivityOperation op = new PostStickyActivityOperation(injector, conversationId, sticky);
-        submit(op);
-
-        return op;
-    }
-
-    /**
      * Request a key from the KMS
-     *
-     * @param keyUri
      */
     public KeyFetchOperation requestKey(Uri keyUri) {
         if (keyUri == null) {
@@ -301,24 +280,20 @@ public class OperationQueue {
         return submit(new UnboundKeyFetchOperation(injector, KeyManager.defaultUnboundKeyLimit));
     }
 
-    public Operation setDeveloperFeature(@NonNull String key, Object value, @NonNull String... emails) {
-        return setFeature(Features.FeatureType.DEVELOPER, key, value, emails);
-    }
-
     public Operation setBooleanUserFeatures(@NonNull Map<String, Boolean> features, @NonNull String... uuids) {
         return setBooleanFeatures(features, Features.FeatureType.USER, uuids);
     }
 
-    public Operation setBooleanDeveloperFeatures(@NonNull Map<String, Boolean> features, @NonNull String... uuids) {
-        return setBooleanFeatures(features, Features.FeatureType.DEVELOPER, uuids);
-    }
-
-    private Operation setBooleanFeatures(@NonNull Map<String, Boolean> features, Features.FeatureType featureType, @NonNull String... uuids) {
+    public Operation setBooleanFeatures(@NonNull Map<String, Boolean> features, Features.FeatureType featureType, @NonNull String... uuids) {
         HashMap<String, String> toggles = new HashMap<>();
         for (String s : features.keySet()) {
             toggles.put(s, String.valueOf(features.get(s)));
         }
         return submit(new FeatureToggleOperation(injector, toggles, featureType, CollectionUtils.asSet(uuids)));
+    }
+
+    public Operation setDeveloperFeature(@NonNull String key, Object value, @NonNull String... emails) {
+        return setFeature(Features.FeatureType.DEVELOPER, key, value, emails);
     }
 
     public Operation setUserFeature(@NonNull String key, Object value, @NonNull String... uuids) {
@@ -363,16 +338,12 @@ public class OperationQueue {
         return submit(new FetchUnjoinedTeamRoomsOperation(injector));
     }
 
-    public Operation createKmsResource(String conversationId, Set<String> participantUuids) {
-        return submit(new CreateKmsResourceOperation(injector, conversationId, participantUuids));
-    }
-
     public Operation archiveConversation(String conversationId, boolean archive) {
         return submit(new ToggleActivityOperation(injector, conversationId, archive ? Verb.archive : Verb.unarchive, OperationType.CONVERSATION_ARCHIVE));
     }
 
     public Operation tag(String conversationId, ConversationTag conversationTag) {
-        return tag(conversationId, Arrays.asList(conversationTag));
+        return tag(conversationId, Collections.singletonList(conversationTag));
     }
 
     public Operation tag(String conversationId, List<ConversationTag> conversationTagList) {
@@ -380,15 +351,15 @@ public class OperationQueue {
     }
 
     public Operation untag(String conversationId, ConversationTag conversationTag) {
-        return untag(conversationId, Arrays.asList(conversationTag));
+        return untag(conversationId, Collections.singletonList(conversationTag));
     }
 
     public Operation untag(String conversationId, List<ConversationTag> conversationTagList) {
         return submit(new TagOperation(injector, conversationId, conversationTagList, false, OperationType.TAG));
     }
 
-    public Operation retrieveRetentionPolicy(String custodianOrgId, Uri retentionUrl, String conversationId, boolean isOneOnOneConversation) {
-        return submit(new GetRetentionPolicyInfoOperation(injector, this.context, custodianOrgId, retentionUrl, conversationId, isOneOnOneConversation));
+    public Operation retrieveRetentionPolicy(String retentionUrl) {
+        return submit(new GetRetentionPolicyInfoOperation(injector, retentionUrl));
     }
 
     /**
@@ -409,10 +380,6 @@ public class OperationQueue {
 
     public Operation searchQuery(String searchString, SearchStringWithModifiers searchStringWithModifiers) {
         return submit(new RemoteSearchOperation(injector, searchString, searchStringWithModifiers));
-    }
-
-    public Operation updateStickies() {
-        return submit(new FetchStickyPackOperation(injector));
     }
 
     public Operation joinTeamRoom(String conversationId, String parentTeamId, int participantCount) {
@@ -455,8 +422,8 @@ public class OperationQueue {
         return submit(new TokenRefreshOperation(injector, reason));
     }
 
-    public Operation getAvatarUrls(String uuid, Action<ContentDataCacheRecord> callback) {
-        return submit(new GetAvatarUrlsOperation(injector, uuid, callback));
+    public Operation getAvatarUrls(ContentManager.CacheRecordRequestParameters parameters) {
+        return submit(new GetAvatarUrlsOperation(injector, parameters));
     }
 
     public Operation catchUpSync() {
@@ -489,7 +456,6 @@ public class OperationQueue {
      * @param uuidsOrEmails List of zero or more id's or emails
      * @param title         Can be null
      * @param createFlags   One or more from the @NewConversationOperation.CreateFlags enum
-     * @return
      */
     public NewConversationOperation createConversation(Collection<String> uuidsOrEmails, String title, CreateFlags... createFlags) {
         EnumSet<CreateFlags> createFlagses = EnumSet.noneOf(CreateFlags.class);
@@ -509,10 +475,6 @@ public class OperationQueue {
 
     /**
      * Create a new team
-     *
-     * @param title
-     * @param summary
-     * @return
      */
     public NewConversationOperation createTeam(String title, String summary, CreateFlags... createFlags) {
         EnumSet<CreateFlags> createFlagses = EnumSet.of(CreateFlags.NEW_TEAM, CreateFlags.PERSIST_WITHOUT_MESSAGES);
@@ -524,9 +486,6 @@ public class OperationQueue {
 
     /**
      * Create a new team room, open to all team members
-     *
-     * @param title
-     * @param teamId
      */
     public NewConversationOperation createTeamConversation(String title, String teamId, CreateFlags... createFlags) {
         EnumSet<CreateFlags> createFlagses = EnumSet.of(CreateFlags.PERSIST_WITHOUT_MESSAGES);
@@ -560,7 +519,7 @@ public class OperationQueue {
      * Add a person to a team
      *
      * @param teamId the team
-     * @param person         the person
+     * @param person the person
      */
     public AddPersonOperation addTeamMember(String teamId, Person person) {
         return (AddPersonOperation) submit(new AddPersonOperation(injector, teamId, person, true));
@@ -619,7 +578,7 @@ public class OperationQueue {
                 copy.addAll(pendingOperations.values());
             } catch (Exception e1) {
                 Ln.w(e, "Failed checking for redundancy " + newOp);
-                return newOp;
+                return newOp.getState() != SyncState.UNINITIALIZED ? null : newOp;
             } finally {
                 lock.unlock();
             }
@@ -647,16 +606,12 @@ public class OperationQueue {
         if (authenticatedUserProvider.isAuthenticated()) {
             return submit(new PostGenericMetricOperation(injector, metric));
         } else {
-            return submit(new PostGenericMetricOperation(injector, metric, true));
+            return postGenericMetricNoAuth(metric);
         }
     }
 
     public Operation postGenericMetricNoAuth(GenericMetric metric) {
         return submit(new PostGenericMetricOperation(injector, metric, true));
-    }
-
-    public Operation postAliasUser(String preloginId) {
-        return submit(new AliasPreloginMetricsUserIdOperation(injector, preloginId));
     }
 
     ////////////
@@ -674,7 +629,7 @@ public class OperationQueue {
 
         lock.lock();
         try {
-            List<Operation> ret = new ArrayList<Operation>(pendingOperations.values());
+            List<Operation> ret = new ArrayList<>(pendingOperations.values());
             Collections.sort(ret, Operation.ascendingStartTimeComparator);
             return ret;
         } finally {
@@ -684,10 +639,8 @@ public class OperationQueue {
 
     /**
      * Write an operation to the queue and to persistent storage
-     *
-     * @param operation
      */
-    void persist(Operation operation) {
+    protected void persist(Operation operation) {
         if (operation.getOperationType().operationClass == null) {
             throw new IllegalArgumentException("Operation must have a class in the OperationType enum");
         }
@@ -723,7 +676,6 @@ public class OperationQueue {
                     return;
                 case PREPARING:
                 case READY:
-                case EXECUTING:
                 case FAULTED:
                     //insert then update
                     op = ContentProviderOperation.newInsert(SyncOperationEntry.CONTENT_URI)
@@ -789,8 +741,6 @@ public class OperationQueue {
     /**
      * Remove an operation from the queue and from persistent storage, even if
      * !operation.isSafeToRemove()
-     *
-     * @param operationId
      */
     public Operation cancelOperation(final String operationId) {
         Operation op = get(operationId);
@@ -866,18 +816,15 @@ public class OperationQueue {
         try {
             if (walkerExecutor == null || walkerExecutor.isShutdown()) {
 
-                ThreadFactory threadFactory = new ThreadFactory() {
-                    @Override
-                    public Thread newThread(Runnable runnable) {
-                        Thread ret = new Thread(runnable);
-                        ret.setDaemon(true);
-                        ret.setName("OperationWalker");
-                        return ret;
-                    }
+                ThreadFactory threadFactory = runnable -> {
+                    Thread ret = new Thread(runnable);
+                    ret.setDaemon(true);
+                    ret.setName("OperationWalker");
+                    return ret;
                 };
 
                 walkerExecutor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
-                        new LinkedBlockingQueue<Runnable>(1),
+                        new LinkedBlockingQueue<>(1),
                         threadFactory);
 
                 walkerExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
@@ -907,14 +854,11 @@ public class OperationQueue {
         lock.lock();
         try {
             if (workerExecutor == null || workerExecutor.isShutdown()) {
-                workerExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
-                    @Override
-                    public Thread newThread(Runnable runnable) {
-                        Thread ret = new Thread(runnable);
-                        ret.setDaemon(true);
-                        ret.setName("OperationWorker" + nextWorkerThreadIndex++);
-                        return ret;
-                    }
+                workerExecutor = Executors.newCachedThreadPool(runnable -> {
+                    Thread ret = new Thread(runnable);
+                    ret.setDaemon(true);
+                    ret.setName("OperationWorker" + nextWorkerThreadIndex++);
+                    return ret;
                 });
             }
             return workerExecutor;
@@ -957,9 +901,11 @@ public class OperationQueue {
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
-    public void onEvent(MercuryClient.MercuryConnectedEvent event) {
-        Ln.i("Mercury connected, catching up");
-        catchUpSync();
+    public void onEvent(UIForegroundTransition event) {
+        if (!deviceRegistration.getFeatures().isBufferedMercuryEnabled()) {
+            Ln.i("UIForegroundTransition, catching up");
+            catchUpSync();
+        }
     }
 
     void signalIdleIfNeeded() {
@@ -1191,12 +1137,9 @@ public class OperationQueue {
         if (ret != null) {
             lock.lock();
             try {
-                getWorkerService().submit(new Callable<Object>() {
-                    @Override
-                    public Object call() throws Exception {
-                        restartOperationSynchronous(operationId);
-                        return null;
-                    }
+                getWorkerService().submit(() -> {
+                    restartOperationSynchronous(operationId);
+                    return null;
                 });
             } catch (Exception e) {
                 Ln.w(e, "Failed restarting operation " + ret);
@@ -1263,7 +1206,7 @@ public class OperationQueue {
 
                     op = ContentProviderOperation.newUpdate(ConversationEntry.CONTENT_URI)
                             .withSelection(ConversationEntry.LAST_ACTIVITY_ID + "=?", new String[]{operationId})
-                                    // TODO this can leave the Last Activity field blank in the room list
+                            // TODO this can leave the Last Activity field blank in the room list
                             .withValue(ConversationEntry.LAST_ACTIVITY_ID.name(), null)
                             .build();
                     batch.add(op);

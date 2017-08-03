@@ -11,7 +11,6 @@ import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.core.Component;
 import com.cisco.spark.android.locus.model.Locus;
-import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.cisco.spark.android.mercury.events.LyraActivityEvent;
 import com.cisco.spark.android.metrics.MetricsReporter;
 import com.cisco.spark.android.metrics.RoomSystemMetricsBuilder;
@@ -29,10 +28,9 @@ import com.cisco.spark.android.sync.EncryptedConversationProcessor;
 import com.cisco.spark.android.sync.KmsResourceObject;
 import com.cisco.spark.android.util.SchedulerProvider;
 import com.cisco.spark.android.wdm.DeviceRegistration;
+import com.cisco.spark.android.whiteboard.util.WhiteboardConstants;
 import com.github.benoitdion.ln.Ln;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -51,6 +49,7 @@ import static com.cisco.spark.android.sync.ConversationContentProviderOperation.
 
 public class LyraService implements Component {
     private static final int CONVERSATION_BINDED_STATE = 1;
+    private static final int httpErrorCode404 = 404;
 
     private EventBus bus;
     private ApiClientProvider apiClientProvider;
@@ -73,7 +72,6 @@ public class LyraService implements Component {
     private MetricsReporter metricsReporter;
 
     private boolean isImplicitBinding;
-    private boolean hasImplicitBound;
 
     public LyraService(EventBus eventBus, ApiClientProvider apiClientProvider,
                        EncryptedConversationProcessor conversationProcessor, ContentResolver contentResolver,
@@ -129,36 +127,7 @@ public class LyraService implements Component {
             Ln.w("bind fail for null parameter");
             return;
         }
-
-        Observable.just(roomIdentity)
-                .subscribeOn(schedulerProvider.from(singleThreadedExecutor))
-                .map(new Func1<String, String>() {
-                    @Override
-                    public String call(String s) {
-                        return getAddKmsMessage(roomIdentity, conversationId);
-                    }
-                })
-                .subscribe(new Action1<String>() {
-                    @Override
-                    public void call(String s) {
-                        bindingBackend.bind(roomIdentity, new BindingRequest(conversationUrl, s), new BindingCallback() {
-                            @Override
-                            public void onSuccess() {
-                                onBindingCallback(LyraBindingEvent.LYRA_BINDING, true);
-                            }
-
-                            @Override
-                            public void onError() {
-                                onBindingCallback(LyraBindingEvent.LYRA_BINDING, false);
-                            }
-                        });
-                    }
-                }, new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        Ln.e(throwable);
-                    }
-                });
+        bindingBackend.bind(conversationUrl, roomIdentity, conversationId);
     }
 
     public void unbind(final Uri conversationUrl, final String roomIdentity, final String conversationId) {
@@ -179,13 +148,17 @@ public class LyraService implements Component {
                     public void call(String s) {
                         bindingBackend.unbind(roomIdentity, getBindingUrlId(conversationUrl), s, new BindingCallback() {
                             @Override
-                            public void onSuccess() {
-                                onBindingCallback(LyraBindingEvent.LYRA_UNBINDING, true);
+                            public void onSuccess(Response response) {
+                                onBindingCallback(LyraBindingEvent.LYRA_UNBINDING, WhiteboardConstants.SUCCESS, response == null ? null : response.message());
                             }
 
                             @Override
-                            public void onError() {
-                                onBindingCallback(LyraBindingEvent.LYRA_UNBINDING, false);
+                            public void onError(Response response) {
+                                if (response != null && response.code() == httpErrorCode404) { //room already unbound, unbind a unbound room failed.
+                                    onBindingCallback(LyraBindingEvent.LYRA_UNBINDING, WhiteboardConstants.SUCCESS, response == null ? null : response.message());
+                                } else {
+                                    onBindingCallback(LyraBindingEvent.LYRA_UNBINDING, response == null ? WhiteboardConstants.NETWORK_ISSUE : WhiteboardConstants.FAILURE + response.code(), response == null ? null : response.message());
+                                }
                             }
                         });
                     }
@@ -197,27 +170,18 @@ public class LyraService implements Component {
                 });
     }
 
-    private void onBindingCallback(@LyraBindingEvent.Events int event, boolean result) {
+    private void onBindingCallback(@LyraBindingEvent.Events int event, String result, String message) {
         switch (event) {
             case LyraBindingEvent.LYRA_BINDING:
                 if (isImplicitBinding) {
-                    if (result) {
-                        hasImplicitBound = true;
-                    } else {
-                        clearImplicitBindingFlag();
-                    }
-                    reportImplicitBindingMetrics(SpaceBindingMetricsValues.BindingMetricValue.BIND, result);
+                    isImplicitBinding = false;
+                    reportImplicitBindingMetrics(SpaceBindingMetricsValues.BindingMetricValue.BIND, result, message);
                 } else {
                     postLyraBindingEvent(LyraBindingEvent.LYRA_BINDING, result);
                 }
                 break;
             case LyraBindingEvent.LYRA_UNBINDING:
-                if (isImplicitBinding) {
-                    clearImplicitBindingFlag();
-                    reportImplicitBindingMetrics(SpaceBindingMetricsValues.BindingMetricValue.UNBIND, result);
-                } else {
-                    postLyraBindingEvent(LyraBindingEvent.LYRA_BINDING, result);
-                }
+                    postLyraBindingEvent(LyraBindingEvent.LYRA_UNBINDING, result);
                 break;
         }
     }
@@ -233,33 +197,26 @@ public class LyraService implements Component {
             @Override
             public void onSuccess(BindingResponses bindingResponses) {
                 LyraService.this.bindingResponses = bindingResponses;
-                postLyraBindingEvent(LyraBindingEvent.LYRA_GETSTATE, true);
+                postLyraBindingEvent(LyraBindingEvent.LYRA_GETSTATE, WhiteboardConstants.SUCCESS);
                 isGetBindingState = false;
             }
 
             @Override
             public void onError() {
                 LyraService.this.bindingResponses = null;
-                postLyraBindingEvent(LyraBindingEvent.LYRA_GETSTATE, false);
+                postLyraBindingEvent(LyraBindingEvent.LYRA_GETSTATE, WhiteboardConstants.FAILURE);
                 isGetBindingState = false;
             }
         });
     }
 
-    private  String getAddKmsMessage(String roomIdentity, String conversationId) {
-        Set<String> userIds = new HashSet<>();
-        userIds.add(roomIdentity);
-        KmsResourceObject kro = ConversationContentProviderQueries.getKmsResourceObject(
-                contentResolver, conversationId);
-        return conversationProcessor.authorizeNewParticipantsUsingKmsMessagingApi(kro, userIds);
-    }
     private  String getDeleteKmsMessage(String roomIdentity, String conversationId) {
         KmsResourceObject kro = ConversationContentProviderQueries.getKmsResourceObject(
                 contentResolver, conversationId);
         return conversationProcessor.removeParticipantUsingKmsMessagingApi(kro, roomIdentity);
     }
 
-    private void postLyraBindingEvent(@LyraBindingEvent.Events int event, boolean result) {
+    private void postLyraBindingEvent(@LyraBindingEvent.Events int event, String result) {
         LyraBindingEvent lyraBindingEvent = new LyraBindingEvent(event, result);
         bus.post(lyraBindingEvent);
     }
@@ -304,7 +261,7 @@ public class LyraService implements Component {
         bindingBackend.updateBindings(roomIdentity, new UpdateBindingCallback() {
             @Override
             public void onSuccess(BindingResponses bindingResponses) {
-                final LyraBindingEvent lyraBindingEvent = new LyraBindingEvent(LyraBindingEvent.LYRA_GETSTATE, true);
+                final LyraBindingEvent lyraBindingEvent = new LyraBindingEvent(LyraBindingEvent.LYRA_GETSTATE, WhiteboardConstants.SUCCESS);
                 if (bindingResponses != null && bindingResponses.getItems().size() > 0) {
                     for (BindingResponse bindingResponse : bindingResponses.getItems()) {
                         final String conversationUrl = bindingResponse.getConversationUrl().toString();
@@ -367,32 +324,51 @@ public class LyraService implements Component {
         thread.start();
     }
 
-    public void onEventMainThread(RoomUpdatedEvent event) {
-        if (event.getRoomState() == RoomUpdatedEvent.RoomState.PAIRED) {
-            if (roomState == null) {
-                roomState = roomService.getRoomState();
-                postLyraBindingEvent(LyraBindingEvent.LYRA_ROOM_UPDATE, true);
-                queryAudioState(roomState.getRoomIdentity().toString());
-                return;
-            }
+    @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
+    public void onEvent(RoomUpdatedEvent event) {
+        if (event.getRoomState() != RoomUpdatedEvent.RoomState.PAIRED) return;
+        roomState = roomService.getRoomState();
 
-            RoomState roomState = roomService.getRoomState();
+        if (roomState == null) return;
 
-            if (!this.roomState.getRoomIdentity().equals(roomState.getRoomIdentity()) ||  !this.roomState.getRoomName().equals(roomState.getRoomName())) {
-                this.roomState = roomState;
-                postLyraBindingEvent(LyraBindingEvent.LYRA_ROOM_UPDATE, true);
-                queryAudioState(roomState.getRoomIdentity().toString());
-            }
-        }
+        postLyraBindingEvent(LyraBindingEvent.LYRA_ROOM_UPDATE, WhiteboardConstants.SUCCESS);
+        queryAudioState(roomState.getRoomIdentity().toString());
+        updateBindings(roomState.getRoomIdentity().toString());
     }
 
-    public void onEvent(RoomUpdatedEvent event) {
-        if (event.getRoomState() == RoomUpdatedEvent.RoomState.PAIRED) {
-            RoomState roomState = roomService.getRoomState();
-            if (roomState != null) {
-                updateBindings(roomState.getRoomIdentity().toString());
+    public void onBindingOperationSucceeded(String responseMessage) {
+        onBindingCallback(LyraBindingEvent.LYRA_BINDING, WhiteboardConstants.SUCCESS, responseMessage);
+    }
+
+    public void onBindingOperationFailed(int code, String responseMessage) {
+        String errorMessage;
+        if (code != -1) {
+            switch (code) {
+                // 401 403 should be treated as "Lost connection to Spark Board"
+                case 401:
+                case 403:
+                    bus.post(new BindingFailureEvent(BindingFailureEvent.BindingFailType.NO_CONNECTION));
+                    errorMessage = BindingFailureEvent.BindingFailType.NO_CONNECTION.toString() + code;
+                    break;
+                // 400 404 409 502 504 should be treated as "Could not open on Spark Board"
+                case 400:
+                case 404:
+                case 409:
+                case 502:
+                case 504:
+                    bus.post(new BindingFailureEvent(BindingFailureEvent.BindingFailType.OPEN_FAILURE));
+                    errorMessage = BindingFailureEvent.BindingFailType.OPEN_FAILURE.toString() + code;
+                    break;
+                default:
+                    errorMessage = WhiteboardConstants.FAILURE + code;
+                    Ln.w("bind room failed, response code:" + code);
+                    break;
             }
+        } else {
+            bus.post(new BindingFailureEvent(BindingFailureEvent.BindingFailType.OPEN_FAILURE));
+            errorMessage = WhiteboardConstants.NETWORK_ISSUE;
         }
+        onBindingCallback(LyraBindingEvent.LYRA_BINDING, errorMessage, responseMessage);
     }
 
     private void queryAudioState(final String roomId) {
@@ -420,7 +396,7 @@ public class LyraService implements Component {
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventMainThread(RoomLeftEvent event) {
         roomState = null;
-        postLyraBindingEvent(LyraBindingEvent.LYRA_ROOM_LEFT, true);
+        postLyraBindingEvent(LyraBindingEvent.LYRA_ROOM_LEFT, WhiteboardConstants.SUCCESS);
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
@@ -440,10 +416,6 @@ public class LyraService implements Component {
             case BIND:
                 implicitBindForCall(locus.getConversationUrl());
                 break;
-            case UNBIND:
-                if (shouldImplicitUnbind(event))
-                    implicitUnbindForCall(locus.getConversationUrl());
-            break;
         }
     }
 
@@ -471,30 +443,6 @@ public class LyraService implements Component {
         });
     }
 
-    public void implicitUnbindForCall(final  String conversationUrl) {
-        final Uri conversationUri = Uri.parse(conversationUrl);
-        RoomState roomState = roomService.getRoomState();
-        String roomIdentity = roomState != null ? String.valueOf(roomState.getRoomIdentity()) : null;
-        bindingBackend.updateBindings(roomIdentity, new UpdateBindingCallback() {
-            @Override
-            public void onSuccess(BindingResponses bindingResponses) {
-                LyraService.this.bindingResponses = bindingResponses;
-                if (bindingResponses == null || bindingResponses.getItems().size() == 0 || !hasBoundWithRoom(conversationUri)) {
-                    clearImplicitBindingFlag();
-                    return;
-                }
-                if (isImplicitBinding && hasImplicitBound) {
-                    unbind(conversationUri, getRoomIdentity(), getConversationIdFromConversationUrl(conversationUrl));
-                }
-            }
-
-            @Override
-            public void onError() {
-                Ln.w("getBindingState fail");
-            }
-        });
-    }
-
     public boolean getAvailableForBinding() {
         if (bindingResponses == null) {
             return false;
@@ -507,6 +455,8 @@ public class LyraService implements Component {
     }
 
     public Boolean isValidateForBind(Uri conversationUri) {
+        if (conversationUri == null)
+            return false;
         if (!roomService.isInRoom())
             return false;
         if (!deviceRegistration.getFeatures().isRoomBindingEnabled())
@@ -562,32 +512,9 @@ public class LyraService implements Component {
         return true;
     }
 
-    private boolean shouldImplicitUnbind(CallControlBindingEvent event) {
-        if (!isImplicitBinding || !hasImplicitBound) {
-            return false;
-        }
-        if (!roomService.isInRoom()) {
-            clearImplicitBindingFlag();
-            return false;
-        }
-        for (LocusParticipant participant : event.getLeftParticipants()) {
-            if (participant.getPerson().getId().equals(getRoomIdentity())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void clearImplicitBindingFlag() {
-        if (isImplicitBinding) {
-            isImplicitBinding = false;
-            hasImplicitBound = false;
-        }
-    }
-
-    private void reportImplicitBindingMetrics(String lyraBindingType, boolean isSuccess) {
+    private void reportImplicitBindingMetrics(String lyraBindingType, String result, String message) {
         RoomSystemMetricsBuilder roomSystemMetricsBuilder = new RoomSystemMetricsBuilder(metricsReporter.getEnvironment());
-        SpaceBindingMetricsValues.BindingMetricValue bindingMetricValue = new SpaceBindingMetricsValues.BindingMetricValue(lyraBindingType, isSuccess);
+        SpaceBindingMetricsValues.BindingMetricValue bindingMetricValue = new SpaceBindingMetricsValues.BindingMetricValue(lyraBindingType, result, message);
         metricsReporter.enqueueMetricsReport(roomSystemMetricsBuilder
                 .addSpaceImplicitBinding(bindingMetricValue)
                 .build());

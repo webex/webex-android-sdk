@@ -15,6 +15,7 @@ import com.cisco.spark.android.model.ParticipantTag;
 import com.cisco.spark.android.model.Person;
 import com.cisco.spark.android.presence.PresenceStatus;
 import com.cisco.spark.android.sync.ConversationContract.ActorEntry;
+import com.cisco.spark.android.sync.ConversationContract.OrganizationEntry;
 import com.cisco.spark.android.util.NameUtils;
 import com.cisco.spark.android.util.Strings;
 
@@ -62,7 +63,7 @@ public class ActorRecord implements Comparable<ActorRecord>, Parcelable, Actor {
         tags = EnumSet.noneOf(ParticipantTag.class);
         if (!isSquaredEntitled) {
             tags.add(ParticipantTag.ENTITLEMENT_NO_SQUARED);
-            tags.add(ParticipantTag.SIDE_BOARDED);
+            tags.add(ParticipantTag.NOT_SIGNED_UP);
         }
 
         if (isNotFound) {
@@ -90,6 +91,13 @@ public class ActorRecord implements Comparable<ActorRecord>, Parcelable, Actor {
                 cursor.getColumnIndex(ActorEntry.TYPE.name()) == -1 ? null : cursor.getString(cursor.getColumnIndex(ActorEntry.TYPE.name()))
         );
     }
+
+    //TODO refactor the actor from String type to enum values below
+    public enum ActorType {
+        BOT,
+        ROBOT,
+        PERSON
+    };
 
     private static long getRawContactId(Cursor cursor) {
         int rawContactIdIndex = cursor.getColumnIndex(ActorEntry.RAW_CONTACT_ID.name());
@@ -162,7 +170,12 @@ public class ActorRecord implements Comparable<ActorRecord>, Parcelable, Actor {
     }
 
     public boolean isSideboarded() {
-        return tags != null && tags.contains(ParticipantTag.SIDE_BOARDED);
+        if (tags.contains(ParticipantTag.SIDE_BOARDED)) {
+            tags.remove(ParticipantTag.SIDE_BOARDED);
+            tags.add(ParticipantTag.NOT_SIGNED_UP);
+        }
+
+        return tags != null && tags.contains(ParticipantTag.NOT_SIGNED_UP);
     }
 
     public boolean isInvited() {
@@ -228,6 +241,7 @@ public class ActorRecord implements Comparable<ActorRecord>, Parcelable, Actor {
         ContentValues values = new ContentValues();
         values.put(ActorEntry.ACTOR_UUID.name(), getUuidOrEmail());
         values.put(ActorEntry.EMAIL.name(), getEmail());
+
         if (getType() != null) {
             values.put(ActorEntry.TYPE.name(), getType());
         }
@@ -254,6 +268,10 @@ public class ActorRecord implements Comparable<ActorRecord>, Parcelable, Actor {
 
         if (presenceExpiration != null) {
             values.put(ActorEntry.PRESENCE_EXPIRATION_DATE.name(), presenceExpiration.getTime());
+        }
+
+        if (getRawContactId() > 0) {
+            values.put(ActorEntry.RAW_CONTACT_ID.name(), getRawContactId());
         }
 
         return values;
@@ -290,6 +308,11 @@ public class ActorRecord implements Comparable<ActorRecord>, Parcelable, Actor {
                 .build();
 
         batch.add(op);
+
+        if (!Strings.isEmpty(getOrgId())) {
+            op = ContentProviderOperation.newInsert(OrganizationEntry.CONTENT_URI).withValue(OrganizationEntry.ORG_ID.name(), getOrgId()).build();
+            batch.add(op);
+        }
     }
 
     public boolean hasValidTags() {

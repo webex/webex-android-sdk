@@ -331,9 +331,10 @@ public class Strings {
         return count;
     }
 
-    private static final Pattern pattern = Pattern.compile("[^\\x00-\\x7F]");
+    // This pattern mirrors the pattern defined by the okhttp3 Headers class
+    private static final Pattern pattern = Pattern.compile("[^\\x20-\\x7E]");
 
-    public static String stripNonAscii(String str) {
+    public static String stripInvalidHeaderChars(String str) {
         return pattern.matcher(str).replaceAll("");
     }
 
@@ -380,5 +381,18 @@ public class Strings {
             index += 2;
         }
         return sb.toString();
+    }
+
+    public static String makeInClausePlaceholders(int len) {
+        if (len > 0) {
+            final StringBuilder sb = new StringBuilder(len * 2 - 1);
+            sb.append("?");
+            for (int i = 1; i < len; i++) {
+                sb.append(",?");
+            }
+            return sb.toString();
+        }
+
+        throw new InvalidParameterException("You must pass a positive number.");
     }
 }

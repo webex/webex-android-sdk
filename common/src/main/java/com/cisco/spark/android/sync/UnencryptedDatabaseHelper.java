@@ -5,27 +5,32 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.SparseArray;
 
+import com.cisco.spark.android.core.Application;
 import com.cisco.spark.android.sync.DBHelperUtils.UpgradeModule;
 import com.github.benoitdion.ln.Ln;
 
+import java.io.File;
+
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-
+@Singleton
 public class UnencryptedDatabaseHelper extends SQLiteOpenHelper implements SQLiteOpenHelperInterface {
-    public static final String SERVICE_DB_NAME = "conversationCacheEncrypted.db";
     private static boolean safetyNetExists = true;
-    private static final String TMP_PREFIX = "TMP_";
     // Upgrades from versions before this are not supported; the DB will be wiped clean and rebuilt.
-    public static final int MINIMUM_SCHEMA_VERSION_FOR_MIGRATION = 97;
     private DBHelperUtils dbHelperUtils = new DBHelperUtils();
 
     @Inject
     public UnencryptedDatabaseHelper(Context context) {
-        super(context, SERVICE_DB_NAME, null, ConversationContract.SCHEMA_VERSION);
+        super(context, DatabaseHelper.SERVICE_DB_NAME, null, ConversationContract.SCHEMA_VERSION);
     }
 
     public UnencryptedDatabaseHelper(Context context, String dbname) {
         super(context, dbname, null, ConversationContract.SCHEMA_VERSION);
+    }
+
+    public DBHelperUtils getDbHelperUtils() {
+        return dbHelperUtils;
     }
 
     @Override
@@ -91,12 +96,31 @@ public class UnencryptedDatabaseHelper extends SQLiteOpenHelper implements SQLit
                 throw new RuntimeException(e);
             }
         }
+
+        //Delete old conversationCacheEncrypted.db
+        Context context = Application.getInstance().getApplicationContext();
+        if (context != null) {
+            File encryptedDBPath = context.getDatabasePath(DatabaseHelper.SERVICE_DB_ENCRYPTED_NAME);
+            if (encryptedDBPath != null && encryptedDBPath.exists()) {
+                boolean success = context.deleteDatabase(DatabaseHelper.SERVICE_DB_ENCRYPTED_NAME);
+                if (success) {
+                    Ln.i(DatabaseHelper.SERVICE_DB_ENCRYPTED_NAME + " has been deleted");
+                } else {
+                    Ln.e("Unable to delete " + DatabaseHelper.SERVICE_DB_ENCRYPTED_NAME);
+                }
+            } else {
+                Ln.i(DatabaseHelper.SERVICE_DB_ENCRYPTED_NAME + " does not exist");
+            }
+        } else {
+            Ln.i(DatabaseHelper.SERVICE_DB_ENCRYPTED_NAME + " does not exist");
+        }
     }
 
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         dbHelperUtils.dropAllTables(new UnencryptedSQLiteDatabase(db));
         onCreate(db);
+        db.setVersion(newVersion);
     }
 
     @Override
@@ -107,7 +131,7 @@ public class UnencryptedDatabaseHelper extends SQLiteOpenHelper implements SQLit
         dbHelperUtils.dropAllViews(unencryptedSQLiteDatabase);
         dbHelperUtils.dropAllTriggers(unencryptedSQLiteDatabase);
 
-        if (db.getVersion() < MINIMUM_SCHEMA_VERSION_FOR_MIGRATION) {
+        if (db.getVersion() < DatabaseHelper.MINIMUM_SCHEMA_VERSION_FOR_MIGRATION) {
             dbHelperUtils.dropAllTables(unencryptedSQLiteDatabase);
             onCreate(db);
             db.setVersion(newVersion);
@@ -139,11 +163,6 @@ public class UnencryptedDatabaseHelper extends SQLiteOpenHelper implements SQLit
     @Override
     public void beginTransactionNonExclusive(SQLiteDatabaseInterface db) {
         ((UnencryptedSQLiteDatabase) db).getDatabase().beginTransactionNonExclusive();
-    }
-
-    public void onDowngrade(SQLiteDatabaseInterface db, int oldVersion, int newVersion) {
-        dbHelperUtils.dropAllTables((UnencryptedSQLiteDatabase) db);
-        onCreate(((UnencryptedSQLiteDatabase) db).getDatabase());
     }
 
     @Override

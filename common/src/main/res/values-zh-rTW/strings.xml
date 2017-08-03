@@ -6,9 +6,14 @@
 
     <!-- Preference keys: do not translate -->
 
+    <!-- User level default Custom notifications -->
+
+    <!-- Always on proximity -->
 
     <!-- This is an android system preference key to get the whole preference screen. It\'s being used
          to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+
 
     <!-- Show if the user has ignored the pairing permission card in dev console  -->
     <string name="pref_key_title_ignore_permission_microphone">Proximity 權限卡</string>
@@ -61,7 +66,6 @@
     <string name="error_remove_participant">無法將參加者從此空間中移除。</string>
     <string name="uploading_space_avatar">正在上傳空間影像</string>
     <string name="error_setting_space_avatar">無法設定空間影像。</string>
-    <string name="error_cropping_space_avatar">無法裁剪空間影像</string>
     <string name="file_too_large">影像太大，請選擇其他影像</string>
 
     <string name="max_participants_warning_text">您無法呼叫人數超過 %d 的 Spark 空間。</string>
@@ -89,22 +93,30 @@
     <string name="call_other_person_declined">其他人已拒絕</string>
     <string name="call_other_person_busy">其他人員繁忙</string>
     <string name="call_participant_left">參加者已離開</string>
-    <string name="call_participant_joined">正在連線</string>
     <string name="call_participant_cancelled">參加者已取消</string>
     <string name="call_participant_expelled">協調人已將您從會議中移除</string>
     <string name="name_was_unavailable">無法連線 %s</string>
 
     <string name="error_file_not_found">在儲存空間中找不到選取的檔案。</string>
 
+    <!-- Spark Space URL -->
+    <string name="dial">撥打：</string>
+    <string name="video_address">視訊位址</string>
+    <string name="meeting_number">會議號</string>
+    <string name="video_address_not_available">位址不可用</string>
+    <string name="meeting_number_not_available">會議號不可用</string>
+    <string name="show_additional_meeting_info">顯示其他會議資訊</string>
+    <string name="hide_additional_meeting_info">隱藏其他會議資訊</string>
+
     <!-- Search Modifiers -->
     <string name="search_hint_for_modifier">輸入人員姓名</string>
     <string name="search_hint_with_modifier">輸入人員姓名</string>
     <string name="search_hint_in_modifier">輸入空間名稱</string>
-    <string name="search_modifier_list_header">選取修飾元來縮小您的搜尋</string>
+    <string name="search_modifier_list_header">搜尋篩選器</string>
     <string name="search_modifier_option_from_keyword"><b>寄件者：</b></string>
-    <string name="search_modifier_option_from">顯示<b>訊息</b>和<b>檔案</b>（來自 <b> 人員）</b></string>
+    <string name="search_modifier_option_from"><i>顯示訊息和檔案（來自  人員）</i></string>
     <string name="search_modifier_option_in_keyword"><b>位於：</b></string>
-    <string name="search_modifier_option_in">顯示<b>訊息</b>和<b>檔案</b>（在給定<b>空間中）</b></string>
+    <string name="search_modifier_option_in"><i>顯示訊息和檔案（在給定空間中）</i></string>
 
     <!-- Presence Status Messages -->
     <string name="do_not_disturb">請勿打擾</string>
@@ -121,6 +133,7 @@
     <string name="presence_status_pending">等待啟動</string>
     <string name="presence_status_ooo">不在辦公室</string>
     <string name="presence_status_ooo_until">不在辦公室直至 %s</string>
+    <string name="presence_status_unknown">不明狀態</string>
 
     <plurals name="presence_status_inactive_hours">
         <item quantity="one">%d 小時前使用中</item>
@@ -139,5 +152,7 @@
     <!-- Day Markers -->
     <string name="day_marker_today">今天</string>
     <string name="day_marker_yesterday">昨天</string>
+
+    <string name="message_failed_notification">有一則訊息無法傳送。</string>
 
 </resources>

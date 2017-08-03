@@ -5,8 +5,11 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.cisco.spark.android.model.SingleUserAvatarUrlsInfo;
+import com.cisco.spark.android.util.FileUtils;
 import com.github.benoitdion.ln.Ln;
 
 import java.io.File;
@@ -147,6 +150,20 @@ public class ContentDataCacheRecord {
         return ret;
     }
 
+    public static ContentDataCacheRecord getCacheRecordFromAvatarUrlsAPIResponse(SingleUserAvatarUrlsInfo avatarUrlsInfo, Uri remoteUri) {
+
+        ContentDataCacheRecord ret = new ContentDataCacheRecord();
+
+        ret.remoteUri = remoteUri;
+        ret.cacheType = ContentDataCacheEntry.Cache.AVATAR;
+        ret.lastAccessTime = System.currentTimeMillis();
+        if (!avatarUrlsInfo.isDefaultAvatar() && !TextUtils.isEmpty(avatarUrlsInfo.getUrl())) {
+            ret.setRealUri(Uri.parse(avatarUrlsInfo.getUrl()));
+        }
+
+        return ret;
+    }
+
     public ContentValues getContentValues() {
         ContentValues cv = new ContentValues();
         cv.put(DATA_REMOTE_URI.name(), remoteUri.toString());
@@ -183,6 +200,40 @@ public class ContentDataCacheRecord {
         ret = ret.withValue(DATA_REAL_URI.name(), realUri == null ? null : realUri.toString());
 
         return ret.build();
+    }
+
+    /**
+     * Update avatar CDR by the GetAvatarsURL api response
+     *
+     * @param avatarInfo api response
+     * @return true if the avatar realUri has changed, otherwise false.
+     */
+    public boolean updateRealUriByAvatarUrlsAPIResponse(@NonNull SingleUserAvatarUrlsInfo avatarInfo) {
+        if (realUri == null && avatarInfo.isDefaultAvatar()) {
+            return false;
+        }
+
+        if (realUri != null && TextUtils.equals(realUri.toString(), avatarInfo.getUrl())) {
+            return false;
+        }
+
+        Ln.d("$BITMAP update realUri of remoteUri: " + remoteUri.toString() + "; oldRealUri: "
+                + (realUri == null ? "null" : realUri.toString()) + "; newRealUri: " + avatarInfo.getUrl());
+
+        if (avatarInfo.isDefaultAvatar() || TextUtils.isEmpty(avatarInfo.getUrl())) {
+            realUri = null;
+        } else {
+            realUri = Uri.parse(avatarInfo.getUrl());
+        }
+
+        deleteLocalFile();
+
+        localUri = null;
+        dataSize = 0;
+        lastAccessTime = System.currentTimeMillis();
+        remoteLastModifiedTime = null;
+
+        return true;
     }
 
     public void setLastAccessTime(long lastAccessTime) {
@@ -241,6 +292,9 @@ public class ContentDataCacheRecord {
 
     public boolean validate() {
         if (localUri == null) {
+            // only avatar case localUri can be null, either below case is valid.
+            // 1) localUri == null && realUri == null: default avatar
+            // 2) localUri == null && realUri != null: haven't download avatar yet
             return true;
         }
 
@@ -249,6 +303,15 @@ public class ContentDataCacheRecord {
 
     public boolean isStale() {
         return System.currentTimeMillis() > getNextCheckForUpdateTime();
+    }
+
+    public void deleteLocalFile() {
+        if (localUri != null) {
+            File f = getLocalUriAsFile();
+            if (f != null) {
+                FileUtils.deleteRecursive(f);
+            }
+        }
     }
 
     private long getAvatarUpdateTime() {

@@ -9,10 +9,6 @@ import retrofit2.http.POST;
 
 public interface OAuth2Client {
 
-    @POST("authorize")
-    @FormUrlEncoded
-    Call<ResponseBody> postCookie(@Header("Cookie") String cookieHeader, @Field("response_type") String responseType, @Field("redirect_uri") String redirectUri, @Field("scope") String scope, @Field("client_id") String clientId, @Field("state") String state);
-
     @POST("access_token")
     @FormUrlEncoded
     Call<OAuth2Tokens> postCode(@Header("Authorization") String authorizationHeader, @Field("grant_type") String grantType, @Field("redirect_uri") String redirectUri, @Field("scope") String scope, @Field("code") String code);

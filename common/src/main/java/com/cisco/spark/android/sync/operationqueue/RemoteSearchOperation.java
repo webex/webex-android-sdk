@@ -5,6 +5,8 @@ import android.text.TextUtils;
 
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.Injector;
+import com.cisco.spark.android.events.ActivityDecryptedEvent;
+import com.cisco.spark.android.model.Activity;
 import com.cisco.spark.android.model.ActivitySearchResponse;
 import com.cisco.spark.android.model.KeyManager;
 import com.cisco.spark.android.model.KeyObject;
@@ -19,6 +21,7 @@ import com.cisco.spark.android.sync.operationqueue.core.RetryPolicy;
 import com.cisco.spark.android.sync.queue.ActivitySyncQueue;
 import com.cisco.spark.android.sync.queue.BulkActivitySyncTask;
 import com.cisco.spark.android.util.CryptoUtils;
+import com.cisco.spark.android.util.LoggingUtils;
 import com.cisco.spark.android.util.UriUtils;
 import com.cisco.wx2.sdk.kms.KmsResource;
 import com.cisco.wx2.sdk.kms.KmsResponseBody;
@@ -26,14 +29,13 @@ import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import de.greenrobot.event.EventBus;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
 
 public class RemoteSearchOperation extends Operation {
     @Inject
@@ -60,6 +62,7 @@ public class RemoteSearchOperation extends Operation {
     @Inject
     transient EventBus bus;
 
+    transient ArrayList<String> activitiesToDecrypt;
     private String searchString;
 
     private SearchStringWithModifiers searchStringWithModifiers;
@@ -68,6 +71,7 @@ public class RemoteSearchOperation extends Operation {
         super(injector);
         this.searchString = searchString;
         this.searchStringWithModifiers = searchStringWithModifiers;
+        this.activitiesToDecrypt = new ArrayList();
     }
 
     @NonNull
@@ -130,34 +134,43 @@ public class RemoteSearchOperation extends Operation {
                         remoteSearchQueryRequest.setKmsMessage(searchKmsMessage);
                     }
                     prepareRemoteSearchRequest(remoteSearchQueryRequest, searchKeyObject);
-                    ActivitySearchResponse searchResponse = apiClientProvider.getSearchClient().querySearchService(remoteSearchQueryRequest);
-                    if (searchResponse != null) {
-                        if (searchResponse.getKmsMessage() != null) {
-                            KmsResponseBody kmsResponseBody = CryptoUtils.decryptKmsMessage(searchResponse.getKmsMessage(), keyManager.getSharedKeyAsJWK());
+                    retrofit2.Response<ActivitySearchResponse> response = apiClientProvider.getSearchClient().querySearchService(remoteSearchQueryRequest).execute();
+                    if (response.isSuccessful()) {
+                        ActivitySearchResponse activitySearchResponse = response.body();
+                        if (activitySearchResponse.getKmsMessage() != null) {
+                            KmsResponseBody kmsResponseBody = CryptoUtils.decryptKmsMessage(activitySearchResponse.getKmsMessage(), keyManager.getSharedKeyAsJWK());
                             if (kmsResponseBody != null && kmsResponseBody.getResource() != null) {
                                 KmsResource resource = kmsResponseBody.getResource();
                                 searchKeyObject.setResources(UriUtils.toString(resource.getUri()));
                             }
                         }
+
+                        for (Activity activity: activitySearchResponse.getActivities().getItems()) {
+                            activitiesToDecrypt.add(activity.getId());
+                        }
+
                         BulkActivitySyncTask searchResultActivitySyncTask = null;
-                        if (searchResponse.getActivities() != null && searchResponse.getActivities().size() > 0) {
-                            searchResultActivitySyncTask = new BulkActivitySyncTask(injector, searchResponse.getActivities().getItems());
+                        if (activitySearchResponse.getActivities() != null && activitySearchResponse.getActivities().size() > 0) {
+                            searchResultActivitySyncTask = new BulkActivitySyncTask(injector, activitySearchResponse.getActivities().getItems());
                             searchResultActivitySyncTask.execute();
                         }
-                        if (!this.isCanceled() && searchResultActivitySyncTask != null && searchResultActivitySyncTask.hasSyncSucceeded()) {
-                            bus.post(new RemoteSearchOperationCompletedEvent(this));
+
+                        if (activitySearchResponse.getActivities().size() == 0) {
+                            return SyncOperationEntry.SyncState.SUCCEEDED;
                         }
-                        return SyncOperationEntry.SyncState.SUCCEEDED;
-                    }
-                } catch (RetrofitError error) {
-                    Response response = error.getResponse();
-                    if (response != null && response.getStatus() >= 400 && response.getStatus() < 500) {
-                        String message = CryptoUtils.getKmsErrorMessage(error, gson, keyManager.getSharedKeyAsJWK());
+
+                        bus.register(this);
+
+                        return SyncOperationEntry.SyncState.EXECUTING;
+                    } else {
+                        String message = CryptoUtils.getKmsErrorMessage(response, gson, keyManager.getSharedKeyAsJWK());
                         if (!TextUtils.isEmpty(message)) {
-                            Ln.w("KMS ERROR while binding key to search query: " + message + " expired?" + searchKeyObject.isKeyExpired());
+                            Ln.w("KMS ERROR while binding key to search query: " + message + " expired?" + searchKeyObject.isKeyExpired() + " | " + LoggingUtils.toString(response));
                         }
+                        return SyncOperationEntry.SyncState.FAULTED;
                     }
-                    return SyncOperationEntry.SyncState.FAULTED;
+                } catch (IOException e) {
+                    Ln.e(e);
                 }
             }
         } else {
@@ -181,13 +194,22 @@ public class RemoteSearchOperation extends Operation {
 
     @Override
     protected SyncOperationEntry.SyncState checkProgress() {
-        return getState();
+
+        if (activitiesToDecrypt.size() > 0) {
+            return SyncOperationEntry.SyncState.EXECUTING;
+        }
+
+        return SyncOperationEntry.SyncState.SUCCEEDED;
     }
 
     @Override
     protected void onStateChanged(SyncOperationEntry.SyncState oldState) {
         if (getState() == SyncOperationEntry.SyncState.SUCCEEDED) {
             bus.post(new RemoteSearchOperationCompletedEvent(this));
+        }
+
+        if (getState().isTerminal() && bus.isRegistered(this)) {
+            bus.unregister(this);
         }
     }
 
@@ -223,6 +245,21 @@ public class RemoteSearchOperation extends Operation {
 
         private RemoteSearchOperationCompletedEvent(RemoteSearchOperation op) {
             this.operation = op;
+        }
+    }
+
+    public void onEvent(ActivityDecryptedEvent event) {
+        Ln.d("Got Decrypted Activities");
+        ArrayList<Activity> decryptedActivities = new ArrayList<>();
+        for (Activity activity : event.getActivities()) {
+            if (activitiesToDecrypt.remove(activity.getId())) {
+                decryptedActivities.add(activity);
+            }
+        }
+
+        if (decryptedActivities.size() > 0) {
+            conversationSearchManager.updateActivitySearchSync(decryptedActivities);
+            bus.post(new RemoteSearchOperationCompletedEvent(this));
         }
     }
 }

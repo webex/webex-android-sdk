@@ -120,4 +120,31 @@ public class User implements Actor {
         result = 31 * result + (email != null ? email.hashCode() : 0);
         return result;
     }
+
+    public static class Builder {
+        private User user;
+
+        public Builder() {
+            user = new User();
+        }
+
+        public Builder setId(String id) {
+            user.id = id;
+            return this;
+        }
+
+        public Builder setEmail(String email) {
+            user.email = email;
+            return this;
+        }
+
+        public Builder setName(String name) {
+            user.name = name;
+            return this;
+        }
+
+        public User build() {
+            return user;
+        }
+    }
 }

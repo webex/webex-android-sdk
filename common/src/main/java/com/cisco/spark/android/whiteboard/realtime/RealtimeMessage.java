@@ -31,6 +31,7 @@ public class RealtimeMessage {
 
         JsonObject envelope = new JsonObject();
         envelope.addProperty("encryptionKeyUrl", keyUrl.toString());
+        envelope.addProperty("channelId", channelId);
 
         JsonObject data = new JsonObject();
         data.addProperty("eventType", "board.activity");

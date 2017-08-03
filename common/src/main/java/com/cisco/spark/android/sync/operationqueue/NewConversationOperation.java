@@ -11,12 +11,17 @@ import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.events.OperationCompletedEvent;
+import com.cisco.spark.android.metrics.SegmentService;
+import com.cisco.spark.android.metrics.TimingProvider;
 import com.cisco.spark.android.metrics.model.GenericMetric;
 import com.cisco.spark.android.metrics.value.ClientMetricField;
 import com.cisco.spark.android.metrics.value.ClientMetricNames;
+import com.cisco.spark.android.metrics.value.ClientMetricTag;
+import com.cisco.spark.android.metrics.value.GenericMetricTagEnums;
 import com.cisco.spark.android.model.Conversation;
 import com.cisco.spark.android.model.KeyManager;
 import com.cisco.spark.android.model.KeyObject;
+import com.cisco.spark.android.model.ParticipantTag;
 import com.cisco.spark.android.model.Participants;
 import com.cisco.spark.android.model.Person;
 import com.cisco.spark.android.model.Team;
@@ -46,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -89,6 +93,13 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
     @Inject
     transient EventBus bus;
 
+    @Inject
+    transient TimingProvider timingProvider;
+
+    @Inject
+    transient SegmentService segmentService;
+
+
     private Participants participants = new Participants();
     private String conversationId;
     private boolean hasMessages;
@@ -100,6 +111,8 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
     private boolean isRoomPreExisting;
     private Conversation result = null;
     private EnumSet<CreateFlags> createFlags = EnumSet.noneOf(CreateFlags.class);
+
+    private transient GenericMetric metric;
 
     private Team teamResult;
 
@@ -159,6 +172,29 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
 
     public boolean isRoomPreExisting() {
         return isRoomPreExisting;
+    }
+
+    @Override
+    public void initialize(Injector injector) {
+        super.initialize(injector);
+
+        this.metric = GenericMetric.buildOperationalMetric(ClientMetricNames.CLIENT_CREATE_CONVERSATION);
+
+        GenericMetricTagEnums.ConversationTypeMetricTagValue value;
+
+        if (createFlags != null) {
+            if (createFlags.contains(CreateFlags.ONE_ON_ONE)) {
+                value = GenericMetricTagEnums.ConversationTypeMetricTagValue.CONVERSATION_TYPE_ONE_TO_ONE;
+            } else if (!TextUtils.isEmpty(teamId)) {
+                value = GenericMetricTagEnums.ConversationTypeMetricTagValue.CONVERSATION_TYPE_TEAM_SPACE;
+            } else if (createFlags.contains(CreateFlags.NEW_TEAM)) {
+                value = GenericMetricTagEnums.ConversationTypeMetricTagValue.CONVERSATION_TYPE_NEW_TEAM;
+            } else {
+                value = GenericMetricTagEnums.ConversationTypeMetricTagValue.CONVERSATION_TYPE_GROUP;
+            }
+
+            metric.addTag(ClientMetricTag.METRIC_TAG_CONVERSATION_TYPE, value);
+        }
     }
 
     @NonNull
@@ -236,8 +272,12 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
                 batch.add(ContentProviderOperation.newInsert(ConversationContract.ActorEntry.CONTENT_URI)
                         .withValue(ConversationContract.ActorEntry.ACTOR_UUID.name(), person.getEmail())
                         .withValue(ConversationContract.ActorEntry.EMAIL.name(), person.getEmail())
-                        .build()
-                );
+                        .build());
+                if (!Strings.isEmpty(person.getOrgId())) {
+                    batch.add(ContentProviderOperation.newInsert(ConversationContract.OrganizationEntry.CONTENT_URI)
+                            .withValue(ConversationContract.OrganizationEntry.ORG_ID.name(), person.getOrgId())
+                            .build());
+                }
             }
 
             writeParticipantToTable(batch, person);
@@ -299,8 +339,6 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
             return SyncState.PREPARING;
         }
 
-        HashMap<String, String> attributes = new HashMap<>();
-        Throwable t = null;
         Response response = null;
         try {
             if (isOneOnOne() && oneOnOneExists()) {
@@ -315,7 +353,11 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
                     .setIsEncrypted(key.getKey() == null)
                     .setClientTempId(getOperationId());
 
-            List<String> userIds = getUserIds(participants.get());
+            List<Person> participantsWithIds = resolvePersonUuids(participants.get());
+            List<String> participantIds = new ArrayList<>();
+            for (Person participantWithId : participantsWithIds) {
+                participantIds.add(participantWithId.getId());
+            }
 
             // If we're attempting to post a team conversation and are missing the team's KRO URI, bail out and wait for a retry
             if (teamId != null) {
@@ -324,17 +366,17 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
                     Ln.i("Trying to create a team conversation but missing the team's KRO URI, bailing out and waiting for a retry");
                     return SyncState.READY;
                 } else {
-                    userIds.add(teamKROURI.toString());
+                    participantIds.add(teamKROURI.toString());
                 }
             }
 
-            String kmsMessage = conversationProcessor.createNewResource(userIds, Collections.singletonList(key.getKeyId()));
+            String kmsMessage = conversationProcessor.createNewResource(participantIds, Collections.singletonList(key.getKeyId()));
 
             conversationBuilder.setEncryptedKmsMessage(kmsMessage);
             conversationBuilder.setIsOneOnOne(isOneOnOne());
 
-            for (Person person : participants.get()) {
-                conversationBuilder.addParticipant(person);
+            for (Person participant : participantsWithIds) {
+                conversationBuilder.addParticipant(participant);
             }
 
             if (Strings.notEmpty(title)) {
@@ -389,6 +431,9 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
                 }
             }
 
+            metric.addNetworkStatus(response);
+            metric.addField(ClientMetricField.METRIC_FIELD_PERCIEVED_DURATION, timingProvider.get(getOperationId()).finish());
+
             if (result != null && !TextUtils.equals(getOperationId(), result.getId())) {
                 try {
                     result.decrypt(key);
@@ -402,7 +447,7 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
                 return SyncState.SUCCEEDED;
             }
 
-            if (response != null && (response.code() >= 400 && response.code() < 500)) {
+            if (response.code() >= 400 && response.code() < 500) {
                 Ln.w("Failed creating new conversation; " + LoggingUtils.toString(response));
                 if (response.code() == 400) {
                     String message = CryptoUtils.getKmsErrorMessage(response, gson, keyManager.getSharedKeyAsJWK());
@@ -417,12 +462,15 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
                 return SyncState.FAULTED;
             }
         } finally {
+
             if (isTeam()) {
-                GenericMetric metric = new GenericMetric(ClientMetricNames.ONBOARDING_CREATED_TEAM);
+                GenericMetric metric = GenericMetric.buildBehavioralMetric(ClientMetricNames.ONBOARDING_CREATED_TEAM)
+                        .withNetworkTraits(response);
                 metric.addField(ClientMetricField.METRIC_FIELD_TEAM_NAME_WORD_COUNT, title.split("\\s+").length);
                 metric.addField(ClientMetricField.METRIC_FIELD_TEAM_NAME_CHARACTER_COUNT, title.replaceAll("\\s+", "").length());
-                metric.addNetworkFields(response);
             }
+
+            postSegmentMetrics(response);
         }
         return SyncState.READY;
     }
@@ -456,29 +504,59 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
         return false;
     }
 
-    private List<String> getUserIds(List<Person> persons) throws IOException {
-        ArrayList<String> ret = new ArrayList();
+    /**
+     * Ensure the Persons in the list are well-formed
+     * @param persons
+     * @return a new List of Person objects with UUID's
+     */
+    private List<Person> resolvePersonUuids(List<Person> persons) throws IOException {
+        ArrayList<Person> ret = new ArrayList<>();
         ArrayList<UserEmailRequest> toRequest = new ArrayList<>();
 
         for (Person p : persons) {
             if (TextUtils.isEmpty(p.getUuid())) {
                 toRequest.add(new UserEmailRequest(p.getEmail()));
             } else {
-                ret.add(p.getUuid());
+                ret.add(p);
             }
         }
+
+        metric.addField(ClientMetricField.METRIC_FIELD_UUID_COUNT, ret.size());
+        metric.addField(ClientMetricField.METRIC_FIELD_EMAIL_COUNT, toRequest.size());
 
         if (!toRequest.isEmpty()) {
             retrofit2.Response<Map<String, UserIdentityKey>> response = apiClientProvider.getUserClient().getOrCreateUserID(apiTokenProvider.getAuthenticatedUser().getConversationAuthorizationHeader(), toRequest).execute();
             if (response.isSuccessful()) {
+                Batch batch = newBatch();
+
                 for (String email : response.body().keySet()) {
                     UserIdentityKey userIdentityKey = response.body().get(email);
                     if (userIdentityKey.getId() == null) {
                         Ln.v("Failed getting or creating UUID for " + email);
                         continue;
                     }
-                    ret.add(userIdentityKey.getId());
+
+                    Person person = new Person(new ActorRecord.ActorKey(userIdentityKey.getId()));
+                    person.setEmail(email);
+                    if (!userIdentityKey.isUserExists())
+                        person.getTags().add(ParticipantTag.NOT_SIGNED_UP);
+
+                    ret.add(person);
+
+                    ContentProviderOperation op = ContentProviderOperation.newInsert(ConversationContract.ActorEntry.CONTENT_URI)
+                            .withValue(ConversationContract.ActorEntry.ACTOR_UUID.name(), person.getId())
+                            .withValue(ConversationContract.ActorEntry.EMAIL.name(), email)
+                            .withValue(ConversationContract.ActorEntry.ENTITLEMENT_SQUARED.name(), userIdentityKey.isUserExists() ? 1 : 0)
+                            .build();
+                    batch.add(op);
+                    if (!Strings.isEmpty(person.getOrgId())) {
+                        op = ContentProviderOperation.newInsert(ConversationContract.OrganizationEntry.CONTENT_URI)
+                                .withValue(ConversationContract.OrganizationEntry.ORG_ID.name(), person.getOrgId())
+                                .build();
+                        batch.add(op);
+                    }
                 }
+                batch.apply();
             }
         }
 
@@ -538,21 +616,26 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
         conversation.setClientTempId(getOperationId());
         new ConversationFrontFillTask(injector, conversation).execute();
 
+        Batch batch = newBatch();
+
+        // Add a database write to be absolutely sure that the real conversation id is persisted
+        // correctly in the database, because once the operation is complete we don't have
+        // a good way to map the provisionalId from this operation to the real conversation id
+        ContentProviderOperation persistOperation = ContentProviderOperation
+                .newUpdate(ConversationEntry.CONTENT_URI)
+                .withValue(ConversationEntry.CONVERSATION_ID.name(), conversation.getId())
+                .withSelection(ConversationEntry.CONVERSATION_ID + "=? OR " + ConversationEntry.CONVERSATION_ID + "=?", new String[]{getOperationId(), conversation.getId()})
+                .build();
+        batch.add(persistOperation);
+
         if (!conversation.getId().equals(getOperationId())) {
-            Batch batch = newBatch();
             ContentProviderOperation op = ContentProviderOperation
                     .newDelete(ParticipantEntry.CONTENT_URI)
                     .withSelection(ParticipantEntry.CONVERSATION_ID + "=?", new String[]{getOperationId()})
                     .build();
             batch.add(op);
-
-            op = ContentProviderOperation.newDelete(ConversationEntry.CONTENT_URI)
-                    .withSelection(ConversationEntry.CONVERSATION_ID + "=? AND EXISTS ( SELECT 1 FROM " + ConversationEntry.TABLE_NAME + " WHERE " + ConversationEntry.CONVERSATION_ID + " =? )", new String[]{getOperationId(), conversationId})
-                    .build();
-            batch.add(op);
-
-            batch.apply();
         }
+        batch.apply();
     }
 
     @Override
@@ -645,6 +728,8 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
 
         if (getState().isTerminal()) {
             bus.post(new NewConversationOperationCompletedEvent(this));
+
+            operationQueue.postGenericMetric(metric);
         }
     }
 
@@ -746,6 +831,20 @@ public class NewConversationOperation extends PostKmsMessageOperation implements
             return false;
 
         return true;
+    }
+
+
+    private void postSegmentMetrics(Response response) {
+        SegmentService.PropertiesBuilder propertiesBuilder = new SegmentService.PropertiesBuilder()
+                .setNetworkResponse(response);
+
+        if (isTeam()) {
+            segmentService.reportMetric(SegmentService.CREATED_TEAM_EVENT, propertiesBuilder.build());
+        } else {
+            // are we creating team space
+            propertiesBuilder.setSpaceIsTeam(!TextUtils.isEmpty(teamId));
+            segmentService.reportMetric(SegmentService.CREATED_SPACE_EVENT, propertiesBuilder.build());
+        }
     }
 
 }

@@ -28,6 +28,17 @@ public class Person extends ActivityObject implements Parcelable, Actor {
         super(ObjectType.person);
     }
 
+    public Person(String email, String entryUUID, String displayName) {
+        this();
+        if (TextUtils.isEmpty(email) && TextUtils.isEmpty(entryUUID))
+            throw new IllegalArgumentException("Person must have an email or actor uuid");
+
+        setId(entryUUID == null ? email : entryUUID);
+        this.emailAddress = email;
+        this.entryUUID = entryUUID;
+        setDisplayName(displayName);
+    }
+
     public Person(String emailOrUuid) {
         this();
         setId(emailOrUuid);
@@ -37,31 +48,29 @@ public class Person extends ActivityObject implements Parcelable, Actor {
             entryUUID = emailOrUuid;
     }
 
-    public Person(ActorRecord.ActorKey actorKey) {
-        this();
-        setUuid(actorKey.getUuid());
-    }
-
     public Person(String email, String displayName) {
         this(email);
         setDisplayName(displayName);
     }
 
+    public Person(ActorRecord.ActorKey actorKey) {
+        this(null, actorKey, null);
+    }
+
+    private Person(String email, ActorRecord.ActorKey actorKey, String displayName) {
+        this(email, actorKey == null ? null : actorKey.getUuid(), displayName);
+    }
+
     public Person(AuthenticatedUser user) {
-        this(user.getEmail(), user.getDisplayName());
-        if (user.getKey() != null)
-            setUuid(user.getKey().getUuid());
+        this(user.getEmail(), user.getKey(), user.getDisplayName());
     }
 
     public Person(ActorRecord actor) {
-        this(actor.getEmail(), actor.getDisplayName());
-        if (actor.getKey() != null)
-            setUuid(actor.getKey().getUuid());
+        this(actor.getEmail(), actor.getKey(), actor.getDisplayName());
     }
 
     public Person(User user) {
-        this(user.getEmail(), user.getDisplayName());
-        setUuid(user.getUuid());
+        this(user.getEmail(), user.getActorKey(), user.getDisplayName());
     }
 
     public boolean isAuthenticatedUser(AuthenticatedUser authenticatedUser) {
@@ -93,7 +102,7 @@ public class Person extends ActivityObject implements Parcelable, Actor {
     }
 
     public boolean isSideboarded() {
-        return tags.contains(ParticipantTag.SIDE_BOARDED);
+        return tags.contains(ParticipantTag.NOT_SIGNED_UP);
     }
 
     public boolean isNotFoundInCI() {
@@ -123,6 +132,18 @@ public class Person extends ActivityObject implements Parcelable, Actor {
     @Override
     public String getEmail() {
         return emailAddress;
+    }
+
+    public void setEmail(String emailAddress) {
+        this.emailAddress = emailAddress;
+    }
+
+    public String getEmailOrUUID() {
+        if (entryUUID != null) {
+            return entryUUID;
+        } else {
+            return emailAddress;
+        }
     }
 
     @Override

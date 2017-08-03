@@ -1,41 +1,30 @@
 package com.cisco.spark.android.mercury.events;
 
-import android.net.Uri;
 import android.support.annotation.NonNull;
 
-import com.cisco.spark.android.authenticator.ApiTokenProvider;
-import com.cisco.spark.android.client.TrackingIdGenerator;
 import com.cisco.spark.android.core.ApiClientProvider;
-import com.cisco.spark.android.core.Settings;
 import com.cisco.spark.android.locus.events.ResetEvent;
 import com.cisco.spark.android.mercury.MercuryClient;
 import com.cisco.spark.android.processing.ActivityListener;
-import com.cisco.spark.android.util.UserAgentProvider;
+import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
+import com.cisco.spark.android.util.Sanitizer;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.spark.android.whiteboard.WhiteboardService;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 
-import java.util.HashMap;
-
 import de.greenrobot.event.EventBus;
+import okhttp3.Response;
+import okhttp3.WebSocket;
 
 public class WhiteboardMercuryClient extends MercuryClient {
 
-    public WhiteboardMercuryClient(ApiClientProvider apiClientProvider, ApiTokenProvider apiTokenProvider, Gson gson,
-                                   EventBus bus, DeviceRegistration deviceRegistration, Settings settings,
-                                   UserAgentProvider userAgentProvider, TrackingIdGenerator trackingIdGenerator,
+    public WhiteboardMercuryClient(ApiClientProvider apiClientProvider, Gson gson,
+                                   EventBus bus, DeviceRegistration deviceRegistration,
                                    ActivityListener activityListener, Ln.Context lnContext,
-                                   WhiteboardService whiteboardService) {
+                                   WhiteboardService whiteboardService, OperationQueue operationQueue, Sanitizer sanitizer) {
 
-        super(false, apiClientProvider, apiTokenProvider, gson, bus, deviceRegistration, settings, userAgentProvider,
-              trackingIdGenerator, activityListener, lnContext, whiteboardService);
-    }
-
-    @NonNull
-    @Override
-    protected MercuryWebSocketClient buildMercuryWebSocketClient(Uri webSocketUri, HashMap<String, String> headers) {
-        return new WhiteboardMercuryWebSocketClient(webSocketUri, headers);
+        super(false, apiClientProvider, gson, bus, deviceRegistration, activityListener, lnContext, whiteboardService, operationQueue, sanitizer);
     }
 
     @NonNull
@@ -44,16 +33,19 @@ public class WhiteboardMercuryClient extends MercuryClient {
         return "WhiteboardMercury";
     }
 
-    protected class WhiteboardMercuryWebSocketClient extends MercuryClient.MercuryWebSocketClient {
-        public WhiteboardMercuryWebSocketClient(Uri serverURI, HashMap<String, String> headers) {
-            super(serverURI, headers);
-        }
+    @NonNull
+    @Override
+    protected MercuryWebsocketListener buildMercuryWebSocketListener() {
+        return new WhiteboardMercuryWebSocketListener();
+    }
+
+    protected class WhiteboardMercuryWebSocketListener extends MercuryClient.MercuryWebsocketListener {
 
         @Override
-        public void onClose(int code, String reason, boolean remote) {
+        public void onClosed(WebSocket webSocket, int code, String reason) {
 
             ln.w("Mercury connection closed [%d (%s)] \"%s\" : %s", code, WebSocketStatusCodes.valueForCode(code).name(),
-                 reason, remote ? " closed by remote" : "closed locally");
+                 reason);
 
             if (!forcedStop) {
                 // Status Code Definitions: https://tools.ietf.org/html/rfc6455#section-7.4.1
@@ -61,9 +53,11 @@ public class WhiteboardMercuryClient extends MercuryClient {
                     case CLOSE_REPLACED:
                         ln.w("Connection was replaced, safe to ignore");
                         break;
+                    case CLOSE_NORMAL:
+                        ln.d("Normal close");
+                        break;
                     case CLOSE_UNKNOWN:
                         ln.w("Connection closed with unknown code %d", code);
-                    case CLOSE_NORMAL:
                     case CLOSE_LOCAL_ERROR:
                     case CLOSE_GOING_AWAY:
                     case CLOSE_PROTOCOL_ERROR:
@@ -83,9 +77,9 @@ public class WhiteboardMercuryClient extends MercuryClient {
         }
 
         @Override
-        public void onError(Exception ex) {
+        public void onFailure(WebSocket webSocket, Throwable t, Response response) {
             ln.e("Secondary mercury connection error");
-            ln.e(ex);
+            ln.e(t);
             //do nothing
         }
     }

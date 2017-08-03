@@ -6,9 +6,14 @@
 
     <!-- Preference keys: do not translate -->
 
+    <!-- User level default Custom notifications -->
+
+    <!-- Always on proximity -->
 
     <!-- This is an android system preference key to get the whole preference screen. It\'s being used
          to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+
 
     <!-- Show if the user has ignored the pairing permission card in dev console  -->
     <string name="pref_key_title_ignore_permission_microphone">Carte d\'autorisation de proximité</string>
@@ -36,7 +41,7 @@
     </plurals>
 
     <string name="and">et</string>
-    <string name="more_no_number">plus</string>
+    <string name="more_no_number">de plus</string>
     <string name="empty_space">&lt;Space is Empty&gt;</string>
     <string name="more" tools:ignore="PluralsCandidate">%d de plus</string>
     <string name="your_pmr">Votre salle de réunion personnelle</string>
@@ -61,7 +66,6 @@
     <string name="error_remove_participant">Impossible de supprimer le participant de l\'espace.</string>
     <string name="uploading_space_avatar">Chargement de l\'image de l\'espace</string>
     <string name="error_setting_space_avatar">Échec de la configuration de l\'image de l\'espace.</string>
-    <string name="error_cropping_space_avatar">Échec du redimensionnement de l\'image de l\'espace</string>
     <string name="file_too_large">L\'image est trop volumineuse, veuillez en choisir une autre</string>
 
     <string name="max_participants_warning_text">Vous ne pouvez pas appeler un espace Spark contenant plus de %d personnes.</string>
@@ -89,22 +93,30 @@
     <string name="call_other_person_declined">L\'autre personne a refusé</string>
     <string name="call_other_person_busy">L\'autre personne est occupée</string>
     <string name="call_participant_left">Le participant est parti</string>
-    <string name="call_participant_joined">Connexion en cours</string>
     <string name="call_participant_cancelled">Le participant a annulé</string>
     <string name="call_participant_expelled">Le modérateur vous a supprimé(e) de la réunion</string>
     <string name="name_was_unavailable">%s était indisponible</string>
 
     <string name="error_file_not_found">Le fichier sélectionné n\'a pas été trouvé dans l\'espace de stockage.</string>
 
+    <!-- Spark Space URL -->
+    <string name="dial">Composer :</string>
+    <string name="video_address">Adresse vidéo</string>
+    <string name="meeting_number">Numéro de réunion</string>
+    <string name="video_address_not_available">Adresse indisponible</string>
+    <string name="meeting_number_not_available">Numéro de réunion non disponible</string>
+    <string name="show_additional_meeting_info">Afficher des informations supplémentaires sur la réunion</string>
+    <string name="hide_additional_meeting_info">Masquer les informations supplémentaires sur la réunion</string>
+
     <!-- Search Modifiers -->
     <string name="search_hint_for_modifier">Saisir le nom d\'une personne</string>
     <string name="search_hint_with_modifier">Saisir le nom d\'une personne</string>
     <string name="search_hint_in_modifier">Saisir le nom d\'un espace</string>
-    <string name="search_modifier_list_header">Sélectionner un modificateur pour affiner votre recherche</string>
+    <string name="search_modifier_list_header">Filtres de recherche</string>
     <string name="search_modifier_option_from_keyword"><b>de :</b></string>
-    <string name="search_modifier_option_from">Afficher les <b>messages</b> et les <b>fichiers</b> d\'une <b>personne</b></string>
+    <string name="search_modifier_option_from"><i>Afficher les messages et les fichiers d\'une personne</i></string>
     <string name="search_modifier_option_in_keyword"><b>dans :</b></string>
-    <string name="search_modifier_option_in">Afficher les <b>messages</b> et les <b>fichiers</b> dans un espace <b>spécifique</b></string>
+    <string name="search_modifier_option_in"><i>Afficher les messages et les fichiers dans un espace spécifique</i></string>
 
     <!-- Presence Status Messages -->
     <string name="do_not_disturb">Ne pas déranger</string>
@@ -121,6 +133,7 @@
     <string name="presence_status_pending">Activation en attente</string>
     <string name="presence_status_ooo">Absent(e)</string>
     <string name="presence_status_ooo_until">Absent(e) jusqu\'au %s</string>
+    <string name="presence_status_unknown">Statut inconnu</string>
 
     <plurals name="presence_status_inactive_hours">
         <item quantity="one">Actif(s) il y a %d heure</item>
@@ -139,5 +152,7 @@
     <!-- Day Markers -->
     <string name="day_marker_today">Aujourd\'hui</string>
     <string name="day_marker_yesterday">Hier</string>
+
+    <string name="message_failed_notification">L\'envoi d\'un message a échoué.</string>
 
 </resources>

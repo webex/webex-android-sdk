@@ -6,8 +6,10 @@ import com.cisco.spark.android.locus.responses.GetLocusListResponse;
 import com.cisco.spark.android.locus.responses.JoinLocusResponse;
 import com.cisco.spark.android.meetings.GetMeetingInfoType;
 import com.cisco.spark.android.locus.model.LocusMeetingInfo;
+import com.cisco.spark.android.status.HealthCheckResponse;
 
 import retrofit2.Call;
+import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
@@ -43,5 +45,5 @@ public interface LocusClient {
     Call<Void> invalidateUserCache(@Path("id") String id);
 
     @GET("ping")
-    Call<Void> ping();
+    Observable<Response<HealthCheckResponse>> ping();
 }

@@ -4,6 +4,7 @@ import com.cisco.spark.android.util.Clock;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Utility class to gather timing splits and dump the data to an analytics tracker and to the logs.
@@ -58,13 +59,27 @@ public class Timing {
      * Dump the timings and send metrics
      */
     public void endAndPublish() {
-        endAndPublish(0, Long.MAX_VALUE);
+        endAndPublish(0, Long.MAX_VALUE, null);
+    }
+
+    /**
+     * Dump the timings and send metrics
+     */
+    public void endAndPublish(Map<String, Object> additionalValues) {
+        endAndPublish(0, Long.MAX_VALUE, additionalValues);
     }
 
     /**
      * Dump the timings and send metrics
      */
     public void endAndPublish(long min, long max) {
+        endAndPublish(min, max, null);
+    }
+
+    /**
+     * Dump the timings and send metrics
+     */
+    public void endAndPublish(long min, long max, Map<String, Object> additionalValues) {
         ArrayList<Split> toPublish = new ArrayList<Split>();
         synchronized (splitLabels) {
             toPublish.addAll(splitLabels);
@@ -89,19 +104,52 @@ public class Timing {
 
         long duration = (clock.now() - first);
         builder.reportTiming(tag, (int) duration);
+
+        if (additionalValues != null) {
+            for (Map.Entry<String, Object> entry : additionalValues.entrySet()) {
+                builder.reportValue(entry.getKey(), entry.getValue());
+            }
+        }
+
         if (duration >= min && duration <= max)
             metricsReporter.enqueueMetricsReport(builder.build(tag));
     }
 
     public void end() {
-        endAndPublish(-1, 0);
+        addSplit(null);
+    }
+
+    public long getTotalDuration() {
+        Split first, last;
+        synchronized (splitLabels) {
+            first = splitLabels.get(0);
+            last = splitLabels.get(splitLabels.size() - 1);
+        }
+
+        return last.timestamp - first.timestamp;
     }
 
     public long finish() {
-        Split first = splitLabels.get(0);
+        Split first;
+        synchronized (splitLabels) {
+            first = splitLabels.get(0);
+        }
 
         long duration = (clock.now() - first.timestamp);
 
+        return duration;
+    }
+
+    public long getLatestDurationToReport() {
+        ArrayList<Split> toPublish = new ArrayList<Split>();
+        synchronized (splitLabels) {
+            toPublish.addAll(splitLabels);
+            splitLabels.clear();
+        }
+        if (toPublish.size() == 0)
+            return 0;
+        Split split = toPublish.get(toPublish.size() - 1);
+        long duration = clock.now() - split.timestamp;
         return duration;
     }
 }

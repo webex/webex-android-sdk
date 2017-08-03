@@ -1,5 +1,7 @@
 package com.cisco.spark.android.mercury;
 
+import android.text.TextUtils;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
@@ -7,6 +9,8 @@ import java.util.Date;
 import java.util.List;
 
 public class MercuryEnvelope {
+
+    private static final String ROUTE_PREFIX = "board.";
 
     private String id;
     private MercuryData data;
@@ -29,7 +33,7 @@ public class MercuryEnvelope {
     }
 
     public AlertType getAlertType() {
-        return alertType;
+        return alertType == null ? AlertType.NONE : alertType;
     }
 
     public boolean isDeliveryEscalation() {
@@ -54,6 +58,22 @@ public class MercuryEnvelope {
 
         @SerializedName("data.activity.target.lastRelevantActivityDate")
         private Date lastRelevantActivityDate;
+
+        private String route;
+
+        public String getChannelId() {
+            return getChannelIdFromRoute(route);
+        }
+
+        private String getChannelIdFromRoute(String route) {
+            if (!TextUtils.isEmpty(this.route) && this.route.startsWith(ROUTE_PREFIX)) {
+                route = this.route.substring(ROUTE_PREFIX.length());
+                if (!TextUtils.isEmpty(route)) {
+                    route = route.replace(".", "-");
+                }
+            }
+            return route;
+        }
 
         public Date getLastReadableActivityDate() {
             return lastReadableActivityDate;

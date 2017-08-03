@@ -1,7 +1,9 @@
 package com.cisco.spark.android.sync.operationqueue;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
+import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.AuthenticatedUserProvider;
 import com.cisco.spark.android.authenticator.NotAuthenticatedException;
@@ -81,23 +83,32 @@ public class TokenRefreshOperation extends AbstractOAuth2Operation {
 
         try {
 
-            //LM
+            //sdk modification
 
-            /*
-            OAuth2Client oAuthClient = apiClientProvider.getOAuthClient();
-            Response<OAuth2AccessToken> response = oAuth2.refreshTokens(oAuthClient, user.getOAuth2Tokens().getRefreshToken());
-            OAuth2AccessToken newToken = getTokenFromResponse(response);
-            if (newToken == null) {
-                if (response.code() == HttpURLConnection.HTTP_BAD_REQUEST)
-                    triggerLogout(response);
-                return SyncState.READY;
+            String sdk = BuildConfig.PUBLICSDK;
+
+            if(sdk.equals("SDKEnabled")){
+                Log.i("TokenRefreshOperation", "doWork:-> SDKEnabled ");
+                return SyncState.SUCCEEDED;
+
+            }else{
+
+                OAuth2Client oAuthClient = apiClientProvider.getOAuthClient();
+                Response<OAuth2AccessToken> response = oAuth2.refreshTokens(oAuthClient, user.getOAuth2Tokens().getRefreshToken());
+                OAuth2AccessToken newToken = getTokenFromResponse(response);
+                if (newToken == null) {
+                    if (response.code() == HttpURLConnection.HTTP_BAD_REQUEST)
+                        triggerLogout(response);
+                    return SyncState.READY;
+                }
+
+                user.setTokens(newToken);
+
+                reduceScopeIfNeeded(user.getOAuth2Tokens());
+
             }
 
-            user.setTokens(newToken);
 
-            reduceScopeIfNeeded(user.getOAuth2Tokens());
-
-            */
 
             return SyncState.SUCCEEDED;
         } catch (NotAuthenticatedException e) {

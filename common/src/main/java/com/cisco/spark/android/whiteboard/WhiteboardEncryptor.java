@@ -44,6 +44,9 @@ public class WhiteboardEncryptor {
         if (keyObject == null) {
             Ln.e("No key provided");
             return null;
+        } else if (keyObject.getKey() == null) {
+            Ln.e("Key provided was invalid");
+            return null;
         }
 
         List<Content> encryptedContent = new ArrayList<>();
@@ -132,6 +135,7 @@ public class WhiteboardEncryptor {
     public String decryptContent(String encryptedData, String encryptionKeyUrl) {
         String decryptedData = "";
         if (TextUtils.isEmpty(encryptionKeyUrl)) {
+            Ln.e(new IllegalStateException("Invalid key url"));
             return encryptedData;
         }
         try {

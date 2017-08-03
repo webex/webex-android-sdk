@@ -3,14 +3,16 @@ package com.cisco.spark.android.ui;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
 import android.support.annotation.IntDef;
+import android.support.v4.content.res.ResourcesCompat;
 import android.text.TextUtils;
 import android.util.LruCache;
 
@@ -61,7 +63,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import de.greenrobot.event.EventBus;
-import retrofit.RetrofitError;
 
 @Singleton
 public class BitmapProvider implements ContentManager.ContentListener {
@@ -98,7 +99,6 @@ public class BitmapProvider implements ContentManager.ContentListener {
         SETTINGS_AVATAR,
         AVATAR_LARGE,
         AVATAR_ROOM_DETAILS_DIALOG,
-        IMAGE_URI,
         AVATAR_EDIT;
 
         public int maxH, maxW, maxPixels;
@@ -178,8 +178,13 @@ public class BitmapProvider implements ContentManager.ContentListener {
                 processingFailed = true;
                 MimeUtils.ContentType contentType = MimeUtils.getContentTypeByFilename(localUri.getLastPathSegment());
                 // If we get here with an IMAGE content type it's probably a corrupt bitmap.
-                if (contentType != MimeUtils.ContentType.IMAGE)
-                    this.bitmap = BitmapFactory.decodeResource(context.getResources(), contentType.drawableResource);
+                if (contentType != MimeUtils.ContentType.IMAGE) {
+                    Drawable icon = ResourcesCompat.getDrawable(context.getResources(), contentType.drawableResource, null);
+                    this.bitmap = Bitmap.createBitmap(icon.getIntrinsicWidth(), icon.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(bitmap);
+                    icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
+                    icon.draw(canvas);
+                }
             }
         }
     }
@@ -371,8 +376,6 @@ public class BitmapProvider implements ContentManager.ContentListener {
         BitmapType.VIDEO_THUMBNAIL.maxW = BitmapType.THUMBNAIL.maxW;
         BitmapType.VIDEO_THUMBNAIL.maxPixels = BitmapType.THUMBNAIL.maxPixels;
 
-        BitmapType.IMAGE_URI.setSquareDims(context, R.dimen.image_uri_size);
-
         BitmapType.AVATAR_LARGE.setSquareDims(context, R.dimen.avatar_large_dim);
         BitmapType.SETTINGS_AVATAR.setSquareDims(context, R.dimen.preferences_avatar_size);
         BitmapType.AVATAR_EDIT.setSquareDims(context, R.dimen.avatar_edit_size);
@@ -422,11 +425,12 @@ public class BitmapProvider implements ContentManager.ContentListener {
      * @param uri              The uri
      * @param type             The largest acceptable type
      * @param requestIfMissing If the requested bitmap is not available request it asynchronously
+     * @param uuidOrEmail      The user's uuid or email if exist
      * @param fileName         A friendly filename to use if the image must be downloaded (ignored
      *                         if requestIfMissing=false)
      * @return A bitmap from the LruCache. The bitmap's LRU record will be bumped to the top.
      */
-    public Bitmap getBestAvailableNoWait(Uri uri, BitmapType type, boolean requestIfMissing, String fileName) {
+    public Bitmap getBestAvailableNoWait(Uri uri, BitmapType type, boolean requestIfMissing, String uuidOrEmail, String fileName) {
         if (uri == null) {
             return null;
         }
@@ -439,22 +443,25 @@ public class BitmapProvider implements ContentManager.ContentListener {
         }
 
         if (requestIfMissing) {
-            getBitmap(uri, type, fileName, null);
+            getBitmap(uri, uuidOrEmail, type, fileName);
         }
 
-        Bitmap bitmap = getBiggerAvailableNoWait(bitmapKeyUri, type);
+        Bitmap bitmap = getBiggerAvailableNoWait(uri, type);
+        Ln.d("getBiggerAvailableNoWait for: " + uri.toString() + "; type: " + type.toString() + "; bitmap is null = " + (bitmap == null));
         if (bitmap == null) {
-            bitmap = getSmallerAvailableNoWait(bitmapKeyUri, type);
+            bitmap = getSmallerAvailableNoWait(uri, type);
+            Ln.d("getSmallerAvailableNoWait for: " + uri.toString() + "; type: " + type.toString() + "; bitmap is null = " + (bitmap == null));
         }
 
         return bitmap;
     }
 
-    private Bitmap getBiggerAvailableNoWait(Uri bitmapKeyUri, BitmapType type) {
+    private Bitmap getBiggerAvailableNoWait(Uri uri, BitmapType type) {
+        Uri bitmapKeyUri = getBitmapKeyUri(uri, type);
         BitmapEntry entry = bitmapLruCache.get(bitmapKeyUri);
 
         if (entry != null && entry.bitmap != null) {
-            Ln.d("getBiggerAvailableNoWait, bitmapKeyUri: " + bitmapKeyUri);
+            Ln.d("success getBiggerAvailableNoWait for bitmapKeyUri: " + bitmapKeyUri);
             return entry.bitmap;
         }
 
@@ -462,28 +469,28 @@ public class BitmapProvider implements ContentManager.ContentListener {
             // Grouped by transformation. These have none
             case THUMBNAIL:
             case VIDEO_THUMBNAIL:
-                return getBiggerAvailableNoWait(bitmapKeyUri, BitmapType.MULTIPAGE_DOCUMENT);
+                return getBiggerAvailableNoWait(uri, BitmapType.MULTIPAGE_DOCUMENT);
             case MULTIPAGE_DOCUMENT:
-                return getBiggerAvailableNoWait(bitmapKeyUri, BitmapType.LARGE);
+                return getBiggerAvailableNoWait(uri, BitmapType.LARGE);
             case LARGE:
                 return null;
 
             // Grouped by transformation. Circular
             case AVATAR_READRECEIPT:
-                return getBiggerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR);
+                return getBiggerAvailableNoWait(uri, BitmapType.AVATAR);
             case AVATAR:
             case CHIP:
-                return getBiggerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR_ROOM_DETAILS_DIALOG);
+                return getBiggerAvailableNoWait(uri, BitmapType.AVATAR_ROOM_DETAILS_DIALOG);
             case AVATAR_ROOM_DETAILS_DIALOG:
-                return getBiggerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR_NOTIFICATION);
+                return getBiggerAvailableNoWait(uri, BitmapType.AVATAR_NOTIFICATION);
             case AVATAR_NOTIFICATION:
-                return getBiggerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR_CALL_PARTICIPANT);
+                return getBiggerAvailableNoWait(uri, BitmapType.AVATAR_CALL_PARTICIPANT);
             case AVATAR_CALL_PARTICIPANT:
-                return getBiggerAvailableNoWait(bitmapKeyUri, BitmapType.SIDE_NAV_AVATAR);
+                return getBiggerAvailableNoWait(uri, BitmapType.SIDE_NAV_AVATAR);
             case SIDE_NAV_AVATAR:
-                return getBiggerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR_EDIT);
+                return getBiggerAvailableNoWait(uri, BitmapType.AVATAR_EDIT);
             case AVATAR_EDIT:
-                return getBiggerAvailableNoWait(bitmapKeyUri, BitmapType.SETTINGS_AVATAR);
+                return getBiggerAvailableNoWait(uri, BitmapType.SETTINGS_AVATAR);
             case SETTINGS_AVATAR:
                 return null;
         }
@@ -491,40 +498,41 @@ public class BitmapProvider implements ContentManager.ContentListener {
         return null;
     }
 
-    private Bitmap getSmallerAvailableNoWait(Uri bitmapKeyUri, BitmapType type) {
+    private Bitmap getSmallerAvailableNoWait(Uri uri, BitmapType type) {
+        Uri bitmapKeyUri = getBitmapKeyUri(uri, type);
         BitmapEntry entry = bitmapLruCache.get(bitmapKeyUri);
 
         if (entry != null && entry.bitmap != null) {
-            Ln.d("getSmallerAvailableNoWait, bitmapKeyUri: " + bitmapKeyUri);
+            Ln.d("success getSmallerAvailableNoWait for bitmapKeyUri: " + bitmapKeyUri);
             return entry.bitmap;
         }
 
         switch (type) {
             // Grouped by transformation. These have none
             case LARGE:
-                return getSmallerAvailableNoWait(bitmapKeyUri, BitmapType.MULTIPAGE_DOCUMENT);
+                return getSmallerAvailableNoWait(uri, BitmapType.MULTIPAGE_DOCUMENT);
             case MULTIPAGE_DOCUMENT:
-                return getSmallerAvailableNoWait(bitmapKeyUri, BitmapType.THUMBNAIL);
+                return getSmallerAvailableNoWait(uri, BitmapType.THUMBNAIL);
             case THUMBNAIL:
             case VIDEO_THUMBNAIL:
                 return null;
 
             // Grouped by transformation. Circular
             case SETTINGS_AVATAR:
-                return getSmallerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR_EDIT);
+                return getSmallerAvailableNoWait(uri, BitmapType.AVATAR_EDIT);
             case AVATAR_EDIT:
-                return getSmallerAvailableNoWait(bitmapKeyUri, BitmapType.SIDE_NAV_AVATAR);
+                return getSmallerAvailableNoWait(uri, BitmapType.SIDE_NAV_AVATAR);
             case SIDE_NAV_AVATAR:
-                return getSmallerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR_CALL_PARTICIPANT);
+                return getSmallerAvailableNoWait(uri, BitmapType.AVATAR_CALL_PARTICIPANT);
             case AVATAR_CALL_PARTICIPANT:
-                return getSmallerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR_NOTIFICATION);
+                return getSmallerAvailableNoWait(uri, BitmapType.AVATAR_NOTIFICATION);
             case AVATAR_NOTIFICATION:
-                return getSmallerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR_ROOM_DETAILS_DIALOG);
+                return getSmallerAvailableNoWait(uri, BitmapType.AVATAR_ROOM_DETAILS_DIALOG);
             case AVATAR_ROOM_DETAILS_DIALOG:
-                return getSmallerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR);
+                return getSmallerAvailableNoWait(uri, BitmapType.AVATAR);
             case AVATAR:
             case CHIP:
-                return getSmallerAvailableNoWait(bitmapKeyUri, BitmapType.AVATAR_READRECEIPT);
+                return getSmallerAvailableNoWait(uri, BitmapType.AVATAR_READRECEIPT);
         }
 
         // TODO check the ContentManager for existing files we can render asynchronously
@@ -603,29 +611,12 @@ public class BitmapProvider implements ContentManager.ContentListener {
         Future<Bitmap> ret = null;
         final Uri keyUri = getBitmapKeyUri(uri, type);
 
-        // Pull from the bitmap cache. If it's not there check the second-chance cache.
-        // If the second-chance cache gets a hit, promote the entry back into the main cache.
-        BitmapEntry bitmapentry = bitmapLruCache.get(keyUri);
-        if (bitmapentry == null) {
-            bitmapentry = avatarLruCache.get(keyUri);
-            if (bitmapentry != null) {
-                ln.d("Bitmap returned to main cache. " + uri);
-                bitmapLruCache.put(keyUri, bitmapentry);
-            }
-        }
-
-        // If the cached bitmap has been recycled out from under us, null it out.
-        if (bitmapentry != null && bitmapentry.bitmap != null && bitmapentry.bitmap.isRecycled()) {
-            ln.d("bitmap was recycled " + uri);
-            bitmapentry.bitmap = null;
-            bitmapLruCache.remove(keyUri);
-            avatarLruCache.remove(keyUri);
-        }
+        final BitmapEntry bitmapEntry = getBitmapEntryFromCache(keyUri, uri);
 
         // If we have a valid bitmap, that's our return value.
-        if (bitmapentry != null && bitmapentry.bitmap != null && !detached) {
-            contentManager.touchCacheRecord(uri, null);
-            ret = new CompletedFuture<>(bitmapentry.bitmap);
+        if (bitmapEntry != null && bitmapEntry.bitmap != null && !detached) {
+            contentManager.touchCacheRecord(uri, uuidOrEmail, filename, type);
+            ret = new CompletedFuture<>(bitmapEntry.bitmap);
 
             // Shortcut for the happy case
             // Call the callback with the bitmap if it's ready
@@ -756,12 +747,6 @@ public class BitmapProvider implements ContentManager.ContentListener {
                 } finally {
                     taskLock.unlock();
                 }
-            } catch (RetrofitError e) {
-                if (e.getKind() != RetrofitError.Kind.NETWORK)
-                    ln.e(false, e);
-                else
-                    ln.v(e);
-                notifyListeners(remoteUri, null, false);
             } catch (Exception e) {
                 ln.e(e, "Caught Exception in GetBitmapTask");
                 notifyListeners(remoteUri, null, false);
@@ -802,6 +787,7 @@ public class BitmapProvider implements ContentManager.ContentListener {
 
                 localFile = record.getLocalUriAsFile();
                 ln.v("got ContentDataCacheRecord with file " + localFile + " for " + remoteUri);
+                ln.d("got ContentDataCacheRecord with file " + localFile + " for " + remoteUri + "; realUri: " + record.getRealUri());
             }
 
             BitmapEntry entry = null;
@@ -862,6 +848,29 @@ public class BitmapProvider implements ContentManager.ContentListener {
         return uri.buildUpon().clearQuery().appendQueryParameter("type", type.name()).build();
     }
 
+    private BitmapEntry getBitmapEntryFromCache(Uri keyUri, Uri uri) {
+        // Pull from the bitmap cache. If it's not there check the second-chance cache.
+        // If the second-chance cache gets a hit, promote the entry back into the main cache.
+        BitmapEntry bitmapEntry = bitmapLruCache.get(keyUri);
+        if (bitmapEntry == null) {
+            bitmapEntry = avatarLruCache.get(keyUri);
+            if (bitmapEntry != null) {
+                ln.d("$BITMAP returned to main cache. " + uri);
+                bitmapLruCache.put(keyUri, bitmapEntry);
+            }
+        }
+
+        // If the cached bitmap has been recycled out from under us, null it out.
+        if (bitmapEntry != null && bitmapEntry.bitmap != null && bitmapEntry.bitmap.isRecycled()) {
+            ln.d("$BITMAP was recycled " + uri);
+            bitmapEntry.bitmap = null;
+            bitmapLruCache.remove(keyUri);
+            avatarLruCache.remove(keyUri);
+        }
+
+        return bitmapEntry;
+    }
+
     private Bitmap fileToBitmap(Uri localUri, BitmapType type) throws URISyntaxException, IOException {
         File localFile = new File(new URI(localUri.toString()));
         return fileToBitmap(localFile, type);
@@ -913,7 +922,7 @@ public class BitmapProvider implements ContentManager.ContentListener {
                 transformation = circleTransform;
                 break;
             case AVATAR_CALL_PARTICIPANT:
-                if (deviceRegistration.getFeatures().isRoundAvatarFilmstripEnabled()) {
+                if (deviceRegistration.getFeatures().isActiveSpeakerViewEnabled()) {
                     transformation = circleTransform;
                 }
                 break;
@@ -935,17 +944,29 @@ public class BitmapProvider implements ContentManager.ContentListener {
     }
 
     @Override
-    public void onFetchRealURIComplete(ContentManager.CacheRecordRequestParameters parameters, SecureContentReference secureContentReference) {
+    public void onRemoteBitmapUpdated(Uri remoteUri, BitmapType bitmapType) {
+        Uri keyUri = getBitmapKeyUri(remoteUri, bitmapType);
+        final BitmapEntry bitmapEntry = bitmapLruCache.get(keyUri);
+        ln.d("onRemoteBitmapUpdated, remoteUri: " + remoteUri + "; bitmapEntry is null? " + (bitmapEntry == null));
+        if (bitmapEntry != null) {
+            bitmapLruCache.remove(remoteUri);
+            avatarLruCache.remove(remoteUri);
+        }
+    }
+
+    @Override
+    public void onFetchAvatarUrlComplete(ContentManager.CacheRecordRequestParameters parameters) {
         if (parameters == null || parameters.getRemoteUri() == null) {
             return;
         }
+        ln.v("onFetchAvatarUrlComplete, remoteUri: " + parameters.getRemoteUri());
 
         if (getListenersForUri(parameters.getRemoteUri()).isEmpty()) {
-            Ln.v("unnecessary to download image because no listeners for uri: " + parameters.getRemoteUri());
+            ln.v("unnecessary to download image because no listeners for uri: " + parameters.getRemoteUri());
             return;
         }
 
-        getBitmap(parameters.getRemoteUri(), secureContentReference, parameters.getBitmapType(), parameters.getFileName(), null, parameters.getRetentionMode(), null);
+        getBitmap(parameters.getRemoteUri(), null, parameters.getBitmapType(), parameters.getFileName(), null, parameters.getRetentionMode(), null);
     }
 
     @Override
@@ -1023,7 +1044,7 @@ public class BitmapProvider implements ContentManager.ContentListener {
 
     private void notifyListeners(final Uri remoteUri, final BitmapType type, final Bitmap bitmap, final boolean shouldFade) {
         if (remoteUri != null && remoteUri.getPathSegments().size() >= 2) {
-            ln.d("Notifying listeners " + remoteUri.getPathSegments().get(remoteUri.getPathSegments().size() - 2));
+            ln.d("Notifying listeners " + remoteUri);
             for (final BitmapProviderListener listenerRef : getListenersForUri(remoteUri)) {
                 if (listenerRef != null) {
                     mainLooperHandler.post(new Runnable() {

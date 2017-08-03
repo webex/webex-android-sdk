@@ -18,6 +18,7 @@ import com.cisco.spark.android.locus.requests.ModifyMediaRequest;
 import com.cisco.spark.android.locus.requests.SendDtmfRequest;
 import com.cisco.spark.android.locus.requests.UpdateLocusRequest;
 import com.cisco.spark.android.locus.responses.CreateAclResponse;
+import com.cisco.spark.android.locus.responses.DeleteIntentResponse;
 import com.cisco.spark.android.locus.responses.JoinLocusResponse;
 import com.cisco.spark.android.locus.responses.LeaveLocusResponse;
 import com.cisco.spark.android.locus.responses.LocusParticipantResponse;
@@ -38,15 +39,13 @@ import retrofit2.http.GET;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Query;
 import retrofit2.http.Url;
 
 
 public interface HypermediaLocusClient {
     @GET
-    Call<Locus> getLocus(@Url String url);
-
-    @GET
-    Locus getLocusSync(@Url String url);
+    Call<Locus> getLocus(@Url String url, @Query("sync_debug") String value);
 
     @POST
     Call<JoinLocusResponse> joinLocus(@Url String url, @Body JoinLocusRequest request);
@@ -107,4 +106,7 @@ public interface HypermediaLocusClient {
 
     @POST
     Call<CreateAclResponse> createAcl(@Url String url, @Body CreateAclRequest createAclRequest);
+
+    @DELETE
+    Call<DeleteIntentResponse> deleteIntent(@Url String url);
 }

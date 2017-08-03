@@ -4,16 +4,26 @@ import android.content.ContentProviderOperation;
 import android.net.Uri;
 
 import com.cisco.spark.android.locus.model.LocusKey;
+import com.cisco.spark.android.model.RetentionPolicy;
 import com.cisco.spark.android.sync.ConversationContract.ActivityEntry;
 import com.cisco.spark.android.sync.ConversationContract.ContentSearchDataEntry;
 import com.cisco.spark.android.sync.ConversationContract.ConversationEntry;
 import com.cisco.spark.android.sync.ConversationContract.ConversationSearchDataEntry;
 import com.cisco.spark.android.sync.ConversationContract.MessageSearchDataEntry;
+import com.cisco.spark.android.sync.ConversationContract.OrganizationEntry;
 import com.github.benoitdion.ln.Ln;
 
 import java.util.ArrayList;
 
 public class ConversationContentProviderOperation {
+
+    // calculate the published days of each activity
+    private static final String CAST_ACTIVITY_PUBLISHED_DAYS_STATEMENT =
+            "CAST(JULIANDAY(DATETIME('now')) - JULIANDAY(DATETIME(" +
+                    ActivityEntry.TABLE_NAME + "." + "ACTIVITY_PUBLISHED_TIME/1000, 'UNIXEPOCH', 'LOCALTIME')) AS INTEGER)";
+    // we delete 7 more days as buffer when purge activity data
+    public static final int ACTIVITY_PRUNING_BUFFER_DAYS = 7;
+
     private ConversationContentProviderOperation() {
     }
 
@@ -185,28 +195,47 @@ public class ConversationContentProviderOperation {
                 .build();
     }
 
-    public static ContentProviderOperation insertSticky(String padId, String padDescription, String stickyId, String stickyUrl, String stickyDescription) {
-        return ContentProviderOperation.newInsert(ConversationContract.StickyEntry.CONTENT_URI)
-                .withValue(ConversationContract.StickyEntry.PAD_ID.name(), padId)
-                .withValue(ConversationContract.StickyEntry.PAD_DESCRIPTION.name(), padDescription)
-                .withValue(ConversationContract.StickyEntry.STICKY_ID.name(), stickyId)
-                .withValue(ConversationContract.StickyEntry.STICKY_URL.name(), stickyUrl)
-                .withValue(ConversationContract.StickyEntry.STICKY_DESCRIPTION.name(), stickyDescription)
-                .build();
-    }
-
-    public static ContentProviderOperation deleteStickyPad(String padId) {
-        return ContentProviderOperation.newDelete(Uri.withAppendedPath(ConversationContract.StickyEntry.CONTENT_URI, padId))
-                .build();
-    }
-
-    public static ContentProviderOperation deleteAllStickyPads() {
-        return ContentProviderOperation.newDelete(ConversationContract.StickyEntry.CONTENT_URI).build();
-    }
-
     public static ContentProviderOperation deleteContentSearchActivityWithTempID(String tempId) {
         return ContentProviderOperation.newDelete(ContentSearchDataEntry.CONTENT_URI)
                 .withSelection(ContentSearchDataEntry.ACTIVITY_ID + "= ?", new String[]{tempId})
                 .build();
     }
+
+    public static ContentProviderOperation deleteGroupSpaceActivitiesBeyondRetentionDate() {
+        return ContentProviderOperation.newDelete(ActivityEntry.CONTENT_URI)
+                .withSelection(ConversationContract.fqname(ActivityEntry.ACTIVITY_TYPE) + "!=" + ActivityEntry.Type.CREATE_CONVERSATION.ordinal() +
+                        " AND " + ConversationContract.fqname(ActivityEntry.CONVERSATION_ID) + " IN (" +
+                        " SELECT " + ConversationContract.fqname(ConversationEntry.CONVERSATION_ID) +
+                        " FROM " + ConversationEntry.TABLE_NAME +
+                        " WHERE " + ConversationContract.fqname(ActivityEntry.CONVERSATION_ID) + "=" + ConversationContract.fqname(ConversationEntry.CONVERSATION_ID) +
+                        " AND " + ConversationContract.fqname(ConversationEntry.ONE_ON_ONE_PARTICIPANT) + " IS NULL" +
+                        " AND " + ConversationContract.fqname(ConversationEntry.RETENTION_DAYS) + ">0" +
+                        " AND " + CAST_ACTIVITY_PUBLISHED_DAYS_STATEMENT + "+?>" + ConversationContract.fqname(ConversationEntry.RETENTION_DAYS) +
+                        " )", new String[]{String.valueOf(ACTIVITY_PRUNING_BUFFER_DAYS)})
+                .build();
+    }
+
+    public static ContentProviderOperation deleteActivityWithId(String activityId) {
+        return ContentProviderOperation.newDelete(ActivityEntry.CONTENT_URI)
+                .withSelection(ActivityEntry.ACTIVITY_ID + "= ?", new String[]{activityId})
+                .build();
+    }
+
+    public static ContentProviderOperation updateRetentionPolicyWithOrgId(String orgId, RetentionPolicy retentionPolicy) {
+        return ContentProviderOperation.newUpdate(OrganizationEntry.CONTENT_URI)
+                .withSelection(OrganizationEntry.ORG_ID + "=?", new String[]{String.valueOf(orgId)})
+                .withValue(OrganizationEntry.RETENTION_URL.name(), retentionPolicy.getRetentionUrl())
+                .withValue(OrganizationEntry.RETENTION_DAYS.name(), retentionPolicy.getRetentionDays())
+                .withValue(OrganizationEntry.LAST_RETENTION_SYNC_TIMESTAMP.name(), System.currentTimeMillis())
+                .build();
+    }
+
+    public static ContentProviderOperation updateConversationRetentionPolicy(RetentionPolicy retentionPolicy) {
+        return ContentProviderOperation.newUpdate(ConversationEntry.CONTENT_URI)
+                .withSelection(ConversationEntry.RETENTION_URL + "=?", new String[]{String.valueOf(retentionPolicy.getRetentionUrl())})
+                .withValue(ConversationEntry.RETENTION_DAYS.name(), retentionPolicy.getRetentionDays())
+                .withValue(ConversationEntry.LAST_RETENTION_SYNC_TIMESTAMP.name(), System.currentTimeMillis())
+                .build();
+    }
+
 }

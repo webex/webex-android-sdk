@@ -1,7 +1,5 @@
 package com.cisco.spark.android.model;
 
-import android.util.Log;
-
 import com.cisco.spark.android.authenticator.OAuth2;
 
 public class LoginTestUserRequest {

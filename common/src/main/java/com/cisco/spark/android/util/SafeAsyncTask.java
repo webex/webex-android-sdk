@@ -15,8 +15,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import retrofit.RetrofitError;
-
 /**
  * Originally from RoboGuice: https://github.com/roboguice/roboguice/blob/master/roboguice/src/main/java/roboguice/util/SafeAsyncTask.java
  * <p/>
@@ -156,13 +154,6 @@ public abstract class SafeAsyncTask<ResultT> implements Callable<ResultT> {
     }
 
     protected void onThrowable(Throwable t) throws RuntimeException {
-        if (t instanceof RetrofitError) {
-            RetrofitError error = (RetrofitError) t;
-            if (error.getKind() == RetrofitError.Kind.NETWORK) {
-                Ln.d(t, "Throwable caught during background processing");
-                return;
-            }
-        }
         Ln.e(t, "Throwable caught during background processing");
     }
 

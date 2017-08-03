@@ -7,4 +7,12 @@
     <item type="id" name="spaceball_scene_files" />
     <item type="id" name="spaceball_scene_sparkurls"/>
     <item type="id" name="spaceball_scene_info" />
+
+    <!-- whiteboard tool bar ids -->
+    <item type="id" name="whiteboard_toolbar_right_post_snapshot" />
+    <item type="id" name="whiteboard_toolbar_right_share_live" />
+    <item type="id" name="whiteboard_toolbar_right_stop_live_share" />
+    <item type="id" name="whiteboard_toolbar_right_clear_all" />
+    <item type="id" name="whiteboard_toolbar_left_all_whiteboards" />
+    <item type="id" name="whiteboard_toolbar_left_done" />
 </resources>

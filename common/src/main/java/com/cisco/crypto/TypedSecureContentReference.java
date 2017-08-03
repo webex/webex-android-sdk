@@ -1,6 +1,7 @@
 package com.cisco.crypto.scr;
 
 import com.cisco.spark.android.client.CountedTypedOutput;
+import com.cisco.spark.android.metrics.TimingProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,8 +12,8 @@ import okio.BufferedSink;
 public class TypedSecureContentReference extends CountedTypedOutput {
     private final SecureContentReference secureContentReference;
 
-    public TypedSecureContentReference(String mimeType, File file) {
-        super(mimeType, file);
+    public TypedSecureContentReference(String mimeType, File file, TimingProvider timingProvider) {
+        super(mimeType, file, timingProvider);
         secureContentReference = SecureContentReference.createInstance();
     }
 

@@ -4,29 +4,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GenericMetricsRequest {
-    private List<GenericMetric> metrics;
+    private volatile List<GenericMetric> metrics = new ArrayList<>();
 
     public GenericMetricsRequest() {
-        metrics = new ArrayList<>();
     }
 
-    public void addMetric(GenericMetric metric) {
+    public synchronized void addMetric(GenericMetric metric) {
         metrics.add(metric);
     }
 
-    public void combine(GenericMetricsRequest otherRequest) {
+    public synchronized void combine(GenericMetricsRequest otherRequest) {
         this.metrics.addAll(otherRequest.getMetrics());
     }
 
-    public void addAllMetrics(List<GenericMetric> otherMetrics) {
+    public synchronized void addAllMetrics(List<GenericMetric> otherMetrics) {
         this.metrics.addAll(otherMetrics);
     }
 
-    public List<GenericMetric> getMetrics() {
-        return metrics;
+    public synchronized List<GenericMetric> getMetrics() {
+        // NOTE: Return a copy of the metrics
+        return new ArrayList<>(metrics);
     }
 
-    public int metricsSize() {
+    public synchronized int metricsSize() {
         return this.metrics.size();
     }
 }

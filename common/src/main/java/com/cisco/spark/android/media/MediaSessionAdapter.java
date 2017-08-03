@@ -6,7 +6,9 @@ import android.view.View;
 
 import com.cisco.spark.android.media.statistics.MediaStats;
 import com.cisco.spark.android.room.audiopairing.AudioDataListener;
+import com.webex.wseclient.WseSurfaceView;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -14,11 +16,12 @@ import java.util.Map;
 public class MediaSessionAdapter implements MediaSession {
 
     @Override
-    public void startSession(String deviceSettings, MediaEngine.MediaDirection mediaDirection, MediaCallbackObserver mediaCallbackObserver) {
+    public void startSession(String deviceSettings, MediaEngine.MediaDirection mediaDirection,
+                             MediaSessionCallbacks mediaSessionCallbacks, SdpReadyCallback sdpReadyCallback) {
     }
 
     @Override
-    public void updateSession(MediaCallbackObserver mediaCallbackObserver, final MediaEngine.MediaDirection mediaDirection) {
+    public void updateSession(final MediaEngine.MediaDirection mediaDirection, SdpReadyCallback sdpReadyCallback) {
     }
 
 
@@ -152,6 +155,16 @@ public class MediaSessionAdapter implements MediaSession {
     }
 
     @Override
+    public void grabShareView(WseSurfaceView.FrameSaved frameSaved) {
+
+    }
+
+    @Override
+    public File getLastShareFrame() {
+        return null;
+    }
+
+    @Override
     public void removeShareWindow() {
 
     }
@@ -163,6 +176,16 @@ public class MediaSessionAdapter implements MediaSession {
 
     @Override
     public void startSelfView() {
+
+    }
+
+    @Override
+    public void setActiveSpeakerWindow(View view) {
+
+    }
+
+    @Override
+    public void removeActiveSpeakerWindow() {
 
     }
 
@@ -312,9 +335,20 @@ public class MediaSessionAdapter implements MediaSession {
     }
 
     @Override
+    public void offerReceived(final String sdp) {
+
+    }
+
+    @Override
     public void updateSDP(final String sdp) {
 
     }
+
+    @Override
+    public void createAnswer(SdpReadyCallback sdpReadyCallback) {
+
+    }
+
 
     @Override
     public void headsetPluggedIn() {
@@ -337,7 +371,7 @@ public class MediaSessionAdapter implements MediaSession {
     }
 
     @Override
-    public void startScreenShare(ScreenShareCallback screenShareCallback, String startScreenShare) {
+    public void startScreenShare(String startScreenShare) {
 
     }
 

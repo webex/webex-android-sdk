@@ -1,11 +1,15 @@
 package com.cisco.spark.android.util;
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
+
+import okhttp3.Headers;
+import retrofit2.Response;
 
 public class NetworkUtils {
 
@@ -37,6 +41,20 @@ public class NetworkUtils {
         }
 
         return serverAddr.getHostAddress();
+    }
+
+    @Nullable
+    public static String getTrackingId(@Nullable Response response) {
+        if (response == null)
+            return null;
+
+        Headers headers = response.headers();
+
+        if (headers == null) {
+            return null;
+        }
+
+        return response.headers().get("trackingid");
     }
 
 }

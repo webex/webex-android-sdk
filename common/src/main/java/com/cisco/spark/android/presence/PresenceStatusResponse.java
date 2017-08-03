@@ -12,6 +12,7 @@ public class PresenceStatusResponse extends MercuryData {
     private PresenceStatus status;
     private Date statusTime;
     private Date lastActive;
+    private Date expiresTime;
     private int expiresTTL;
 
     public PresenceStatusResponse() {
@@ -47,7 +48,11 @@ public class PresenceStatusResponse extends MercuryData {
         return expiresTTL;
     }
 
+    public Date getExpiresTime() {
+        return expiresTime;
+    }
+
     public Date getExpirationDate() {
-        return PresenceUtils.getExpireTime(getExpiresTTL());
+        return (status == PresenceStatus.PRESENCE_STATUS_OOO) ? expiresTime : PresenceUtils.getExpireTime(getExpiresTTL());
     }
 }

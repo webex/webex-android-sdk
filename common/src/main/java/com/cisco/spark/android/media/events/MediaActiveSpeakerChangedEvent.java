@@ -4,14 +4,15 @@ import com.cisco.spark.android.media.MediaSessionEngine;
 
 import java.util.Locale;
 
-public class MediaActiveSpeakerChangedEvent {
+public class MediaActiveSpeakerChangedEvent extends MediaSessionEvent {
 
     private final long mid;
     private final long vid;
     private long[] oldCSIs;
     private long[] newCSIs;
 
-    public MediaActiveSpeakerChangedEvent(long mid, long vid, long[] oldCSIs, long[] newCSIs) {
+    public MediaActiveSpeakerChangedEvent(String callId, long mid, long vid, long[] oldCSIs, long[] newCSIs) {
+        super(callId);
         this.mid = mid;
         this.vid = vid;
         this.oldCSIs = oldCSIs;

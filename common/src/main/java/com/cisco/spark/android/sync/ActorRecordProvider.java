@@ -1,7 +1,6 @@
 package com.cisco.spark.android.sync;
 
 import android.content.Context;
-import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
@@ -366,7 +365,7 @@ public class ActorRecordProvider {
         }
     }
 
-    public void sync() throws RemoteException, OperationApplicationException {
+    public void sync() throws RemoteException {
         Batch batch = batchProvider.get();
         ActorRecord actorRecord;
         lock.lock();

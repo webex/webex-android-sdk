@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.reachability.NetworkReachability;
 import com.cisco.spark.android.sync.Batch;
+import com.cisco.spark.android.util.Clock;
 import com.cisco.spark.android.util.LoggingLock;
 import com.cisco.spark.android.util.Strings;
 import com.github.benoitdion.ln.Ln;
@@ -57,6 +58,9 @@ public abstract class Operation {
 
     @Inject
     transient Lazy<ContentResolver> contentResolver;
+
+    @Inject
+    transient Clock clock;
 
     /**
      * Transient fields are not serialized.
@@ -892,9 +896,9 @@ public abstract class Operation {
 
         SyncState state = getState();
         if (state.isPreExecute()) {
-            ret = Math.max(0, retryPolicy.getTimeOfNextAttempt() - System.currentTimeMillis());
+            ret = Math.max(0, retryPolicy.getTimeOfNextAttempt() - clock.now());
         } else if (state == SyncState.EXECUTING) {
-            ret = retryPolicy.getAttemptStartedTime() + retryPolicy.getAttemptTimeout() - System.currentTimeMillis();
+            ret = retryPolicy.getAttemptStartedTime() + retryPolicy.getAttemptTimeout() - clock.now();
         }
 
         if (ret == 0 && onPrepare() == SyncState.PREPARING) {

@@ -1,11 +1,12 @@
 package com.cisco.spark.android.wdm;
 
-import android.os.Build;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.util.Strings;
 import com.cisco.spark.android.util.TestUtils;
+import com.cisco.spark.android.util.UIUtils;
 import com.github.benoitdion.ln.Ln;
 
 import java.io.PrintWriter;
@@ -17,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 
 public final class Features {
-    public static final String CALL_INITIATION_FEATURE_KEY = "call-initiation";
     public static final String DEV_CONSOLE_FEATURE_KEY = "console";
     public static final String TEAM_MEMBER_ENTITLEMENT = "team-member";
     public static final String UPLOAD_CALL_LOGS = "upload-call-logs";
@@ -36,54 +36,47 @@ public final class Features {
     public static final String ADD_GUEST = "android-add-guest-release";
     public static final String ANDROID_DIRECT_UPLOAD = "android-direct-upload";
     public static final String CONTENT_SEARCH = "android-search-v2";
-    public static final String SMART_SHRUNKEN_HEADS = "smart-shrunken-heads";
     public static final String MESSAGE_SEARCH = "android-message-search";
-    public static final String MARKDOWN = "markdown";
     public static final String ULTRASOUND_PROXIMITY_NOTIFICATIONS = "android-ultrasound-notifications";
     public static final String NUMERIC_DIALING_ENABLED = "numeric-dialing";
     public static final String MULTI_CALL = "android-multi-call";
-    public static final String STICKIES_SEND = "stickies.send";
     public static final String SHARE_LOCATION = "android-share-location";
     public static final String COACHMARK_IMPORTANT_FILTERS = "android-important-coachmark-filters";
-    public static final String COACHMARK_IMPORTANT_SWITCH = "android-important-coachmark-switch";
-    public static final String TEAMS = "android-teams";
-    public static final String TEAMS_V2 = "android-teams-v2";
     public static final String ULTRASOUND_PROXIMITY_DISABLE_OVERRIDE = "android-ultrasound-proximity-disable-override";
-    public static final String MODIFIERS_SEARCH = "android-search-v3";
-    public static final String MODIFIERS_SEARCH_V2 = "android-search-v4";
     public static final String IMPORTANT_FILTER = "android-important-filter";
     public static final String USER_PRESENCE = "user-presence";
     public static final String ANDROID_USER_PRESENCE = "android-user-presence";
     public static final String EMOJI = "android-emoji";
     public static final String SCREEN_SHARING = "android-screen-sharing";
+    public static final String SCREEN_SHARING_SPARKANS = "android-screen-sharing-sparkans1";
     public static final String MOVE_ROOM_TO_TEAM = "android-move-room-to-team";
     public static final String MEDIA_ENABLE_AUDIO_ALL_CODECS = "media-enable-audio-all-codecs";
+    public static final String ROAP_ENABLED = "android-roap-enabled";
     public static final String ANDROID_ESCALATE_ONE_TO_ONE = "android-escalate-one-to-one";
-    public static final String CUSTOM_NOTIFICATIONS = "android-custom-notifications";
-    public static final String ANDROID_FLAG = "android-flag";
     public static final String USER_TOGGLE_DIRECT_MESSAGE_NOTIFICATIONS = "direct-message-notifications";
     public static final String USER_TOGGLE_GROUP_MESSAGE_NOTIFICATIONS = "group-message-notifications";
     public static final String USER_TOGGLE_MENTION_NOTIFICATIONS = "mention-notifications";
-    public static final String LOCAL_CONTACTS_INTEGRATION = "android-local-contacts-integration";
-    public static final String CUSTOM_ROOM_AVATARS = "android-custom-room-avatars";
     public static final String DIRECT_SHARE = "android-direct-share";
     public static final String USER_PRESENCE_QUIET_TIME = "android-quiet-time";
     public static final String DISABLE_PIN_ENFORCEMENT = "android-disable-pin-enforcement";
-    public static final String NATIVE_CLIENT_LOBBY = "android-native-client-lobby";
     public static final String FEEDBACK_VIA_EMAIL = "feedback-via-email";
-    public static final String GLOBAL_CUSTOM_NOTIFICATIONS_SETTINGS = "android-custom-notifications-global-settings";
     public static final String ADD_INTEGRATIONS_AND_BOTS = "android-add-integrations-and-bots";
+    public static final String ANDROID_CONTACT_CARD = "android-contact-card";
+    public static final String VOICEMAIL_V1 = "android-voicemail-v1";
+    public static final String VOICEMAIL_ENABLED_FOR_ORG = "voicemail";
+    public static final String BRIDGE_TEST_V2 = "android-bridge-test-v2";
+    public static final String BUFFERED_MERCURY = "android-mercury-buffer-state";
 
     // Whiteboard features
 
     public static final String ANDROID_WHITEBOARD = "android-whiteboard";
     public static final String ANDROID_WHITEBOARD_EARLYADOPTERS = "android-whiteboard-ea1";
-
-    public static final String ANDROID_WHITEBOARD_WITH_ACL = "android-whiteboard-with-acl";
-    public static final String ANDROID_WHITEBOARD_WITH_ACL_RELEASE = "android-whiteboard-with-acl-release";
+    public static final String ANDROID_WHITEBOARD_GA = "android-whiteboard-ga";
 
     public static final String ANDROID_SEND_WHITEBOARD = "android-send-whiteboard";
     public static final String ANDROID_SEND_WHITEBOARD_EARLYADOPTERS = "android-send-whiteboard-ea1";
+
+    public static final String ANDROID_DELETE_WHITEBOARD = "android-delete-whiteboard";
 
     // This locks the whiteboard activity to landscape as a workaround for configuration changes in web whiteboard
     public static final String ANDROID_WHITEBOARDING_LANDSCAPE = "android-whiteboarding-landscape";
@@ -93,6 +86,8 @@ public final class Features {
 
     public static final String ANDROID_NATIVE_WHITEBOARD = "android-native-whiteboard";
     public static final String ANDROID_NATIVE_WHITEBOARD_SPARKANS = "android-native-whiteboard-sparkans1";
+    public static final String ANDROID_NATIVE_WHITEBOARD_SPARKANS2 = "android-native-whiteboard-sparkans2";
+    public static final String ANDROID_NATIVE_WHITEBOARD_GA = "android-native-whiteboard-ga";
 
 
     // Spark board support
@@ -103,9 +98,7 @@ public final class Features {
     public static final String ANDROID_IMPLICIT_BINDING_WHEN_CALLING_RELEASE = "android-implicit-binding-for-call-release";
 
     // Spaceballs / Spark 2.0 features
-    public static final String ANDROID_SPACEBALLS = "android-spaceballs";
-    public static final String ANDROID_SPACEBALLS_RELEASE = "android-spaceballs-release";
-    public static final String ANDROID_SPACEBALLS_FILES = "android-spaceballs-files";
+    public static final String ANDROID_FILES_SPACEBALL = "android-view-media";
 
     public static final String ANDROID_INCALL_ROSTER = "android-show-roster-enabled";
     public static final String ANDROID_INCALL_ROSTER_RELEASE = "android-show-roster-enabled-release";
@@ -121,18 +114,14 @@ public final class Features {
     public static final String LYRA_VOLUME_CONTROL_RELEASE = "android-volume-control-release";
 
     public static final String REMOVE_ROOM_FROM_TEAM = "android-remove-room-from-team";
-    public static final String CUSTOM_NOTIFICATIONS_SHOW_ACTIVE_COUNT = "android-custom-notifications-show-active-count";
-    public static final String CUSTOM_NOTIFICATIONS_SHOW_ACTIVE = "android-custom-notifications-show-active";
-    public static final String ANDROID_SPARK_PMR = "android-spark-pmr";
     public static final String ALWAYS_ON_PROXIMITY = "android-always-on-proximity";
     public static final String RECORD_MEETINGS_CONTROL_ENABLED = "android-record-meetings-control-enabled";
     public static final String DIAL_TIMEOUT_SECONDS = "dial-timeout-seconds";
     public static final String MEDIA_RECONNECT_TIMEOUT = "media-reconnect-timeout";
     public static final String MOVE_ROOM_ADD_MEMBERS = "android-move-room-add-members";
-    public static final String SILHOUETTE_REPLACEMENT = "replace-default-avatar";
     public static final String ROOM_OWNERSHIP_AND_RETENTION = "android-room-retention";
     public static final String CALLIOPE_DISCOVERY_FEATURE = "android-calliope-discovery";
-    public static final String ANDROID_DELTA_EVENT = "android-delta-event";
+    public static final String ANDROID_LOCUS_DELTA_EVENT = "android-locus-delta-event";
     public static final String USER_PRESENCE_ENABLED = "user-presence-enabled";
     public static final String ANDROID_SPARK_ROOM_URL = "android-spark-room-url";
     public static final String AUDIO_ONLY_CALLS_ENABLED = "android-audio-only-calls";
@@ -145,7 +134,12 @@ public final class Features {
     public static final String ANALYTICS_USER_ALIASED = "analytics-user-aliased";
     public static final String ANDROID_PRESENCE_VISUALIZATION = "android-presence-visuals";
     public static final String ANDROID_WHITEBOARD_ADD_GUEST_ACL = "android-whiteboard-add-guest-acl";
-    public static final String ANDROID_CALENDAR_SERVICE_MEETINGS = "android-calendar-service-meetings";
+    public static final String LYRA_ROOM_SERVICE = "android-lyra-room-service";
+    public static final String ANDROID_HIDE_PAIRED_DEVICE = "android-hide-paired-device";
+    public static final String ANDROID_PMR_SETTINGS = "android-pmr-settings";
+    public static final String ANDROID_BOARD_ANNOTATION_FILE = "android-board-annotation-file";
+    public static final String ANDROID_BOARD_ANNOTATION_PRESENTATION = "android-board-annotation-presentation";
+    public static final String ANDROID_PROXIMITY_MEASUREMENT = "android-proximity-measurement";
 
     // Filters
     public static final String ANDROID_UNREAD_FILTER_INDICATOR = "android-filters-unread-indicator";
@@ -154,7 +148,32 @@ public final class Features {
     public static final String ANDROID_MEETING_LOCK = "android-meeting-lock";
 
     // In Call features
-    public static final String ANDROID_ROUND_AVATAR_FILMSTRIP = "android-spaceballs-filmstrip";
+    public static final String ANDROID_ACTIVE_SPARKER_VIEWER = "android-active-speaker-view";
+
+    // Misc Features
+    public static final String ANDROID_SYNCING_INDICATOR = "android-syncing-indicator";
+    public static final String ANDROID_ACTIVITY_PRUNING = "android-activity-pruning";
+    public static final String ANDROID_NOTIFY_FAILED_SENDS = "android-notify-failed-sends";
+
+    // Call join / leave indication
+    public static final String ANDROID_CALL_SPINNER = "android-call-spinner";
+
+    // Simulated blur pane when only person on a call
+    public static final String ANDROID_CALL_EMPTYUX = "android-call-emptyux";
+
+    // Suggested Call Matches
+    public static final String ANDROID_CALL_OUT_SUGGEST_MATCHES = "android-call-out-suggest-matches";
+    //OBTP Bricklets and Toasts
+    public static final String SCHEDULED_MEETING_V2 = "android-locus-scheduled-meeting-v2";
+
+    //OBTP bricklets for Teams, Call, and Meetings tab
+    public static final String SCHEDULED_MEETING_V3 = "android-locus-scheduled-meeting-v3";
+
+    // WebEx PMR
+    public static final String ANDROID_SPARK_PMR = "android-spark-pmr";
+    public static final String LOCUS_LOCKED_LOBBY = "locus-enable-locked-lobby";
+    // MeetingHub
+    public static final String ANDROID_MEETING_HUB = "android-meeting-hub";
 
     // Set by GSON during deserialization
     private Set<FeatureToggle> entitlement = null;
@@ -195,43 +214,15 @@ public final class Features {
             userFeatureMap.clear();
     }
 
-    public boolean isAvatarReplacementEnabled() {
-        return isDeveloperFeatureEnabled(SILHOUETTE_REPLACEMENT, false);
-    }
-
-    public boolean isMarkdownEnabled() {
-        return isDeveloperFeatureEnabled(MARKDOWN, isTeamMember());
-    }
-
-    public boolean isCustomNotificationsEnabled() {
-        return isDeveloperFeatureEnabled(CUSTOM_NOTIFICATIONS, false);
-    }
-
-    public boolean areGlobalCustomNotificationSettingsEnabled() {
-        return isDeveloperFeatureEnabled(GLOBAL_CUSTOM_NOTIFICATIONS_SETTINGS, false);
-    }
-
-    public boolean isNativeWhiteboardEnabled() {
-        return isAnyToggleEnabled(ANDROID_NATIVE_WHITEBOARD_SPARKANS, ANDROID_NATIVE_WHITEBOARD);
-    }
-
     public boolean isScreenSharingEnabled() {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            return false;
+        if (UIUtils.hasLollipop()) {
+            return isAnyToggleEnabled(SCREEN_SHARING, SCREEN_SHARING_SPARKANS);
         }
-        return isDeveloperFeatureEnabled(SCREEN_SHARING, false);
-    }
-
-    public boolean isCustomNotificationsShowActiveCounter() {
-        return isDeveloperFeatureEnabled(CUSTOM_NOTIFICATIONS_SHOW_ACTIVE_COUNT, false);
+        return false;
     }
 
     public boolean isAlwaysOnProximityEnabled() {
         return isDeveloperFeatureEnabled(ALWAYS_ON_PROXIMITY, false);
-    }
-
-    public boolean isLockWhiteboardToLandscapeEnabled() {
-        return isAnyToggleEnabled(ANDROID_WHITEBOARDING_LANDSCAPE_EARLYADOPTERS, ANDROID_WHITEBOARDING_LANDSCAPE);
     }
 
     public boolean isFiltersUnreadIndicatorEnabled() {
@@ -244,6 +235,10 @@ public final class Features {
 
     public boolean hasTabsNavigation() {
         return false;
+    }
+
+    public boolean isBufferedMercuryEnabled() {
+        return isDeveloperFeatureEnabled(BUFFERED_MERCURY, false);
     }
 
     public enum FeatureType { ENTITLEMENT, DEVELOPER, USER }
@@ -263,10 +258,6 @@ public final class Features {
         }
     }
 
-    public boolean isCallInitiationEnabled() {
-        return isEntitlementFeatureEnabled(CALL_INITIATION_FEATURE_KEY, false);
-    }
-
     public boolean isDevConsoleEnabled() {
         // Debug build defaults to true except during tests
         return isDeveloperFeatureEnabled(DEV_CONSOLE_FEATURE_KEY, BuildConfig.DEBUG && !TestUtils.isInstrumentation());
@@ -278,10 +269,6 @@ public final class Features {
 
     public boolean isRoomModerationEnabled() {
         return isEntitlementFeatureEnabled(ROOM_MODERATION_ENTITLEMENT, false);
-    }
-
-    public boolean uploadCallLogs() {
-        return isDeveloperFeatureEnabled(UPLOAD_CALL_LOGS, false);
     }
 
     public boolean isCallFecVideoEnabled() {
@@ -332,14 +319,6 @@ public final class Features {
         return isDeveloperFeatureEnabled(MESSAGE_SEARCH, false);
     }
 
-    public boolean isSearchModifiersEnabled() {
-        return isDeveloperFeatureEnabled(MODIFIERS_SEARCH, false);
-    }
-
-    public boolean isSearchModifierV2FeaturesEnabled() {
-        return isDeveloperFeatureEnabled(MODIFIERS_SEARCH_V2, false);
-    }
-
     public boolean isShowRosterEnabled() {
         return isAnyToggleEnabled(ANDROID_INCALL_ROSTER_RELEASE, ANDROID_INCALL_ROSTER);
     }
@@ -368,27 +347,12 @@ public final class Features {
         return isAnyToggleEnabled(ROOM_BINDING_RELEASE, ROOM_BINDING);
     }
 
-    public boolean isNativeClientLobbyEnabled() {
-        return isDeveloperFeatureEnabled(NATIVE_CLIENT_LOBBY, false);
-    }
-
-    public int getMaxBridgeSize() {
-        final int defaultMaxBridgeSize = 12;
-        return getFeatureInt(MAX_BRIDGE_SIZE, FeatureType.DEVELOPER, defaultMaxBridgeSize);
-    }
-
-    public int getMeetUrlMaxConvParticipants() {
-        final int defaultMeetUrlMaxConvParticipants = 0;
-        return getFeatureInt(MEET_MAX_CONV_PARTICIPATNS, FeatureType.DEVELOPER, defaultMeetUrlMaxConvParticipants);
-    }
-
     public boolean isMeetUrlOneOnOneEnabled() {
         return isDeveloperFeatureEnabled(MEET_URL_ONE_ON_ONE, false);
     }
 
-    public int getMaxRosterSize() {
-        final int defaultMaxRosterSize = getMaxBridgeSize();
-        return getFeatureInt(MAX_ROSTER_SIZE, FeatureType.DEVELOPER, defaultMaxRosterSize);
+    public boolean isCallEmptyUxEnabled() {
+        return isDeveloperFeatureEnabled(ANDROID_CALL_EMPTYUX, false);
     }
 
     public boolean isEntitlementFeatureEnabled(String key, boolean defaultValue) {
@@ -407,24 +371,12 @@ public final class Features {
         return isFeatureEnabled(ADD_GUEST, FeatureType.DEVELOPER, false);
     }
 
-    public boolean isStickiesEnabled() {
-        return isFeatureEnabled(STICKIES_SEND, FeatureType.DEVELOPER, false);
-    }
-
     public boolean isUltraSoundProximityNotificationsEnabled() {
         return isFeatureEnabled(ULTRASOUND_PROXIMITY_NOTIFICATIONS, FeatureType.DEVELOPER, false);
     }
 
-    public boolean isNumericDialingEnabled() {
-        return isFeatureEnabled(NUMERIC_DIALING_ENABLED, FeatureType.DEVELOPER, false);
-    }
-
     public boolean isMultiCallEnabled() {
         return isFeatureEnabled(MULTI_CALL, FeatureType.DEVELOPER, false);
-    }
-
-    public boolean isSmartShrunkenHeadsEnabled() {
-        return isFeatureEnabled(SMART_SHRUNKEN_HEADS, FeatureType.DEVELOPER, false);
     }
 
     public boolean isLocationSharingEnabled() {
@@ -433,14 +385,6 @@ public final class Features {
 
     public boolean hasSeenFiltersCoachmark() {
         return isFeatureEnabled(COACHMARK_IMPORTANT_FILTERS, FeatureType.USER, false);
-    }
-
-    public boolean hasSeenImportantSwitchCoachmark() {
-        return isFeatureEnabled(COACHMARK_IMPORTANT_SWITCH, FeatureType.USER, false);
-    }
-
-    public boolean areTeamsEnabled() {
-        return isFeatureEnabled(TEAMS, FeatureType.DEVELOPER, true) || isFeatureEnabled(TEAMS_V2, FeatureType.DEVELOPER, true);
     }
 
     public boolean isMoveRoomToTeamEnabled() {
@@ -479,10 +423,6 @@ public final class Features {
         return isFeatureEnabled(ANDROID_ESCALATE_ONE_TO_ONE, FeatureType.DEVELOPER, false);
     }
 
-    public boolean hasCustomRoomAvatarsEnabled() {
-        return isFeatureEnabled(CUSTOM_ROOM_AVATARS, FeatureType.DEVELOPER, false);
-    }
-
     public boolean hasDirectSharesEnabled() {
         return isFeatureEnabled(DIRECT_SHARE, FeatureType.DEVELOPER, false);
     }
@@ -495,36 +435,12 @@ public final class Features {
         return isFeatureEnabled(ULTRASOUND_PROXIMITY_DISABLE_OVERRIDE, FeatureType.USER, false);
     }
 
-    public boolean isNativeContactsIntegrationEnabled() {
-        return isFeatureEnabled(LOCAL_CONTACTS_INTEGRATION, FeatureType.DEVELOPER, false);
-    }
-
-    public boolean isFlaggingEnabled() {
-        return isFeatureEnabled(ANDROID_FLAG, FeatureType.DEVELOPER, false);
-    }
-
-    public boolean isWhiteboardEnabled() {
-        return isAnyToggleEnabled(ANDROID_WHITEBOARD_EARLYADOPTERS, ANDROID_WHITEBOARD);
-    }
-
-    public boolean isSendWhiteboardEnabled() {
-        return isAnyToggleEnabled(ANDROID_SEND_WHITEBOARD_EARLYADOPTERS, ANDROID_SEND_WHITEBOARD);
-    }
-
-    public boolean isShowRecordMeetingsControlEnabled() {
+    public boolean isRecordMeetingsControlEnabled() {
         return isDeveloperFeatureEnabled(RECORD_MEETINGS_CONTROL_ENABLED, false);
     }
 
     public boolean isAddIntegrationAndBotsEnabled() {
         return isDeveloperFeatureEnabled(ADD_INTEGRATIONS_AND_BOTS, false);
-    }
-
-    public boolean isSpaceballsEnabled() {
-        return isAnyToggleEnabled(ANDROID_SPACEBALLS, ANDROID_SPACEBALLS_RELEASE);
-    }
-
-    public boolean isFilesActivityEnabled() {
-        return isDeveloperFeatureEnabled(ANDROID_SPACEBALLS_FILES, false);
     }
 
     public boolean isRoomOwnershipAndRetentionFeatureEnabled() {
@@ -576,8 +492,8 @@ public final class Features {
         return isDeveloperFeatureEnabled(ANDROID_SHORT_TERM_SPACE_MEETING_LINK, false);
     }
 
-    public boolean isWhiteBoardAddGuestAclEnabled() {
-        return isDeveloperFeatureEnabled(ANDROID_WHITEBOARD_ADD_GUEST_ACL, false);
+    public boolean isContactCardEnabled() {
+        return isDeveloperFeatureEnabled(ANDROID_CONTACT_CARD, false);
     }
 
     public void setFeaturesLoaded(boolean loaded) {
@@ -588,7 +504,7 @@ public final class Features {
         return loaded;
     }
 
-    private boolean isFeatureEnabled(String key, FeatureType featureType, boolean defaultValue) {
+    public boolean isFeatureEnabled(String key, FeatureType featureType, boolean defaultValue) {
 
         Boolean override = getOverridenFeature(key, defaultValue);
         if (override != null) {
@@ -608,24 +524,69 @@ public final class Features {
         return isDeveloperFeatureEnabled(ANDROID_SPARK_PMR, false);
     }
 
-    public boolean isCalendarServiceMeetingsEnabled() {
-        return isDeveloperFeatureEnabled(ANDROID_CALENDAR_SERVICE_MEETINGS, false);
+    public boolean isHidePairedDeviceEnable() {
+        return isDeveloperFeatureEnabled(ANDROID_HIDE_PAIRED_DEVICE, false);
     }
 
-    public boolean isDeltaEventEnabled() {
-        return isDeveloperFeatureEnabled(ANDROID_DELTA_EVENT, false);
-    }
-
-    public boolean isWhiteboardWithAclEnabled() {
-        return isAnyToggleEnabled(ANDROID_WHITEBOARD_WITH_ACL_RELEASE, ANDROID_WHITEBOARD_WITH_ACL);
+    public boolean isProximityMeasurementEnable() {
+        return isDeveloperFeatureEnabled(ANDROID_PROXIMITY_MEASUREMENT, false);
     }
 
     public boolean isPresenceVisualizationEnabled() {
         return isDeveloperFeatureEnabled(ANDROID_PRESENCE_VISUALIZATION, false);
     }
 
-    public boolean isRoundAvatarFilmstripEnabled() {
-        return isDeveloperFeatureEnabled(ANDROID_ROUND_AVATAR_FILMSTRIP, false);
+    public boolean isLyraRoomServiceEnabled() {
+        return isDeveloperFeatureEnabled(LYRA_ROOM_SERVICE, false);
+    }
+
+    public boolean isSyncingIndicatorEnabled() {
+        return isDeveloperFeatureEnabled(ANDROID_SYNCING_INDICATOR, false);
+    }
+
+    public boolean isActiveSpeakerViewEnabled() {
+        return isDeveloperFeatureEnabled(ANDROID_ACTIVE_SPARKER_VIEWER, false);
+    }
+
+    public boolean isVoicemailV1Enabled() {
+        // 6/30/2017: Disabling VM integration until a CI entitlement solution for test users is found.
+        // Currently, test and production users have sufficient entitlements to user VM, but the entitlement
+        // needed on a machine account in the VoicemailTest IT to set test data is not possible.
+        //
+        //return isDeveloperFeatureEnabled(VOICEMAIL_ENABLED_FOR_ORG, false) && isDeveloperFeatureEnabled(VOICEMAIL_V1, false);
+        return false;
+    }
+
+    public boolean useBridgeTestV2() {
+        return isDeveloperFeatureEnabled(BRIDGE_TEST_V2, false);
+    }
+
+    public boolean isAndroidPmrSettingsEnabled() {
+        return isDeveloperFeatureEnabled(ANDROID_PMR_SETTINGS, false);
+    }
+
+    public boolean isNotifyFailedSendsEnabled() {
+        return isDeveloperFeatureEnabled(ANDROID_NOTIFY_FAILED_SENDS, false);
+    }
+
+    public boolean isCallOutSuggestMatchesEnabled() {
+        return isDeveloperFeatureEnabled(ANDROID_CALL_OUT_SUGGEST_MATCHES, false);
+    }
+
+    public boolean isMeetingHubEnabled() {
+        return isDeveloperFeatureEnabled(ANDROID_MEETING_HUB, false);
+    }
+
+    public Boolean isLocusLockedLobbyEnabled() {
+        return isDeveloperFeatureEnabled(LOCUS_LOCKED_LOBBY, false);
+    }
+
+    public boolean isScheduledMeetingV2Enabled() {
+        return isDeveloperFeatureEnabled(SCHEDULED_MEETING_V2, false);
+    }
+
+    public boolean isScheduledMeetingV3Enabled() {
+        return isDeveloperFeatureEnabled(SCHEDULED_MEETING_V3, false);
     }
 
     /**
@@ -650,6 +611,9 @@ public final class Features {
         return false;
     }
 
+    public boolean isActivityPruningEnabled() {
+        return isDeveloperFeatureEnabled(ANDROID_ACTIVITY_PRUNING, false);
+    }
 
     /**
      * Tri-state variant of isFeatureEnabled, does not use defaultValue
@@ -672,9 +636,9 @@ public final class Features {
         }
     }
 
-    private int getFeatureInt(String key, FeatureType featureType, int defaultValue) {
+    public int getFeatureInt(String key, FeatureType featureType, int defaultValue) {
         FeatureToggle feature = getFeatureMap(featureType).get(key);
-        if (feature != null) {
+        if (feature != null && feature.getVal() != null && TextUtils.isDigitsOnly(feature.getVal())) {
             return feature.getIntVal();
         } else {
             return defaultValue;

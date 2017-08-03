@@ -53,28 +53,32 @@ public abstract class AbstractOAuth2Operation extends Operation {
     protected void reduceScopeIfNeeded(OAuth2Tokens newToken) {
         OAuth2Client oAuthClient = apiClientProvider.getOAuthClient();
 
-        if (!sdkClient.supportsReducedScopes()
-                || !updateReducedScopeTokens(oAuthClient, newToken)) {
-            authenticatedUserProvider.updateTokens(newToken, newToken);
-        }
+        updateReducedScopeTokens(oAuthClient, newToken);
     }
 
-    protected boolean updateReducedScopeTokens(OAuth2Client oAuthClient, OAuth2AccessToken newToken) {
+    protected void updateReducedScopeTokens(OAuth2Client oAuthClient, OAuth2AccessToken newToken) {
         OAuth2AccessToken kmsTokens = null;
         OAuth2AccessToken conversationTokens = null;
+        OAuth2AccessToken voicemailTokens = null;
         try {
-            kmsTokens = getTokenFromResponse(oAuth2.getKmsTokens(oAuthClient, newToken));
-            conversationTokens = getTokenFromResponse(oAuth2.getConversationTokens(oAuthClient, newToken));
+            if (sdkClient.supportsHybridKms()) {
+                kmsTokens = getTokenFromResponse(oAuth2.getKmsTokens(oAuthClient, newToken));
+                conversationTokens = getTokenFromResponse(oAuth2.getConversationTokens(oAuthClient, newToken));
 
-            if (conversationTokens != null && kmsTokens != null) {
-                authenticatedUserProvider.updateTokens(conversationTokens, kmsTokens);
-                return true;
+                if (sdkClient.supportsVoicemailScopes()) {
+                    voicemailTokens = getTokenFromResponse(oAuth2.getVoicemailTokens(oAuthClient, newToken));
+
+                    if (voicemailTokens == null) {
+                        Ln.w("Voicemail Scope-reduction failed");
+                    }
+                }
             }
+
         } catch (Exception e) {
             Ln.e(e);
         }
-        Ln.w("Scope-reduction failed " + (conversationTokens == null) + " " + (kmsTokens == null));
-        return false;
+        Ln.w("Scope-reduction: " + (conversationTokens == null) + " " + (kmsTokens == null) + " " + (voicemailTokens == null));
+        authenticatedUserProvider.updateTokens(newToken, conversationTokens, kmsTokens, voicemailTokens);
     }
 
     protected OAuth2AccessToken getTokenFromResponse(Response<OAuth2AccessToken> response) {

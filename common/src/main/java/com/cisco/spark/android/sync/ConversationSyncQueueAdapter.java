@@ -9,6 +9,7 @@ import com.cisco.spark.android.mercury.MercuryClient;
 import com.cisco.spark.android.model.KeyManager;
 import com.cisco.spark.android.sync.operationqueue.FetchMentionsOperation;
 import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
+import com.cisco.spark.android.sync.queue.ConversationSyncQueue;
 import com.cisco.spark.android.sync.queue.SyncFlagsOperation;
 import com.cisco.spark.android.util.SafeAsyncTask;
 import com.cisco.spark.android.wdm.DeviceRegistration;
@@ -49,22 +50,17 @@ public class ConversationSyncQueueAdapter {
         // This starts negotiating the shared key if we don't have one yet
         keyManager.getSharedKeyWithKMS();
 
-        Ln.i("Submitting catchup task");
-        operationQueue.catchUpSync();
-
-        Ln.i("Submitting fetch StickyPack task (if necessary)");
-        if (!settings.hasLoadedStickyPack())
-            operationQueue.updateStickies();
+        if (!deviceRegistration.getFeatures().isBufferedMercuryEnabled() || ConversationSyncQueue.getHighWaterMark(context.getContentResolver()) == 0) {
+            Ln.i("Submitting catchup task");
+            operationQueue.catchUpSync();
+        }
 
         Ln.i("Submitting fetch Mentions task (if necessary)");
         if (!settings.hasLoadedMentions())
             operationQueue.submit(new FetchMentionsOperation(injector));
 
-
-        if (deviceRegistration.getFeatures().isFlaggingEnabled()) {
-            Ln.i("Submitting fetch Flags task");
-            operationQueue.submit(new SyncFlagsOperation(injector));
-        }
+        Ln.i("Submitting fetch Flags task");
+        operationQueue.submit(new SyncFlagsOperation(injector));
     }
 
     public void clear() {

@@ -7,9 +7,10 @@ import com.cisco.spark.android.client.AvatarUrl;
 import com.cisco.spark.android.client.EmptyBody;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.Injector;
-import com.cisco.spark.android.metrics.ContentMetricsBuilder;
 import com.cisco.spark.android.metrics.MetricsReporter;
+import com.cisco.spark.android.metrics.SegmentService;
 import com.cisco.spark.android.metrics.model.GenericMetric;
+import com.cisco.spark.android.metrics.value.ClientMetricField;
 import com.cisco.spark.android.metrics.value.ClientMetricNames;
 import com.cisco.spark.android.model.AvatarSession;
 import com.cisco.spark.android.sync.ContentManager;
@@ -17,6 +18,7 @@ import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.cisco.spark.android.sync.operationqueue.core.RetryPolicy;
 import com.cisco.spark.android.util.MimeUtils;
 import com.github.benoitdion.ln.Ln;
+import com.segment.analytics.Properties;
 
 import java.io.File;
 
@@ -43,6 +45,9 @@ public class AvatarUpdateOperation extends Operation {
 
     @Inject
     transient ContentManager contentManager;
+
+    @Inject
+    transient SegmentService segmentService;
 
     private File file;
 
@@ -81,16 +86,19 @@ public class AvatarUpdateOperation extends Operation {
             // Update session with completed upload
             Response<AvatarUrl> avatarUriResponse = avatarClient.updateUploadSession(avatarSession.getId(), new AvatarUrl(avatarSession.getUrl())).execute();
 
-            GenericMetric metric = new GenericMetric(ClientMetricNames.ONBOARDING_UPLOADED_AVATAR);
-            metric.addNetworkFields(avatarUriResponse);
-            metric.addFileFields(file);
+            GenericMetric metric = GenericMetric.buildBehavioralMetric(ClientMetricNames.ONBOARDING_UPLOADED_AVATAR)
+                    .withNetworkTraits(avatarUriResponse);
+            addFileTraits(metric, file);
             operationQueue.postGenericMetric(metric);
 
+            Properties segmentMetricProperties = new SegmentService.PropertiesBuilder()
+                    .setNetworkResponse(avatarUriResponse)
+                    .setFileTraits(file).build();
+            segmentService.reportMetric(SegmentService.ONBOARDING_UPLOADED_AVATAR, segmentMetricProperties);
 
             if (avatarUriResponse.isSuccessful()) {
                 AvatarUrl avatarUri = avatarUriResponse.body();
                 if (avatarUri != null) {
-                    metricsReporter.enqueueMetricsReport(metricsReporter.newContentMetricsBuilder().incrementCounter(ContentMetricsBuilder.AVATAR_UPLOAD_SUCCESS_TAG).build());
                     return SyncState.SUCCEEDED;
                 }
             }
@@ -98,6 +106,13 @@ public class AvatarUpdateOperation extends Operation {
             ln.w(e, "Failed creating avatar upload session");
         }
         return SyncState.READY;
+    }
+
+    private void addFileTraits(GenericMetric metric, File file) {
+        if (file != null) {
+            metric.addField(ClientMetricField.METRIC_FIELD_MIME_TYPE, MimeUtils.getMimeType(file.getAbsolutePath()));
+            metric.addField(ClientMetricField.METRIC_FIELD_FILE_SIZE, file.length());
+        }
     }
 
     @Override
@@ -111,13 +126,6 @@ public class AvatarUpdateOperation extends Operation {
         if (newOperation.getOperationType() == OperationType.SET_AVATAR) {
             Ln.d("Canceling because a newer avatar operation was just posted. " + this);
             cancel();
-        }
-    }
-
-    @Override
-    protected void onStateChanged(SyncState oldState) {
-        if (getState() == SyncState.FAULTED) {
-            metricsReporter.enqueueMetricsReport(metricsReporter.newContentMetricsBuilder().incrementCounter(ContentMetricsBuilder.AVATAR_UPLOAD_FAILURE_TAG).build());
         }
     }
 

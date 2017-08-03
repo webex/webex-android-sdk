@@ -7,14 +7,14 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import net.sqlcipher.database.SQLiteDatabase;
-import net.sqlcipher.database.SQLiteException;
-
+import android.database.sqlite.SQLiteException;
 import android.graphics.PointF;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Debug;
+import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
 
 import com.cisco.spark.android.BuildConfig;
@@ -22,20 +22,24 @@ import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.client.TrackingIdGenerator;
 import com.cisco.spark.android.content.ContentLoader;
 import com.cisco.spark.android.core.AuthenticatedUser;
+import com.cisco.spark.android.core.SecureDevice;
 import com.cisco.spark.android.core.Settings;
 import com.cisco.spark.android.media.MediaEngine;
+import com.cisco.spark.android.sdk.SdkClient;
 import com.cisco.spark.android.sync.ContentManager;
 import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.DatabaseHelper;
-import com.cisco.spark.android.sync.LocalKeyStoreManager;
+import com.cisco.spark.android.sync.UnencryptedDatabaseHelper;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.spark.android.wdm.FeatureToggle;
 import com.cisco.spark.android.wdm.Features;
 import com.github.benoitdion.ln.Ln;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -45,14 +49,21 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 
+import javax.inject.Inject;
+
 public class SystemUtils {
 
     private static final String APP_INFO_FILE_NAME = "sysinfo.txt";
     private static final float ONE_MEGABYTE = 1024 * 1024;
+    @Inject
+    static UnencryptedDatabaseHelper unencryptedDatabaseHelper;
+
+    @Inject
+    SecureDevice secureDevice;
 
     public static File generateSysInfoFile(File logLocation, Context context, ApiTokenProvider tokenProvider, MediaEngine mediaEngine,
                                            Settings settings, ContentLoader contentLoader, DeviceRegistration deviceRegistration,
-                                           TrackingIdGenerator trackingIdGenerator, DiagnosticManager diagnosticManager) {
+                                           TrackingIdGenerator trackingIdGenerator, DiagnosticManager diagnosticManager, SdkClient sdkClient) {
         File versionFile = null;
         try {
             versionFile = new File(logLocation + File.separator + APP_INFO_FILE_NAME);
@@ -65,6 +76,7 @@ public class SystemUtils {
             generateUserSettingsInfo(writer, settings, deviceRegistration);
             generateDevConsoleInfo(writer, settings, deviceRegistration);
             generateStorageUseInfo(writer, context);
+            writer.println(sdkClient.generateClientInfo());
 
             try {
                 generateDbInfo(writer, context);
@@ -87,6 +99,7 @@ public class SystemUtils {
         String deviceId = "unknown";
         String deviceUrl = "unknown";
         String mercuryUri = "unknown";
+        String clientSecurityPolicy = "unknown";
         String dynamicLoggingPIN = "unknown";
 
         try {
@@ -96,6 +109,7 @@ public class SystemUtils {
                 deviceId = deviceRegistration.getId();
                 deviceUrl = deviceRegistration.getUrl().toString();
                 mercuryUri = deviceRegistration.getWebSocketUrl().toString();
+                clientSecurityPolicy = deviceRegistration.getClientSecurityPolicy();
                 dynamicLoggingPIN = diagnosticManager.getPin();
             }
         } catch (Exception e) {
@@ -104,11 +118,12 @@ public class SystemUtils {
 
         writer.println("User Information:");
         writer.println("-----------------");
-        writer.println("User name  : " + userName);
-        writer.println("Device ID  : " + deviceId);
-        writer.println("Device URL : " + deviceUrl);
-        writer.println("Mercury URI: " + mercuryUri);
-        writer.println("Server PIN : " + (dynamicLoggingPIN == null ? "none" : dynamicLoggingPIN));
+        writer.println("User name      : " + userName);
+        writer.println("Device ID      : " + deviceId);
+        writer.println("Device URL     : " + deviceUrl);
+        writer.println("Mercury URI    : " + mercuryUri);
+        writer.println("Security Policy: " + clientSecurityPolicy);
+        writer.println("Server PIN     : " + (dynamicLoggingPIN == null ? "none" : dynamicLoggingPIN));
         writer.println("");
     }
 
@@ -155,6 +170,11 @@ public class SystemUtils {
         writer.println("CPU instruction set: " + Build.CPU_ABI);
         writer.println("Number of cores    : " + Runtime.getRuntime().availableProcessors());
         writer.println("Is rooted          : " + (isRooted() ? "Yes" : "No"));
+        writer.println("Has lockscreen     : " + (hasLockScreen(context) ? "Yes" : "No"));
+        if (UIUtils.hasMarshmallow()) {
+            writer.println("isSecureDevice     : " + (isDeviceSecure(context) ? "Yes" : "No"));
+            writer.println("isKeyguardSecure   : " + (isKeyguardSecure(context) ? "Yes" : "No"));
+        }
         writer.println("Network status     : " + getNetworkStatus(context));
         writer.println("");
     }
@@ -201,16 +221,28 @@ public class SystemUtils {
         writer.println(String.format("Share Location Toggle: %s (feature enabled = %s)", settings.getLocationSharingEnabled(), deviceRegistration.getFeatures().isLocationSharingEnabled()));
         writer.println(String.format("Proximity Disabled: %s", deviceRegistration.getFeatures().hasUserDisabledProximityFeatures()));
 
-        final boolean customNotificationsEnabled = deviceRegistration.getFeatures().isCustomNotificationsEnabled();
-        writer.println(String.format("Custom Notifications Enabled: %s", customNotificationsEnabled));
-        if (customNotificationsEnabled) {
-            final FeatureToggle directMessages = deviceRegistration.getFeatures().getFeature(Features.FeatureType.USER, Features.USER_TOGGLE_DIRECT_MESSAGE_NOTIFICATIONS);
+        // Custom Notifications
+        final FeatureToggle directMessages = deviceRegistration.getFeatures().getFeature(Features.FeatureType.USER, Features.USER_TOGGLE_DIRECT_MESSAGE_NOTIFICATIONS);
+        if (directMessages != null) {
             writer.println(String.format("Custom Notifications - 1:1: %s (%s)", directMessages.getBooleanVal(), directMessages.getLastModified()));
-            final FeatureToggle messages = deviceRegistration.getFeatures().getFeature(Features.FeatureType.USER, Features.USER_TOGGLE_GROUP_MESSAGE_NOTIFICATIONS);
-            writer.println(String.format("Custom Notifications - messages: %s (%s)", messages.getBooleanVal(), messages.getLastModified()));
-            final FeatureToggle mentions = deviceRegistration.getFeatures().getFeature(Features.FeatureType.USER, Features.USER_TOGGLE_MENTION_NOTIFICATIONS);
-            writer.println(String.format("Custom Notifications - @mentions: %s (%s)", mentions.getBooleanVal(), mentions.getLastModified()));
+        } else {
+            writer.println(String.format("Custom Notifications - 1:1: null (null)"));
         }
+
+        final FeatureToggle messages = deviceRegistration.getFeatures().getFeature(Features.FeatureType.USER, Features.USER_TOGGLE_GROUP_MESSAGE_NOTIFICATIONS);
+        if (messages != null) {
+            writer.println(String.format("Custom Notifications - messages: %s (%s)", messages.getBooleanVal(), messages.getLastModified()));
+        } else {
+            writer.println(String.format("Custom Notifications - messages: null (null)"));
+        }
+
+        final FeatureToggle mentions = deviceRegistration.getFeatures().getFeature(Features.FeatureType.USER, Features.USER_TOGGLE_MENTION_NOTIFICATIONS);
+        if (mentions != null) {
+            writer.println(String.format("Custom Notifications - @mentions: %s (%s)", mentions.getBooleanVal(), mentions.getLastModified()));
+        } else {
+            writer.println(String.format("Custom Notifications - @mentions: null (null)"));
+        }
+
         writer.println(String.format("Notification Sounds: %s", settings.isNotificationSoundEnabled()));
         writer.println(String.format("Notification Vibrations: %s", settings.isNotificationVibrateEnabled()));
         writer.println("");
@@ -254,7 +286,6 @@ public class SystemUtils {
     private static void generateDbInfo(PrintWriter writer, Context context) {
         writer.println("Database Info:");
         writer.println("------------------");
-
         try {
             DecimalFormat formatter = new DecimalFormat("#,###");
 
@@ -264,16 +295,16 @@ public class SystemUtils {
             }
 
             writer.println("");
+
             writer.println("Row Counts");
-            SQLiteDatabase db = SQLiteDatabase.openDatabase(dbFile.getPath(), LocalKeyStoreManager.getMasterPassword(), null, SQLiteDatabase.OPEN_READONLY);
 
             Cursor cursor = null;
             for (ConversationContract.DbColumn[] table : ConversationContract.allTables) {
                 try {
-                    String tablename = table[0].tablename();
-                    cursor = db.query(tablename, new String[]{"count(*)"}, null, null, null, null, null);
+                    Uri contentUri = table[0].contentUri();
+                    cursor = context.getContentResolver().query(contentUri, new String[]{"count(*)"}, null, null, null, null);
                     if (cursor != null && cursor.moveToNext()) {
-                        writer.println(tablename + ": " + formatter.format(cursor.getLong(0)));
+                        writer.println(contentUri + ": " + formatter.format(cursor.getLong(0)));
                     }
                 } finally {
                     if (cursor != null)
@@ -286,6 +317,7 @@ public class SystemUtils {
             Ln.w(e);
         }
         writer.println("");
+
     }
 
     private static void generateThreadDump(PrintWriter writer) {
@@ -347,33 +379,54 @@ public class SystemUtils {
 
         // check if /system/app/Superuser.apk is present
         try {
-            File file = new File("/system/app/Superuser.apk");
-            if (file.exists()) {
-                return true;
+            String[] paths = { "/system/app/Superuser.apk", "/sbin/su", "/system/bin/su", "/system/xbin/su", "/data/local/xbin/su", "/data/local/bin/su", "/system/sd/xbin/su",
+                    "/system/bin/failsafe/su", "/data/local/su", "/su/bin/su"};
+            for (String path : paths) {
+                if (new File(path).exists()) {
+                    return true;
+                }
             }
         } catch (Exception e) {
             Ln.v(e);
         }
 
         // try executing commands
-        return canExecuteCommand("/system/xbin/which su") ||
-                canExecuteCommand("/system/bin/which su") ||
-                canExecuteCommand("which su");
-    }
-
-    public static boolean hasLockScreen(Context context) {
-        return ((KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE)).isKeyguardSecure();
-    }
-
-    private static boolean canExecuteCommand(String command) {
-        boolean executed;
+        Process process = null;
         try {
-            Runtime.getRuntime().exec(command);
-            executed = true;
-        } catch (Exception e) {
-            executed = false;
+            process = Runtime.getRuntime().exec(new String[] { "/system/xbin/which", "su" });
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            return in.readLine() != null;
+        } catch (Throwable t) {
+            return false;
+        } finally {
+            if (process != null) {
+                process.destroy();
+            }
         }
-        return executed;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public static boolean isDeviceSecure(Context context) {
+        KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+        return keyguardManager.isDeviceSecure();
+    }
+
+    public static boolean isKeyguardSecure(Context context) {
+        KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+        return keyguardManager.isKeyguardSecure();
+    }
+
+    /**
+     * Uses isDeviceSecure if has Marshmallow or isKeyguardSecure otherwise.
+     * Protected for API level
+     *
+     * @return if user has lock screen set (Only None or Swipe will return false)
+     */
+    public static boolean hasLockScreen(Context context) {
+        if (UIUtils.hasMarshmallow()) {
+            return isDeviceSecure(context);
+        }
+        return isKeyguardSecure(context);
     }
 
     private static int getAppProcessId(Context context, String processName) {

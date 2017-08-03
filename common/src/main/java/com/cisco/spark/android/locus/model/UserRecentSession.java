@@ -11,6 +11,7 @@ import java.util.Map;
 
 public class UserRecentSession {
     private static final String CONVERSATION_URL = "conversationUrl";
+    private static final String CALLBACK_ADDRESS = "callbackAddress";
     private static final String OUTGOING_DIRECTION = "OUTGOING";
     private static final String MISSED_DISPOSITION = "MISSED";
 
@@ -143,6 +144,14 @@ public class UserRecentSession {
 
     public void setConversationUrl(String conversationUrl) {
         links.put(CONVERSATION_URL, conversationUrl);
+    }
+
+    public String getCallbackAddress() {
+        return links.get(CALLBACK_ADDRESS);
+    }
+
+    public void setCallbackAddress(String callbackAddress) {
+        links.put(CALLBACK_ADDRESS, callbackAddress);
     }
 
     public boolean isOutgoingCall() {

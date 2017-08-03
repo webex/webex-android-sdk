@@ -9,7 +9,7 @@ public class BoardRegistration {
     private long messageTtl;
     private Uri mercuryConnectionServiceClusterUrl;
     private Uri webSocketUrl;
-    private boolean isSharedWebSocket;
+    private boolean sharedWebSocket;
     private Action action;
 
     public BoardRegistration(String binding,
@@ -26,13 +26,13 @@ public class BoardRegistration {
                         long messageTtl,
                         Uri mercuryConnectionServiceClusterUrl,
                         Uri webSocketUrl,
-                        boolean isSharedWebSocket,
+                        boolean sharedWebSocket,
                         Action action) {
         this.binding = binding;
         this.messageTtl = messageTtl;
         this.mercuryConnectionServiceClusterUrl = mercuryConnectionServiceClusterUrl;
         this.webSocketUrl = webSocketUrl;
-        this.isSharedWebSocket = isSharedWebSocket;
+        this.sharedWebSocket = sharedWebSocket;
         this.action = action;
     }
 
@@ -53,7 +53,7 @@ public class BoardRegistration {
     }
 
     public boolean getIsSharedWebSocket() {
-        return isSharedWebSocket;
+        return sharedWebSocket;
     }
 
     public Action getAction() {
@@ -61,6 +61,6 @@ public class BoardRegistration {
     }
 
     public enum Action {
-        REPLACE, REMOVE
+        ADD, REPLACE, REMOVE
     }
 }

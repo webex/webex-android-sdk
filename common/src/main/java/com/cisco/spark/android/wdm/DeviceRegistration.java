@@ -1,6 +1,7 @@
 package com.cisco.spark.android.wdm;
 
 import android.net.Uri;
+import android.support.annotation.Nullable;
 
 import com.cisco.spark.android.client.UrlProvider;
 import com.cisco.spark.android.client.WhistlerTestClient;
@@ -8,8 +9,12 @@ import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+
+import okhttp3.HttpUrl;
 
 public class DeviceRegistration {
 
@@ -37,6 +42,8 @@ public class DeviceRegistration {
     private Uri deviceStatusUrl;
     private boolean isDeviceManaged;
     private String deviceIdentifier;
+
+    private HostMap serviceHostMap;
 
     // maintain two whitelists where we will send our auth:
     // a static whitelist from BuildConfig, and
@@ -75,6 +82,7 @@ public class DeviceRegistration {
             this.supportProviderCompanyName = null;
             this.clientSecurityPolicy = null;
             this.modificationTime = null;
+            serviceHostMap = null;
             buildConfigWhitelist.clear();
             serviceCatalogWhitelist.clear();
             initialize(urlProvider);
@@ -83,18 +91,18 @@ public class DeviceRegistration {
 
     public void initialize(UrlProvider urlProvider) {
         synchronized (synclock) {
-            buildConfigWhitelist.add(Uri.parse(urlProvider.getUsersApiUrl()).getHost());
-            buildConfigWhitelist.add(Uri.parse(urlProvider.getServiceApiUrl()).getHost());
-            buildConfigWhitelist.add(Uri.parse(urlProvider.getCalliopeRegistrarUrl()).getHost());
+            buildConfigWhitelist(Uri.parse(urlProvider.getUsersApiUrl()));
+            buildConfigWhitelist(Uri.parse(urlProvider.getServiceApiUrl()));
+            buildConfigWhitelist(Uri.parse(urlProvider.getCalliopeRegistrarUrl()));
 
             String aclServiceUrl = urlProvider.getAclServiceUrl();
             if (aclServiceUrl != null) {
-                buildConfigWhitelist.add(Uri.parse(aclServiceUrl).getHost());
+                buildConfigWhitelist(Uri.parse(aclServiceUrl));
             }
 
             String metricsApiUrl = urlProvider.getMetricsApiUrl();
             if (metricsApiUrl != null) {
-                buildConfigWhitelist.add(Uri.parse(metricsApiUrl).getHost());
+                buildConfigWhitelist(Uri.parse(metricsApiUrl));
             }
 
             refreshWhitelist();
@@ -109,6 +117,7 @@ public class DeviceRegistration {
             whitelist(getConversationServiceUrl());
             whitelist(getLocusServiceUrl());
             whitelist(getJanusServiceUrl());
+            whitelist(getVoicemailServiceUrl());
             whitelist(getMetricsServiceUrl());
             whitelist(getRoomServiceUrl());
             whitelist(getWebSocketUrl());
@@ -119,17 +128,26 @@ public class DeviceRegistration {
             whitelist(getAdminServiceUrl());
             whitelist(getFeatureServiceUrl());
             whitelist(getCalendarServiceUrl());
-            whitelist(getStickiesServiceUrl());
             whitelist(getSearchServiceUrl());
             whitelist(getSwUpgradeServiceUrl());
             whitelist(getAdminServiceUrl());
             whitelist(getPresenceServiceUrl());
             whitelist(getCalliopeDiscoveryServiceUrl());
-            whitelist(Uri.parse(WhistlerTestClient.URL));
+            whitelist(WhistlerTestClient.URL);
             whitelist(getUserAppsServiceUrl());
             whitelist(getBoardServiceUrl());
             whitelist(getHecateServiceUrl());
             whitelist(getLyraServiceUrl());
+            whitelist(getRetentionServiceUrl());
+
+            // serviceHostMap will only be available with the feature-toggle wdm-u2c-lookup2
+            if (serviceHostMap != null && serviceHostMap.getHostCatalog() != null) {
+                for (Map.Entry<String, List<ServiceHost>> entry : serviceHostMap.getHostCatalog().entrySet()) {
+                    for (ServiceHost serviceHost : entry.getValue()) {
+                        whitelist(Uri.parse(serviceHost.getHost()));
+                    }
+                }
+            }
         }
     }
 
@@ -147,7 +165,6 @@ public class DeviceRegistration {
             this.deviceSettingsString = deviceRegistration.deviceSettingsString;
             this.webSocketUrl = deviceRegistration.getWebSocketUrl();
             this.features = deviceRegistration.getFeatures();
-            Ln.v("Custom notifications feature toggle enabled ? %s", features.isCustomNotificationsEnabled());
             Ln.v("Custom notifications user toggles direct: %s, @mentions: %s, group: %s",
                     features.isUserFeatureEnabled(Features.USER_TOGGLE_DIRECT_MESSAGE_NOTIFICATIONS),
                     features.isUserFeatureEnabled(Features.USER_TOGGLE_MENTION_NOTIFICATIONS),
@@ -170,6 +187,7 @@ public class DeviceRegistration {
             this.deviceIdentifier = deviceRegistration.getDeviceIdentifier();
             this.clientSecurityPolicy = deviceRegistration.getClientSecurityPolicy();
             this.modificationTime = deviceRegistration.getModificationTime();
+            this.serviceHostMap = deviceRegistration.serviceHostMap;
             refreshWhitelist();
         }
     }
@@ -192,6 +210,7 @@ public class DeviceRegistration {
         return url;
     }
 
+    // TODO Make this hard to get to for everything except the modules
     public Features getFeatures() {
         return features;
     }
@@ -208,6 +227,10 @@ public class DeviceRegistration {
         return services == null ? null : services.conversationServiceUrl;
     }
 
+    public Uri getRetentionServiceUrl() {
+        return services == null ? null : services.retentionServiceUrl;
+    }
+
     public Uri getRoomServiceUrl() {
         return services == null ? null : services.roomServiceUrl;
     }
@@ -218,6 +241,10 @@ public class DeviceRegistration {
 
     public Uri getJanusServiceUrl() {
         return services == null ? null : services.janusServiceUrl;
+    }
+
+    public Uri getVoicemailServiceUrl() {
+        return services == null ? null : services.voicemailServiceUrl;
     }
 
     public Uri getAclServiceUrl() {
@@ -260,10 +287,6 @@ public class DeviceRegistration {
         return services != null ? services.calendarServiceUrl : null;
     }
 
-    public Uri getStickiesServiceUrl() {
-        return services != null ? services.stickiesServiceUrl : null;
-    }
-
     public Uri getSearchServiceUrl() {
         return services != null ? services.argonautServiceUrl : null;
     }
@@ -288,14 +311,21 @@ public class DeviceRegistration {
         return deviceSettingsString;
     }
 
-    public boolean sendAuthToHost(String host) {
+    protected boolean sendAuthToHost(@Nullable String host) {
+        if (host == null) {
+            return false;
+        }
         synchronized (synclock) {
-            return host != null && (serviceCatalogWhitelist.contains(host) || buildConfigWhitelist.contains(host));
+            return serviceCatalogWhitelist.contains(host) || buildConfigWhitelist.contains(host);
         }
     }
 
-    public boolean sendAuthToHost(Uri uri) {
-        return sendAuthToHost(uri.getHost());
+    public boolean sendAuthToHost(@Nullable Uri uri) {
+        return sendAuthToHost(getHost(uri));
+    }
+
+    public boolean sendAuthToHost(@Nullable HttpUrl url) {
+        return sendAuthToHost(getHost(url));
     }
 
     public boolean showSupportText() {
@@ -356,10 +386,19 @@ public class DeviceRegistration {
         }
     }
 
+
+    public void buildConfigWhitelist(Uri uri) {
+        synchronized (synclock) {
+            if (uri != null && uri.getHost() != null) {
+                buildConfigWhitelist.add(getHost(uri));
+            }
+        }
+    }
+
     public void whitelist(Uri uri) {
         synchronized (synclock) {
             if (uri != null && uri.getHost() != null) {
-                serviceCatalogWhitelist.add(uri.getHost());
+                serviceCatalogWhitelist.add(getHost(uri));
             }
         }
     }
@@ -391,12 +430,28 @@ public class DeviceRegistration {
         return deviceIdentifier;
     }
 
+    public HostMap getServiceHostMap() {
+        return serviceHostMap;
+    }
+
+    // Abstracted for testing
+    protected String getHost(@Nullable Uri uri) {
+        return uri == null ? null : uri.getHost();
+    }
+
+    // Abstracted for testing
+    protected String getHost(@Nullable HttpUrl url) {
+        return url == null ? null : url.host();
+    }
+
     private static class Services {
         private Uri aclServiceUrl;
         private Uri conversationServiceUrl;
+        private Uri retentionServiceUrl;
         private Uri roomServiceUrl;
         private Uri locusServiceUrl;
         private Uri janusServiceUrl;
+        private Uri voicemailServiceUrl;
         private Uri avatarServiceUrl;
         private Uri metricsServiceUrl;
         private Uri encryptionServiceUrl;
@@ -406,7 +461,6 @@ public class DeviceRegistration {
         private Uri atlasServiceUrl;
         private Uri featureServiceUrl;
         private Uri calendarServiceUrl;
-        private Uri stickiesServiceUrl;
         private Uri argonautServiceUrl;
         private Uri swupgradeServiceUrl;
         private Uri apheleiaServiceUrl;

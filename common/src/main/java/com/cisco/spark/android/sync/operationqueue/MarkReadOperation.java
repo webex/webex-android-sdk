@@ -1,8 +1,10 @@
 package com.cisco.spark.android.sync.operationqueue;
 
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import com.cisco.spark.android.core.Injector;
+import com.cisco.spark.android.metrics.SegmentService;
 import com.cisco.spark.android.model.Activity;
 import com.cisco.spark.android.model.ActivityReference;
 import com.cisco.spark.android.model.Verb;
@@ -10,6 +12,7 @@ import com.cisco.spark.android.sync.ConversationContentProviderQueries;
 import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.github.benoitdion.ln.Ln;
+import com.segment.analytics.Properties;
 
 import java.io.IOException;
 import java.util.Date;
@@ -27,6 +30,7 @@ public class MarkReadOperation extends ActivityOperation {
 
     private long lastSelfAckTimestamp;
     private long lastSeenActivityTimestamp;
+
 
     public MarkReadOperation(Injector injector, String conversationId) {
         super(injector, conversationId);
@@ -73,8 +77,10 @@ public class MarkReadOperation extends ActivityOperation {
     protected SyncState doWork() throws IOException {
         super.doWork();
         Response<Activity> response = postActivity(activity);
-        if (response.isSuccessful())
+        if (response.isSuccessful()) {
+            postSegmentMetrics(response);
             return SyncState.SUCCEEDED;
+        }
 
         return SyncState.READY;
     }
@@ -97,4 +103,15 @@ public class MarkReadOperation extends ActivityOperation {
     public ConversationContract.SyncOperationEntry.OperationType getOperationType() {
         return MARK_CONVERSATION_READ;
     }
+
+
+    private void postSegmentMetrics(Response response) {
+        String teamPrimaryConvId = ConversationContentProviderQueries.getTeamPrimaryConversationId(getContentResolver(), getConversationId());
+        Properties segmentProperties = new SegmentService.PropertiesBuilder()
+                .setNetworkResponse(response)
+                .setSpaceIsTeam(!TextUtils.isEmpty(teamPrimaryConvId))
+                .build();
+        segmentService.reportMetric(SegmentService.READ_MESSAGES_EVENT, segmentProperties);
+    }
+
 }

@@ -1,7 +1,6 @@
 package com.cisco.spark.android.sync.queue;
 
 import android.content.ContentProviderOperation;
-import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
@@ -9,6 +8,7 @@ import android.os.RemoteException;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.AuthenticatedUser;
 import com.cisco.spark.android.core.Injector;
+import com.cisco.spark.android.events.ActivityDecryptedEvent;
 import com.cisco.spark.android.events.SelfLeaveEvent;
 import com.cisco.spark.android.model.Activity;
 import com.cisco.spark.android.model.ActivityReference;
@@ -19,14 +19,12 @@ import com.cisco.spark.android.sync.ActorRecord;
 import com.cisco.spark.android.sync.Batch;
 import com.cisco.spark.android.sync.ConversationContentProviderOperation;
 import com.cisco.spark.android.sync.ConversationContentProviderQueries;
-import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.ConversationRecord;
 import com.cisco.spark.android.sync.EncryptedConversationProcessor;
 import com.cisco.spark.android.sync.TitleBuilder;
 import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
 import com.cisco.spark.android.ui.conversation.ConversationResolver;
 import com.cisco.spark.android.util.LoggingUtils;
-import com.cisco.spark.android.util.RxUtils;
 import com.cisco.spark.android.util.UriUtils;
 import com.github.benoitdion.ln.Ln;
 
@@ -34,7 +32,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -47,6 +44,7 @@ import rx.functions.Action1;
 
 import static com.cisco.spark.android.sync.ConversationContract.ActivityEntry;
 import static com.cisco.spark.android.sync.ConversationContract.ConversationEntry;
+import static com.cisco.spark.android.sync.ConversationContract.vw_Participant;
 
 /**
  * Gets X most recent activity events across Y most recent conversations.
@@ -81,8 +79,13 @@ public class IncrementalSyncTask extends AbstractConversationSyncTask {
     protected int maxActivities;
     protected long sinceTime;
     private int maxParticipants;
+    private boolean isFailed;
+    final ArrayList<String> conversationIds = new ArrayList<>();
 
-    HashSet<Uri> keysRequested = new HashSet<>();
+    Action1<Throwable> onError = e -> {
+        Ln.e(e);
+        isFailed = true;
+    };
 
     // use the factory methods in ActivitySyncQueue
     protected IncrementalSyncTask(Injector injector) {
@@ -121,8 +124,8 @@ public class IncrementalSyncTask extends AbstractConversationSyncTask {
 
     @Override
     public boolean execute() {
-
         if (sinceTime == HIGH_WATER_MARK)
+            // Using the no-param version here as sometimes (in IT's anyway) the cached version is more accurate than the db
             sinceTime = conversationSyncQueue.getHighWaterMark();
 
         try {
@@ -140,13 +143,11 @@ public class IncrementalSyncTask extends AbstractConversationSyncTask {
                 }
             }
 
-            final ArrayList<String> conversationIds = new ArrayList<>();
-
             Action1<Conversation> onNextAction = new Action1<Conversation>() {
                 @Override
                 public void call(Conversation conv) {
 
-                    Ln.i("Processing conversation " + conv);
+                    Ln.i("Processing conversation " + conversationIds.size() + " :" + conv);
 
                     conversationIds.add(conv.getId());
 
@@ -181,20 +182,21 @@ public class IncrementalSyncTask extends AbstractConversationSyncTask {
                     if (batch.size() > 200) {
                         batch.apply();
                         batch.clear();
+                        checkpoint();
                     }
-
-                    // This frees up memory on very large syncs
-                    cr.freeParticipants();
                 }
             };
 
             Observable<Conversation> convStream = getConversations();
-            if (convStream != null) {
-                convStream.subscribe(onNextAction, RxUtils.onError);
-            } else {
+
+            if (convStream == null) {
                 Ln.i("Failed getting conversation stream for incremental sync");
                 return false;
             }
+
+            convStream.subscribe(onNextAction, onError);
+            if (isFailed)
+                return false;
 
             if (conversationIds.size() < maxConversations && !conversationIds.isEmpty()) {
                 setConversationListLoadingIndicator(batch, false);
@@ -202,7 +204,7 @@ public class IncrementalSyncTask extends AbstractConversationSyncTask {
                 setConversationListLoadingIndicator(batch, true);
             }
 
-            if (!batch.apply())
+            if (!batch.apply() || !checkpoint())
                 return false;
 
         } catch (Exception e) {
@@ -224,9 +226,14 @@ public class IncrementalSyncTask extends AbstractConversationSyncTask {
             b.apply();
         }
 
+        return true;
+    }
+
+    private boolean checkpoint() {
+
         try {
             actorRecordProvider.sync();
-        } catch (RemoteException | OperationApplicationException e) {
+        } catch (RemoteException e) {
             Ln.e(e, "Failed syncing actors");
         }
 
@@ -259,14 +266,18 @@ public class IncrementalSyncTask extends AbstractConversationSyncTask {
                 eventBus.post(new HideConversationNotificationEvent(cr.getId()));
             }
         }
-
         searchManager.updateConversationSearch(updatedConversations, activityDecryptedEvent.getActivities());
 
-        if (!keysToFetch.isEmpty())
+        if (!keysToFetch.isEmpty()) {
             operationQueue.requestKeys(keysToFetch);
+            keysToFetch.clear();
+        }
 
         sendEncryptionMetrics();
 
+        // Clear out stuff we don't need anymore
+        updatedConversations.clear();
+        activityDecryptedEvent = new ActivityDecryptedEvent();
         return true;
     }
 
@@ -280,12 +291,12 @@ public class IncrementalSyncTask extends AbstractConversationSyncTask {
     }
 
     private void updateTopParticipants(Batch batch, ConversationRecord conversationRecord) {
-        String where = ConversationContract.vw_Participant.CONVERSATION_ID + "=?";
+        String where = vw_Participant.CONVERSATION_ID + "=?";
         ArrayList<String> args = new ArrayList<>();
         args.add(conversationRecord.getId());
 
         if (conversationRecord.getSyncOperationId() != null) {
-            where += " OR " + ConversationContract.vw_Participant.CONVERSATION_ID + "=?";
+            where += " OR " + vw_Participant.CONVERSATION_ID + "=?";
             args.add(conversationRecord.getSyncOperationId());
         }
 
@@ -293,10 +304,10 @@ public class IncrementalSyncTask extends AbstractConversationSyncTask {
         Cursor c = null;
         try {
             c = getContentResolver().query(
-                    ConversationContract.vw_Participant.CONTENT_URI,
-                    ConversationContract.vw_Participant.DEFAULT_PROJECTION,
+                    vw_Participant.CONTENT_URI,
+                    vw_Participant.DEFAULT_PROJECTION,
                     where, args.toArray(new String[args.size()]),
-                    ConversationContract.vw_Participant.LAST_ACTIVE_TIME + " DESC LIMIT " + (ConversationResolver.MAX_TOP_PARTICIPANTS + 1)
+                    vw_Participant.LAST_ACTIVE_TIME + " DESC LIMIT " + (ConversationResolver.MAX_TOP_PARTICIPANTS + 1)
             );
 
             while (c != null && c.moveToNext() && topParticipants.size() < ConversationResolver.MAX_TOP_PARTICIPANTS) {
@@ -551,5 +562,9 @@ public class IncrementalSyncTask extends AbstractConversationSyncTask {
         return getMaxParticipants() == MAX_PARTICIPANTS
                 && conv.getParticipants().size() < MAX_PARTICIPANTS
                 && conv.getParticipants().size() > 0;
+    }
+
+    public int getConversationsProcessed() {
+        return conversationIds.size();
     }
 }

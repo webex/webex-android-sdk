@@ -10,7 +10,6 @@ import com.cisco.spark.android.whiteboard.WhiteboardError;
 import com.cisco.spark.android.whiteboard.WhiteboardService;
 import com.cisco.spark.android.whiteboard.persistence.model.Channel;
 import com.cisco.spark.android.whiteboard.persistence.model.ChannelItems;
-import com.github.benoitdion.ln.Ln;
 
 import javax.inject.Inject;
 
@@ -27,31 +26,13 @@ public class RemoteWhiteboardStore extends AbsRemoteWhiteboardStore {
     }
 
     @Override
-    protected Call<Channel> createCreateChannelCall(Channel channel) {
-        return getWhiteboardPersistenceClient().createChannel(channel);
-    }
-
-    @Override
     protected Call<ChannelItems<Channel>> createGetChannelsCall(String aclLink, int channelsLimit) {
-        Call<ChannelItems<Channel>> call;
-        if (deviceRegistration.getFeatures().isWhiteboardWithAclEnabled()) {
-            call = getWhiteboardPersistenceClient().getChannelsWithAcl(aclLink, channelsLimit);
-        } else {
-            call = getWhiteboardPersistenceClient().getChannels(aclLink, channelsLimit);
-        }
-        return call;
+        return getWhiteboardPersistenceClient().getChannelsWithAcl(aclLink, channelsLimit);
     }
 
     @Override
     protected boolean isPrivateStore() {
         return false;
-    }
-
-    @Override
-    protected void processCreateChannelFailure() {
-        Ln.e("Failed to create board");
-        whiteboardService.boardReady();
-        sendBoardError(WhiteboardError.ErrorData.NETWORK_ERROR);
     }
 
     @Override

@@ -99,7 +99,8 @@ public class SetupSharedKeyWithKmsOperation extends PostKmsMessageOperation {
     public RetryPolicy buildRetryPolicy() {
         return RetryPolicy.newJobTimeoutPolicy(60, TimeUnit.MINUTES)
                 .withExponentialBackoff()
-                .withMaxAttempts(Integer.MAX_VALUE);
+                .withMaxAttempts(Integer.MAX_VALUE)
+                .withAttemptTimeout(10, TimeUnit.SECONDS);
     }
 
     @Override

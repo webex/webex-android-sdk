@@ -6,7 +6,8 @@ public class MetricsReportRequest {
     // Metrics endpoint
     public enum Endpoint {
         CIRCONUS,
-        SPLUNK
+        SPLUNK,
+        FLUSH
     }
 
     private List<MetricsItem> metrics;

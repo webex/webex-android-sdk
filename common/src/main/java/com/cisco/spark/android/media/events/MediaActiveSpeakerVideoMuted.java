@@ -4,7 +4,7 @@ import android.support.annotation.Nullable;
 
 import java.util.Locale;
 
-public class MediaActiveSpeakerVideoMuted {
+public class MediaActiveSpeakerVideoMuted extends MediaSessionEvent {
 
     private final boolean muted;
     private final Long csi;
@@ -16,8 +16,8 @@ public class MediaActiveSpeakerVideoMuted {
      * @param csi the corresponding csi or null
      * @param vid the videoId which was muted
      */
-    public static MediaActiveSpeakerVideoMuted newVideoMuteWithCsiEvent(@Nullable Long csi, int vid) {
-        return new MediaActiveSpeakerVideoMuted(true, csi, vid);
+    public static MediaActiveSpeakerVideoMuted newVideoMuteWithCsiEvent(String callId, @Nullable Long csi, int vid) {
+        return new MediaActiveSpeakerVideoMuted(callId, true, csi, vid);
     }
 
     /**
@@ -26,11 +26,12 @@ public class MediaActiveSpeakerVideoMuted {
      * @param csi the corresponding csi or null
      * @param vid the videoId which was unmuted
      */
-    public static MediaActiveSpeakerVideoMuted newVideoOnWithCsiEvent(@Nullable Long csi, int vid) {
-        return new MediaActiveSpeakerVideoMuted(false, csi, vid);
+    public static MediaActiveSpeakerVideoMuted newVideoOnWithCsiEvent(String callId, @Nullable Long csi, int vid) {
+        return new MediaActiveSpeakerVideoMuted(callId, false, csi, vid);
     }
 
-    private MediaActiveSpeakerVideoMuted(boolean muted, @Nullable Long csi, int vid) {
+    private MediaActiveSpeakerVideoMuted(String callId, boolean muted, @Nullable Long csi, int vid) {
+        super(callId);
         this.muted = muted;
         this.csi = csi;
         this.vid = vid;

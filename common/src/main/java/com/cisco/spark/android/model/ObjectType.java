@@ -13,6 +13,5 @@ public class ObjectType {
     public static final String content = "content";
     public static final String event = "event";
     public static final String locusSessionSummary = "locusSessionSummary";
-    public static final String imageURI = "imageURI";
     public static final String team = "team";
 }

@@ -1,5 +1,6 @@
 package com.cisco.spark.android.whiteboard.view.event;
 
+import com.cisco.spark.android.whiteboard.persistence.model.Channel;
 import com.cisco.spark.android.whiteboard.persistence.model.Content;
 
 import java.util.List;
@@ -7,22 +8,26 @@ import java.util.List;
 public class WhiteboardLoadContentsEvent {
 
     private List<Content> contents;
-    private String boardId;
+    private Channel channel;
     private boolean shouldResetBoard;
 
-    public WhiteboardLoadContentsEvent(List<Content> contents, String boardId, boolean shouldResetBoard) {
+    public WhiteboardLoadContentsEvent(List<Content> contents, Channel boardId, boolean shouldResetBoard) {
         this.contents = contents;
-        this.boardId = boardId;
+        this.channel = boardId;
         this.shouldResetBoard = shouldResetBoard;
     }
 
     public String getBoardId() {
-        return boardId;
+        return channel != null ? channel.getChannelId() : null;
     }
     public List<Content> getContents() {
         return contents;
     }
     public boolean shouldResetBoard() {
         return shouldResetBoard;
+    }
+
+    public Channel getChannel() {
+        return channel;
     }
 }

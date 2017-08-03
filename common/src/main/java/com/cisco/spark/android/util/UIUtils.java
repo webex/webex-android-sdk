@@ -1,16 +1,20 @@
 package com.cisco.spark.android.util;
 
-import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.DrawableRes;
 import android.support.v4.view.ViewCompat;
+import android.util.DisplayMetrics;
 import android.view.Display;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -26,12 +30,6 @@ import java.lang.reflect.Field;
 import java.util.Locale;
 
 public class UIUtils {
-    // the minimum width for a tablet device
-    private static final int MINIMUM_TABLET_WIDTH_DP = 600;
-
-    public static boolean hasJellyBeanMR1() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1;
-    }
 
     public static boolean hasKitKat() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
@@ -39,6 +37,10 @@ public class UIUtils {
 
     public static boolean hasMarshmallow() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+    }
+
+    public static boolean hasNougat() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
     }
 
     public static boolean isTablet(Context context) {
@@ -82,7 +84,7 @@ public class UIUtils {
         }
     }
 
-    @SuppressLint("NewApi")
+    @TargetApi(Build.VERSION_CODES.M)
     public static boolean canDrawOnTopOfApps(Context context) {
         if (hasMarshmallow()) {
             return Settings.canDrawOverlays(context);
@@ -229,7 +231,26 @@ public class UIUtils {
         return size;
     }
 
+    public static int getScreenWidth(Context context) {
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics metrics = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(metrics);
+        return metrics.widthPixels;
+    }
+
     public static boolean autoRotationEnabled(Context context) {
         return (Settings.System.getInt(context.getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1);
+    }
+
+    public static boolean hasNavigationBar(Context context) {
+        Resources resources = context.getResources();
+        int resourceId = resources.getIdentifier("config_showNavigationBar", "bool", "android");
+        if (resourceId > 0) {
+            return resources.getBoolean(resourceId);
+        }
+        // Check for keys
+        boolean hasMenuKey = ViewConfiguration.get(context).hasPermanentMenuKey();
+        boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
+        return !hasMenuKey && !hasBackKey;
     }
 }

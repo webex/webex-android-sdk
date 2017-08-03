@@ -3,7 +3,6 @@ package com.cisco.spark.android.sync;
 import android.content.Context;
 import android.util.SparseArray;
 
-import com.cisco.spark.android.core.Application;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.sync.DBHelperUtils.UpgradeModule;
 import com.github.benoitdion.ln.Ln;
@@ -12,8 +11,6 @@ import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteException;
 import net.sqlcipher.database.SQLiteOpenHelper;
 
-import java.io.File;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -21,8 +18,8 @@ import static com.cisco.spark.android.sync.DBHelperUtils.urlIDs;
 
 @Singleton
 public class DatabaseHelper extends SQLiteOpenHelper implements SQLiteOpenHelperInterface {
-    public static final String SERVICE_DB_NAME = "conversationCacheEncrypted.db";
-    public static final String SERVICE_DB_LEGACY_NAME = "conversationCache.db";
+    public static final String SERVICE_DB_ENCRYPTED_NAME = "conversationCacheEncrypted.db";
+    public static final String SERVICE_DB_NAME = "conversationCache.db";
     public static final String DB_PLAINTEXT_NAME = "conversationCachePlainText.db";
     // Upgrades from versions before this are not supported; the DB will be wiped clean and rebuilt.
     public static final int MINIMUM_SCHEMA_VERSION_FOR_MIGRATION = 142;
@@ -113,25 +110,6 @@ public class DatabaseHelper extends SQLiteOpenHelper implements SQLiteOpenHelper
                 throw new RuntimeException(e);
             }
         }
-
-        //Delete old conversationCache.db
-        Context context = Application.getInstance().getApplicationContext();
-        if (context != null) {
-            File unencryptedDBPath = context.getDatabasePath(DatabaseHelper.SERVICE_DB_LEGACY_NAME);
-            if (unencryptedDBPath != null && unencryptedDBPath.exists()) {
-                boolean success = context.deleteDatabase(DatabaseHelper.SERVICE_DB_LEGACY_NAME);
-                if (success) {
-                    Ln.i(DatabaseHelper.SERVICE_DB_LEGACY_NAME + " has been deleted");
-                } else {
-                    Ln.e("Unable to delete " + DatabaseHelper.SERVICE_DB_LEGACY_NAME);
-                }
-            } else {
-                Ln.w(DatabaseHelper.SERVICE_DB_LEGACY_NAME + " does not exist");
-            }
-        } else {
-            Ln.w(DatabaseHelper.SERVICE_DB_LEGACY_NAME + " does not exist");
-        }
-
     }
 
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {

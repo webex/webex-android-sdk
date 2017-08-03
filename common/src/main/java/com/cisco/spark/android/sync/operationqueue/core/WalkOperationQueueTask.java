@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-import retrofit.RetrofitError;
-
 import static com.cisco.spark.android.sync.ConversationContract.SyncOperationEntry.SyncState;
 
 /**
@@ -86,6 +84,7 @@ public class WalkOperationQueueTask implements Callable<Void> {
 
                         if (operation.getState() == SyncState.EXECUTING && retryPolicy.shouldAbortAttempt()) {
                             if (operation.syncStateFuture != null && !operation.syncStateFuture.isDone()) {
+                                Ln.w(new RuntimeException("OperationAttemptTimedOut : " + operation.getOperationType()), "Cancelling operation attempt");
                                 operation.syncStateFuture.cancel(true);
                             }
                             operation.syncStateFuture = null;
@@ -163,10 +162,6 @@ public class WalkOperationQueueTask implements Callable<Void> {
     private void handleException(Operation operation, Throwable exception) {
         try {
             throw exception;
-        } catch (RetrofitError e) {
-            Ln.i(e, "Network error.");
-            if (!operation.getState().isTerminal())
-                operation.setState(operation.getRetryPolicy().validateRequestedState(SyncState.READY));
         } catch (IOException e) {
             Ln.i(e, "Network error.");
             if (!operation.getState().isTerminal())

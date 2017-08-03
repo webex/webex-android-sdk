@@ -7,7 +7,7 @@ import android.webkit.URLUtil;
 import com.cisco.spark.android.whiteboard.persistence.model.Content;
 import com.cisco.spark.android.whiteboard.persistence.model.ContentItems;
 import com.cisco.spark.android.whiteboard.view.model.Stroke;
-import com.cisco.spark.android.whiteboard.view.writer.LocalWILLWriter;
+import com.cisco.spark.android.whiteboard.renderer.LocalWILLWriter;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -69,7 +69,7 @@ public class WhiteboardUtils {
         int colorInt = Color.BLACK;
         if (colorJson != null) {
             int alpha = colorJson.get("alpha").getAsInt();
-            colorInt = Color.argb(alpha == 1 ? 255 : 0, colorJson.get("red").getAsInt(),
+            colorInt = Color.argb(alpha == 0 ? 0 : 255, colorJson.get("red").getAsInt(),
                                   colorJson.get("green").getAsInt(), colorJson.get("blue").getAsInt());
         }
         return colorInt;
@@ -107,6 +107,14 @@ public class WhiteboardUtils {
         return senderId.toString() + WhiteboardConstants.REMOTE_WRITER_KEY_SEPARATOR + curveId;
     }
 
+    public static String safeGetAsString(JsonElement jsonElement, String defaultValue) {
+        if (jsonElement != null) {
+            return jsonElement.getAsString();
+        } else {
+            return defaultValue;
+        }
+    }
+
     public static String getIdFromUrl(String url) {
         return url != null ? url.substring(url.lastIndexOf('/') + 1) : null;
     }
@@ -134,7 +142,7 @@ public class WhiteboardUtils {
         if (link != null) {
             Pattern pattern = Pattern.compile("<([^>]+)>; rel=\"next\"");
             Matcher matcher = pattern.matcher(link);
-            if (matcher.groupCount() > 0 && URLUtil.isNetworkUrl(matcher.group(1))) {
+            if (matcher.matches() && URLUtil.isNetworkUrl(matcher.group(1))) {
                 nextUrl = matcher.group(1);
             }
         }
@@ -164,6 +172,11 @@ public class WhiteboardUtils {
     }
 
     public static Stroke createStroke(JsonObject payload, Gson gson) {
+        UUID strokeId = null;
+        if (payload.has(WhiteboardConstants.CURVE_ID)) {
+            strokeId = UUID.fromString(payload.get(WhiteboardConstants.CURVE_ID).getAsString());
+        }
+
         float[] points = gson.fromJson(payload.getAsJsonArray("curvePoints"), float[].class);
         JsonElement drawMode = payload.get("drawMode");
         BlendMode blendMode;
@@ -173,6 +186,7 @@ public class WhiteboardUtils {
             blendMode = BlendMode.BLENDMODE_NORMAL;
         }
         Stroke stroke = new Stroke(
+                strokeId,
                 points,
                 convertColorJsonToInt(payload.getAsJsonObject("color")),
                 payload.get("stride").getAsInt(),
@@ -187,6 +201,7 @@ public class WhiteboardUtils {
     public static Stroke createStroke(LocalWILLWriter writer, float scaleFactor) {
         float[] points = scaleRawOutputPoints(writer.getPoints(), scaleFactor);
         return new Stroke(
+                writer.getWriterId(),
                 points,
                 writer.getColor(),
                 writer.getStride(),

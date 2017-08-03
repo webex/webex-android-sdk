@@ -70,7 +70,7 @@ public abstract class PostKmsMessageOperation extends Operation {
         kmsRequestComplete.setDestination(getDestination());
 
         if (kmsRequestComplete.getKmsMessages() != null && !kmsRequestComplete.getKmsMessages().isEmpty()) {
-            apiClientProvider.getSecurityClient().postKmsMessage(kmsRequestComplete, new VoidCallback());
+            apiClientProvider.getSecurityClient().postKmsMessage(kmsRequestComplete).enqueue(VoidCallback.instance);
         }
     }
 
@@ -80,7 +80,7 @@ public abstract class PostKmsMessageOperation extends Operation {
         kmsRequestComplete.addKmsMessage(encryptedRequest);
         kmsRequestComplete.setDestination(getDestination());
         if (kmsRequestComplete.getKmsMessages() != null && !kmsRequestComplete.getKmsMessages().isEmpty()) {
-            apiClientProvider.getSecurityClient().postKmsMessage(kmsRequestComplete, new VoidCallback());
+            apiClientProvider.getSecurityClient().postKmsMessage(kmsRequestComplete).enqueue(VoidCallback.instance);
         }
     }
 
@@ -96,7 +96,7 @@ public abstract class PostKmsMessageOperation extends Operation {
     @Override
     public RetryPolicy buildRetryPolicy() {
         return RetryPolicy.newLimitAttemptsPolicy(3)
-                .withAttemptTimeout(30, TimeUnit.SECONDS);
+                .withAttemptTimeout(10, TimeUnit.SECONDS);
     }
 
     public static class EncryptedRequest {

@@ -99,17 +99,28 @@ public class SpaceballView extends FrameLayout {
     public void notifyDataSource() {
         checkSetRowColumn();
         if (null != itemViews && itemViews.size() > 0) {
-            refreshAppPositions();
             redraw(true);
         }
     }
 
     private void checkSetRowColumn() {
-        if (rowNum > 0) {
-            gridLayout.setRowCount(rowNum);
-        }
-        if (colNum > 0) {
-            gridLayout.setColumnCount(colNum);
+        try {
+            if (rowNum > 0) {
+                gridLayout.setRowCount(rowNum);
+            }
+            if (colNum > 0) {
+                gridLayout.setColumnCount(colNum);
+            }
+        } catch (IllegalArgumentException ex) {
+            // Catch and rethrow exception with more debug data. The original issue is resolved
+            // But if it still surfaces in the field we'd like more data.
+            int childCount = gridLayout.getChildCount();
+            throw new IllegalArgumentException(
+                    "CheckSetRowColumn failed col = " + colNum +
+                    " rows = " + rowNum +
+                    " children = " + childCount +
+                    " itemsViews = " + (itemViews == null ? null : itemViews.size()),
+                    ex);
         }
     }
 
@@ -323,4 +334,9 @@ public class SpaceballView extends FrameLayout {
             }
         }
     }
+
+    public void removeAllBalls() {
+        gridLayout.removeAllViews();
+    }
+
 }

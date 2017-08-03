@@ -2,11 +2,9 @@ package com.cisco.spark.android.callcontrol;
 
 import android.support.annotation.StringRes;
 
+import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.meetings.GetMeetingInfoType;
-import com.cisco.spark.android.sync.ActorRecord;
-
-import java.util.List;
 
 public interface CallUi {
     void requestCallPermissions(CallContext callContext);
@@ -17,18 +15,15 @@ public interface CallUi {
 
     void showMeetingLobbyUi(LocusKey id);
 
-    void dismissRingback(LocusKey locusKey);
+    void dismissRingback(Call call);
 
-    void startRingback(LocusKey locusKey);
+    void startRingback(Call call);
 
     int getRingbackTimeout();
 
-    void requestUserToUploadLogs(LocusKey locusKey);
+    void requestUserToUploadLogs(Call call);
 
-    void reportIceFailure(LocusKey locusKey);
+    void reportIceFailure(Call call);
 
     void showMessage(@StringRes int stringResourceId);
-
-    void showMeetingPeopleUi(long eventId, List<ActorRecord> participantsList);
-
 }

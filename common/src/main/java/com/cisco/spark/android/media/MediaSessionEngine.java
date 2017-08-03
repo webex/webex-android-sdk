@@ -1,6 +1,9 @@
 package com.cisco.spark.android.media;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.support.annotation.Nullable;
 
 import com.cisco.spark.android.core.Settings;
 import com.cisco.spark.android.log.LogFilePrint;
@@ -16,7 +19,10 @@ import com.webex.wme.StunTrace;
 import com.webex.wme.StunTraceSink;
 import com.webex.wme.TraceServer;
 import com.webex.wme.TraceServerSink;
+import com.webex.wme.WmeError;
 import com.webex.wme.WmeStunTraceResult;
+
+import java.io.File;
 
 import de.greenrobot.event.EventBus;
 
@@ -73,6 +79,23 @@ public class MediaSessionEngine implements MediaEngine, StunTraceSink {
     }
 
     @Override
+    public boolean isLastTraceServerUsable() {
+        ln.i("isLastTraceServerUsable");
+        return WmeError.Succeeded(TraceServer.INSTANCE.isLastTraceServerUsable());
+    }
+
+
+    @Override
+    @Nullable
+    public Bitmap getLastContentFrame() {
+        File lastContentFrameFile = getActiveMediaSession().getLastShareFrame();
+        if (lastContentFrameFile != null) {
+            return BitmapFactory.decodeFile(lastContentFrameFile.getAbsolutePath());
+        }
+        return null;
+    }
+
+    @Override
     public void initialize() {
         Ln.d("MediaSessionEngine.initialize(), MediaSessionEngine initialized = " + initialized);
 
@@ -115,13 +138,11 @@ public class MediaSessionEngine implements MediaEngine, StunTraceSink {
 
 
     @Override
-    public MediaSession startMediaSession(MediaCallbackObserver mediaCallbackObserver, final MediaDirection mediaDirection) {
-        Ln.d("MediaSessionEngine.startMediaSession(), media direction = " + mediaDirection);
+    public MediaSession createMediaSession(String callId) {
+        Ln.d("MediaSessionEngine.createMediaSession(), callId = " + callId);
 
-        MediaSession mediaSession = new MediaSessionImpl(devManager, bus, deviceRegistration, settings, gson, context, lnContext);
+        MediaSession mediaSession = new MediaSessionImpl(callId, devManager, bus, deviceRegistration, settings, gson, context, lnContext);
         activeMediaSession = mediaSession;
-        mediaSession.startSession(deviceSettings, mediaDirection, mediaCallbackObserver);
-
         return mediaSession;
     }
 
@@ -167,8 +188,11 @@ public class MediaSessionEngine implements MediaEngine, StunTraceSink {
     @Override
     public String getVersion() {
         // need to ensure that initialize is called before calling version()
-        initialize();
-        return MediaSessionAPI.INSTANCE.version() + " (MediaSession)";
+        if (initialized) {
+            return MediaSessionAPI.INSTANCE.version() + " (MediaSession)";
+        } else {
+            return "";
+        }
     }
 
 

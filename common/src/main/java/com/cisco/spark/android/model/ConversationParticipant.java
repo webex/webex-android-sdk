@@ -30,8 +30,7 @@ public class ConversationParticipant {
         String actorUuid = cursor.getString(vw_Participant.ACTOR_UUID.ordinal());
         String displayName = cursor.getString(vw_Participant.DISPLAY_NAME.ordinal());
         String email = cursor.getString(vw_Participant.EMAIL.ordinal());
-        person = new Person(email, displayName);
-        person.setUuid(actorUuid);
+        person = new Person(email, actorUuid, displayName);
     }
 
     public String getConversationId() {

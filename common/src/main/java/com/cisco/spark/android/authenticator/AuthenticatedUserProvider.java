@@ -12,8 +12,8 @@ public interface AuthenticatedUserProvider {
 
     boolean isAuthenticated();
 
-    void updateTokens(OAuth2AccessToken conversationTokens, OAuth2AccessToken kmsTokens);
+    void updateTokens(OAuth2AccessToken tokens, OAuth2AccessToken conversationTokens, OAuth2AccessToken kmsTokens, OAuth2AccessToken voicemailTokens);
 
     // Exposed for testing
-    void replaceTokens(OAuth2Tokens tokens, OAuth2AccessToken conversationTokens, OAuth2AccessToken kmsTokens);
+    void replaceTokens(OAuth2Tokens tokens, OAuth2AccessToken conversationTokens, OAuth2AccessToken kmsTokens, OAuth2AccessToken voicemailTokens);
 }

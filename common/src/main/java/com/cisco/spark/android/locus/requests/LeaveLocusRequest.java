@@ -2,9 +2,15 @@ package com.cisco.spark.android.locus.requests;
 
 import android.net.Uri;
 
-public class LeaveLocusRequest {
+import com.cisco.spark.android.features.CoreFeatures;
+
+public class LeaveLocusRequest extends DeltaRequest {
     private Uri deviceUrl;
     private String usingResource;
+
+    public LeaveLocusRequest(CoreFeatures coreFeatures) {
+        super(coreFeatures);
+    }
 
     public Uri getDeviceUrl() {
         return deviceUrl;

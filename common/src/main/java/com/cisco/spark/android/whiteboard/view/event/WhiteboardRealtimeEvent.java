@@ -1,14 +1,21 @@
 package com.cisco.spark.android.whiteboard.view.event;
 
+import com.google.gson.JsonObject;
+
 public class WhiteboardRealtimeEvent {
+    private String boardId;
+    private JsonObject data;
 
-    private String data;
-
-    public WhiteboardRealtimeEvent(String data) {
+    public WhiteboardRealtimeEvent(JsonObject data, String boardId) {
         this.data = data;
+        this.boardId = boardId;
     }
 
-    public String getData() {
+    public JsonObject getData() {
         return data;
+    }
+
+    public String getBoardId() {
+        return boardId;
     }
 }

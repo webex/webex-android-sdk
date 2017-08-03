@@ -1,6 +1,8 @@
 package com.cisco.spark.android.wdm;
 
 
+import com.github.benoitdion.ln.Ln;
+
 import java.util.Date;
 
 public final class FeatureToggle {
@@ -30,7 +32,12 @@ public final class FeatureToggle {
     }
 
     public int getIntVal() {
-        return Integer.parseInt(val);
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            Ln.w("Expected numeric toggle value: " + key + "=" + val);
+        }
+        return 0;
     }
 
     public boolean isMutable() {

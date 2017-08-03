@@ -22,4 +22,8 @@ public class WhiteboardChannelSavedEvent {
     public boolean isSuccess() {
         return success;
     }
+
+    public Channel getChannel() {
+        return channel;
+    }
 }

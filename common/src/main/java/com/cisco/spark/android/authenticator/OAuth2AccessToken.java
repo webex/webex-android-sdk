@@ -21,8 +21,9 @@ public class OAuth2AccessToken {
     }
 
     // Exposed for testing
-    public OAuth2AccessToken(long expiresIn) {
+    public OAuth2AccessToken(long expiresIn, String scopes) {
         this.expiresIn = expiresIn;
+        this.scopes = scopes;
     }
 
     public long getExpiresIn() {

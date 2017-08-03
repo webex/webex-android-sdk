@@ -61,7 +61,7 @@ public class SearchStringWithModifiers {
     }
 
     private boolean containsModifier(String modifierString) {
-        if (isSearchModifiersEnabled() && !TextUtils.isEmpty(modifierString)) {
+        if (!TextUtils.isEmpty(modifierString)) {
             boolean foundModifier = false;
             for (SearchModifiers searchModifier : SearchModifiers.values()) {
                 modifierString = Strings.removeSpacesAroundSearchModifierDelimiter(modifierString);
@@ -166,29 +166,26 @@ public class SearchStringWithModifiers {
     }
 
     public boolean usesModifiers() {
-        return isSearchModifiersEnabled() && (!fromModifierUUID.isEmpty() || isInModifierEnabledAndUUIDPresent() || !withModifierUUID.isEmpty());
+        return !fromModifierUUID.isEmpty() || isUUIDPresent() || !withModifierUUID.isEmpty();
     }
 
     public List<SearchModifiers> getSearchModifiersUsedList() {
         ArrayList<SearchModifiers> searchModifiersUsed = new ArrayList<>();
-        if (isSearchModifiersEnabled()) {
-            if (!fromModifierUUID.isEmpty()) {
-                searchModifiersUsed.add(SearchModifiers.FROM);
-            }
-            if (isInModifierEnabledAndUUIDPresent()) {
-                searchModifiersUsed.add(SearchModifiers.SHAREDIN);
-            }
-            if (!withModifierUUID.isEmpty()) {
-                searchModifiersUsed.add(SearchModifiers.ROOMSWITH);
-            }
+        if (!fromModifierUUID.isEmpty()) {
+            searchModifiersUsed.add(SearchModifiers.FROM);
+        }
+        if (isUUIDPresent()) {
+            searchModifiersUsed.add(SearchModifiers.SHAREDIN);
+        }
+        if (!withModifierUUID.isEmpty()) {
+            searchModifiersUsed.add(SearchModifiers.ROOMSWITH);
         }
         return searchModifiersUsed;
     }
 
     public boolean queryDirectory() {
-        return (!isSearchModifiersEnabled() ||
-                (isSearchModifiersEnabled() && (updatingModifierType == null ||
-                        (updatingModifierType != null && (updatingModifierType.equals(SearchModifiers.FROM) && fromModifierUUID.isEmpty()) || (updatingModifierType.equals(SearchModifiers.ROOMSWITH) && withModifierUUID.size() < 5)))));
+        return updatingModifierType == null ||
+                updatingModifierType != null && updatingModifierType.equals(SearchModifiers.FROM) && fromModifierUUID.isEmpty() || updatingModifierType.equals(SearchModifiers.ROOMSWITH) && withModifierUUID.size() < 5;
     }
 
     public List<SectionType> getSearchResultSectionTypesForCurrentModifier() {
@@ -251,7 +248,7 @@ public class SearchStringWithModifiers {
 
     public String getSelectionCriteriaForMessageSearchWithModifiers() {
         StringBuffer args = new StringBuffer();
-        if (isInModifierEnabledAndUUIDPresent()) {
+        if (isUUIDPresent()) {
             args.append(SearchModifiers.SHAREDIN.getLocalMessageSearchSelection());
         }
         return args.toString();
@@ -260,7 +257,7 @@ public class SearchStringWithModifiers {
     public List<String> getSelectionArgsForMessageSearchWithModifiers() {
         List<String> selectionArgsForMessageSearch = new ArrayList<>();
         StringBuffer args = new StringBuffer();
-        if (isInModifierEnabledAndUUIDPresent()) {
+        if (isUUIDPresent()) {
             selectionArgsForMessageSearch.add(inModifierUUID);
         }
 
@@ -282,7 +279,7 @@ public class SearchStringWithModifiers {
 
     public String getSelectionCriteriaForContentSearchWithModifiers() {
         StringBuffer args = new StringBuffer();
-        if (isInModifierEnabledAndUUIDPresent()) {
+        if (isUUIDPresent()) {
             args.append(SearchModifiers.SHAREDIN.getLocalContentSearchSelection());
         }
 
@@ -292,7 +289,7 @@ public class SearchStringWithModifiers {
     public List<String> getSelectionArgsForContentSearchWithModifiers() {
         List<String> selectionArgsForContentSearch = new ArrayList<>();
         StringBuffer args = new StringBuffer();
-        if (isInModifierEnabledAndUUIDPresent()) {
+        if (isUUIDPresent()) {
             selectionArgsForContentSearch.add(inModifierUUID);
         }
 
@@ -375,16 +372,8 @@ public class SearchStringWithModifiers {
         return (isUpdatingModifier() && getUpdatingModifierType().equals(SearchStringWithModifiers.SearchModifiers.FROM));
     }
 
-    public boolean isSearchModifiersEnabled() {
-        return deviceRegistration.getFeatures().isSearchModifiersEnabled();
-    }
-
-    public boolean isSearchModifierV2Enabled() {
-        return deviceRegistration.getFeatures().isSearchModifierV2FeaturesEnabled();
-    }
-
-    private boolean isInModifierEnabledAndUUIDPresent() {
-        return isSearchModifierV2Enabled() && !inModifierUUID.isEmpty();
+    private boolean isUUIDPresent() {
+        return !inModifierUUID.isEmpty();
     }
 
     public void setSearchString(String query) {

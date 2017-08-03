@@ -1,5 +1,8 @@
 package com.cisco.spark.android.authenticator;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
@@ -95,13 +98,18 @@ public class ApiTokenProvider implements AuthenticatedUserProvider {
     }
 
     public void setAuthenticatedUser(AuthenticatedUser authenticatedUser) {
+        actorRecordProvider.monitor(ActorRecord.newInstance(authenticatedUser), false);
         lock.lock();
         try {
             this.authenticatedUser = authenticatedUser;
-            actorRecordProvider.monitor(ActorRecord.newInstance(authenticatedUser), false);
             storeAuthenticatedUser(authenticatedUser);
         } finally {
             lock.unlock();
+        }
+        try {
+            actorRecordProvider.sync();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -186,12 +194,13 @@ public class ApiTokenProvider implements AuthenticatedUserProvider {
     }
 
     @Override
-    public void updateTokens(OAuth2AccessToken conversationTokens, OAuth2AccessToken kmsTokens) {
+    public void updateTokens(@NonNull OAuth2AccessToken baseToken, @Nullable OAuth2AccessToken conversationTokens, @Nullable OAuth2AccessToken kmsTokens, @Nullable OAuth2AccessToken voicemailTokens) {
         lock.lock();
         try {
             if (authenticatedUser != null) {
-                authenticatedUser.setConversationTokens(conversationTokens);
-                authenticatedUser.setKmsTokens(kmsTokens);
+                authenticatedUser.setConversationTokens(conversationTokens != null ? conversationTokens : baseToken);
+                authenticatedUser.setKmsTokens(kmsTokens != null ? kmsTokens : baseToken);
+                authenticatedUser.setVoicemailTokens(voicemailTokens != null ? voicemailTokens : baseToken);
                 storeAuthenticatedUser(authenticatedUser);
             }
         } finally {
@@ -200,12 +209,12 @@ public class ApiTokenProvider implements AuthenticatedUserProvider {
     }
 
     @Override
-    public void replaceTokens(OAuth2Tokens tokens, OAuth2AccessToken conversationTokens, OAuth2AccessToken kmsTokens) {
+    public void replaceTokens(OAuth2Tokens tokens, OAuth2AccessToken conversationTokens, OAuth2AccessToken kmsTokens, OAuth2AccessToken voicemailTokens) {
         lock.lock();
         try {
             if (authenticatedUser != null) {
                 authenticatedUser.setTokens(tokens);
-                updateTokens(conversationTokens, kmsTokens);
+                updateTokens(tokens, conversationTokens, kmsTokens, voicemailTokens);
             }
         } finally {
             lock.unlock();

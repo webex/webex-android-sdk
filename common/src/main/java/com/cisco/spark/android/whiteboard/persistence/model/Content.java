@@ -20,6 +20,14 @@ public class Content {
     private String payload;
     private ChannelImage file;
 
+    public static Content createFile(Uri imageUri, String deviceType, String encryptionKeyUrl, int width, int height) {
+
+        Content content = new Content(null, null, null, CONTENT_TYPE_FILE, deviceType, 0, null, null, encryptionKeyUrl,
+                                                                                     null);
+        content.setBackgroundImage(new ChannelImage(imageUri, width, height));
+        return content;
+    }
+
     public Content(String type, String device, String encryptionKeyUrl, String payload) {
         this(null, null, null, type, device, 0, null, null, encryptionKeyUrl, payload);
     }

@@ -6,9 +6,14 @@
 
     <!-- Preference keys: do not translate -->
 
+    <!-- User level default Custom notifications -->
+
+    <!-- Always on proximity -->
 
     <!-- This is an android system preference key to get the whole preference screen. It\'s being used
          to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+
 
     <!-- Show if the user has ignored the pairing permission card in dev console  -->
     <string name="pref_key_title_ignore_permission_microphone">Cartão de permissão de proximidade</string>
@@ -61,7 +66,6 @@
     <string name="error_remove_participant">Não foi possível remover o participante do espaço.</string>
     <string name="uploading_space_avatar">Carregando imagem do espaço</string>
     <string name="error_setting_space_avatar">Falha ao definir a imagem do espaço.</string>
-    <string name="error_cropping_space_avatar">Falha ao cortar a imagem do espaço.</string>
     <string name="file_too_large">Imagem muito grande, escolha outra</string>
 
     <string name="max_participants_warning_text">Você não pode ligar para um Espaço Spark com mais de %d pessoas.</string>
@@ -89,22 +93,30 @@
     <string name="call_other_person_declined">A outra pessoa rejeitou</string>
     <string name="call_other_person_busy">Outra pessoa está ocupada</string>
     <string name="call_participant_left">Participante saiu</string>
-    <string name="call_participant_joined">Conectando</string>
     <string name="call_participant_cancelled">Participante cancelou</string>
     <string name="call_participant_expelled">O moderador removeu você da reunião</string>
     <string name="name_was_unavailable">%s não estava disponível</string>
 
     <string name="error_file_not_found">O arquivo selecionado não foi encontrado no armazenamento.</string>
 
+    <!-- Spark Space URL -->
+    <string name="dial">Disque:</string>
+    <string name="video_address">Endereço do vídeo</string>
+    <string name="meeting_number">Número da reunião</string>
+    <string name="video_address_not_available">Endereço indisponível</string>
+    <string name="meeting_number_not_available">O número da reunião não está disponível</string>
+    <string name="show_additional_meeting_info">Mostrar informações adicionais da reunião</string>
+    <string name="hide_additional_meeting_info">Ocultar informações adicionais da reunião</string>
+
     <!-- Search Modifiers -->
     <string name="search_hint_for_modifier">Insira o nome de uma pessoa</string>
     <string name="search_hint_with_modifier">Insira o nome de uma pessoa</string>
     <string name="search_hint_in_modifier">Insira o nome de um espaço</string>
-    <string name="search_modifier_list_header">Selecione um modificador para restringir a sua pesquisa</string>
+    <string name="search_modifier_list_header">Procurar filtros</string>
     <string name="search_modifier_option_from_keyword"><b>de:</b></string>
-    <string name="search_modifier_option_from">Mostrar <b>mensagens</b> e <b>arquivos</b> de uma <b>pessoa</b></string>
+    <string name="search_modifier_option_from"><i>Mostrar mensagens e arquivos de uma pessoa</i></string>
     <string name="search_modifier_option_in_keyword"><b>em:</b></string>
-    <string name="search_modifier_option_in">Mostrar <b>mensagens</b> e <b>arquivos</b> em um determinado <b>espaço</b></string>
+    <string name="search_modifier_option_in"><i>Mostrar mensagens e arquivos em um determinado espaço</i></string>
 
     <!-- Presence Status Messages -->
     <string name="do_not_disturb">Não perturbe</string>
@@ -121,6 +133,7 @@
     <string name="presence_status_pending">Ativação pendente</string>
     <string name="presence_status_ooo">Ausência temporária</string>
     <string name="presence_status_ooo_until">Ausência temporária até %s</string>
+    <string name="presence_status_unknown">Status desconhecido</string>
 
     <plurals name="presence_status_inactive_hours">
         <item quantity="one">Ativo %d hora atrás</item>
@@ -139,5 +152,7 @@
     <!-- Day Markers -->
     <string name="day_marker_today">Hoje</string>
     <string name="day_marker_yesterday">Ontem</string>
+
+    <string name="message_failed_notification">Não foi possível enviar uma mensagem.</string>
 
 </resources>

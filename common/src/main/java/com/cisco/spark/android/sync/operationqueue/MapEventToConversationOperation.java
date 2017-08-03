@@ -11,15 +11,17 @@ import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.ConversationRecord;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.cisco.spark.android.sync.operationqueue.core.RetryPolicy;
+import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import retrofit.client.Response;
+import retrofit2.Response;
 
 public class MapEventToConversationOperation extends Operation implements ConversationOperation {
     private Date endDate;
@@ -74,13 +76,18 @@ public class MapEventToConversationOperation extends Operation implements Conver
         ConversationRecord conversationRecord = ConversationRecord.buildFromContentResolver(getContentResolver(), gson, provisionalConversationId, null);
         String conversationId = conversationRecord != null ? conversationRecord.getId() : provisionalConversationId;
 
-        // Persist this mapping via the api
+        // Persist this mapping via the API
         CalendarServiceClient calendarServiceClient = apiClientProvider.getCalendarServiceClient();
-        Response response = calendarServiceClient.mapEventToRoom(
-                new EventToRoomMapping(eventId, UUID.fromString(conversationId),
-                        new Date(endDate.getTime() + TimeUnit.DAYS.toMillis(1))));
+        Response response = null;
+        try {
+            response = calendarServiceClient.mapEventToRoom(
+                    new EventToRoomMapping(eventId, UUID.fromString(conversationId),
+                            new Date(endDate.getTime() + TimeUnit.DAYS.toMillis(1)))).execute();
+        } catch (IOException e) {
+            Ln.e(e);
+        }
 
-        if (response != null && response.getStatus() >= 200 && response.getStatus() < 300) {
+        if (response != null && response.isSuccessful()) {
             return ConversationContract.SyncOperationEntry.SyncState.SUCCEEDED;
         } else {
             return ConversationContract.SyncOperationEntry.SyncState.READY;

@@ -6,9 +6,14 @@
 
     <!-- Preference keys: do not translate -->
 
+    <!-- User level default Custom notifications -->
+
+    <!-- Always on proximity -->
 
     <!-- This is an android system preference key to get the whole preference screen. It\'s being used
          to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+
 
     <!-- Show if the user has ignored the pairing permission card in dev console  -->
     <string name="pref_key_title_ignore_permission_microphone">Behörighetskort för Proximity</string>
@@ -61,7 +66,6 @@
     <string name="error_remove_participant">Kunde inte ta bort mötesdeltagaren från utrymmet.</string>
     <string name="uploading_space_avatar">Laddar upp utrymmesbild</string>
     <string name="error_setting_space_avatar">Kunde inte ställa in utrymmesbild.</string>
-    <string name="error_cropping_space_avatar">Kunde inte beskära utrymmesbild</string>
     <string name="file_too_large">Bilden är för stor, välj en annan</string>
 
     <string name="max_participants_warning_text">Du kan inte ringa till ett Spark-utrymme med fler än %d personer.</string>
@@ -89,22 +93,30 @@
     <string name="call_other_person_declined">Andra personen avvisade</string>
     <string name="call_other_person_busy">Den andra personen är upptagen</string>
     <string name="call_participant_left">Mötesdeltagare lämnade</string>
-    <string name="call_participant_joined">Ansluter</string>
     <string name="call_participant_cancelled">Mötesdeltagare avbröt</string>
     <string name="call_participant_expelled">Moderatorn har tagit bort dig från mötet</string>
     <string name="name_was_unavailable">%s var inte tillgänglig</string>
 
     <string name="error_file_not_found">Den valda filen kunde inte hittas i arkivet.</string>
 
+    <!-- Spark Space URL -->
+    <string name="dial">Ring:</string>
+    <string name="video_address">Videoadress</string>
+    <string name="meeting_number">Mötesnummer</string>
+    <string name="video_address_not_available">Adressen är inte tillgänglig</string>
+    <string name="meeting_number_not_available">Mötesnumret är inte tillgängligt</string>
+    <string name="show_additional_meeting_info">Visa ytterligare mötesinformation</string>
+    <string name="hide_additional_meeting_info">Dölj ytterligare mötesinformation</string>
+
     <!-- Search Modifiers -->
     <string name="search_hint_for_modifier">Ange namnet på en person</string>
     <string name="search_hint_with_modifier">Ange namnet på en person</string>
     <string name="search_hint_in_modifier">Ange namnet på ett utrymme</string>
-    <string name="search_modifier_list_header">Välj ett alternativ för att avgränsa din sökning</string>
+    <string name="search_modifier_list_header">Sökfilter</string>
     <string name="search_modifier_option_from_keyword"><b>från:</b></string>
-    <string name="search_modifier_option_from">Visa <b>meddelanden</b> och <b>filer</b> från en <b>person</b></string>
+    <string name="search_modifier_option_from"><i>Visa meddelanden och filer från en person</i></string>
     <string name="search_modifier_option_in_keyword"><b>i:</b></string>
-    <string name="search_modifier_option_in">Visa <b>meddelanden</b> och <b>filer</b> i ett visst <b>utrymme</b></string>
+    <string name="search_modifier_option_in"><i>Visa meddelanden och filer på en given plats</i></string>
 
     <!-- Presence Status Messages -->
     <string name="do_not_disturb">Stör inte</string>
@@ -121,6 +133,7 @@
     <string name="presence_status_pending">Inväntar aktivering</string>
     <string name="presence_status_ooo">Frånvarande</string>
     <string name="presence_status_ooo_until">Ej på kontoret till %s</string>
+    <string name="presence_status_unknown">Okänd status</string>
 
     <plurals name="presence_status_inactive_hours">
         <item quantity="one">Aktiv för %d timme sedan</item>
@@ -139,5 +152,7 @@
     <!-- Day Markers -->
     <string name="day_marker_today">Idag</string>
     <string name="day_marker_yesterday">Igår</string>
+
+    <string name="message_failed_notification">Ett meddelande kunde inte skickas.</string>
 
 </resources>

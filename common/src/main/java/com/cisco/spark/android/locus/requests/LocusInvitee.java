@@ -1,7 +1,13 @@
 package com.cisco.spark.android.locus.requests;
 
-public class LocusInvitee {
+import com.cisco.spark.android.features.CoreFeatures;
+
+public class LocusInvitee extends DeltaRequest {
     private String invitee;
+
+    public LocusInvitee(CoreFeatures coreFeatures) {
+        super(coreFeatures);
+    }
 
     public String getInvitee() {
         return invitee;

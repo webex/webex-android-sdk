@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.ContentProvider;
 import android.os.StrictMode;
-import android.util.Log;
 
 import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.app.AndroidSystemServicesModule;
@@ -19,6 +18,7 @@ import com.github.benoitdion.ln.NaturalLog;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -32,8 +32,6 @@ public abstract class ApplicationDelegate implements Injector {
     private Application application;
     private ObjectGraph objectGraph;
     private LogUncaughtExceptionHandler logUncaughtExceptionHandler;
-
-    private static final String TAG = "ApplicationDelegate";
 
     @Inject
     LogFilePrint log;
@@ -58,16 +56,15 @@ public abstract class ApplicationDelegate implements Injector {
 
     public ApplicationDelegate(Application application) {
         this.application = application;
+
         logUncaughtExceptionHandler = new LogUncaughtExceptionHandler();
-        logUncaughtExceptionHandler.setPreviousUncaughtExceptionHandler(Thread.getDefaultUncaughtExceptionHandler());
+        logUncaughtExceptionHandler.setPreviousUncaughtExceptionHandlers(getExceptionHandlers());
         Thread.setDefaultUncaughtExceptionHandler(logUncaughtExceptionHandler);
     }
 
     public void create() {
         initializeLn();
         Ln.d("SquaredApplication - onCreate()");
-
-        detectDuplicateProcess("sco.wx2.androi", "com.cisco.wx2.android");
 
         onCreate();
 
@@ -85,8 +82,11 @@ public abstract class ApplicationDelegate implements Injector {
 
     protected abstract NaturalLog buildLn();
 
+    protected List<Thread.UncaughtExceptionHandler> getExceptionHandlers() {
+        return Collections.singletonList(Thread.getDefaultUncaughtExceptionHandler());
+    }
+
     protected void initializeLn() {
-        Log.i(TAG, "initializeLn: ->Start");
         Ln.initialize(buildLn());
     }
 
@@ -189,47 +189,6 @@ public abstract class ApplicationDelegate implements Injector {
     }
 
     protected abstract Object getApplicationModule();
-
-    protected void detectDuplicateProcess(String psName, String matchName) {
-        Ln.d("Starting Duplicate Process Checking");
-        final int myPid = android.os.Process.myPid();
-        final ArrayList<Integer> pids = new ArrayList<Integer>();
-        PSUtils.iteratePSresults(psName, matchName, new PSUtils.PSResultHandler() {
-
-            @Override
-            public void onResult(PSUtils.PSResult result) {
-                if (myPid != result.getPid()) {
-                    Ln.d("Removing duplicate app process ID: %d", result.getPid());
-                    // NOTE: We only have permission to kill processes we created
-                    android.os.Process.killProcess(result.getPid());
-                    pids.add(result.getPid());
-                } else {
-                    Ln.d("Found My Process Id: %d", result.getPid());
-                }
-            }
-
-            @Override
-            public void onException(Exception ex) {
-            }
-        });
-
-        PSUtils.iteratePSresults(psName, matchName, new PSUtils.PSResultHandler() {
-
-            @Override
-            public void onResult(PSUtils.PSResult result) {
-                if (pids.contains(result.getPid())) {
-                    Ln.w("Duplicate app process still running: pid=%d", result.getPid());
-                }
-            }
-
-            @Override
-            public void onException(Exception ex) {
-            }
-        });
-
-
-        Ln.d("Duplicate Process Detection completed");
-    }
 
     public void setObjectGraph(ObjectGraph objectGraph) {
         this.objectGraph = objectGraph;

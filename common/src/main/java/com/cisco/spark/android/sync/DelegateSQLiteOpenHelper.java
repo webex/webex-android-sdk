@@ -7,6 +7,7 @@ import javax.inject.Inject;
 public class DelegateSQLiteOpenHelper {
     private SQLiteOpenHelperInterface sqliteOpenHelper = null;
     private Context context;
+    private static boolean isDatabaseEncrypted = false;
 
     @Inject
     public DelegateSQLiteOpenHelper(Context context) {
@@ -15,8 +16,12 @@ public class DelegateSQLiteOpenHelper {
 
     public synchronized SQLiteOpenHelperInterface getSqliteOpenHelper() {
         if (sqliteOpenHelper == null) {
-            sqliteOpenHelper = new DatabaseHelper(context);
+            sqliteOpenHelper = isDatabaseEncrypted ? new DatabaseHelper(context) : new UnencryptedDatabaseHelper(context);
         }
         return sqliteOpenHelper;
+    }
+
+    public static boolean isDatabaseEncrypted() {
+        return isDatabaseEncrypted;
     }
 }

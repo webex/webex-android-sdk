@@ -13,7 +13,8 @@ import com.cisco.spark.android.sync.operationqueue.core.RetryPolicy;
 import com.cisco.spark.android.util.TestUtils;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -25,8 +26,10 @@ import static com.cisco.spark.android.sync.ConversationContract.SyncOperationEnt
 
 public class PostGenericMetricOperation extends Operation {
     private static final int MAX_METRICS = 100;
+
     private GenericMetricsRequest metricsRequest;
-    private boolean prelogin;
+    private boolean preLogin;
+    private boolean isDiagnosticEvent;
 
     @Inject
     transient ApiClientProvider apiClientProvider;
@@ -35,16 +38,17 @@ public class PostGenericMetricOperation extends Operation {
     transient LocusDataCache locusDataCache;
 
     public PostGenericMetricOperation(Injector injector, GenericMetric metric) {
-        super(injector);
-        this.prelogin = false;
-        this.metricsRequest = new GenericMetricsRequest();
-
-        this.metricsRequest.addMetric(metric);
+        this(injector, metric, false);
     }
 
-    public PostGenericMetricOperation(Injector injector, GenericMetric metric, boolean prelogin) {
-        this(injector, metric);
-        this.prelogin = prelogin;
+    public PostGenericMetricOperation(Injector injector, GenericMetric metric, boolean preLogin) {
+        super(injector);
+
+        this.metricsRequest = new GenericMetricsRequest();
+        this.metricsRequest.addMetric(metric);
+        this.isDiagnosticEvent = metric.isDiagnosticEvent();
+
+        this.preLogin = preLogin;
     }
 
     @NonNull
@@ -53,6 +57,9 @@ public class PostGenericMetricOperation extends Operation {
         if (TestUtils.isInstrumentation()) {
             return RetryPolicy.newLimitAttemptsPolicy()
                     .withInitialDelay(TimeUnit.SECONDS.toMillis(1));
+        } else if (preLogin) {
+            return RetryPolicy.newLimitAttemptsPolicy()
+                    .withInitialDelay(TimeUnit.SECONDS.toMillis(5));
         } else {
             return RetryPolicy.newLimitAttemptsPolicy()
                     .withInitialDelay(TimeUnit.MINUTES.toMillis(1));
@@ -71,13 +78,18 @@ public class PostGenericMetricOperation extends Operation {
             return false;
         }
 
-        PostGenericMetricOperation metricOperation = (PostGenericMetricOperation) newOperation;
+        if (!preLogin) {
+            PostGenericMetricOperation metricOperation = (PostGenericMetricOperation) newOperation;
+            if (this.isDiagnosticEvent == metricOperation.isDiagnosticEvent) {
+                if (getState().isPreExecute()) {
+                    this.metricsRequest.combine(metricOperation.getMetricsRequest());
+                }
 
-        if (getState().isPreExecute()) {
-            this.metricsRequest.combine(metricOperation.getMetricsRequest());
+                return getState().isPreExecute();
+            }
         }
 
-        return getState().isPreExecute();
+        return false;
     }
 
     @Override
@@ -98,7 +110,7 @@ public class PostGenericMetricOperation extends Operation {
     @NonNull
     @Override
     public SyncState onPrepare() {
-        if (locusDataCache.isInCall()) {
+        if (locusDataCache.isInCall() && !this.isDiagnosticEvent) {
             return SyncState.PREPARING; // Wait until the user ends the call or the sync finishes.
         }
         return super.onPrepare();
@@ -112,18 +124,17 @@ public class PostGenericMetricOperation extends Operation {
         if (metricsRequest.metricsSize() <= MAX_METRICS) {
             response = postMetrics(metricsRequest);
         } else {
-            while (metricsRequest.metricsSize() > 0) {
-                List<GenericMetric> metrics = metricsRequest.getMetrics().subList(0, MAX_METRICS - 1);
+            LinkedBlockingQueue<GenericMetric> allMetrics = new LinkedBlockingQueue<>(metricsRequest.getMetrics());
+            while (allMetrics.size() > 0) {
+                ArrayList<GenericMetric> metrics = new ArrayList<>();
+                allMetrics.drainTo(metrics, 100);
                 GenericMetricsRequest subRequest = new GenericMetricsRequest();
                 subRequest.addAllMetrics(metrics);
-
                 response = postMetrics(subRequest);
 
                 if (!response.isSuccessful()) {
                     break;
                 }
-
-                metrics.clear(); // This removes them from the main list as well.
             }
         }
 
@@ -141,11 +152,20 @@ public class PostGenericMetricOperation extends Operation {
     }
 
     protected Response postMetrics(GenericMetricsRequest request) throws IOException {
-        return apiClientProvider.getMetricsClient().postClientMetric(request).execute();
+        // Inform metrics about to be sent that they are to be sent now - may need to know 'sent time'
+        for (GenericMetric metric : request.getMetrics()) {
+            metric.onInstantBeforeSend();
+        }
+
+        if (preLogin) {
+            return apiClientProvider.getMetricsPreloginClient().postClientMetric(request).execute();
+        } else {
+            return apiClientProvider.getMetricsClient().postClientMetric(request).execute();
+        }
     }
 
     public GenericMetricsRequest getMetricsRequest() {
-        return this.metricsRequest;
+        return metricsRequest;
     }
 
     @Override
@@ -153,5 +173,10 @@ public class PostGenericMetricOperation extends Operation {
         String info =  super.getOperationInfo();
 
         return info + " " + metricsRequest.getMetrics();
+    }
+
+    @Override
+    public boolean requiresAuth() {
+        return !preLogin;
     }
 }

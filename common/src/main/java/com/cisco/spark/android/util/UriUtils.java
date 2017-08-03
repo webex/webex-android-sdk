@@ -13,21 +13,29 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class UriUtils {
 
-    public static final String DEEP_LINKING_PATH_MEET = "meet";
-    public static final String DEEP_LINKING_PATH_ROOMS = "rooms";
-    public static final String DEEP_LINKING_PATH_SPACES = "spaces";
-    public static final String DEEP_LINKING_PATH_TEAMS = "teams";
+    public static final String DEEP_LINKING_ACTIVATE_PATH = "activate";
+    public static final String DEEP_LINKING_ACTIVATE_PARAM_EMAIL = "email";
+    public static final String DEEP_LINKING_ACTIVATE_PARAM_TOKEN = "t";
+
+    public static final String DEEP_LINKING_MEET_PATH = "meet";
     public static final String DEEP_LINKING_MEET_URL_REGEX = "https:\\/\\/web\\.ciscospark\\.com\\/"
-            + DEEP_LINKING_PATH_MEET + "\\/[A-Za-z0-9._%+-]+";
+            + DEEP_LINKING_MEET_PATH + "\\/[A-Za-z0-9._%+-]+";
+
+    public static final String DEEP_LINKING_ROOMS_PATH = "rooms";
+    public static final String DEEP_LINKING_SPACES_PATH = "spaces";
     public static final String DEEP_LINKING_SPACES_URL_REGEX = "(https?:\\/\\/)?web\\.ciscospark\\.com\\/(#\\/)?("
-            + DEEP_LINKING_PATH_ROOMS + "|" + DEEP_LINKING_PATH_SPACES + ")\\/[A-Za-z0-9._%+-]+(\\/chat|\\/)?";
+            + DEEP_LINKING_ROOMS_PATH + "|" + DEEP_LINKING_SPACES_PATH + ")\\/[A-Za-z0-9._%+-]+(\\/chat|\\/)?";
+
+    public static final String DEEP_LINKING_TEAMS_PATH = "teams";
     public static final String DEEP_LINKING_TEAMS_URL_REGEX = "(https?:\\/\\/)?web\\.ciscospark\\.com\\/(#\\/)?"
-            + DEEP_LINKING_PATH_TEAMS + "\\/[A-Za-z0-9._%+-]+(\\/chat|\\/)?";
+            + DEEP_LINKING_TEAMS_PATH + "\\/[A-Za-z0-9._%+-]+(\\/chat|\\/)?";
+
     public static final String PMR_URL_REGEX_HTTP = "https?:\\/\\/([\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+)\\.webex\\.com\\/meet\\/[A-Za-z0-9._%+-]+";
     public static final String PMR_URL_REGEX_SIP = "(sip:)?(([A-Za-z0-9._%+-]+)@([\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+)\\.webex\\.com)";
 
@@ -84,6 +92,15 @@ public class UriUtils {
         if (uri == null) {
             return null;
         }
+        return uri.toString();
+    }
+
+    public static String toNonNullString(Uri uri) {
+
+        if (uri == null) {
+            return "";
+        }
+
         return uri.toString();
     }
 
@@ -176,19 +193,35 @@ public class UriUtils {
     }
 
     public static boolean isSupportedDeepLinkingUri(@NonNull Uri uri) {
-        return isMeetDeepLinkingUri(uri) || isSpacesDeepLinkingUri(uri) || isTeamsDeepLinkingUri(uri);
+        return isMeetDeepLinkingUri(uri) || isSpacesDeepLinkingUri(uri) || isTeamsDeepLinkingUri(uri) || isActivateDeepLinkingUri(uri);
     }
 
     public static boolean isMeetDeepLinkingUri(@NonNull Uri uri) {
-        return Pattern.compile(DEEP_LINKING_MEET_URL_REGEX, Pattern.CASE_INSENSITIVE).matcher(uri.toString()).matches();
+        return compileRegex(DEEP_LINKING_MEET_URL_REGEX, uri);
     }
 
     public static boolean isSpacesDeepLinkingUri(@NonNull Uri uri) {
-        return Pattern.compile(DEEP_LINKING_SPACES_URL_REGEX, Pattern.CASE_INSENSITIVE).matcher(uri.toString()).matches();
+        return compileRegex(DEEP_LINKING_SPACES_URL_REGEX, uri);
     }
 
     public static boolean isTeamsDeepLinkingUri(@NonNull Uri uri) {
-        return Pattern.compile(DEEP_LINKING_TEAMS_URL_REGEX, Pattern.CASE_INSENSITIVE).matcher(uri.toString()).matches();
+        return compileRegex(DEEP_LINKING_TEAMS_URL_REGEX, uri);
+    }
+
+    public static boolean isActivateDeepLinkingUri(@NonNull Uri uri) {
+        if (!uri.isHierarchical()) {
+            return false;
+        }
+        List<String> pathSegments = uri.getPathSegments();
+        Set<String> queryParameters = uri.getQueryParameterNames();
+        return pathSegments != null && queryParameters != null
+                && pathSegments.contains(DEEP_LINKING_ACTIVATE_PATH)
+                && queryParameters.contains(DEEP_LINKING_ACTIVATE_PARAM_EMAIL)
+                && queryParameters.contains(DEEP_LINKING_ACTIVATE_PARAM_TOKEN);
+    }
+
+    private static boolean compileRegex(String regexString, @NonNull Uri uri) {
+        return Pattern.compile(regexString, Pattern.CASE_INSENSITIVE).matcher(uri.toString()).matches();
     }
 
     public static String extractDeepLinkId(@NonNull Uri uri, String deepLinkTag) {

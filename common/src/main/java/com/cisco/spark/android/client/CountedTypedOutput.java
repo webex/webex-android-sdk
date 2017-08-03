@@ -1,11 +1,13 @@
 package com.cisco.spark.android.client;
 
 import com.cisco.spark.android.content.ContentUploadMonitor;
+import com.cisco.spark.android.metrics.TimingProvider;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Locale;
 
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -20,9 +22,17 @@ public class CountedTypedOutput extends RequestBody implements ContentUploadMoni
     private int percentage;
     private boolean complete;
 
-    public CountedTypedOutput(String mimeType, File file) {
+    TimingProvider timingProvider;
+
+    public CountedTypedOutput(String mimeType, File file, TimingProvider timingProvider) {
         this.mimeType = mimeType;
         this.file = file;
+        this.timingProvider = timingProvider;
+    }
+
+    @Override
+    public long contentLength() throws IOException {
+        return file.length();
     }
 
     @Override
@@ -54,6 +64,11 @@ public class CountedTypedOutput extends RequestBody implements ContentUploadMoni
             int read;
 
             while ((read = fileInputStream.read(buffer)) != -1) {
+                if (bytesRead == 0) {
+                    timingProvider.get(String.format(Locale.getDefault(), "%d_first", file.hashCode())).end();
+                    timingProvider.get(String.format(Locale.getDefault(), "%d_total", file.hashCode()));
+                }
+
                 bytesRead += read;
                 long size = file.length();
                 double percent = (bytesRead / (double) size);
@@ -62,6 +77,8 @@ public class CountedTypedOutput extends RequestBody implements ContentUploadMoni
 
                 out.write(buffer, 0, read);
             }
+
+            timingProvider.get(String.format(Locale.getDefault(), "%d_total", file.hashCode())).end();
 
             complete = true;
         } finally {

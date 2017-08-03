@@ -3,6 +3,8 @@ package com.cisco.spark.android.log;
 import com.github.benoitdion.ln.Ln;
 
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.ArrayList;
+import java.util.List;
 
 import de.greenrobot.event.EventBus;
 
@@ -18,15 +20,18 @@ import de.greenrobot.event.EventBus;
  */
 public class LogUncaughtExceptionHandler implements UncaughtExceptionHandler {
 
-    private UncaughtExceptionHandler previousUEH = null;
+    private final List<UncaughtExceptionHandler> previousUEHs;
     private LogFilePrint logFilePrint;
     private EventBus bus;
 
     public LogUncaughtExceptionHandler() {
+        previousUEHs = new ArrayList<>();
     }
 
-    public void setPreviousUncaughtExceptionHandler(UncaughtExceptionHandler previous) {
-        previousUEH = previous;
+    public void setPreviousUncaughtExceptionHandlers(List<UncaughtExceptionHandler> previous) {
+        if (previous != null) {
+            previousUEHs.addAll(previous);
+        }
     }
 
     public void uncaughtException(Thread t, Throwable e) {
@@ -37,7 +42,8 @@ public class LogUncaughtExceptionHandler implements UncaughtExceptionHandler {
         if (logFilePrint != null) {
             logFilePrint.stopCapture();
         }
-        if (previousUEH != null) {
+
+        for (UncaughtExceptionHandler previousUEH : previousUEHs) {
             previousUEH.uncaughtException(t, e);
         }
     }

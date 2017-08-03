@@ -5,6 +5,7 @@ import android.support.annotation.StringRes;
 import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallInitiationOrigin;
 import com.cisco.spark.android.callcontrol.CallUi;
+import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.meetings.GetMeetingInfoType;
 import com.cisco.spark.android.sync.ActorRecord;
@@ -36,12 +37,12 @@ class VideoTestCallUI implements CallUi {
     }
 
     @Override
-    public void dismissRingback(LocusKey locusKey) {
+    public void dismissRingback(Call call) {
 
     }
 
     @Override
-    public void startRingback(LocusKey locusKey) {
+    public void startRingback(Call call) {
 
     }
 
@@ -51,12 +52,12 @@ class VideoTestCallUI implements CallUi {
     }
 
     @Override
-    public void requestUserToUploadLogs(LocusKey locusKey) {
+    public void requestUserToUploadLogs(Call call) {
 
     }
 
     @Override
-    public void reportIceFailure(LocusKey locusKey) {
+    public void reportIceFailure(Call call) {
 
     }
 
@@ -65,8 +66,12 @@ class VideoTestCallUI implements CallUi {
 
     }
 
-    @Override
-    public void showMeetingPeopleUi(long eventId, List<ActorRecord> participantsList) {
 
-    }
+
+
+
+
+
+
+
 }

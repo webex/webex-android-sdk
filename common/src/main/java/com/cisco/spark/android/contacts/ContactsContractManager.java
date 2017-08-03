@@ -36,6 +36,7 @@ import com.cisco.spark.android.util.FileUtils;
 import com.cisco.spark.android.util.LoggingLock;
 import com.cisco.spark.android.util.NameUtils;
 import com.cisco.spark.android.util.Strings;
+import com.cisco.spark.android.util.UIUtils;
 import com.github.benoitdion.ln.Ln;
 
 import java.io.File;
@@ -66,12 +67,19 @@ public class ContactsContractManager {
         public static final String ITEM_DETAIL = ContactsContract.Data.DATA3;
         public static final String USER_UUID = ContactsContract.Data.DATA4;
 
-        private static String contentType;
+        private static String spaceContentType;
+        private static String callContentType;
 
-        public static String getContentType(Context context) {
-            if (contentType == null)
-                contentType = context.getString(R.string.spark_contact_mimetype);
-            return contentType;
+        public static String getSpaceContentType(Context context) {
+            if (spaceContentType == null)
+                spaceContentType = context.getString(R.string.spark_contact_mimetype);
+            return spaceContentType;
+        }
+
+        public static String getCallContentType(Context context) {
+            if (callContentType == null)
+                callContentType = context.getString(R.string.spark_call_mimetype);
+            return callContentType;
         }
     }
 
@@ -141,14 +149,14 @@ public class ContactsContractManager {
             lock.unlock();
         }
     }
-
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     public void removeAccount() {
         lock.lock();
         try {
             Account account = getAccount();
             if (account != null) {
                 AccountManager am = AccountManager.get(context);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                if (UIUtils.hasLollipopMR1()) {
                     am.removeAccountExplicitly(account);
                 } else {
                     am.removeAccount(account, null, null);
@@ -282,12 +290,24 @@ public class ContactsContractManager {
             String labelFormat = context.getString(isSparkUser ? R.string.contact_view_space : R.string.contact_invite_to_spark);
             contactsBatch.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                     .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-                    .withValue(ContactsContract.Data.MIMETYPE, SparkDataKind.getContentType(context))
+                    .withValue(ContactsContract.Data.MIMETYPE, SparkDataKind.getSpaceContentType(context))
                     .withValue(SparkDataKind.EMAIL, actorRecord.getEmail())
                     .withValue(SparkDataKind.ITEM_SUMMARY, context.getString(R.string.spark))
                     .withValue(SparkDataKind.ITEM_DETAIL, String.format(Locale.US, labelFormat, NameUtils.getFirstName(actorRecord.getDisplayName())))
                     .withValue(SparkDataKind.USER_UUID, actorRecord.getUuidOrEmail())
                     .build());
+
+            // spark id
+            if (isSparkUser) {
+                contactsBatch.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                        .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                        .withValue(ContactsContract.Data.MIMETYPE, SparkDataKind.getCallContentType(context))
+                        .withValue(SparkDataKind.EMAIL, actorRecord.getEmail())
+                        .withValue(SparkDataKind.ITEM_SUMMARY, context.getString(R.string.spark))
+                        .withValue(SparkDataKind.ITEM_DETAIL, String.format(Locale.US, "Call %s", NameUtils.getFirstName(actorRecord.getDisplayName())))
+                        .withValue(SparkDataKind.USER_UUID, actorRecord.getUuidOrEmail())
+                        .build());
+            }
 
             // email address
             contactsBatch.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
@@ -324,7 +344,7 @@ public class ContactsContractManager {
             c = contentResolver.query(ContactsContract.Data.CONTENT_URI,
                     null,
                     ContactsContract.Data.MIMETYPE + "=? AND (" + SparkDataKind.EMAIL + "=? OR " + SparkDataKind.USER_UUID + "=?)",
-                    new String[]{SparkDataKind.getContentType(context), emailOrUuid, emailOrUuid},
+                    new String[]{SparkDataKind.getSpaceContentType(context), emailOrUuid, emailOrUuid},
                     null);
 
             if (c != null && c.moveToNext()) {

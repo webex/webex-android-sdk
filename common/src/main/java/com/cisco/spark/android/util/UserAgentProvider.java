@@ -14,7 +14,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 public class UserAgentProvider implements Provider<String> {
-    private static final String APP_NAME = "wx2-android";
+    public static final String APP_NAME = "wx2-android";
 
     @Inject
     protected ApplicationInfo appInfo;
@@ -32,7 +32,7 @@ public class UserAgentProvider implements Provider<String> {
         if (userAgent == null) {
             synchronized (UserAgentProvider.class) {
                 if (userAgent == null) {
-                    userAgent = String.format("%s/%s (Android %s; %s %s / %s %s; %s)",
+                    String tempUserAgent = String.format("%s/%s (Android %s; %s %s / %s %s; %s)",
                             APP_NAME,
                             appVersionProvider.getVersionName(),
                             Build.VERSION.RELEASE,
@@ -58,10 +58,10 @@ public class UserAgentProvider implements Provider<String> {
                     }
 
                     if (params.size() > 0) {
-                        userAgent += "[" + Strings.join(";", params) + "]";
+                        tempUserAgent += "[" + Strings.join(";", params) + "]";
                     }
 
-                    userAgent = Strings.stripNonAscii(userAgent);
+                    userAgent = Strings.stripInvalidHeaderChars(tempUserAgent);
                 }
             }
         }

@@ -6,9 +6,14 @@
 
     <!-- Preference keys: do not translate -->
 
+    <!-- User level default Custom notifications -->
+
+    <!-- Always on proximity -->
 
     <!-- This is an android system preference key to get the whole preference screen. It\'s being used
          to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+
 
     <!-- Show if the user has ignored the pairing permission card in dev console  -->
     <string name="pref_key_title_ignore_permission_microphone">近接权限卡</string>
@@ -61,7 +66,6 @@
     <string name="error_remove_participant">无法从空间中删除参加者。</string>
     <string name="uploading_space_avatar">正在上传空间图像</string>
     <string name="error_setting_space_avatar">设置空间图像失败。</string>
-    <string name="error_cropping_space_avatar">剪裁空间图像失败</string>
     <string name="file_too_large">图像太大，请选择另一张</string>
 
     <string name="max_participants_warning_text">您不能呼叫超过 %d 人的 Spark 空间。</string>
@@ -89,22 +93,30 @@
     <string name="call_other_person_declined">其他人已拒绝</string>
     <string name="call_other_person_busy">其他人正在忙碌</string>
     <string name="call_participant_left">参加者已离开</string>
-    <string name="call_participant_joined">正在连接</string>
     <string name="call_participant_cancelled">参加者已取消</string>
     <string name="call_participant_expelled">协调人已将您从该会议中删除</string>
     <string name="name_was_unavailable">无法联系到 %s</string>
 
     <string name="error_file_not_found">存储空间中找不到所选文件。</string>
 
+    <!-- Spark Space URL -->
+    <string name="dial">拨打：</string>
+    <string name="video_address">视频地址</string>
+    <string name="meeting_number">会议号</string>
+    <string name="video_address_not_available">地址不可用</string>
+    <string name="meeting_number_not_available">会议号不可用</string>
+    <string name="show_additional_meeting_info">显示更多会议信息</string>
+    <string name="hide_additional_meeting_info">隐藏其他会议信息</string>
+
     <!-- Search Modifiers -->
     <string name="search_hint_for_modifier">输入人员的姓名</string>
     <string name="search_hint_with_modifier">输入人员的姓名</string>
     <string name="search_hint_in_modifier">输入空间名称</string>
-    <string name="search_modifier_list_header">选择修改器来缩小搜索范围</string>
+    <string name="search_modifier_list_header">搜索过滤器</string>
     <string name="search_modifier_option_from_keyword"><b>来自：</b></string>
-    <string name="search_modifier_option_from">显示<b>消息</b>和<b>文件</b>（来自<b>某个人员）</b></string>
+    <string name="search_modifier_option_from"><i>显示消息和文件（来自某个人员）</i></string>
     <string name="search_modifier_option_in_keyword"><b>在：</b></string>
-    <string name="search_modifier_option_in">在给定空间中显示<b>消息</b>和<b>文件</b><b></b></string>
+    <string name="search_modifier_option_in"><i>在给定空间中显示消息和文件</i></string>
 
     <!-- Presence Status Messages -->
     <string name="do_not_disturb">请勿打扰</string>
@@ -121,6 +133,7 @@
     <string name="presence_status_pending">待激活</string>
     <string name="presence_status_ooo">外出</string>
     <string name="presence_status_ooo_until">外出至 %s</string>
+    <string name="presence_status_unknown">未知状态</string>
 
     <plurals name="presence_status_inactive_hours">
         <item quantity="one">%d 小时前处于活动状态</item>
@@ -139,5 +152,7 @@
     <!-- Day Markers -->
     <string name="day_marker_today">今天</string>
     <string name="day_marker_yesterday">昨天</string>
+
+    <string name="message_failed_notification">有一则消息发送失败。</string>
 
 </resources>

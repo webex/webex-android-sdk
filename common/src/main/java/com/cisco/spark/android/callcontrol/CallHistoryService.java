@@ -88,6 +88,7 @@ public class CallHistoryService implements Component {
         userRecentSession.setDirection(cursor.getString(ConversationContract.vw_CallHistory.DIRECTION.ordinal()));
         userRecentSession.setDisposition(cursor.getString(ConversationContract.vw_CallHistory.DISPOSTION.ordinal()));
         userRecentSession.setParticipantCount(cursor.getInt(ConversationContract.vw_CallHistory.PARTICIPANT_COUNT.ordinal()));
+        userRecentSession.setCallbackAddress(cursor.getString(ConversationContract.vw_CallHistory.CALLBACK_ADDRESS.ordinal()));
 
         LocusParticipantInfo otherParticipant = new LocusParticipantInfo();
         userRecentSession.setOther(otherParticipant);
@@ -101,7 +102,6 @@ public class CallHistoryService implements Component {
         otherParticipant.setSipUrl(cursor.getString(ConversationContract.vw_CallHistory.OTHER_SIP_URL.ordinal()));
         otherParticipant.setTelUrl(cursor.getString(ConversationContract.vw_CallHistory.OTHER_TEL_URL.ordinal()));
         otherParticipant.setOwnerId(cursor.getString(ConversationContract.vw_CallHistory.OTHER_OWNER_ID.ordinal()));
-        otherParticipant.setCallbackAddress(cursor.getString(ConversationContract.vw_CallHistory.OTHER_CALLBACK_ADDRESS.ordinal()));
 
         String conversationUrl = cursor.getString(ConversationContract.vw_CallHistory.CONVERSATION_URL.ordinal());
         if (conversationUrl != null) {
@@ -184,12 +184,12 @@ public class CallHistoryService implements Component {
                         .withValue(ConversationContract.CallHistory.OTHER_PHONE_NUMBER.name(), otherParticipant.getPhoneNumber())
                         .withValue(ConversationContract.CallHistory.OTHER_SIP_URL.name(), otherParticipant.getSipUrl())
                         .withValue(ConversationContract.CallHistory.OTHER_TEL_URL.name(), otherParticipant.getTelUrl())
-                        .withValue(ConversationContract.CallHistory.OTHER_CALLBACK_ADDRESS.name(), otherParticipant.getCallbackAddress())
+                        .withValue(ConversationContract.CallHistory.CALLBACK_ADDRESS.name(), userRecentSession.getCallbackAddress())
                         .withValue(ConversationContract.CallHistory.PARTICIPANT_COUNT.name(), userRecentSession.getParticipantCount())
                         .withValue(ConversationContract.CallHistory.CONVERSATION_URL.name(), userRecentSession.getConversationUrl());
-                        if (otherParticipant.getOwnerId() != null) {
-                            cpo.withValue(ConversationContract.CallHistory.OTHER_OWNER_ID.name(), otherParticipant.getOwnerId().toString());
-                        }
+                if (otherParticipant.getOwnerId() != null) {
+                    cpo.withValue(ConversationContract.CallHistory.OTHER_OWNER_ID.name(), otherParticipant.getOwnerId().toString());
+                }
 
                 batch.add(cpo.build());
             }

@@ -95,38 +95,39 @@ public class SquaredBackgroundCheck implements BackgroundCheck {
     }
 
     private void foregroundActivityDetected() {
-        if (isInactive()) {
-            syncLock.lock();
-            try {
+        syncLock.lock();
+        try {
+            if (isInactive()) {
                 if (isInactive()) {
                     bus.post(new UIForegroundTransition());
                     ln.i("BG->FG: transition");
                     isInactive = false;
                     activenessCondition.signalAll();
                 }
-            } finally {
-                syncLock.unlock();
             }
-        }
 
-        cancelTimer();
-        timer = new Timer("Background check timer");
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (isInBackground()) {
-                    isInactive = true;
-                    ln.i("FG->BG: transition");
-                    bus.post(new UIBackgroundTransition());
-                } else {
-                    if (!running) {
-                        cancelTimer();
+            cancelTimer();
+            timer = new Timer("Background check timer");
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (isInBackground()) {
+                        isInactive = true;
+                        ln.i("FG->BG: transition");
+                        bus.post(new UIBackgroundTransition());
                     } else {
-                        foregroundActivityDetected();
+                        if (!running) {
+                            cancelTimer();
+                        } else {
+                            foregroundActivityDetected();
+                        }
                     }
                 }
-            }
-        }, timeout);
+            }, timeout);
+        } finally {
+            syncLock.unlock();
+        }
+
         logBatteryStatus();
     }
 

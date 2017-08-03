@@ -16,15 +16,23 @@ import java.io.InputStream;
 public class FileUtilities {
 
     public static byte[] getByteArray(Bitmap bitmap) {
+        return getByteArray(bitmap, false);
+    }
+
+    public static byte[] getByteArray(Bitmap bitmap, boolean compress) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 0, baos);
+        if (compress) {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+        } else {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, baos);
+        }
         return baos.toByteArray();
     }
 
     public static byte[] readBytes(InputStream inputStream) throws IOException {
         ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
 
-        byte[] byteBuffer = new byte[1024];
+        byte[] byteBuffer = new byte[2048];
         while (true) {
             int readBytes = inputStream.read(byteBuffer);
             if (readBytes == -1) {
@@ -75,6 +83,7 @@ public class FileUtilities {
 
         BitmapFactory.Options op = new BitmapFactory.Options();
         op.inSampleSize = scaleProvider.getMacroScale(bounds.outWidth, bounds.outHeight);
+        op.inScaled = false;
 
         if (rgbConfig != null) {
             op.inPreferredConfig = rgbConfig;

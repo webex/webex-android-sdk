@@ -10,7 +10,7 @@ public interface VideoOverlay {
 
     void hide();
 
-    void endCall();
+    void endCall(LocusKey locusKey);
 
     void setMultitaskingMode(boolean multitasking);
 

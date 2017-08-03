@@ -7,6 +7,8 @@ import android.content.ContentValues;
 import android.content.OperationApplicationException;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -26,6 +28,7 @@ import com.cisco.spark.android.sync.ConversationContract.DbColumn;
 import com.cisco.spark.android.sync.ConversationContract.FlagEntry;
 import com.cisco.spark.android.sync.ConversationContract.MessageSearchDataEntry;
 import com.cisco.spark.android.sync.ConversationContract.MessageSearchEntry;
+import com.cisco.spark.android.sync.ConversationContract.OrganizationEntry;
 import com.cisco.spark.android.sync.ConversationContract.ParticipantEntry;
 import com.cisco.spark.android.sync.ConversationContract.TeamEntry;
 import com.cisco.spark.android.sync.ConversationContract.ViewColumn;
@@ -33,9 +36,6 @@ import com.cisco.spark.android.sync.ConversationContract.VirtualTableColumn;
 import com.cisco.spark.android.util.CpuStat;
 import com.cisco.spark.android.util.Strings;
 import com.github.benoitdion.ln.Ln;
-
-import net.sqlcipher.database.SQLiteDatabase;
-import net.sqlcipher.database.SQLiteException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -281,6 +281,9 @@ public class ConversationContentProvider extends SquaredContentProvider {
         if (match == ParticipantEntry.URI_MATCHCODE)
             return SQLiteDatabase.CONFLICT_IGNORE;
 
+        if (match == OrganizationEntry.URI_MATCHCODE)
+            return SQLiteDatabase.CONFLICT_IGNORE;
+
         if (match == SyncOperationEntry.URI_MATCHCODE)
             return SQLiteDatabase.CONFLICT_IGNORE;
 
@@ -298,6 +301,9 @@ public class ConversationContentProvider extends SquaredContentProvider {
 
         if (match == ConversationContract.ContentDataCacheEntry.URI_MATCHCODE)
             return SQLiteDatabase.CONFLICT_REPLACE;
+
+        if (match == ConversationContract.CalendarMeetingInfoEntry.URI_MATCHCODE)
+            return SQLiteDatabase.CONFLICT_IGNORE;
 
         return SQLiteDatabase.CONFLICT_ABORT;
     }

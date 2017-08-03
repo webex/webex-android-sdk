@@ -7,6 +7,7 @@ import android.text.TextUtils;
 
 import com.cisco.spark.android.app.ActivityManager;
 import com.cisco.spark.android.media.MediaEngine;
+import com.cisco.spark.android.metrics.MetricsReporter;
 import com.cisco.spark.android.room.audiopairing.AudioDataListener;
 import com.cisco.spark.android.room.audiopairing.AudioPairingNative;
 import com.cisco.spark.android.room.audiopairing.AudioSamplerAndroid;
@@ -31,6 +32,7 @@ public class UltrasoundProximityDetector implements ProximityDetector, AudioData
     private MediaEngine mediaEngine;
     private final ActivityManager activityManager;
     private final EventBus eventBus;
+    private final MetricsReporter metricsReporter;
 
     private TokenListener tokenListener = NULL_LISTENER;
 
@@ -63,10 +65,11 @@ public class UltrasoundProximityDetector implements ProximityDetector, AudioData
     private AverageUltrasonicMetrics averageMetrics = new AverageUltrasonicMetrics();
     private volatile boolean isInUltrasonicRange;
 
-    public UltrasoundProximityDetector(MediaEngine mediaEngine, ActivityManager activityManager, EventBus eventBus) {
+    public UltrasoundProximityDetector(MediaEngine mediaEngine, ActivityManager activityManager, EventBus eventBus, MetricsReporter metricsReporter) {
         this.mediaEngine = mediaEngine;
         this.activityManager = activityManager;
         this.eventBus = eventBus;
+        this.metricsReporter = metricsReporter;
     }
 
     @Override
@@ -108,7 +111,7 @@ public class UltrasoundProximityDetector implements ProximityDetector, AudioData
 
         final int audioSamplerReference;
         synchronized (audioSamplerLock) {
-            audioSamplerAndroid = new AudioSamplerAndroid();
+            audioSamplerAndroid = new AudioSamplerAndroid(metricsReporter);
             audioSamplerReference = audioSamplerAndroid.hashCode();
         }
         Ln.i("RoomService, creating new AudioSampler [ %08x ]", audioSamplerReference);
@@ -279,7 +282,7 @@ public class UltrasoundProximityDetector implements ProximityDetector, AudioData
             if (historySparkToken.isNewTokenThenSet(newToken)) {
                 Ln.i("RoomService, detected a new spark token%s [ %s ]", (firstToken ? " initial" : ""), getSource());
                 Ln.v("AltoMetric, post found token");
-                eventBus.post(new AltoMetricsPairingEventFoundNewToken());
+                eventBus.post(new AltoMetricsPairingEventFoundNewToken(ultrasoundMetrics));
                 tokenListener.newToken(newToken, ultrasoundMetrics, firstToken);
             } else {
                 if (!TextUtils.isEmpty(newToken)) {

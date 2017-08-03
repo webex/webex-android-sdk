@@ -1,14 +1,17 @@
 package com.cisco.spark.android.locus.requests;
 
+import com.cisco.spark.android.features.CoreFeatures;
+
 import java.util.List;
 
-public class UpdateLocusRequest {
+public class UpdateLocusRequest extends DeltaRequest {
 
     private List<LocusInvitee> invitees;
     private boolean alertIfActive;
     private String kmsMessage;
 
-    public UpdateLocusRequest(List<LocusInvitee> invitees, boolean alertIfActive) {
+    public UpdateLocusRequest(CoreFeatures coreFeatures, List<LocusInvitee> invitees, boolean alertIfActive) {
+        super(coreFeatures);
         this.invitees = invitees;
         this.alertIfActive = alertIfActive;
     }

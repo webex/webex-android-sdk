@@ -48,7 +48,7 @@ public class Content extends ActivityObject implements Mentionable {
         if (getFiles().getItems().size() > 0) {
             File file = getFiles().getItems().get(0);
             List<ContentAction> actions = file.getActions();
-            if ((actions != null) && (actions.size() > 0) && (ActionMimeType.whiteboard.equals(actions.get(0).getMimeType()))) {
+            if ((actions != null) && (actions.size() > 0) && (ActionMimeType.WHITEBOARD.equals(actions.get(0).getMimeType()))) {
                 return true;
             }
         }

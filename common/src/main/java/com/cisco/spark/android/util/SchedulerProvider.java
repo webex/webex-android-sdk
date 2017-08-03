@@ -1,6 +1,7 @@
 package com.cisco.spark.android.util;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import rx.Scheduler;
 import rx.android.schedulers.AndroidSchedulers;
@@ -11,6 +12,11 @@ import rx.schedulers.Schedulers;
  */
 @SuppressWarnings("unused")
 public class SchedulerProvider {
+
+    private static final int DEFAULT_SCHEDULERS = 5;
+
+    private Scheduler file;
+    private Scheduler database;
 
     private Scheduler io;
     private Scheduler computation;
@@ -23,7 +29,13 @@ public class SchedulerProvider {
 
     private Scheduler executorOverride;
 
+    private Scheduler network;
+
     public SchedulerProvider() {
+        this(DEFAULT_SCHEDULERS);
+    }
+
+    public SchedulerProvider(int numNetworkSchedulers) {
 
         // Built in
         io = Schedulers.io();
@@ -31,9 +43,13 @@ public class SchedulerProvider {
         immediate = Schedulers.immediate();
 
         mainThread = AndroidSchedulers.mainThread();
+        network = Schedulers.from(Executors.newFixedThreadPool(numNetworkSchedulers));
 
         timer = Schedulers.computation();
         executorOverride = null;
+
+        file = Schedulers.from(Executors.newFixedThreadPool(DEFAULT_SCHEDULERS));
+        database = Schedulers.from(Executors.newFixedThreadPool(DEFAULT_SCHEDULERS));
     }
 
     public void setImmediate(Scheduler immediate) {
@@ -62,6 +78,10 @@ public class SchedulerProvider {
 
     public void setExecutorOverride(Scheduler executorOverride) {
         this.executorOverride = executorOverride;
+    }
+
+    public void setNetwork(Scheduler network) {
+        this.network = network;
     }
 
     public Scheduler computation() {
@@ -100,5 +120,17 @@ public class SchedulerProvider {
 
     public Scheduler mainThread() {
         return mainThread;
+    }
+
+    public Scheduler network() {
+        return network;
+    }
+
+    public Scheduler file() {
+        return file;
+    }
+
+    public Scheduler database() {
+        return database;
     }
 }

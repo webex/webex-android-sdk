@@ -4,7 +4,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
 
-import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.authenticator.AuthenticatedUserProvider;
 import com.cisco.spark.android.authenticator.NotAuthenticatedException;
 import com.cisco.spark.android.authenticator.OAuth2Client;
@@ -19,17 +18,19 @@ import com.cisco.spark.android.client.HecateClient;
 import com.cisco.spark.android.client.HyperSecRestClient;
 import com.cisco.spark.android.client.HypermediaLocusClient;
 import com.cisco.spark.android.client.JanusClient;
+import com.cisco.spark.android.client.LinusClient;
 import com.cisco.spark.android.client.LocusClient;
 import com.cisco.spark.android.client.LyraClient;
+import com.cisco.spark.android.client.LyraProximityServiceClient;
 import com.cisco.spark.android.client.MetricsClient;
 import com.cisco.spark.android.client.MetricsPreloginClient;
 import com.cisco.spark.android.client.PresenceServiceClient;
 import com.cisco.spark.android.client.RegionClient;
+import com.cisco.spark.android.client.RetentionClient;
 import com.cisco.spark.android.client.RoomEmulatorServiceClient;
 import com.cisco.spark.android.client.RoomServiceClient;
 import com.cisco.spark.android.client.SearchClient;
 import com.cisco.spark.android.client.SecRestClient;
-import com.cisco.spark.android.client.StickiesServiceClient;
 import com.cisco.spark.android.client.TrackingIdGenerator;
 import com.cisco.spark.android.client.UrlProvider;
 import com.cisco.spark.android.client.UserClient;
@@ -37,6 +38,7 @@ import com.cisco.spark.android.client.WebExFilesClient;
 import com.cisco.spark.android.client.WhistlerTestClient;
 import com.cisco.spark.android.client.WhiteboardPersistenceClient;
 import com.cisco.spark.android.flag.FlagClient;
+import com.cisco.spark.android.model.ErrorDetail;
 import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
 import com.cisco.spark.android.util.UserAgentProvider;
 import com.cisco.spark.android.wdm.DeviceRegistration;
@@ -44,9 +46,9 @@ import com.cisco.spark.android.wdm.WdmClient;
 import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.NaturalLog;
 import com.google.gson.Gson;
-import com.jakewharton.retrofit.Ok3Client;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 
 import javax.inject.Provider;
 
@@ -56,12 +58,15 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import retrofit.RestAdapter;
-import retrofit.converter.GsonConverter;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.Converter;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClientProvider extends BaseApiClientProvider {
+    private static Converter<ResponseBody, ErrorDetail> errorDetailConverter;
 
     protected final DeviceRegistration deviceRegistration;
 
@@ -83,6 +88,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
     private FlagClient flagClient;
     private RegionClient regionClient;
     private ConversationClient conversationClient;
+    private RetentionClient retentionClient;
     private JanusClient janusClient;
     private FeatureClient featureClient;
     private LyraClient lyraClient;
@@ -90,14 +96,14 @@ public class ApiClientProvider extends BaseApiClientProvider {
     private LocusClient locusClient;
     private CalendarServiceClient calendarServiceClient;
     private HypermediaLocusClient hypermediaLocusClient;
+    protected LinusClient linusClient;
     private SecRestClient securityClient;
     private AdminClient adminClient;
-    private StickiesServiceClient stickiesServiceClient;
     private WhistlerTestClient whistlerTestClient;
     private SearchClient searchClient;
     private CalliopeClient calliopeClient;
     private HecateClient hecateClient;
-
+    private LyraProximityServiceClient lyraProximityServiceClient;
 
     public static final Callback<Void> NULL_CALLBACK = new Callback<Void>() {
         @Override
@@ -137,11 +143,9 @@ public class ApiClientProvider extends BaseApiClientProvider {
 
     @Override
     protected boolean shouldRefreshTokensNow() {
-        if (authenticatedUserProvider.isAuthenticated()) {
-            AuthenticatedUser user = authenticatedUserProvider.getAuthenticatedUser();
-            if (user != null && user.getOAuth2Tokens() != null) {
-                return user.getOAuth2Tokens().shouldRefreshNow();
-            }
+        AuthenticatedUser user = authenticatedUserProvider.getAuthenticatedUserOrNull();
+        if (user != null && user.getOAuth2Tokens() != null) {
+            return user.getOAuth2Tokens().shouldRefreshNow();
         }
         return false;
     }
@@ -159,14 +163,16 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 }
             };
 
-            OkHttpClient client = okHttpClientNoInterceptors()
+            OkHttpClient.Builder clientBuilder = okHttpClientNoInterceptors()
                     .addInterceptor(interceptor)
                     .addInterceptor(getTokenRefreshInterceptor())
-                    .addNetworkInterceptor(getAuthInterceptor(deviceRegistration))
-                    .addNetworkInterceptor(getLoggingInterceptor(getLogLevel()))
-                    .build();
+                    .addNetworkInterceptor(getAuthInterceptor(deviceRegistration));
 
-            webExFilesClient = retrofit(client).build().create(WebExFilesClient.class);
+            for (LoggingInterceptor logInterceptor : getLoggingInterceptors(getLogLevel())) {
+                clientBuilder.addNetworkInterceptor(logInterceptor);
+            }
+
+            webExFilesClient = retrofit(clientBuilder.build()).build().create(WebExFilesClient.class);
         }
         return webExFilesClient;
     }
@@ -182,7 +188,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
             }
             Uri url = Uri.parse(aclServiceUrl);
             url = Uri.withAppendedPath(url, "");
-            aclClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, deviceRegistration).build()).baseUrl(url.toString()).build().create(AclClient.class);
+            aclClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, url, deviceRegistration).build()).baseUrl(url.toString()).build().create(AclClient.class);
         }
         return aclClient;
     }
@@ -202,14 +208,17 @@ public class ApiClientProvider extends BaseApiClientProvider {
 
         String urlString = sanitizeRetrofit2Url(url.toString());
 
-        OkHttpClient client = okHttpClientNoInterceptors()
+        OkHttpClient.Builder clientBuilder = okHttpClientNoInterceptors()
                 .addInterceptor(interceptor)
                 .addInterceptor(getTokenRefreshInterceptor())
-                .addNetworkInterceptor(getAuthInterceptor(deviceRegistration))
-                .addNetworkInterceptor(getLoggingInterceptor(LoggingInterceptor.Level.REQUEST_BODY))
-                .build();
+                .addInterceptor(getHAIntercepter(url, deviceRegistration))
+                .addNetworkInterceptor(getAuthInterceptor(deviceRegistration));
 
-        return retrofit(client).baseUrl(urlString).build().create(AclClient.class);
+        for (LoggingInterceptor logInterceptor : getLoggingInterceptors(LoggingInterceptor.Level.REQUEST_BODY)) {
+            clientBuilder.addNetworkInterceptor(logInterceptor);
+        }
+
+        return retrofit(clientBuilder.build()).baseUrl(urlString).build().create(AclClient.class);
     }
 
     public String sanitizeRetrofit2Url(String url) {
@@ -229,7 +238,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            avatarClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, deviceRegistration).build()).baseUrl(url.toString()).build().create(AvatarClient.class);
+            avatarClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, url, deviceRegistration).build()).baseUrl(url.toString()).build().create(AvatarClient.class);
         }
         return avatarClient;
     }
@@ -237,14 +246,14 @@ public class ApiClientProvider extends BaseApiClientProvider {
     @Deprecated
     public synchronized HyperSecRestClient getHyperSecRestClient() {
         if (hyperSecRestClient == null) {
-            hyperSecRestClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, deviceRegistration).build()).build().create(HyperSecRestClient.class);
+            hyperSecRestClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, null, deviceRegistration).build()).build().create(HyperSecRestClient.class);
         }
         return hyperSecRestClient;
     }
 
     public synchronized OAuth2Client getOAuthClient() {
         if (oAuth2Client == null) {
-            OkHttpClient client = okHttpClientNoInterceptors()
+            OkHttpClient.Builder clientBuilder = okHttpClientNoInterceptors()
                     // Just UA header and logging interceptors for this client
                     .addInterceptor(new Interceptor() {
                         @Override
@@ -255,11 +264,13 @@ public class ApiClientProvider extends BaseApiClientProvider {
                             return chain.proceed(request);
                         }
                     })
-                    .addNetworkInterceptor(getLoggingInterceptor(getLogLevel()))
-                    .addInterceptor(getResponseBodyLoggingInterceptor())
-                    .build();
+                    .addInterceptor(getResponseBodyLoggingInterceptor());
 
-            oAuth2Client = retrofit(client)
+            for (LoggingInterceptor interceptor : getLoggingInterceptors(getLogLevel())) {
+                clientBuilder.addNetworkInterceptor(interceptor);
+            }
+
+            oAuth2Client = retrofit(clientBuilder.build())
                     .baseUrl(urlProvider.getOauth2Url())
                     .build()
                     .create(OAuth2Client.class);
@@ -270,7 +281,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
 
     public synchronized UserClient getUserClient() {
         if (userClient == null) {
-            userClient = retrofit(deviceRegistration).baseUrl(BuildConfig.USERS_API_URL).build().create(UserClient.class);
+            userClient = retrofit(Uri.parse(urlProvider.getUsersApiUrl()), deviceRegistration).baseUrl(urlProvider.getUsersApiUrl()).build().create(UserClient.class);
         }
         return userClient;
     }
@@ -283,7 +294,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            whiteboardPersistenceClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, deviceRegistration).build()).baseUrl(url.toString()).build().create(WhiteboardPersistenceClient.class);
+            whiteboardPersistenceClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, url, deviceRegistration).build()).baseUrl(url.toString()).build().create(WhiteboardPersistenceClient.class);
         }
 
         return whiteboardPersistenceClient;
@@ -297,7 +308,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            flagClient = retrofit(deviceRegistration).baseUrl(url.toString()).build().create(FlagClient.class);
+            flagClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(FlagClient.class);
         }
         return flagClient;
     }
@@ -310,9 +321,22 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            conversationClient = retrofit(deviceRegistration).baseUrl(url.toString()).build().create(ConversationClient.class);
+            conversationClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(ConversationClient.class);
         }
         return conversationClient;
+    }
+
+    public synchronized RetentionClient getRetentionClient() {
+        if (retentionClient == null) {
+            Uri url = deviceRegistration.getRetentionServiceUrl();
+            if (url == null) {
+                ln.e("Device data reported null retention service url");
+                return null;
+            }
+            url = Uri.withAppendedPath(url, "");
+            retentionClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(RetentionClient.class);
+        }
+        return retentionClient;
     }
 
     public synchronized RoomServiceClient getRoomServiceClient() {
@@ -323,7 +347,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            roomServiceClient = retrofit(deviceRegistration).baseUrl(url.toString()).build().create(RoomServiceClient.class);
+            roomServiceClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(RoomServiceClient.class);
         }
         return roomServiceClient;
     }
@@ -336,7 +360,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            roomEmulatorServiceClient = retrofit(deviceRegistration).baseUrl(url.toString()).build().create(RoomEmulatorServiceClient.class);
+            roomEmulatorServiceClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(RoomEmulatorServiceClient.class);
         }
         return roomEmulatorServiceClient;
     }
@@ -349,7 +373,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            apheleiaClient = retrofit(deviceRegistration).baseUrl(url.toString()).build().create(PresenceServiceClient.class);
+            apheleiaClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(PresenceServiceClient.class);
         }
         return apheleiaClient;
     }
@@ -362,7 +386,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            janusClient = retrofit(deviceRegistration).baseUrl(url.toString()).build().create(JanusClient.class);
+            janusClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(JanusClient.class);
         }
         return janusClient;
     }
@@ -370,7 +394,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
     public synchronized RegionClient getRegionClient() {
         if (regionClient == null) {
             Uri url = Uri.parse(urlProvider.getRegionUrl()).buildUpon().appendPath("").build();
-            regionClient = retrofit(deviceRegistration).baseUrl(url.toString()).build().create(RegionClient.class);
+            regionClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(RegionClient.class);
         }
         return regionClient;
     }
@@ -383,7 +407,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            featureClient = retrofit(deviceRegistration).baseUrl(url.toString()).build().create(FeatureClient.class);
+            featureClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(FeatureClient.class);
         }
         return featureClient;
     }
@@ -396,7 +420,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            lyraClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, deviceRegistration).build()).baseUrl(url.toString()).build().create(LyraClient.class);
+            lyraClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, url, deviceRegistration).build()).baseUrl(url.toString()).build().create(LyraClient.class);
         }
 
         return lyraClient;
@@ -412,7 +436,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
             }
 
             url = Uri.withAppendedPath(url, "");
-            metricsClient = retrofit(deviceRegistration).baseUrl(url.toString()).build().create(MetricsClient.class);
+            metricsClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(MetricsClient.class);
 
         }
         return metricsClient;
@@ -444,7 +468,7 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 throw new NotAuthenticatedException();
             }
             url = Uri.withAppendedPath(url, "");
-            locusClient = retrofit(deviceRegistration)
+            locusClient = retrofit(okHttpClient(getLocusLogLevel(), url, deviceRegistration).build())
                     .baseUrl(url.toString())
                     .callbackExecutor(callbackExecutor)
                     .build()
@@ -460,8 +484,8 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 ln.w("Device data reported null calendar service url.");
                 throw new NotAuthenticatedException();
             }
-            RestAdapter restAdapter = buildStandardRestAdapter(url.toString(), deviceRegistration);
-            calendarServiceClient = restAdapter.create(CalendarServiceClient.class);
+            url = Uri.withAppendedPath(url, "");
+            calendarServiceClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(CalendarServiceClient.class);
         }
         return calendarServiceClient;
     }
@@ -473,8 +497,8 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 ln.w("null admin service uri");
                 throw new NotAuthenticatedException();
             }
-            RestAdapter restAdapter = buildStandardRestAdapter(adminUri.toString(), deviceRegistration);
-            adminClient = restAdapter.create(AdminClient.class);
+            adminUri = Uri.withAppendedPath(adminUri, "");
+            adminClient = retrofit(adminUri, deviceRegistration).baseUrl(adminUri.toString()).build().create(AdminClient.class);
         }
         return adminClient;
     }
@@ -486,36 +510,32 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 ln.w("Device data reported null SecREST service url");
                 throw new NotAuthenticatedException();
             }
-            RestAdapter restAdapter = buildStandardRestAdapter(securityServiceUrl.toString(), deviceRegistration);
-            securityClient = restAdapter.create(SecRestClient.class);
+            securityServiceUrl = Uri.withAppendedPath(securityServiceUrl, "");
+            securityClient = retrofit(securityServiceUrl, deviceRegistration).baseUrl(securityServiceUrl.toString()).build().create(SecRestClient.class);
         }
         return securityClient;
     }
 
     public synchronized WdmClient getWdmClient() {
         if (wdmClient == null) {
-            String wdmUrl;
+            Uri wdmUrl;
 
             if (!TextUtils.isEmpty(settings.getCustomWdmUrl())) {
-                wdmUrl = settings.getCustomWdmUrl();
-                deviceRegistration.whitelist(Uri.parse(wdmUrl));
+                wdmUrl = Uri.parse(settings.getCustomWdmUrl());
+                deviceRegistration.buildConfigWhitelist(wdmUrl);
             } else {
-                wdmUrl = urlProvider.getServiceApiUrl();
+                wdmUrl = Uri.parse(urlProvider.getServiceApiUrl());
             }
 
-            RestAdapter restAdapter = createRestAdapterBuilder()
-                    .setConverter(new GsonConverter(gson))
-                    .setClient(new Ok3Client(buildOkHttpClient(deviceRegistration)))
-                    .setEndpoint(wdmUrl)
-                    .build();
-            wdmClient = restAdapter.create(WdmClient.class);
+            wdmUrl = Uri.withAppendedPath(wdmUrl, "");
+            wdmClient = retrofit(wdmUrl, deviceRegistration).baseUrl(wdmUrl.toString()).build().create(WdmClient.class);
         }
         return wdmClient;
     }
 
     public synchronized HypermediaLocusClient getHypermediaLocusClient() {
         if (hypermediaLocusClient == null) {
-            hypermediaLocusClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, deviceRegistration).build())
+            hypermediaLocusClient = retrofit(okHttpClient(getLocusLogLevel(), deviceRegistration.getLocusServiceUrl(), deviceRegistration).build())
                     .callbackExecutor(callbackExecutor)
                     .build().create(HypermediaLocusClient.class);
         }
@@ -523,18 +543,14 @@ public class ApiClientProvider extends BaseApiClientProvider {
         return hypermediaLocusClient;
     }
 
-    public synchronized StickiesServiceClient getStickiesClient() {
-        if (stickiesServiceClient == null) {
-
-            Uri url = deviceRegistration.getStickiesServiceUrl();
-            if (url == null) {
-                ln.w("Device data reported null Stickies service url");
-                throw new NotAuthenticatedException();
-            }
-            RestAdapter restAdapter = buildStandardRestAdapter(url.toString(), deviceRegistration);
-            stickiesServiceClient = restAdapter.create(StickiesServiceClient.class);
+    public synchronized LinusClient getLinusClient() {
+        if (linusClient == null) {
+            linusClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, null, deviceRegistration).build())
+                    .callbackExecutor(callbackExecutor)
+                    .build().create(LinusClient.class);
         }
-        return stickiesServiceClient;
+
+        return linusClient;
     }
 
     public synchronized SearchClient getSearchClient() {
@@ -544,8 +560,9 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 ln.w("Device data reported null argonaut service url");
                 throw new NotAuthenticatedException();
             }
-            RestAdapter restAdapter = buildStandardRestAdapter(searchClientUri.toString(), deviceRegistration);
-            searchClient = restAdapter.create(SearchClient.class);
+
+            searchClientUri = Uri.withAppendedPath(searchClientUri, "");
+            searchClient = retrofit(searchClientUri, deviceRegistration).baseUrl(searchClientUri.toString()).build().create(SearchClient.class);
         }
         return searchClient;
     }
@@ -557,8 +574,8 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 ln.w("Device data reported null calliope service url");
                 throw new NotAuthenticatedException();
             }
-            RestAdapter restAdapter = buildStandardRestAdapter(calliopeClientUri.toString(), deviceRegistration);
-            calliopeClient = restAdapter.create(CalliopeClient.class);
+            calliopeClientUri = Uri.withAppendedPath(calliopeClientUri, "");
+            calliopeClient = retrofit(calliopeClientUri, deviceRegistration).baseUrl(calliopeClientUri.toString()).build().create(CalliopeClient.class);
         }
         return calliopeClient;
     }
@@ -566,10 +583,10 @@ public class ApiClientProvider extends BaseApiClientProvider {
     public synchronized WhistlerTestClient getWhistlerTestClient() {
         if (whistlerTestClient == null) {
 
-            final String url = WhistlerTestClient.URL;
-
-            RestAdapter restAdapter = buildStandardRestAdapter(url, deviceRegistration);
-            whistlerTestClient = restAdapter.create(WhistlerTestClient.class);
+            Uri url = WhistlerTestClient.URL;
+            // There is no corresponding service in the service collection
+            url = Uri.withAppendedPath(url, "");
+            whistlerTestClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(WhistlerTestClient.class);
         }
 
         return whistlerTestClient;
@@ -582,11 +599,36 @@ public class ApiClientProvider extends BaseApiClientProvider {
                 ln.w("Device data reported null hecate service url");
                 throw new NotAuthenticatedException();
             }
-            RestAdapter restAdapter = buildStandardRestAdapter(url.toString(), deviceRegistration);
-            hecateClient = restAdapter.create(HecateClient.class);
+
+            url = Uri.withAppendedPath(url, "");
+            hecateClient = retrofit(url, deviceRegistration).baseUrl(url.toString()).build().create(HecateClient.class);
         }
 
         return hecateClient;
+    }
+
+    public synchronized LyraProximityServiceClient getLyraProximityServiceClient() {
+        if (lyraProximityServiceClient == null) {
+            Uri url = deviceRegistration.getProximityServiceUrl();
+            if (url == null) {
+                ln.e("Lyra proximity service url is null");
+                throw new NotAuthenticatedException();
+            }
+            url = Uri.withAppendedPath(url, "");
+            lyraProximityServiceClient = retrofit(okHttpClient(LoggingInterceptor.Level.HEADERS, url, deviceRegistration).build()).baseUrl(url.toString()).build().create(LyraProximityServiceClient.class);
+        }
+        return lyraProximityServiceClient;
+    }
+
+    public static Converter<ResponseBody, ErrorDetail> getErrorDetailConverter() {
+        if (errorDetailConverter == null) {
+            errorDetailConverter = new Retrofit.Builder()
+                    .addConverterFactory(GsonConverterFactory.create(new Gson()))
+                    .baseUrl(DEFAULT_BASE_URL)
+                    .build()
+                    .responseBodyConverter(ErrorDetail.class, new Annotation[0]);
+        }
+        return errorDetailConverter;
     }
 
     //Used for testing

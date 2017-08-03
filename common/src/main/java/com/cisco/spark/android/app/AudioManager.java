@@ -12,10 +12,7 @@ public interface AudioManager {
     boolean isMusicActive();
 
     boolean isWiredHeadsetOn();
-    void setBluetoothScoOn(boolean on);
     boolean isBluetoothScoOn();
-    void setBluetoothA2dpOn(boolean on);
-    boolean isBluetoothA2dpOn();
     boolean isWiredHeadsetOrBluetoothConnected();
     int getStreamVolume(int streamType);
     int getStreamMaxVolume(int streamType);
@@ -23,4 +20,8 @@ public interface AudioManager {
     int abandonAudioFocus(android.media.AudioManager.OnAudioFocusChangeListener l);
     boolean hasAudioFocus();
 
+    void setBluetoothScoAvailableOffCall(boolean bluetoothScoAvailableOffCall);
+    boolean isBluetoothScoAvailableOffCall();
+    void startBluetoothSco();
+    void stopBluetoothSco();
 }

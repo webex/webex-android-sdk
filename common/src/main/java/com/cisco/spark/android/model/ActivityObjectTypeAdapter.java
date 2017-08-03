@@ -42,8 +42,6 @@ public class ActivityObjectTypeAdapter implements JsonDeserializer<ActivityObjec
             return jsonDeserializationContext.<EventObject>deserialize(jsonElement, EventObject.class);
         } else if ("locusSessionSummary".equals(objectType)) {
             return jsonDeserializationContext.<EventObject>deserialize(jsonElement, LocusSessionSummary.class);
-        } else if ("imageURI".equals(objectType)) {
-            return jsonDeserializationContext.<ImageURIObject>deserialize(jsonElement, ImageURIObject.class);
         } else {
             ActivityObject ret = new ActivityObject(objectType);
             ret.setId(getField(object, "id"));

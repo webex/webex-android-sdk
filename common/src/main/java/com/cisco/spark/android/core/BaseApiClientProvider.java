@@ -1,6 +1,7 @@
 package com.cisco.spark.android.core;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -15,7 +16,6 @@ import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.NaturalLog;
 import com.google.gson.Gson;
-import com.jakewharton.retrofit.Ok3Client;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -41,16 +41,12 @@ import javax.net.ssl.SSLContext;
 
 import dagger.Lazy;
 import de.greenrobot.event.EventBus;
+import okhttp3.Authenticator;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import retrofit.ErrorHandler;
-import retrofit.RestAdapter;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
-import retrofit.converter.GsonConverter;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -60,7 +56,7 @@ public abstract class BaseApiClientProvider {
     protected static final String DEFAULT_BASE_URL = "https://cisco.com/";
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
-    protected static final String TRACKING_ID_HEADER = "TrackingID";
+    public static final String TRACKING_ID_HEADER = "TrackingID";
     private static final String CISCO_DEVICE_URL_HEADER = "Cisco-Device-URL";
     private static final String LOG_LEVEL_TOKEN_HEADER = "LogLevelToken";
     private static final String ACCEPT_LANGUAGE = "Accept-Language";
@@ -105,6 +101,10 @@ public abstract class BaseApiClientProvider {
         return Ln.isDebugEnabled() ? LoggingInterceptor.Level.REQUEST_BODY : LoggingInterceptor.Level.BASIC;
     }
 
+    protected LoggingInterceptor.Level getLocusLogLevel() {
+        return Ln.isDebugEnabled() ? LoggingInterceptor.Level.REQUEST_BODY : LoggingInterceptor.Level.HEADERS;
+    }
+
     protected abstract boolean shouldRefreshTokensNow();
     protected abstract String getAuthHeader();
 
@@ -127,8 +127,9 @@ public abstract class BaseApiClientProvider {
                 okhttp3.Request.Builder requestBuilder = chain.request().newBuilder()
                         .addHeader("Accept", "application/json")
                         .header("Content-Type", "application/json")
-                        .header("User-Agent", userAgentProvider.get())
                         .header(TRACKING_ID_HEADER, trackingIdGenerator.nextTrackingId());
+
+                addHeaderWithDefaultValue(requestBuilder, "User-Agent", userAgentProvider.get(), UserAgentProvider.APP_NAME);
 
                 if (deviceRegistration != null && deviceRegistration.getUrl() != null) {
                     requestBuilder.header(CISCO_DEVICE_URL_HEADER, deviceRegistration.getUrl().toString());
@@ -141,6 +142,15 @@ public abstract class BaseApiClientProvider {
                 return chain.proceed(requestBuilder.build());
             }
         };
+    }
+
+    private void addHeaderWithDefaultValue(okhttp3.Request.Builder builder, String headerName, String headerValue, String defaultValue) {
+        try {
+            builder.header(headerName, headerValue);
+        } catch (IllegalArgumentException e) {
+            Ln.w(e, "Falling back to using a default value for the header: " + headerName);
+            builder.header(headerName, defaultValue);
+        }
     }
 
     protected Interceptor getHttp308RedirectInterceptor() {
@@ -199,7 +209,7 @@ public abstract class BaseApiClientProvider {
                 okhttp3.Request request = chain.request();
                 okhttp3.Request.Builder builder = request.newBuilder();
 
-                if (deviceRegistration != null && !deviceRegistration.sendAuthToHost(request.url().host())) {
+                if (deviceRegistration != null && !deviceRegistration.sendAuthToHost(request.url())) {
                     ln.d("Not sending sensitive headers for url: %s", request.url());
                     for (String sensitiveHeader : SENSITIVE_HEADERS) {
                         builder.removeHeader(sensitiveHeader);
@@ -218,6 +228,10 @@ public abstract class BaseApiClientProvider {
         };
     }
 
+    protected Interceptor getHAIntercepter(Uri url, DeviceRegistration deviceRegistration) {
+        return new HAInterceptor(url, deviceRegistration == null ? null : deviceRegistration.getServiceHostMap());
+    }
+
     protected Interceptor getResponseBodyLoggingInterceptor() {
         return new Interceptor() {
             @Override
@@ -234,68 +248,29 @@ public abstract class BaseApiClientProvider {
     }
 
     protected Interceptor getPreAuthUserIdInterceptor() {
-        return new Interceptor() {
-            @Override
-            public okhttp3.Response intercept(Chain chain) throws IOException {
-                okhttp3.Request.Builder requestBuilder = chain.request().newBuilder()
-                        .addHeader("X-Prelogin-UserId", settings.getPreloginUserId());
+        return chain -> {
+            Request.Builder requestBuilder = chain.request().newBuilder()
+                    .addHeader("X-Prelogin-UserId", settings.getPreloginUserId());
 
-                return chain.proceed(requestBuilder.build());
-            }
+            return chain.proceed(requestBuilder.build());
         };
-    }
-
-    protected RestAdapter buildStandardRestAdapter(final String url, DeviceRegistration deviceRegistration) {
-        return buildStandardRestAdapter(url, okHttpClient(getLogLevel(), deviceRegistration).build());
-    }
-
-    protected RestAdapter buildStandardRestAdapter(final String url, OkHttpClient client) {
-        return buildStandardRestAdapter(url, client, gson);
-    }
-
-    protected RestAdapter buildStandardRestAdapter(final String url, OkHttpClient client, Gson gson) {
-        return createRestAdapterBuilder()
-                .setErrorHandler(new ErrorHandler() {
-                    @Override
-                    public Throwable handleError(RetrofitError cause) {
-                        if (cause.getKind() == RetrofitError.Kind.NETWORK) {
-                            ln.d(cause);
-                        } else {
-                            Response response = cause.getResponse();
-                            if (response != null && response.getStatus() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                                ln.w(false, cause, "Received %d - %s", response.getStatus(), response.getReason());
-                            } else if (response != null && response.getStatus() == HttpURLConnection.HTTP_MOVED_TEMP) {
-                                ln.d("Received 307 - Temporary redirect");
-                            } else if (response != null && response.getStatus() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-                                ln.d("Received 304 - Not Modified");
-                            } else {
-                                ln.w(false, cause);
-                            }
-                        }
-                        return cause;
-                    }
-                })
-                .setClient(new Ok3Client(client))
-                .setConverter(new GsonConverter(gson))
-                .setEndpoint(url)
-                .setExecutors(
-                        Executors.newCachedThreadPool(getThreadFactory("Async HTTP")),
-                        Executors.newCachedThreadPool(getThreadFactory("Async HTTP Callback")))
-                .build();
     }
 
     protected Retrofit.Builder retrofitPrelogin(DeviceRegistration deviceRegistration) {
         OkHttpClient.Builder okHttpClientBuilder = okHttpClientNoInterceptors()
                 .addNetworkInterceptor(getCommonHeadersInterceptor(deviceRegistration))
                 .addNetworkInterceptor(getPreAuthUserIdInterceptor())
-                .addNetworkInterceptor(getResponseBodyLoggingInterceptor())
-                .addNetworkInterceptor(getLoggingInterceptor(getLogLevel()));
+                .addNetworkInterceptor(getResponseBodyLoggingInterceptor());
+
+        for (LoggingInterceptor interceptor : getLoggingInterceptors(getLogLevel())) {
+            okHttpClientBuilder.addNetworkInterceptor(interceptor);
+        }
 
         return retrofit(okHttpClientBuilder.build());
     }
 
-    protected Retrofit.Builder retrofit(DeviceRegistration deviceRegistration) {
-        return retrofit(okHttpClient(getLogLevel(), deviceRegistration).build());
+    protected Retrofit.Builder retrofit(Uri baseUrl, DeviceRegistration deviceRegistration) {
+        return retrofit(okHttpClient(getLogLevel(), baseUrl, deviceRegistration).build());
     }
 
     protected Retrofit.Builder retrofit(OkHttpClient okHttpClient) {
@@ -307,17 +282,29 @@ public abstract class BaseApiClientProvider {
                 .client(okHttpClient);
     }
 
-    protected OkHttpClient buildOkHttpClient(DeviceRegistration deviceRegistration) {
-        return okHttpClient(getLogLevel(), deviceRegistration).build();
+    public OkHttpClient buildOkHttpClient(Uri baseUrl, DeviceRegistration deviceRegistration) {
+        return buildOkHttpClient(baseUrl, deviceRegistration, new Dispatcher((ThreadPoolExecutor) AsyncTask.THREAD_POOL_EXECUTOR));
     }
 
-    protected OkHttpClient.Builder okHttpClient(LoggingInterceptor.Level logLevel, DeviceRegistration deviceRegistration) {
+    public OkHttpClient buildOkHttpClient(Uri baseUrl, DeviceRegistration deviceRegistration, Dispatcher dispatcher) {
+        return okHttpClient(getLogLevel(), baseUrl, deviceRegistration, dispatcher).build();
+    }
+
+    protected OkHttpClient.Builder okHttpClient(LoggingInterceptor.Level logLevel, Uri baseUrl, DeviceRegistration deviceRegistration) {
+        return okHttpClient(logLevel, baseUrl, deviceRegistration, new Dispatcher((ThreadPoolExecutor) AsyncTask.THREAD_POOL_EXECUTOR));
+    }
+
+    protected OkHttpClient.Builder okHttpClient(LoggingInterceptor.Level logLevel, Uri baseUrl, DeviceRegistration deviceRegistration, Dispatcher customDispatcher) {
         OkHttpClient.Builder ret = okHttpClientNoInterceptors()
                 .addInterceptor(getCommonHeadersInterceptor(deviceRegistration))
                 .addInterceptor(getHttp308RedirectInterceptor())
                 .addInterceptor(getTokenRefreshInterceptor())
-                .addNetworkInterceptor(getAuthInterceptor(deviceRegistration))
-                .addNetworkInterceptor(getLoggingInterceptor(logLevel));
+                .addInterceptor(getHAIntercepter(baseUrl, deviceRegistration))
+                .addInterceptor(getAuthInterceptor(deviceRegistration));
+
+        for (LoggingInterceptor interceptor : getLoggingInterceptors(logLevel)) {
+            ret.addInterceptor(interceptor);
+        }
 
         List<Interceptor> customInterceptors = getCustomInterceptors();
         if (customInterceptors != null) {
@@ -329,23 +316,29 @@ public abstract class BaseApiClientProvider {
         if (Ln.isVerboseEnabled())
             ret.addInterceptor(getResponseBodyLoggingInterceptor());
 
-        ret.dispatcher(new Dispatcher((ThreadPoolExecutor) AsyncTask.THREAD_POOL_EXECUTOR));
+        if (customDispatcher != null) {
+            ret.dispatcher(customDispatcher);
+        }
 
         return ret;
     }
 
     protected OkHttpClient.Builder okHttpClientNoInterceptors() {
         OkHttpClient.Builder builder = okHttpClientBuilderProvider.get();
-        return builder
+        builder
                 .proxy(getProxy())
                 .certificatePinner(certificatePinner.getCertificatePinner())
                 .sslSocketFactory(buildSSLContext().getSocketFactory())
                 .connectionPool(getConnectionPool())
                 .readTimeout(30, TimeUnit.SECONDS)
                 .connectTimeout(30, TimeUnit.SECONDS);
+        if (getProxyAuthenticator() != null) {
+            builder.proxyAuthenticator(getProxyAuthenticator());
+        }
+        return builder;
     }
 
-    protected LoggingInterceptor getLoggingInterceptor(LoggingInterceptor.Level logLevel) {
+    protected List<LoggingInterceptor> getLoggingInterceptors(LoggingInterceptor.Level logLevel) {
         LoggingInterceptor loggingInterceptor = new LoggingInterceptor(new LoggingInterceptor.Logger() {
             @Override
             public void log(String message) {
@@ -353,7 +346,7 @@ public abstract class BaseApiClientProvider {
             }
         });
         loggingInterceptor.setLevel(logLevel);
-        return loggingInterceptor;
+        return Collections.singletonList(loggingInterceptor);
     }
 
     ConnectionPool getConnectionPool() {
@@ -386,10 +379,6 @@ public abstract class BaseApiClientProvider {
     @Nullable
     protected List<Interceptor> getCustomInterceptors() {
         return null;
-    }
-
-    protected RestAdapter.Builder createRestAdapterBuilder() {
-        return new RestAdapter.Builder();
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
@@ -427,6 +416,10 @@ public abstract class BaseApiClientProvider {
     }
 
     protected Proxy getProxy() {
+        return null;
+    }
+
+    protected Authenticator getProxyAuthenticator() {
         return null;
     }
 }

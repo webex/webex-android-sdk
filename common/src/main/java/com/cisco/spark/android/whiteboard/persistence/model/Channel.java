@@ -12,7 +12,7 @@ public class Channel implements Comparable<Channel> {
     private String channelId;
     private Uri channelUrl;
     private String parentId;
-    private String type;
+    private ChannelType type;
     private UUID creatorId;
     private Long createdTime;
     private Map<String, String> properties;
@@ -24,6 +24,7 @@ public class Channel implements Comparable<Channel> {
     private Uri kmsResourceUrl;
     private Long contentLastUpdatedTime;
     private Uri hiddenSpaceUrl;
+    private Uri openSpaceUrl;
     private Uri conversationUrl;
     private ChannelImage image;
 
@@ -34,12 +35,14 @@ public class Channel implements Comparable<Channel> {
     public Channel(String conversationId) {
         this();
         this.aclUrl = conversationId;
+        this.conversationUrl = Uri.parse(conversationId);
     }
 
     public Channel() {
-        this.type = "whiteboard";
+        this.type = ChannelType.WHITEBOARD;
     }
 
+    @Deprecated
     public boolean isUsingOldEncryption() { //the board is in a room BUT was created not using the acl TODO remove when transitioned
         return conversationUrl != null && aclUrlLink == null;
     }
@@ -112,8 +115,12 @@ public class Channel implements Comparable<Channel> {
         return aclUrl.substring(aclUrl.lastIndexOf('/') + 1);
     }
 
-    public String getType() {
-        return type;
+    public ChannelType getType() {
+        return type != null ? type : ChannelType.WHITEBOARD;
+    }
+
+    public void setChannelType(ChannelType type) {
+        this.type = type;
     }
 
     public Long getContentLastUpdatedTime() {
@@ -130,6 +137,14 @@ public class Channel implements Comparable<Channel> {
 
     public void setHiddenSpaceUrl(Uri hiddenSpaceUrl) {
         this.hiddenSpaceUrl = hiddenSpaceUrl;
+    }
+
+    public Uri getOpenSpaceUrl() {
+        return openSpaceUrl;
+    }
+
+    public void setOpenSpaceUrl(Uri openSpaceUrl) {
+        this.openSpaceUrl = openSpaceUrl;
     }
 
     public ChannelImage getImage() {
@@ -166,7 +181,7 @@ public class Channel implements Comparable<Channel> {
     }
 
     public boolean isPrivateChannel() {
-        return aclUrlLink == null && conversationUrl == null;
+        return aclUrlLink == null;
     }
 
     public SecureContentReference getAvailableSnapShotSecureContentReference() {

@@ -11,10 +11,9 @@
     <string name="pref_key_custom_wdm_url"><xliff:g>CUSTOM_WDM_URL</xliff:g></string>
     <string name="pref_key_device_id"><xliff:g>DEVICE_ID</xliff:g></string>
     <string name="pref_key_device_registration"><xliff:g>DEVICE_REGISTRATION</xliff:g></string>
-    <string name="pref_key_email"><xliff:g>EMAIL</xliff:g></string>
-    <string name="pref_key_edited">EMAIL_EDITED</string>
+    <string name="pref_key_install_referrer"><xliff:g>INSTALL_REFERRER</xliff:g></string>
+    <string name="pref_key_onboarding_email"><xliff:g>ONBOARDING_EMAIL</xliff:g></string>
     <string name="pref_key_name_to_set"><xliff:g>NAME_TO_SET</xliff:g></string>
-    <string name="pref_key_is_email_verified"><xliff:g>IS_EMAIL_VERIFIED</xliff:g></string>
     <string name="pref_key_encrypted_conversation_icons"><xliff:g>ENCRYPTED_CONVERSATION_ICONS</xliff:g></string>
     <string name="pref_key_is_drone"><xliff:g>IS_DRONE</xliff:g></string>
     <string name="pref_key_linus_name"><xliff:g>LINUS_NAME</xliff:g></string>
@@ -23,10 +22,10 @@
     <string name="pref_key_media_override_ip_address"><xliff:g>MEDIA_OVERRIDE_IP_ADDRESS</xliff:g></string>
     <string name="pref_key_use_resource_for_calls"><xliff:g>USE_RESOURCE_FOR_CALLS</xliff:g></string>
     <string name="pref_key_resource_for_calls"><xliff:g>RESOURCE_FOR_CALLS</xliff:g></string>
-    <string name="pref_key_message_id"><xliff:g>MESSAGE_ID</xliff:g></string>
     <string name="pref_key_network_congestion"><xliff:g>NETWORK_CONGESTION</xliff:g></string>
     <string name="pref_key_network_congestion_check_disabled"><xliff:g>NETWORK_CONGESTION_CHECK_DISABLED</xliff:g></string>
     <string name="pref_key_performance_statistics_enabled"><xliff:g>PERFORMANCE_STATISTICS_ENABLED</xliff:g></string>
+    <string name="pref_key_enable_sw720p"><xliff:g>ENABLE_SW720P</xliff:g></string>
     <string name="pref_key_hardware_codec_enabled"><xliff:g>HARDWARE_CODEC_ENABLED</xliff:g></string>
     <string name="pref_key_tc_aec_enabled"><xliff:g>TC_AEC_ENABLED</xliff:g></string>
     <string name="pref_key_srtp_disabled"><xliff:g>SRTP_DISABLED</xliff:g></string>
@@ -35,6 +34,7 @@
     <string name="pref_key_room_service_enabled"><xliff:g>ROOM_SERVICE_ENABLED</xliff:g></string>
     <string name="pref_key_pstn_enabled"><xliff:g>PSTN_ENABLED</xliff:g></string>
     <string name="pref_key_send_full_dataset"><xliff:g>SEND_FULL_DATASET</xliff:g></string>
+    <string name="pref_key_ultrasound_info"><xliff:g>ULTRASOUND_INFO</xliff:g></string>
     <string name="pref_key_clear_content"><xliff:g>CLEAR_CONTENT</xliff:g></string>
     <string name="pref_key_snooze_enabled"><xliff:g>SNOOZE_ENABLED</xliff:g></string>
     <string name="pref_key_snooze_until"><xliff:g>SNOOZE_UNTIL</xliff:g></string>
@@ -58,23 +58,27 @@
     <string name="pref_key_spark_pmr"><xliff:g>SPARK_PMR</xliff:g></string>
     <string name="pref_key_calendars_to_display"><xliff:g>CALENDARS_TO_DISPLAY</xliff:g></string>
     <string name="pref_key_clear_calendar"><xliff:g>CLEAR_CALENDARS</xliff:g></string>
+    <string name="pref_key_recent_metrics"><xliff:g>RECENT_METRICS</xliff:g></string>
     <string name="pref_key_alt_conversation_color"><xliff:g>ALT_CONVERSATION_COLOR</xliff:g></string>
     <string name="pref_key_allow_screenshots"><xliff:g>ALLOW_SCREENSHOTS</xliff:g></string>
     <string name="pref_key_auto_report_enabled"><xliff:g>AUTO_REPORT</xliff:g></string>
     <string name="pref_key_server_features"><xliff:g>SERVER_FEATURES</xliff:g></string>
     <string name="pref_key_paired_tour"><xliff:g>PAIRED_TOUR_SEEN</xliff:g></string>
     <string name="pref_key_spark_board_tour"><xliff:g>SPARK_BOARD_TOUR_SEEN</xliff:g></string>
-    <string name="pref_key_spark_video_system_tour"><xliff:g>SPARK_VIDEO_SYSTEM_TOUR_SEEN</xliff:g></string>
+    <string name="pref_key_spark_room_device_tour"><xliff:g>SPARK_VIDEO_SYSTEM_TOUR_SEEN</xliff:g></string>
+    <string name="pref_key_spark_bricklet_removal_tour"><xliff:g>SPARK_BRICKLET_REMOVAL_TOUR</xliff:g></string>
     <string name="pref_key_room_tour"><xliff:g>ROOM_TOUR_SEEN</xliff:g></string>
     <string name="pref_key_home_tour"><xliff:g>HOME_TOUR_SEEN</xliff:g></string>
-    <string name="pref_key_onboarding_team"><xliff:g>ONBOARDING_TEAM</xliff:g></string>
     <string name="pref_key_new_room_tour"><xliff:g>NEW_ROOM_TOUR_SEEN</xliff:g></string>
     <string name="pref_key_team_room_tour"><xliff:g>NEW_TEAM_TOUR_SEEN</xliff:g></string>
+    <string name="pref_key_space_ball_coach_mark"><xliff:g>SPACE_BALL_COACH_MARK</xliff:g></string>
+    <string name="pref_key_binding_coach_mark"><xliff:g>BINDING_COACH_MARK</xliff:g></string>
+    <string name="pref_key_device_selector_coach_mark"><xliff:g>DEVICE_SELECTOR_COACH_MARK</xliff:g></string>
+    <string name="pref_key_remote_control_coach_mark"><xliff:g>REMOTE_CONTROL_COACH_MARK</xliff:g></string>
     <string name="pref_key_get_help"><xliff:g>GET_HELP</xliff:g></string>
     <string name="pref_key_support_numbers"><xliff:g>SUPPORT_NUMBERS</xliff:g></string>
     <string name="pref_key_about"><xliff:g>ABOUT_SPARK</xliff:g></string>
     <string name="pref_key_send_logs"><xliff:g>SEND_LOGS</xliff:g></string>
-    <string name="pref_key_user_created"><xliff:g>USER_CREATED</xliff:g></string>
     <string name="pref_key_help_category"><xliff:g>HELP_CATEGORY</xliff:g></string>
     <string name="pref_key_report_problem"><xliff:g>REPORT_PROBLEM</xliff:g></string>
     <string name="pref_key_launch_avatar_overlay"><xliff:g>LAUNCH_AVATAR_OVERLAY</xliff:g></string>
@@ -85,7 +89,6 @@
     <string name="pref_key_call_out_last_input_type_used"><xliff:g>CALL_OUT_LAST_INPUT_TYPE_USED</xliff:g></string>
     <string name="pref_key_has_explained_phone_state_permissions"><xliff:g>KEY_EXPLAINED_PHONE_STATE</xliff:g></string>
     <string name="pref_key_mute_inactive_conversations">MUTE_INACTIVE_CONVERSATIONS</string>
-    <string name="pref_key_refresh_stickers">REFRESH_STICKERS</string>
     <string name="pref_key_has_loaded_sticky_pack"><xliff:g>HAS_LOADED_STICKY_PACK</xliff:g></string>
     <string name="pref_key_has_loaded_mentions"><xliff:g>HAS_LOADED_MENTIONS</xliff:g></string>
     <string name="pref_key_user_toggles"><xliff:g>USER_TOGGLES</xliff:g></string>
@@ -95,7 +98,6 @@
     <string name="pref_key_notice_disclaimers"><xliff:g>NOTICE_DISCLAIMERS</xliff:g></string>
     <string name="pref_key_last_security_check"><xliff:g>LAST_SECURITY_CHECK</xliff:g></string>
     <string name="pref_key_sample_callrating"><xliff:g>KEY_SAMPLE_CALL_RATING</xliff:g></string>
-    <string name="pref_key_email_has_password"><xliff:g>EMAIL_HAS_PASSWORD</xliff:g></string>
     <string name="pref_key_native_contacts"><xliff:g>NATIVE_CONTACTS_INTEGRATION</xliff:g></string>
     <string name="pref_key_advanced"><xliff:g>PREFERENCES_ADVANCED</xliff:g></string>
     <string name="pref_key_prelogin_userid"><xliff:g>PRELOGIN_USER_ID</xliff:g></string>
@@ -165,8 +167,8 @@
     <string name="call_banner_you_timeout">You missed a call.</string>
     <string name="call_banner_syncup" tools:ignore="StringFormatCount">You joined a meeting.</string>
     <string name="call_banner_missed_syncup" tools:ignore="StringFormatCount">The meeting has ended.</string>
-    <string name="call_banner_x_unvailable_syncup">Never mind. %1$s cancelled the meeting.</string>
-    <string name="call_banner_you_unvailable_syncup">Never mind. You cancelled the meeting.</string>
+    <string name="call_banner_x_unvailable_syncup">Never mind. %1$s canceled the meeting.</string>
+    <string name="call_banner_you_unvailable_syncup">Never mind. You canceled the meeting.</string>
 
     <string name="error_sending_message">Unable to send the message.</string>
     <string name="error_message_canceled">Message canceled</string>
@@ -177,7 +179,6 @@
     <string name="error_remove_participant">Unable to remove participant from the space.</string>
     <string name="uploading_space_avatar">Uploading space image</string>
     <string name="error_setting_space_avatar">Failed to set space image.</string>
-    <string name="error_cropping_space_avatar">Failed to crop space image</string>
     <string name="file_too_large">Image too large, choose another</string>
 
     <string name="max_participants_warning_text">You can\'t call a Spark Space with more than %d people.</string>
@@ -205,8 +206,7 @@
     <string name="call_other_person_declined">Other person declined</string>
     <string name="call_other_person_busy">Other person busy</string>
     <string name="call_participant_left">Participant left</string>
-    <string name="call_participant_joined">Connecting</string>
-    <string name="call_participant_cancelled">Participant cancelled</string>
+    <string name="call_participant_cancelled">Participant canceled</string>
     <string name="call_participant_expelled">The moderator has removed you from the meeting</string>
     <string name="name_was_unavailable">%s was unavailable</string>
 
@@ -216,7 +216,7 @@
     <string name="dial">Dial:</string>
     <string name="video_address">Video Address</string>
     <string name="meeting_number">Meeting Number</string>
-    <string name="video_address_not_available">Video address not available</string>
+    <string name="video_address_not_available">Address unavailable</string>
     <string name="meeting_number_not_available">Meeting number not available</string>
     <string name="show_additional_meeting_info">Show Additional Meeting Information</string>
     <string name="hide_additional_meeting_info">Hide Additional Meeting Information</string>
@@ -225,11 +225,11 @@
     <string name="search_hint_for_modifier">Enter a person\'s name</string>
     <string name="search_hint_with_modifier">Enter a person\'s name</string>
     <string name="search_hint_in_modifier">Enter a space\'s name</string>
-    <string name="search_modifier_list_header">Select a modifier to narrow your search</string>
+    <string name="search_modifier_list_header">Search filters</string>
     <string name="search_modifier_option_from_keyword"><b>from:</b></string>
-    <string name="search_modifier_option_from">Show <b>messages</b> and <b>files</b> from a <b>person</b></string>
+    <string name="search_modifier_option_from"><i>Show messages and files from a person</i></string>
     <string name="search_modifier_option_in_keyword"><b>in:</b></string>
-    <string name="search_modifier_option_in">Show <b>messages</b> and <b>files</b> in a given <b>space</b></string>
+    <string name="search_modifier_option_in"><i>Show messages and files in a given space</i></string>
 
     <!-- Presence Status Messages -->
     <string name="do_not_disturb">Do Not Disturb</string>
@@ -246,6 +246,7 @@
     <string name="presence_status_pending">Pending Activation</string>
     <string name="presence_status_ooo">Out of Office</string>
     <string name="presence_status_ooo_until">Out of Office until %s</string>
+    <string name="presence_status_unknown">Unknown status</string>
 
     <plurals name="presence_status_inactive_hours">
         <item quantity="one">Active %d hour ago</item>
@@ -264,5 +265,7 @@
     <!-- Day Markers -->
     <string name="day_marker_today">Today</string>
     <string name="day_marker_yesterday">Yesterday</string>
+
+    <string name="message_failed_notification">A message failed to send.</string>
 
 </resources>

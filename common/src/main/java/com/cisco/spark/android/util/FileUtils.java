@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
@@ -104,6 +105,19 @@ public class FileUtils {
         }
     }
 
+    public static void writeFileFromRaw(Context context, int resId, ParcelFileDescriptor outfile) {
+        if (outfile == null || context == null) {
+            Ln.e("Invalid Arg passed to writeFileFromRaw");
+            return;
+        }
+
+        InputStream is = context.getResources().openRawResource(resId);
+        FileOutputStream fos;
+        fos = new FileOutputStream(outfile.getFileDescriptor());
+        streamCopy(is, fos);
+        close(is);
+    }
+
     public static String readFile(File file) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
@@ -143,7 +157,7 @@ public class FileUtils {
     }
 
     public static File getCacheDir(Context context) {
-        File cacheDir = context.getExternalCacheDir();
+        File cacheDir = context.getCacheDir();
         if (cacheDir == null)
             cacheDir = context.getCacheDir();
         return cacheDir;
@@ -287,6 +301,153 @@ public class FileUtils {
         } catch (IOException e) {
             Ln.e(e, "Error reading file: " + file.getAbsolutePath());
             return null;
+        }
+    }
+
+    public static String formatFilesize(long filesize) {
+        double humanSize;
+        FileUnit unit;
+
+        if (FileUnit.GIGABYTES.isGreaterThanUnit(filesize)) {
+            humanSize = FileUnit.BYTES.toGigaBytes(filesize);
+            unit = FileUnit.GIGABYTES;
+        } else if (FileUnit.MEGABYTES.isGreaterThanUnit(filesize)) {
+            humanSize = FileUnit.BYTES.toMegaBytes(filesize);
+            unit = FileUnit.MEGABYTES;
+        } else if (FileUnit.KILOBYTES.isGreaterThanUnit(filesize)) {
+            humanSize = FileUnit.BYTES.toKiloBytes(filesize);
+            unit = FileUnit.KILOBYTES;
+        } else {
+            humanSize = filesize;
+            unit = FileUnit.BYTES;
+        }
+
+        return String.format("%.1f %s", humanSize, unit.getSuffix());
+    }
+
+    public enum FileUnit {
+        BYTES("B") {
+            public double toBytes(long filesize) {
+                return filesize;
+            }
+
+            public double toKiloBytes(long filesize) {
+                return filesize / (double) (kiloBytes / bytes);
+            }
+
+            public double toMegaBytes(long filesize) {
+                return filesize / (double) (megaBytes / bytes);
+            }
+
+            public double toGigaBytes(long filesize) {
+                return filesize / (double) (gigaBytes / bytes);
+            }
+
+            public boolean isGreaterThanUnit(long filesize) {
+                return filesize > bytes;
+            }
+        },
+        KILOBYTES("KB") {
+            public double toBytes(long filesize) {
+                return scale(filesize, kiloBytes / bytes);
+            }
+
+            public double toKiloBytes(long filesize) {
+                return filesize;
+            }
+
+            public double toMegaBytes(long filesize) {
+                return filesize / (double) (megaBytes / kiloBytes);
+            }
+
+            public double toGigaBytes(long filesize) {
+                return filesize / (double) (gigaBytes / kiloBytes);
+            }
+
+            public boolean isGreaterThanUnit(long filesize) {
+                return filesize > kiloBytes;
+            }
+        },
+        MEGABYTES("MB") {
+            public double toBytes(long filesize) {
+                return scale(filesize, kiloBytes / bytes);
+            }
+
+            public double toKiloBytes(long filesize) {
+                return scale(filesize, megaBytes / kiloBytes);
+            }
+
+            public double toMegaBytes(long filesize) {
+                return filesize;
+            }
+
+            public double toGigaBytes(long filesize) {
+                return filesize / (double) (gigaBytes / megaBytes);
+            }
+
+            public boolean isGreaterThanUnit(long filesize) {
+                return filesize > megaBytes;
+            }
+        },
+        GIGABYTES("GB") {
+            public double toBytes(long filesize) {
+                return scale(filesize, megaBytes / bytes);
+            }
+
+            public double toKiloBytes(long filesize) {
+                return scale(filesize, megaBytes / kiloBytes);
+            }
+
+            public double toMegaBytes(long filesize) {
+                return scale(filesize, megaBytes / megaBytes);
+            }
+
+            public double toGigaBytes(long filesize) {
+                return filesize;
+            }
+
+            public boolean isGreaterThanUnit(long filesize) {
+                return filesize > gigaBytes;
+            }
+        };
+
+        private String suffix;
+
+        FileUnit(String sufffix) {
+            this.suffix = sufffix;
+        }
+
+        public String getSuffix() {
+            return suffix;
+        }
+
+        public double toBytes(long filesize) {
+            throw new AbstractMethodError();
+        }
+
+        public double toKiloBytes(long filesize) {
+            throw new AbstractMethodError();
+        }
+
+        public double toMegaBytes(long filesize) {
+            throw new AbstractMethodError();
+        }
+
+        public double toGigaBytes(long filesize) {
+            throw new AbstractMethodError();
+        }
+
+        public boolean isGreaterThanUnit(long filesize) {
+            throw new AbstractMethodError();
+        }
+
+        static final long bytes = 1L;
+        static final long kiloBytes = bytes * 1024L;
+        static final long megaBytes = kiloBytes * 1024L;
+        static final long gigaBytes = megaBytes * 1024L;
+
+        static long scale(long d, long m) {
+            return d * m;
         }
     }
 }

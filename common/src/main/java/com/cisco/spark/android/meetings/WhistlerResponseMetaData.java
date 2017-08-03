@@ -6,6 +6,8 @@ public class WhistlerResponseMetaData {
     private String hostPin;
     private String meetingId;
     private String domain;
+    private String name;
+    private String site;
 
     public String getHostPin() {
         return hostPin;
@@ -17,5 +19,24 @@ public class WhistlerResponseMetaData {
 
     public String getDomain() {
         return domain;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getSite() {
+        return site;
+    }
+
+    @Override
+    public String toString() {
+        return "WhistlerResponseMetaData{" +
+                "hostPin='" + hostPin + '\'' +
+                ", meetingId='" + meetingId + '\'' +
+                ", domain='" + domain + '\'' +
+                ", name='" + name + '\'' +
+                ", site='" + site + '\'' +
+                '}';
     }
 }

@@ -1,5 +1,8 @@
 package com.cisco.spark.android.media;
 
+import android.graphics.Bitmap;
+import android.support.annotation.Nullable;
+
 import com.cisco.spark.android.room.audiopairing.AudioDataListener;
 import com.webex.wme.MediaSessionAPI;
 import com.webex.wme.TraceServerSink;
@@ -25,7 +28,7 @@ public class MediaEngineAdapter implements MediaEngine {
     }
 
     @Override
-    public MediaSession startMediaSession(MediaCallbackObserver mediaCallbackObserver, MediaDirection mediaDirection) {
+    public MediaSession createMediaSession(String callId) {
         return null;
     }
 
@@ -47,6 +50,12 @@ public class MediaEngineAdapter implements MediaEngine {
     @Override
     public void setLoggingLevel(MediaSessionAPI.TraceLevelMask level) {
 
+    }
+
+    @Override
+    @Nullable
+    public Bitmap getLastContentFrame() {
+        return null;
     }
 
     @Override
@@ -82,5 +91,10 @@ public class MediaEngineAdapter implements MediaEngine {
     @Override
     public void startTraceServer(String clusters) {
 
+    }
+
+    @Override
+    public boolean isLastTraceServerUsable() {
+        return false;
     }
 }

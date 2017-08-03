@@ -1,15 +1,13 @@
 package com.cisco.spark.android.whiteboard;
 
+import android.content.ContentResolver;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
-import android.util.Base64;
 
 import com.cisco.crypto.scr.SecureContentReference;
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
@@ -22,33 +20,45 @@ import com.cisco.spark.android.core.Component;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.core.Settings;
 import com.cisco.spark.android.events.WhiteboardChannelUpdateEvent;
+import com.cisco.spark.android.features.CoreFeatures;
 import com.cisco.spark.android.locus.events.ResetEvent;
 import com.cisco.spark.android.locus.model.LocusDataCache;
 import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.locus.service.LocusService;
+import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.mercury.MercuryClient;
+import com.cisco.spark.android.mercury.MercuryClient.WebSocketStatusCodes;
 import com.cisco.spark.android.mercury.events.WhiteboardActivityEvent;
 import com.cisco.spark.android.mercury.events.WhiteboardMercuryClient;
+import com.cisco.spark.android.metrics.MetricsReporter;
+import com.cisco.spark.android.metrics.model.MetricsReportRequest;
+import com.cisco.spark.android.model.Conversation;
 import com.cisco.spark.android.model.ErrorDetail;
 import com.cisco.spark.android.model.KeyManager;
-import com.cisco.spark.android.model.KeyObject;
 import com.cisco.spark.android.processing.ActivityListener;
 import com.cisco.spark.android.reachability.NetworkReachabilityChangedEvent;
 import com.cisco.spark.android.sdk.SdkClient;
 import com.cisco.spark.android.sync.ContentManager;
 import com.cisco.spark.android.sync.EncryptedConversationProcessor;
 import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
+import com.cisco.spark.android.ui.BitmapProvider;
+import com.cisco.spark.android.util.Clock;
+import com.cisco.spark.android.util.LoggingUtils;
+import com.cisco.spark.android.util.Sanitizer;
 import com.cisco.spark.android.util.SchedulerProvider;
 import com.cisco.spark.android.util.UserAgentProvider;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.spark.android.whiteboard.loader.FileLoader;
+import com.cisco.spark.android.whiteboard.loader.WhiteboardLoader;
 import com.cisco.spark.android.whiteboard.persistence.AbsRemoteWhiteboardStore;
 import com.cisco.spark.android.whiteboard.persistence.RemoteWhiteboardStore;
 import com.cisco.spark.android.whiteboard.persistence.model.Channel;
 import com.cisco.spark.android.whiteboard.persistence.model.Content;
 import com.cisco.spark.android.whiteboard.persistence.model.ImageContent;
+import com.cisco.spark.android.whiteboard.persistence.model.Whiteboard;
 import com.cisco.spark.android.whiteboard.snapshot.SnapshotManager;
 import com.cisco.spark.android.whiteboard.util.WhiteboardConstants;
+import com.cisco.spark.android.whiteboard.util.WhiteboardUtils;
 import com.cisco.spark.android.whiteboard.view.event.WhiteboardLoadContentsEvent;
 import com.cisco.spark.android.whiteboard.view.event.WhiteboardMercuryUpdateEvent;
 import com.cisco.spark.android.whiteboard.view.event.WhiteboardServiceResponseEvent;
@@ -58,26 +68,21 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import de.greenrobot.event.EventBus;
 import retrofit2.Response;
 import rx.Observable;
 
-import static com.cisco.spark.android.whiteboard.SnapshotRequest.SnapshotRequestType.GET_SNAPSHOT_FOR_CHAT;
-import static com.cisco.spark.android.whiteboard.SnapshotRequest.SnapshotRequestType.GET_SNAPSHOT_FOR_UPLOAD;
+import static com.cisco.spark.android.whiteboard.WhiteboardError.ErrorData.LOAD_BOARD_ERROR;
 
 public class WhiteboardService implements Component {
 
@@ -85,37 +90,43 @@ public class WhiteboardService implements Component {
     protected static final long TIMER_DELAY_SERVER = 2000;
     protected static final long TIMER_DELAY_NETWORK = 1000;
     protected static final long TIMER_PERIOD = 5000;
-    protected static final long DEFAULT_IMAGE_UPLOAD_INTERVAL = 360000;
     protected static final int MESSAGE_RELOAD_BOARD = 1;
 
     public static final int ERROR_TOLERANCE_THRESHOLD = 3;
     public static final int ERROR_DETECT_THRESHOLD = 4;
 
-    private final SnapshotManager snapshotManager;
-    private final SdkClient sdkClient;
-    private final LocusDataCache locusDataCache;
-
+    protected final WhiteboardCache whiteboardCache;
+    protected final LocusDataCache locusDataCache;
     protected final TrackingIdGenerator trackingIdGenerator;
     protected final ActivityListener activityListener;
     protected final Ln.Context lnContext;
     protected final Gson gson;
     protected final EventBus bus;
+    protected final Sanitizer sanitizer;
+    protected final SdkClient sdkClient;
     protected final JsonParser jsonParser;
     protected final KeyManager keyManager;
+    protected final CoreFeatures coreFeatures;
     protected final ContentManager contentManager;
+    protected final SnapshotManager snapshotManager;
     protected final ApiTokenProvider apiTokenProvider;
     protected final UserAgentProvider userAgentProvider;
     protected final SchedulerProvider schedulerProvider;
     protected final ApiClientProvider apiClientProvider;
     protected final Injector injector;
+    protected final OperationQueue operationQueue;
     protected final DeviceRegistration deviceRegistration;
     protected final Settings settings;
+    protected final Context context;
+    protected final ContentResolver contentResolver;
 
-    protected final WhiteboardEncryptor whiteboardEncryptor;
-    protected final WhiteboardShareDelegate shareDelegate;
-    protected final WhiteboardCreator whiteboardCreator;
+    protected final WhiteboardLoader whiteboardLoader;
     protected final WhiteboardSavingInConversationDelegate whiteboardSavingDelegate;
     protected final WhiteboardMercuryController whiteboardMercuryController;
+    protected final WhiteboardEncryptor whiteboardEncryptor;
+    protected final WhiteboardShareDelegate shareDelegate;
+    protected final AnnotationCreator annotationCreator;
+    protected final WhiteboardCreator whiteboardCreator;
 
     private boolean running;
 
@@ -125,60 +136,58 @@ public class WhiteboardService implements Component {
     private Uri parentkmsResourceObjectUrl;
     private String aclId;
     private Uri mediaShareUrl;
-    private Channel backgroundUpdatingChannel;
 
+    private WhiteboardContext wbContext;
     private Channel currentChannel;
+
     private String loadingChannelId;
 
     protected ApplicationController applicationController;
 
     @Nullable protected WhiteboardStore localStore;
-    protected WhiteboardStore remoteStore;
+    @Nullable protected WhiteboardStore remoteStore;
 
     private OnWhiteboardEventListener onWhiteboardEventListener;
     private boolean isReloadBoard;
+    @Deprecated
     private boolean isReadonlyMode;
     private boolean isLosingNetwork;
 
-    private boolean uploadSnapshotWorking;
-    private boolean useSharedWebSocket;
-    private UploadSnapshotTask snapshotTask;
-    private long imageUpdateInterval;
+    private long whiteboardLoadTimeStart;
+    private long whiteboardStartDecryptingTime;
+    protected Clock clock;
 
-    // FIXME These should be pulled out
-    protected Map<String, String> whiteboardCache = new ConcurrentHashMap<>();
-    private Map<String, String> sentWhiteboard = new ConcurrentHashMap<>();
-
-    @Deprecated
-    protected boolean hasMultipleLocalBoards;
-    @Deprecated
-    protected boolean hasMultipleRemoteBoards;
-    protected int numberOfLocalBoards;
-    protected int numberOfRemoteBoards;
-    protected SnapshotSyncQueue pendingGetSnapshotQueue;
+    private MetricsReporter metricsReporter;
 
     private List<PendingContent> pendingContents = new ArrayList<>();
     private final Object pendingContentLock = new Object();
+    private Executor saveContentExecutor;
 
-    public WhiteboardService(ApiClientProvider apiClientProvider, Gson gson, EventBus eventBus,
+    private final Object stateLock = new Object();
+
+    public WhiteboardService(WhiteboardCache whiteboardCache, ApiClientProvider apiClientProvider, Gson gson, EventBus eventBus,
                              ApiTokenProvider apiTokenProvider, KeyManager keyManager, OperationQueue operationQueue,
                              DeviceRegistration deviceRegistration, LocusDataCache locusDataCache, Settings settings,
                              UserAgentProvider userAgentProvider, TrackingIdGenerator trackingIdGenerator,
-                             ActivityListener activityListener, Ln.Context lnContext,
-                             CallControlService callControlService, Context context, Injector injector,
-                             EncryptedConversationProcessor conversationProcessor, SdkClient sdkClient,
+                             ActivityListener activityListener, Ln.Context lnContext, CallControlService callControlService, Sanitizer sanitizer, Context context,
+                             Injector injector, EncryptedConversationProcessor conversationProcessor, SdkClient sdkClient,
                              ContentManager contentManager, LocusService locusService, SchedulerProvider schedulerProvider,
-                             AuthenticatedUserProvider authenticatedUserProvider) {
-
+                             BitmapProvider bitmapProvider, FileLoader fileLoader, MediaEngine mediaEngine,
+                             AuthenticatedUserProvider authenticatedUserProvider, CoreFeatures coreFeatures, Clock clock, MetricsReporter metricsReporter,
+                             ContentResolver contentResolver) {
         this.gson = gson;
         this.bus = eventBus;
         this.apiTokenProvider = apiTokenProvider;
+        this.operationQueue = operationQueue;
         this.deviceRegistration = deviceRegistration;
         this.keyManager = keyManager;
+        this.sanitizer = sanitizer;
         this.schedulerProvider = schedulerProvider;
+        this.coreFeatures = coreFeatures;
         this.jsonParser = new JsonParser();
         this.apiClientProvider = apiClientProvider;
-
+        this.context = context;
+        this.whiteboardCache = whiteboardCache;
         this.whiteboardEncryptor = new WhiteboardEncryptor(keyManager);
         this.locusDataCache = locusDataCache;
         this.settings = settings;
@@ -189,27 +198,38 @@ public class WhiteboardService implements Component {
         this.injector = injector;
         this.sdkClient = sdkClient;
         this.contentManager = contentManager;
+        this.metricsReporter = metricsReporter;
+        this.clock = clock;
+        this.contentResolver = contentResolver;
 
         // Potentially move this to the module
         this.shareDelegate = new WhiteboardShareDelegate(conversationProcessor, locusDataCache, callControlService, deviceRegistration,
                                                          apiClientProvider, this, locusService, keyManager, eventBus);
-        this.whiteboardCreator = new WhiteboardCreator(deviceRegistration, apiClientProvider, this, schedulerProvider,
-                                                       keyManager, sdkClient, eventBus, conversationProcessor, injector,
-                                                       context, authenticatedUserProvider);
+        this.whiteboardCreator = new WhiteboardCreator(apiClientProvider, this, schedulerProvider,
+                                                       whiteboardCache, keyManager, sdkClient, eventBus, conversationProcessor,
+                                                       authenticatedUserProvider, gson);
         this.whiteboardSavingDelegate = new WhiteboardSavingInConversationDelegate(this, schedulerProvider,
                 apiClientProvider, conversationProcessor, injector, context, eventBus);
         this.whiteboardMercuryController = new WhiteboardMercuryController(whiteboardEncryptor, schedulerProvider,
-                                                                           this, apiClientProvider, locusDataCache, bus,
+                                                                           this, whiteboardCache, apiClientProvider, locusDataCache, bus,
                                                                            gson);
+
+        this.whiteboardLoader = new WhiteboardLoader(this, whiteboardCache, schedulerProvider,
+                                                     gson, bitmapProvider, context, apiClientProvider, fileLoader, mediaEngine);
+
+
+        this.snapshotManager = new SnapshotManager(injector, keyManager, operationQueue, fileLoader, bus, context, this, contentManager, contentResolver);
+
+        this.annotationCreator = new AnnotationCreator(apiClientProvider, this, schedulerProvider,
+                                                       snapshotManager, callControlService, locusDataCache, coreFeatures,
+                                                       keyManager, sdkClient, context, bus, fileLoader);
 
 
         localStore = buildLocalStore();
         remoteStore = buildRemoteStore();
-        snapshotTask = new UploadSnapshotTask();
-        currentChannel = null;
 
-        snapshotManager = new SnapshotManager(injector, keyManager, operationQueue, new FileLoader(apiClientProvider), bus, context, this);
-        pendingGetSnapshotQueue = new SnapshotSyncQueue();
+        wbContext = new WhiteboardContext();
+        saveContentExecutor = Executors.newSingleThreadExecutor();
     }
 
     @Nullable
@@ -245,7 +265,7 @@ public class WhiteboardService implements Component {
         if (running) {
             return;
         }
-        Ln.i(TAG, "Whiteboard start");
+        Ln.i("Whiteboard start");
         running = true;
         isLosingNetwork = false;
 
@@ -257,7 +277,9 @@ public class WhiteboardService implements Component {
         whiteboardCreator.start();
         snapshotManager.start();
 
-        remoteStore.start();
+        if (null != remoteStore) {
+            remoteStore.start();
+        }
 
         if (localStore != null) {
             localStore.start();
@@ -266,9 +288,13 @@ public class WhiteboardService implements Component {
         bus.post(WhiteboardServiceEvent.changeWhiteboardServiceState(true));
     }
 
+    public SnapshotManager getSnapshotManager() {
+        return snapshotManager;
+    }
+
     @Override
     public void stop() {
-        Ln.i(TAG, "Whiteboard stop");
+        Ln.i("Whiteboard stop");
         if (bus.isRegistered(this)) {
             bus.unregister(this);
         }
@@ -276,8 +302,9 @@ public class WhiteboardService implements Component {
         shareDelegate.stop();
         whiteboardCreator.stop();
         snapshotManager.stop();
-
-        remoteStore.stop();
+        if (null != remoteStore) {
+            remoteStore.stop();
+        }
 
         if (localStore != null) {
             localStore.stop();
@@ -289,19 +316,19 @@ public class WhiteboardService implements Component {
     public void reset() {
         Ln.i("WhiteboardService unregisterWhiteboard");
         loadingChannelId = null;
-        aclUrlLink = null;
-        keyUrl = null;
-        currentChannel = null;
+        setCurrentChannel(null);
         isReloadBoard = false;
+        wbContext = new WhiteboardContext();
+        currentChannel = null;
         stopMercury();
         isReadonlyMode = false;
-        if (snapshotTask != null) {
-            snapshotTask.cancelTimer();
+
+        if (localStore != null) {
+            localStore.clearCache();
         }
-        imageUpdateInterval = 0L;
-        whiteboardCache.clear();
-        sentWhiteboard.clear();
-        pendingGetSnapshotQueue.clear();
+        if (sdkClient.shouldClearRemoteBoardStore() && null != remoteStore) {
+            remoteStore.clearCache();
+        }
     }
 
     public boolean isRunning() {
@@ -313,8 +340,12 @@ public class WhiteboardService implements Component {
         this.applicationController = applicationController;
     }
 
-    public synchronized void createBoardGeneral(String conversationId, Uri keyUrl, Uri aclUrl) {
-        whiteboardCreator.createBoard(new WhiteboardCreator.CreateData(conversationId, keyUrl, aclUrl));
+    public synchronized UUID createBoard(WhiteboardCreator.CreateData createData, WhiteboardCreator.CreateCallback createCallback) {
+        if (whiteboardCreator.createBoard(createData, createCallback)) {
+            return createData.getId();
+        } else {
+            return null;
+        }
     }
 
     public Channel loadBoardById(String boardId) {
@@ -348,63 +379,38 @@ public class WhiteboardService implements Component {
         return image;
     }
 
-    public synchronized UUID getImageSnapshot(SnapshotRequest.SnapshotRequestType snapShotType) {
-        SnapshotRequest request = SnapshotRequest.getSnapshotRequest(snapShotType);
-        pendingGetSnapshotQueue.add(request);
-        sendGetImageSnapshot();
-        return request.getRequestId();
+    public void uploadWhiteboardSnapshot(final Uri imageUrl, @NonNull final Channel channel) {
+        snapshotManager.uploadWhiteboardSnapshot(imageUrl, channel, getAclId(), null, true, createSnapshotUploadListener(imageUrl));
     }
 
-    public UUID getImageSnapShotForSendToChat() {
-        return getImageSnapshot(GET_SNAPSHOT_FOR_CHAT);
+    public void uploadWhiteboardSnapshot(final Uri imageUrl, final UUID channelCreationRequestId) {
+        snapshotManager.uploadWhiteboardSnapshot(imageUrl, channelCreationRequestId, getAclId(), createSnapshotUploadListener(imageUrl));
     }
 
-    public UUID getImageSnapshotForUpload() {
-        return getImageSnapshot(GET_SNAPSHOT_FOR_UPLOAD);
+    private SnapshotManager.SnapshotManagerUploadListener createSnapshotUploadListener(Uri imageUrl) {
+        return new SnapshotManager.SnapshotManagerUploadListener() {
+
+            @Override
+            public void onSuccess(String operationId, com.cisco.spark.android.model.File file, Channel channel) {
+                deleteSnapshotFile();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                deleteSnapshotFile();
+
+                createDefaultError(new JsonObject());
+                setReloadBoard(true);
+            }
+
+
+            private void deleteSnapshotFile() {
+                if (!new File(imageUrl.getPath()).delete())
+                    Ln.w("Couldn't delete file: " + imageUrl.getPath());
+            }
+        };
     }
 
-    public void getImageSnapshotResponse(final JsonObject msg) {
-        String image = msg.get("data").getAsString();
-        if (TextUtils.isEmpty(image))
-            return;
-        if (onWhiteboardEventListener != null) {
-            onWhiteboardEventListener.onSnapshotReceived(image);
-        }
-        File file = parseSnapshot(image);
-        if (null == file)
-            return;
-        handleSnapshot(image, file);
-    }
-
-    protected void handleSnapshot(String image, File file) {
-        SnapshotRequest request = pendingGetSnapshotQueue.poll();
-        if (request == null)
-            return;
-        if (request.getRequestType() == GET_SNAPSHOT_FOR_UPLOAD) {
-            sendSnapShot(image, file);
-        } else if (request.getRequestType() == GET_SNAPSHOT_FOR_CHAT) {
-            bus.post(WhiteboardSnapshotEvent.whiteboardSnapshotEvent(image, file, request.getRequestId(), request.getRequestType()));
-        }
-    }
-
-    public void uploadWhiteboardSnapshot(final Uri imageUrl, final Channel snapshotChannel) {
-        snapshotManager.uploadWhiteboardSnapshot(imageUrl, snapshotChannel, getChannelWhiteboardStore(snapshotChannel), snapshotChannel.getDefaultEncryptionKeyUrl(), getAclId(),
-                new SnapshotManager.SnapshotManagerUploadListener() {
-                    @Override
-                    public void onSuccess() {
-                        if (!new java.io.File(imageUrl.getPath()).delete())
-                            Ln.w("Couldn't delete file: " + imageUrl.getPath());
-                    }
-
-                    @Override
-                    public void onFailure(String errorMessage) {
-                        if (!new java.io.File(imageUrl.getPath()).delete())
-                            Ln.w("Couldn't delete file: " + imageUrl.getPath());
-                        createDefaultError(new JsonObject());
-                        setReloadBoard(true);
-                    }
-                });
-    }
 
     public void downloadWhiteboardSnapshot(@Nullable SecureContentReference secureContentReference, @NonNull SnapshotManager.SnapshotManagerDownloadListener snapshotManagerDownloadListener) {
         snapshotManager.downloadWhiteboardSnapshot(secureContentReference, snapshotManagerDownloadListener);
@@ -419,29 +425,34 @@ public class WhiteboardService implements Component {
     }
 
     public Channel getCurrentChannel() {
-        return currentChannel;
+        synchronized (stateLock) {
+            return currentChannel;
+        }
     }
 
     public synchronized void setCurrentChannel(Channel currentChannel) {
-        this.currentChannel = currentChannel;
+        synchronized (stateLock) {
+            Ln.e("Setting current channel " + currentChannel + " <- " + LoggingUtils.getCaller());
+            this.currentChannel = currentChannel;
+        }
         bus.post(new WhiteboardChannelUpdateEvent());
     }
 
     public boolean isLocal() {
-        if (deviceRegistration.getFeatures().isWhiteboardWithAclEnabled()) {
-            return getAclUrlLink() == null;
-        } else {
-            return getAclId() == null;
-        }
+        return getAclUrlLink() == null;
     }
 
     public synchronized void setAclUrlLink(Uri aclUrlLink) {
-        this.aclUrlLink = aclUrlLink;
+        synchronized (stateLock) {
+            this.aclUrlLink = aclUrlLink;
+        }
     }
 
     public void setAclId(String aclId) {
-        if (!TextUtils.isEmpty(aclId)) {
-            this.aclId = aclId;
+        synchronized (stateLock) {
+            if (!TextUtils.isEmpty(aclId)) {
+                this.aclId = aclId;
+            }
         }
     }
 
@@ -449,56 +460,91 @@ public class WhiteboardService implements Component {
      * Overridden in sparkling
      */
     public Uri getAclUrlLink() {
-        return aclUrlLink;
+        synchronized (stateLock) {
+            return aclUrlLink;
+        }
     }
 
     public Uri getParentkmsResourceObjectUrl() {
-        return parentkmsResourceObjectUrl;
+        synchronized (stateLock) {
+            return parentkmsResourceObjectUrl;
+        }
     }
 
     // THIS IS THE KEY URL FOR THE CURRENT SPACE BEING VIEWED. ****NOT**** THE WHITEBOARD
     public Uri getDefaultConversationKeyUrl() {
-        return keyUrl;
+        synchronized (stateLock) {
+            return keyUrl;
+        }
     }
 
     public void setDefaultConversationKeyUrl(Uri keyUrl) {
-        this.keyUrl = keyUrl;
+        synchronized (stateLock) {
+            this.keyUrl = keyUrl;
+        }
     }
 
     public String getAclId() {
-        return aclId;
+        synchronized (stateLock) {
+            return aclId;
+        }
+    }
+
+    public WhiteboardContext getWhiteboardContext() {
+        return wbContext;
     }
 
     public KeyManager getKeyManager() {
         return keyManager;
     }
 
+    public UUID beginAnnotation(AnnotationCreator.AnnotationParams args) {
+        return annotationCreator.beginAnnotation(args);
+    }
+
+    public AnnotationCreator getAnnotationCreator() {
+        return annotationCreator;
+    }
+
     public DeviceRegistration getDeviceRegistration() {
         return deviceRegistration;
     }
 
-    public void parseContentItems(List<Content> items, boolean autoloadContentBatch) {
+    public void parseContentItems(String channelId, List<Content> items, boolean autoloadContentBatch) {
+
+        if (items == null || items.size() == 0) {
+            // Empty board
+            bus.post(new WhiteboardLoadContentsEvent(items, getCurrentChannel(), !autoloadContentBatch));
+            return;
+        }
+        whiteboardStartDecryptingTime = clock.monotonicNow();
         List<Content> parsedContents = new ArrayList<>();
-        if (items != null) {
-            for (Content content : items) {
-                String data = whiteboardEncryptor.decryptContent(content);
-                if (!TextUtils.isEmpty(data)) {
-                    content.setPayload(data);
-                    parsedContents.add(content);
-                }
+        List<Content> failedContents = new ArrayList<>();
+
+        for (Content content : items) {
+            String data = whiteboardEncryptor.decryptContent(content);
+            if (!TextUtils.isEmpty(data)) {
+                content.setPayload(data);
+                parsedContents.add(content);
+            } else {
+                failedContents.add(content);
             }
         }
-        bus.post(new WhiteboardLoadContentsEvent(parsedContents, getBoardId(), !autoloadContentBatch));
+
+        if (!failedContents.isEmpty()) {
+            bus.post(new WhiteboardError(WhiteboardError.ErrorData.DECRYPT_CONTENTS_ERROR, channelId));
+        } else if (!parsedContents.isEmpty()) {
+            bus.post(new WhiteboardLoadContentsEvent(parsedContents, getCurrentChannel(), !autoloadContentBatch));
+            sendWhiteboardLoadMetrics(items.size(), channelId);
+        } else {
+            Ln.e(new IllegalStateException("Does not compute"));
+        }
     }
 
     protected void clearPendingContent() {
         synchronized (pendingContentLock) {
             pendingContents.clear();
         }
-    }
-
-    protected void sendGetImageSnapshot() {
-        // FIXME
     }
 
     @WorkerThread
@@ -546,8 +592,16 @@ public class WhiteboardService implements Component {
         tempChannel.setChannelId(channelId);
         setCurrentChannel(tempChannel); //// TODO: 09.11.16 need this ?
 
-        getCurrentWhiteboardStore().loadContent(channelId);
-        getCurrentWhiteboardStore().getChannel(channelId);
+        WhiteboardStore store = getCurrentWhiteboardStore();
+        store.getChannel(channelId).subscribe(channel -> {
+            // TODO This is where mercury should be initialised
+            setCurrentChannel(channel);
+            store.loadContent(channelId);
+        }, throwable -> {
+            bus.post(new WhiteboardError(LOAD_BOARD_ERROR));
+            setLoadingChannel(null);
+            setCurrentChannel(null);
+        });
     }
 
     public void saveContents(final JsonObject msg) {
@@ -557,7 +611,12 @@ public class WhiteboardService implements Component {
             return;
         }
         handleWhiteboardMessage(msg);
-        getCurrentWhiteboardStore().saveContent(getBoardId(), contentRequests, msg);
+
+        Observable.just(1)
+                .subscribeOn(schedulerProvider.from(getSaveContentExecutor()))
+                .subscribe(integer -> {
+                    getCurrentWhiteboardStore().saveContent(getCurrentChannel(), contentRequests, msg);
+                }, Ln::e);
     }
 
     @Nullable
@@ -579,11 +638,30 @@ public class WhiteboardService implements Component {
     }
 
     public void clearBoard(final JsonObject msg) {
-        getCurrentWhiteboardStore().clear(getBoardId(), msg);
+        Observable.just(1)
+                .subscribeOn(schedulerProvider.from(getSaveContentExecutor()))
+                .subscribe(integer -> {
+                    Channel currentChannel = getCurrentChannel();
+                    String boardId = currentChannel != null ? currentChannel.getChannelId() : null;
+                    Whiteboard whiteboard = whiteboardCache.getWhiteboard(boardId);
+                    if (whiteboard == null || whiteboard.getBackgroundBitmap() == null) {
+                        Ln.d("clear board - no background content");
+                        getCurrentWhiteboardStore().clear(getBoardId(), msg);
+                    } else {
+                        Ln.d("clear board - have background content");
+                        List<Content> backgroundContentList = new ArrayList<>();
+                        backgroundContentList.add(whiteboard.getBackgroundContent());
+                        getCurrentWhiteboardStore().clearPartialContents(getBoardId(), backgroundContentList, msg);
+                    }
+                }, Ln::e);
     }
 
     public void clearBoardSnapshot(Channel snapshotChannel) {
-        snapshotManager.clearWhiteboardSnapshot(snapshotChannel, getChannelWhiteboardStore(snapshotChannel), snapshotChannel.getDefaultEncryptionKeyUrl(), getAclId());
+        snapshotManager.clearWhiteboardSnapshot(snapshotChannel, getChannelWhiteboardStore(snapshotChannel), getAclId());
+    }
+
+    public void postWhiteboardsSnapshotsToConversation(Conversation conversation, List<Channel> channels) {
+        snapshotManager.postWhiteboardsSnapshotsToConversation(conversation, channels);
     }
 
     public synchronized String getBoardId() {
@@ -595,10 +673,20 @@ public class WhiteboardService implements Component {
 
     }
 
+    protected void handleWhiteboardMessage(JsonObject msg) {
+    }
+
     @Nullable
     @CheckResult
     private List<Content> createEncryptedContents(JsonArray contents) {
         List<Content> listContents = new ArrayList<>();
+
+        Channel currentChannel = getCurrentChannel();
+
+        if (currentChannel == null) {
+            return null;
+        }
+
 
         Uri keyUrl = currentChannel.getDefaultEncryptionKeyUrl();
 
@@ -619,7 +707,7 @@ public class WhiteboardService implements Component {
             ErrorDetail errorDetail = null;
             try {
                 errorDetail = gson.fromJson(error.errorBody().string(), ErrorDetail.class);
-            } catch (IOException e) {
+            } catch (JsonSyntaxException | IOException e) {
                 Ln.e(e);
             }
 
@@ -671,21 +759,34 @@ public class WhiteboardService implements Component {
         sendRESTResponseEvent(msg, null, errorResponse);
     }
 
-    public void resetBoard() {
+    public void partialResetBoard() {
         setCurrentChannel(null);
-        stopMercury();
         clearPendingContent();
         getMercuryController().clearPendingMessages();
     }
 
+    public void fullResetBoard() {
+        partialResetBoard();
+        stopMercury();
+    }
+
     public void realtimeMessage(final JsonObject msg) {
 
-        final String conversationId = getAclId();
         final Uri appKeyUrl = getDefaultConversationKeyUrl();
         final Uri aclUrl = getAclUrlLink();
 
         if (getCurrentChannel() == null) {
-            createBoardGeneral(conversationId, appKeyUrl, aclUrl);
+            createBoard(new WhiteboardCreator.CreateData(getWhiteboardContext()), new WhiteboardCreator.CreateCallback() {
+                @Override
+                public void onSuccess(UUID createID, Channel channel) {
+                    // TODO
+                }
+
+                @Override
+                public void onFail(UUID uuid) {
+                    // TODO
+                }
+            });
         }
 
         whiteboardMercuryController.realtimeMessage(msg, getCurrentChannel());
@@ -699,11 +800,24 @@ public class WhiteboardService implements Component {
         return whiteboardMercuryController.usePrimaryMercury();
     }
 
+    public Observable<Whiteboard> load(String channelId) {
+        return whiteboardLoader.load(channelId);
+    }
+
+    public Observable<Whiteboard> load(String channelId, WhiteboardLoader.LoaderArgs loaderArgs) {
+        return whiteboardLoader.load(channelId, loaderArgs);
+    }
+
     public void loadBoard(final String channelId, final boolean isLoadboard) {
+        whiteboardLoadTimeStart = clock.monotonicNow();
         if (isLoadboard) {
             loadBoardFromMercury(channelId);
         }
         whiteboardMercuryController.initMercury(channelId, false);
+    }
+
+    protected void reloadBoard() {
+        loadBoard(getBoardId(), true);
     }
 
     public void stopMercury() {
@@ -715,9 +829,8 @@ public class WhiteboardService implements Component {
      */
     @NonNull
     protected MercuryClient createWhiteboardMercuryClient() {
-        return new WhiteboardMercuryClient(apiClientProvider, apiTokenProvider, gson, bus,
-                deviceRegistration, settings, userAgentProvider,
-                trackingIdGenerator, activityListener, lnContext, this);
+        return new WhiteboardMercuryClient(apiClientProvider, gson, bus,
+                deviceRegistration, activityListener, lnContext, this, operationQueue, sanitizer);
     }
 
     // Need to maintain this interface until the web one goes away
@@ -768,31 +881,16 @@ public class WhiteboardService implements Component {
         whiteboardMercuryController.setPrimaryMercury(mercuryClient);
     }
 
+    public void setMetricsReporter(MetricsReporter metricsReporter) {
+        this.metricsReporter = metricsReporter;
+    }
+
     public WhiteboardShareDelegate getWhiteboardShareDelegate() {
         return shareDelegate;
     }
 
     public void share() {
         shareDelegate.share(getCurrentChannel(), getAclId());
-    }
-
-    public void saveWhiteboardsInBoundConversation(List<Channel> boards) {
-        //All boards must have at least: boardId and kmsResourceUrl
-        for (final Channel board : boards) {
-            whiteboardSavingDelegate.saveBoardInConversation(board, getAclId(), getRemoteStore(), new AbsRemoteWhiteboardStore.ClientCallback() {
-                @Override
-                public void onSuccess() {
-                    bus.post(new WhiteboardChannelSavedEvent(board, true));
-                }
-
-                @Override
-                public void onFailure(String errorMessage) {
-                    bus.post(new WhiteboardChannelSavedEvent(board, false, errorMessage));
-                }
-            });
-        }
-        localStore.clearCache();
-        numberOfLocalBoards = 0;
     }
 
     public void removeSelfFromWhiteboardsAcls(List<Channel> boards) {
@@ -810,7 +908,6 @@ public class WhiteboardService implements Component {
         if (onWhiteboardEventListener != null) {
             onWhiteboardEventListener.onBoardFinished();
         }
-        whiteboardCreator.createComplete();
         bus.post(WhiteboardStateEvent.whiteboardPersistanceReady());
     }
 
@@ -820,22 +917,10 @@ public class WhiteboardService implements Component {
         }
     }
 
-    @Deprecated
-    public boolean hasMultipleRemoteBoards() {
-        return hasMultipleRemoteBoards;
-    }
-
-    @Deprecated
-    public boolean hasMultipleLocalBoards() {
-        return hasMultipleLocalBoards;
-    }
-
-    public int getNumberOfLocalBoards() {
-        return numberOfLocalBoards;
-    }
-
-    public int getNumberOfRemoteBoards() {
-        return numberOfRemoteBoards;
+    public void boardConnectMercuryError(String errorMessage) {
+        if (onWhiteboardEventListener != null) {
+            onWhiteboardEventListener.onBoardError(new WhiteboardError(WhiteboardError.ErrorData.LOAD_BOARD_ERROR, null, errorMessage));
+        }
     }
 
     public String getSharedBoardId() {
@@ -848,8 +933,8 @@ public class WhiteboardService implements Component {
     }
 
     public void saveContents(List<Content> content, String id) {
-        String boardId = getBoardId();
-        if (boardId == null) {
+        Channel channel = getCurrentChannel();
+        if (channel == null) {
             synchronized (pendingContentLock) {
                 pendingContents.add(new PendingContent(content, id));
             }
@@ -857,13 +942,17 @@ public class WhiteboardService implements Component {
         }
         JsonObject json = new JsonObject();
         json.addProperty("writerId", id);
-        json.addProperty("boardId", boardId);
+        json.addProperty("boardId", channel.getChannelId());
         json.addProperty("action", WhiteboardConstants.SAVE_CONTENT);
-        bus.post(new WhiteboardMercuryUpdateEvent(content, boardId, false));
-        List<Content> encryptedContents = whiteboardEncryptor.encryptContent(content, getCurrentChannel().getDefaultEncryptionKeyUrl());
+        bus.post(new WhiteboardMercuryUpdateEvent(content, channel.getChannelId(), false));
+        List<Content> encryptedContents = whiteboardEncryptor.encryptContent(content, channel.getDefaultEncryptionKeyUrl());
 
         if (encryptedContents != null) {
-            getCurrentWhiteboardStore().saveContent(boardId, encryptedContents, json);
+            Observable.just(1)
+                    .subscribeOn(schedulerProvider.from(getSaveContentExecutor()))
+                    .subscribe(integer -> {
+                        getCurrentWhiteboardStore().saveContent(channel, encryptedContents, json);
+                    }, Ln::e);
         } else {
             Ln.e("Unable to encrypt contents.");
         }
@@ -874,8 +963,7 @@ public class WhiteboardService implements Component {
         JsonObject json = new JsonObject();
         json.addProperty("boardId", boardId);
         json.addProperty("action", WhiteboardConstants.CLEAR_BOARD);
-        getCurrentWhiteboardStore().clear(boardId, json);
-        clearBoardSnapshot(getCurrentChannel());
+        clearBoard(json);
     }
 
     public void unshareWhiteboard() {
@@ -884,6 +972,21 @@ public class WhiteboardService implements Component {
 
     public WhiteboardMercuryController getMercuryController() {
         return whiteboardMercuryController;
+    }
+
+    public String getLoadingChannel() {
+        return loadingChannelId;
+    }
+
+    public void setWhiteboardContext(WhiteboardContext whiteboardContext) {
+
+        synchronized (stateLock) {
+            this.aclId = whiteboardContext.getAclId();
+            this.aclUrlLink = whiteboardContext.getAclUrl();
+            this.keyUrl = whiteboardContext.getDefaultEncryptionKeyUrl();
+            this.parentkmsResourceObjectUrl = whiteboardContext.getKro();
+            this.wbContext = whiteboardContext;
+        }
     }
 
     public interface OnWhiteboardEventListener {
@@ -895,6 +998,10 @@ public class WhiteboardService implements Component {
         void onBoardError(WhiteboardError whiteboardError);
 
         void onSnapshotReceived(String image);
+
+        void onBoardCreated(Channel channel);
+
+        void onBoardContentLoaded();
     }
 
     public OnWhiteboardEventListener getOnWhiteboardEventListener() {
@@ -907,14 +1014,14 @@ public class WhiteboardService implements Component {
             return;
         }
         if (event.isConnected()) {
-            Ln.d(TAG, "Network is connected");
+            Ln.d("Network is connected");
             isLosingNetwork = false;
             bus.post(WhiteboardServiceEvent.changeWhiteboardServiceState(false));
             if (isReloadBoard) {
-                loadBoard(getBoardId(), true);
+                reloadBoard();
             }
         } else {
-            Ln.d(TAG, "Network is disconnected");
+            Ln.d("Network is disconnected");
             isLosingNetwork = true;
         }
     }
@@ -925,6 +1032,8 @@ public class WhiteboardService implements Component {
             return;
         }
 
+        whiteboardMercuryController.stopMercury();
+
         Ln.d("mercuryErrorEvent " + event.getCode());
         WhiteboardError whiteboardError = new WhiteboardError(WhiteboardError.ErrorData.LOSE_NETWORK_CONNECTION_ERROR);
         if (onWhiteboardEventListener != null) {
@@ -932,13 +1041,23 @@ public class WhiteboardService implements Component {
         }
         bus.post(WhiteboardServiceEvent.changeWhiteboardServiceState(false));
 
+        // If we think that the connection has died for no good reason, try to open a new one
+        Channel currentChannel = getCurrentChannel();
+        if (isRunning() && currentChannel != null && shouldAttemptReopen(event)) {
+            whiteboardMercuryController.initMercury(currentChannel.getChannelId(), false);
+        }
+    }
+
+    protected boolean shouldAttemptReopen(ResetEvent event) {
+        WebSocketStatusCodes code = event.getCode();
+        return code == WebSocketStatusCodes.CLOSE_ABNORMAL || code == WebSocketStatusCodes.CLOSE_UNKNOWN;
     }
 
     /**
      * Overridden in sparkling
      */
     protected boolean isWhiteboardEnabled() {
-        return deviceRegistration.getFeatures().isWhiteboardEnabled();
+        return coreFeatures.isWhiteboardEnabled();
     }
 
     public void setReloadBoard(boolean reloadBoard) {
@@ -949,10 +1068,12 @@ public class WhiteboardService implements Component {
         return isReloadBoard;
     }
 
+    @Deprecated
     public boolean isReadonlyMode() {
         return isReadonlyMode;
     }
 
+    @Deprecated
     public void setReadonlyMode(boolean readonlyMode) {
         isReadonlyMode = readonlyMode;
     }
@@ -974,214 +1095,113 @@ public class WhiteboardService implements Component {
         return isLosingNetwork;
     }
 
-    public synchronized void loadBoardList(String conversationId, int channelsLimit) {
-        if (deviceRegistration.getFeatures().isWhiteboardWithAclEnabled()) {
-            Uri aclUrlLink = getAclUrlLink();
-            String aclUrl = aclUrlLink != null ? aclUrlLink.toString() : null;
-            getCurrentWhiteboardStore().loadWhiteboardList(aclUrl, channelsLimit);
-        } else {
-            getCurrentWhiteboardStore().loadWhiteboardList(conversationId, channelsLimit);
-        }
-    }
 
-    public void loadNextPageBoards(String conversationId, String url) {
-        if (conversationId == null) {
-            localStore.loadNextPageWhiteboards(conversationId, url);
-        } else {
-            remoteStore.loadNextPageWhiteboards(conversationId, url);
-        }
-    }
-
-    public void loadWhiteboardsComplete(List<Channel> items, final String link, final boolean isLocalStore,
-                                        final boolean isFirstPage) {
-        if (isLocalStore) {
-            hasMultipleLocalBoards = !items.isEmpty();
-            numberOfLocalBoards = items.size();
-        } else {
-            hasMultipleRemoteBoards = !items.isEmpty();
-            numberOfRemoteBoards = items.size();
-        }
-
-        try {
-            for (Channel channel : items) {
-                if (channel.getImage() != null && channel.getImage().getEncryptionKeyUrl() != null) {
-                    KeyObject keyObject = keyManager.getBoundKey(channel.getImage().getEncryptionKeyUrl());
-                    channel.getImage().decrypt(keyObject);
-                }
-            }
-        } catch (ParseException e) {
-            Ln.e("Unable to decrypt", e);
-        } catch (IOException e) {
-            Ln.e(e.getMessage(), e);
-        }
-        WhiteboardListReadyEvent event = new WhiteboardListReadyEvent(items, link, isLocalStore, isFirstPage);
-        bus.post(event);
-    }
-
+    @Deprecated
     public void getChannelInfo(String channelId) {
-        getCurrentWhiteboardStore().getChannelInfo(channelId);
+        getCurrentWhiteboardStore().getChannelInfo(channelId, null);
+    }
+
+    public void getChannelInfo(String channelId, @Nullable AbsRemoteWhiteboardStore.ChannelInfoCallback callback) {
+        getCurrentWhiteboardStore().getChannelInfo(channelId, callback);
     }
 
     public void getChannelComplete(Channel channel) {
+        Channel currentChannel = getCurrentChannel();
         if (currentChannel != null && currentChannel.getDefaultEncryptionKeyUrl() == null) {
             currentChannel.setDefaultEncryptionKeyUrl(getDefaultConversationKeyUrl());
             inCallMercuryInit(channel);
         }
     }
 
+    @Deprecated //should use the callback passed as in param instead
     public void getChannelInfoComplete(final Channel channel) {
         WhiteboardChannelInfoReadyEvent event = new WhiteboardChannelInfoReadyEvent(channel);
         bus.post(event);
     }
 
-    public void createBoardComplete(Channel channel, Uri keyUrl) {
+    public void createBoardComplete(Channel channel, UUID channelCreationRequestId, Uri keyUrl) {
 
-        whiteboardCreator.createComplete();
-        currentChannel = channel;
-
-        if (channel.getDefaultEncryptionKeyUrl() == null) {
-            channel.setDefaultEncryptionKeyUrl(keyUrl);
-        }
+        setCurrentChannel(channel);
 
         synchronized (pendingContentLock) {
             for (PendingContent pendingContent : pendingContents) {
-                saveContents(pendingContent.getContents(), pendingContent.getId());
+                List<Content> pendingContentList = pendingContent.getContents();
+                for (Content content : pendingContentList) {
+                    whiteboardCache.addStrokeToCurrentRealtimeBoard(WhiteboardUtils.createStroke(content, jsonParser, gson));
+                }
+                saveContents(pendingContentList, pendingContent.getId());
             }
             pendingContents.clear();
         }
 
         inCallMercuryInit(channel);
-        bus.post(new WhiteboardCreationCompleteEvent());
+        bus.post(new WhiteboardCreationCompleteEvent(channelCreationRequestId, channel));
+        if (onWhiteboardEventListener != null) {
+            onWhiteboardEventListener.onBoardCreated(channel);
+        }
     }
 
     public void loadBoardsError(WhiteboardError.ErrorData errorData) {
         bus.post(errorData);
     }
 
-    public void createBoardError(WhiteboardError.ErrorData errorData) {
-        whiteboardCreator.createComplete(WhiteboardError.ErrorData.CREATE_BOARD_ERROR);
+    public WhiteboardEncryptor getWhiteboardEncryptor() {
+        return whiteboardEncryptor;
     }
 
-    public synchronized void setupWhiteboardServiceByConversationId(WhiteboardCreator.CreateData createData, final WhiteboardServiceAvailableHandler handler) {
-        whiteboardCreator.setupWhiteboardServiceByConversationId(createData, handler);
+    public Executor getSaveContentExecutor() {
+        if (null == saveContentExecutor) {
+            saveContentExecutor = Executors.newSingleThreadExecutor();
+        }
+        return saveContentExecutor;
     }
 
-    private boolean hasReceivedRealtimeWhiteboard() {
-        return whiteboardCache.containsKey(getBoardId()) ? false : true;
-    }
-
-    private void handleWhiteboardMessage(JsonObject msg) {
-        whiteboardCache.put(getBoardId(), msg.toString());
-        long updateInterval;
-        if (imageUpdateInterval <= 0) {
-            updateInterval = getCurrentChannel().getImageUpdateInterval();
-        } else {
-            updateInterval = imageUpdateInterval;
-        }
-        if (!uploadSnapshotWorking) {
-            if (updateInterval > 0) {
-                snapshotTask.doWork(updateInterval);
-            } else {
-                snapshotTask.doWork(DEFAULT_IMAGE_UPLOAD_INTERVAL);
-            }
-        }
-    }
-
-    public void setImageUpdateInterval(Long imageUpdateInterval) {
-        this.imageUpdateInterval = imageUpdateInterval;
-    }
-
-    private void sendSnapShot(String image, File content) {
-        if (sentWhiteboard.containsValue(image)) {
-            snapshotTask.cancelTimer();
-            return;
-        }
-        Ln.d("got image snapshot:" + image);
-        sentWhiteboard.put(getBoardId(), image);
-        uploadWhiteboardSnapshot(Uri.fromFile(content), getCurrentChannel());
-    }
-
-
-    private File parseSnapshot(String image) {
-        FileOutputStream out = null;
-        File content = null;
-        try {
-            byte[] decodedString = Base64.decode(image, Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-            content = File.createTempFile("photo", ".jpg");
-            out = new FileOutputStream(content);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException e) {
-                Ln.e(e);
-            }
-            return content;
-        }
-    }
-
-    class UploadSnapshotTask {
-
-        private Timer uploadSnapshotTimer;
-        private TimerTask uploadSnapshotTask;
-        private boolean isTimerStarting = true;
-
-        public synchronized void doWork(long period) {
-            if (uploadSnapshotTimer == null) {
-                uploadSnapshotTimer = new Timer();
-                startTimer();
-            }
-
-            if (uploadSnapshotTask == null) {
-                uploadSnapshotTask = new TimerTask() {
-                    @Override
-                    public void run() {
-                        if (isTimerStarting) {
-                            if (hasReceivedRealtimeWhiteboard()) {
-                                cancelTimer();
-                            } else {
-                                Ln.d("start get snapshot in timer");
-                                getImageSnapshotForUpload();
-                            }
-                        }
-                    }
-                };
-            }
-
-            if (uploadSnapshotTimer != null && uploadSnapshotTask != null) {
-                uploadSnapshotTimer.scheduleAtFixedRate(uploadSnapshotTask, period, period);
-                uploadSnapshotWorking = true;
-            }
-        }
-
-        public synchronized void startTimer() {
-            this.isTimerStarting = true;
-            uploadSnapshotWorking = true;
-        }
-
-        public synchronized void cancelTimer() {
-            isTimerStarting = false;
-            uploadSnapshotWorking = false;
-            if (uploadSnapshotTimer != null) {
-                uploadSnapshotTimer.cancel();
-                uploadSnapshotTimer = null;
-            }
-
-            if (uploadSnapshotTask != null) {
-                uploadSnapshotTask.cancel();
-                uploadSnapshotTask = null;
-            }
-        }
+    private void sendWhiteboardLoadMetrics(int whiteboardsize, String whiteboardId) {
+        MetricsReportRequest request = metricsReporter.newWhiteboardServiceMetricsBuilder()
+                .reportWhiteboardLoaded(
+                        whiteboardStartDecryptingTime - whiteboardLoadTimeStart, clock.monotonicNow() - whiteboardStartDecryptingTime, whiteboardsize, whiteboardId
+                )
+                .build();
+        metricsReporter.enqueueMetricsReport(request);
     }
 
     public interface WhiteboardServiceAvailableHandler {
         void onWhiteboardServiceAvailable(String convId, Uri keyUrl, Uri aclUrlLink);
+    }
+
+    public static class WhiteboardContext {
+
+        private Uri aclUrl;
+        private Uri defaultEncryptionKeyUrl;
+        private String aclId;
+        private Uri kro;
+
+        public WhiteboardContext() {
+
+        }
+
+        public WhiteboardContext(Uri aclUrl, Uri defaultEncryptionKeyUrl, String aclId, Uri kro) {
+
+            this.aclUrl = aclUrl;
+            this.defaultEncryptionKeyUrl = defaultEncryptionKeyUrl;
+            this.aclId = aclId;
+            this.kro = kro;
+        }
+
+        public Uri getAclUrl() {
+            return aclUrl;
+        }
+
+        public Uri getDefaultEncryptionKeyUrl() {
+            return defaultEncryptionKeyUrl;
+        }
+
+        public String getAclId() {
+            return aclId;
+        }
+
+        public Uri getKro() {
+            return kro;
+        }
     }
 }

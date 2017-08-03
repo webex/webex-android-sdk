@@ -1,8 +1,10 @@
 package com.cisco.spark.android.lyra;
 
+import android.net.Uri;
+
 public interface BindingBackend {
 
-    void bind(String roomIdentity, BindingRequest bindingRequest, BindingCallback callback);
+    void bind(Uri conversationUrl, String roomIdentity, String conversationId);
 
     void unbind(String roomIdentity, String  bindingUrl, String kmsMessage, BindingCallback callback);
 

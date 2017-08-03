@@ -4,6 +4,7 @@ import android.os.Build;
 
 import com.cisco.spark.android.app.ActivityManager;
 import com.cisco.spark.android.media.MediaEngine;
+import com.cisco.spark.android.metrics.MetricsReporter;
 import com.cisco.spark.android.room.BackgroundUltrasoundProximityDetector;
 import com.cisco.spark.android.room.CloudProximityBackend;
 import com.cisco.spark.android.room.MockProximityDetector;
@@ -34,18 +35,18 @@ public class LiveProximityModule {
 
     @Provides
     @Singleton
-    ProximityDetector provideProximityDetector(MediaEngine mediaEngine, ActivityManager activityManager, EventBus eventBus) {
+    ProximityDetector provideProximityDetector(MediaEngine mediaEngine, ActivityManager activityManager, EventBus eventBus, MetricsReporter metricsReporter) {
         if (Build.FINGERPRINT.contains("generic")) {
             return new MockProximityDetector();
         } else {
-            return new UltrasoundProximityDetector(mediaEngine, activityManager, eventBus);
+            return new UltrasoundProximityDetector(mediaEngine, activityManager, eventBus, metricsReporter);
         }
     }
 
     @Provides
     @Singleton
-    BackgroundUltrasoundProximityDetector provideBackgroundDetector() {
-        return new BackgroundUltrasoundProximityDetector();
+    BackgroundUltrasoundProximityDetector provideBackgroundDetector(MetricsReporter metricsReporter) {
+        return new BackgroundUltrasoundProximityDetector(metricsReporter);
     }
 
 

@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 
+import com.cisco.spark.android.metrics.MetricsReporter;
 import com.cisco.spark.android.room.audiopairing.AudioDataListener;
 import com.cisco.spark.android.room.audiopairing.AudioPairingNative;
 import com.cisco.spark.android.room.audiopairing.AudioSamplerAndroid;
@@ -42,8 +43,11 @@ public class BackgroundUltrasoundProximityDetector implements ProximityDetector,
     private Handler handler = new Handler(Looper.getMainLooper());
     private boolean usingWme = false;
 
+    private MetricsReporter metricsReporter;
 
-    public BackgroundUltrasoundProximityDetector() {
+
+    public BackgroundUltrasoundProximityDetector(MetricsReporter metricsReporter) {
+        this.metricsReporter = metricsReporter;
     }
 
     @Override
@@ -57,7 +61,7 @@ public class BackgroundUltrasoundProximityDetector implements ProximityDetector,
         isListening = true;
         // kick off thread to capture audio and check for ultrasound pairing token from TP unit
 
-        audioSamplerAndroid = new AudioSamplerAndroid();
+        audioSamplerAndroid = new AudioSamplerAndroid(metricsReporter);
         Ln.i("%s creating new AudioSampler [ %08x ]", TAG, audioSamplerAndroid.hashCode());
 
         Ln.i("%s audioSampler, starting [ %08x ]", TAG, audioSamplerAndroid.hashCode());
@@ -75,7 +79,7 @@ public class BackgroundUltrasoundProximityDetector implements ProximityDetector,
         isListening = true;
         // kick off thread to capture audio and check for ultrasound pairing token from TP unit
 
-        audioSamplerAndroid = new AudioSamplerAndroid();
+        audioSamplerAndroid = new AudioSamplerAndroid(metricsReporter);
         Ln.i("%s creating new AudioSampler [ %08x ]", TAG, audioSamplerAndroid.hashCode());
 
         handler.removeCallbacksAndMessages(null);

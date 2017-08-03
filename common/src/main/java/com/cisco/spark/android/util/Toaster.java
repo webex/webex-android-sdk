@@ -4,40 +4,50 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.StringRes;
 import android.text.TextUtils;
 import android.widget.Toast;
 
+import com.cisco.spark.android.sdk.SdkClient;
+
 import java.text.MessageFormat;
 
-import static android.widget.Toast.LENGTH_LONG;
-import static android.widget.Toast.LENGTH_SHORT;
+import static android.widget.Toast.*;
 
 /**
  * Helper to show {@link Toast} notifications Inspired by https://github.com/kevinsawicki/wishlist/blob/master/lib/src/main/java/com/github/kevinsawicki/wishlist/Toaster.java
  */
 public class Toaster {
 
-    private static void show(final Context context, final int resId, final int duration) {
-        if (context == null) {
+    private volatile boolean enabled;
+
+    public Toaster(SdkClient sdkClient) {
+        this.enabled = sdkClient.toastsEnabled();
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    private void show(final Context context, final int resId, final int duration) {
+
+        if (context == null || !enabled) {
             return;
         }
 
         if (Looper.getMainLooper() == Looper.myLooper()) {
             Toast.makeText(context, resId, duration).show();
         } else {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(context, resId, duration).show();
-                }
-            });
+            new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(context, resId, duration).show());
         }
     }
 
-    private static void show(final Context context, final String message, final int duration) {
-        if (context == null) {
+    private void show(final Context context, final String message, final int duration) {
+
+        if (context == null || !enabled) {
             return;
         }
+
         if (TextUtils.isEmpty(message)) {
             return;
         }
@@ -45,43 +55,33 @@ public class Toaster {
         if (Looper.getMainLooper() == Looper.myLooper()) {
             Toast.makeText(context, message, duration).show();
         } else {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(context, message, duration).show();
-                }
-            });
+            new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(context, message, duration).show());
         }
     }
 
 
-    private static void show(final Activity activity, final int resId, final int duration) {
-        if (activity == null) {
+    private void show(final Activity activity, final @StringRes int resId, final int duration) {
+
+        if (activity == null || !enabled) {
             return;
         }
 
         final Context context = activity.getApplication();
-        activity.runOnUiThread(new Runnable() {
-            public void run() {
-                Toast.makeText(context, resId, duration).show();
-            }
-        });
+        activity.runOnUiThread(() -> Toast.makeText(context, resId, duration).show());
     }
 
-    private static void show(final Activity activity, final String message, final int duration) {
-        if (activity == null) {
+    private void show(final Activity activity, final String message, final int duration) {
+
+        if (activity == null || !enabled) {
             return;
         }
+
         if (TextUtils.isEmpty(message)) {
             return;
         }
 
         final Context context = activity.getApplication();
-        activity.runOnUiThread(new Runnable() {
-            public void run() {
-                Toast.makeText(context, message, duration).show();
-            }
-        });
+        activity.runOnUiThread(() -> Toast.makeText(context, message, duration).show());
     }
 
     /**
@@ -90,7 +90,7 @@ public class Toaster {
      * @param activity
      * @param resId
      */
-    public static void showLong(final Activity activity, int resId) {
+    public void showLong(final Activity activity, @StringRes int resId) {
         show(activity, resId, LENGTH_LONG);
     }
 
@@ -100,7 +100,7 @@ public class Toaster {
      * @param activity
      * @param resId
      */
-    public static void showShort(final Activity activity, final int resId) {
+    public void showShort(final Activity activity, final @StringRes int resId) {
         show(activity, resId, LENGTH_SHORT);
     }
 
@@ -110,7 +110,7 @@ public class Toaster {
      * @param activity
      * @param message
      */
-    public static void showLong(final Activity activity, final String message) {
+    public void showLong(final Activity activity, final String message) {
         show(activity, message, LENGTH_LONG);
     }
 
@@ -120,7 +120,7 @@ public class Toaster {
      * @param activity
      * @param message
      */
-    public static void showShort(final Activity activity, final String message) {
+    public void showShort(final Activity activity, final String message) {
         show(activity, message, LENGTH_SHORT);
     }
 
@@ -131,7 +131,7 @@ public class Toaster {
      * @param message
      * @param args
      */
-    public static void showLong(final Activity activity, final String message, final Object... args) {
+    public void showLong(final Activity activity, final String message, final Object... args) {
         String formatted = MessageFormat.format(message, args);
         show(activity, formatted, LENGTH_LONG);
     }
@@ -143,7 +143,7 @@ public class Toaster {
      * @param message
      * @param args
      */
-    public static void showShort(final Activity activity, final String message, final Object... args) {
+    public void showShort(final Activity activity, final String message, final Object... args) {
         String formatted = MessageFormat.format(message, args);
         show(activity, formatted, LENGTH_SHORT);
     }
@@ -155,7 +155,7 @@ public class Toaster {
      * @param resId
      * @param args
      */
-    public static void showLong(final Activity activity, final int resId, final Object... args) {
+    public void showLong(final Activity activity, final @StringRes int resId, final Object... args) {
         if (activity == null) {
             return;
         }
@@ -171,7 +171,7 @@ public class Toaster {
      * @param resId
      * @param args
      */
-    public static void showShort(final Activity activity, final int resId, final Object... args) {
+    public void showShort(final Activity activity, final @StringRes int resId, final Object... args) {
         if (activity == null) {
             return;
         }
@@ -188,7 +188,7 @@ public class Toaster {
      * @param context
      * @param resId
      */
-    public static void showLong(final Context context, final int resId) {
+    public void showLong(final Context context, final @StringRes int resId) {
         show(context, resId, LENGTH_LONG);
     }
 
@@ -199,7 +199,7 @@ public class Toaster {
      * @param context
      * @param resId
      */
-    public static void showShort(final Context context, final int resId) {
+    public void showShort(final Context context, final @StringRes int resId) {
         show(context, resId, LENGTH_SHORT);
     }
 
@@ -209,7 +209,7 @@ public class Toaster {
      * @param context
      * @param message
      */
-    public static void showLong(final Context context, final String message) {
+    public void showLong(final Context context, final String message) {
         show(context, message, LENGTH_LONG);
     }
 
@@ -219,7 +219,7 @@ public class Toaster {
      * @param context
      * @param message
      */
-    public static void showShort(final Context context, final String message) {
+    public void showShort(final Context context, final String message) {
         show(context, message, LENGTH_SHORT);
     }
 
@@ -230,7 +230,7 @@ public class Toaster {
      * @param message
      * @param args
      */
-    public static void showLong(final Context context, final String message, final Object... args) {
+    public void showLong(final Context context, final String message, final Object... args) {
         String formatted = MessageFormat.format(message, args);
         show(context, formatted, LENGTH_LONG);
     }
@@ -242,7 +242,7 @@ public class Toaster {
      * @param message
      * @param args
      */
-    public static void showShort(final Context context, final String message, final Object... args) {
+    public void showShort(final Context context, final String message, final Object... args) {
         String formatted = MessageFormat.format(message, args);
         show(context, formatted, LENGTH_SHORT);
     }
@@ -254,7 +254,7 @@ public class Toaster {
      * @param resId
      * @param args
      */
-    public static void showLong(final Context context, final int resId, final Object... args) {
+    public void showLong(final Context context, final @StringRes int resId, final Object... args) {
         if (context == null) {
             return;
         }
@@ -270,7 +270,7 @@ public class Toaster {
      * @param resId
      * @param args
      */
-    public static void showShort(final Context context, final int resId, final Object... args) {
+    public void showShort(final Context context, final @StringRes int resId, final Object... args) {
         if (context == null) {
             return;
         }

@@ -23,6 +23,7 @@ public class AuthenticatedUser implements Actor {
     private OAuth2Tokens tokens;
     private OAuth2AccessToken conversationTokens;
     private OAuth2AccessToken kmsTokens;
+    private OAuth2AccessToken voicemailTokens;
     private String userId;
 
     public AuthenticatedUser(String email, ActorRecord.ActorKey actorKey, String displayName, OAuth2Tokens oAuth2Tokens, String department, String orgId, long created, String type) {
@@ -58,6 +59,18 @@ public class AuthenticatedUser implements Actor {
         return tokens;
     }
 
+    public OAuth2AccessToken getConversationTokens() {
+        return conversationTokens;
+    }
+
+    public OAuth2AccessToken getKMSTokens() {
+        return kmsTokens;
+    }
+
+    public OAuth2AccessToken getVoicemailTokens() {
+        return voicemailTokens;
+    }
+
     public String getDepartment() {
         return department;
     }
@@ -72,6 +85,10 @@ public class AuthenticatedUser implements Actor {
 
     public void setConversationTokens(OAuth2AccessToken conversationTokens) {
         this.conversationTokens = conversationTokens;
+    }
+
+    public void setVoicemailTokens(OAuth2AccessToken voicemailTokens) {
+        this.voicemailTokens = voicemailTokens;
     }
 
     public ActorRecord.ActorKey getKey() {
@@ -91,6 +108,14 @@ public class AuthenticatedUser implements Actor {
     public String getConversationAuthorizationHeader() {
         if (conversationTokens != null)
             return conversationTokens.getAuthorizationHeader();
+        if (tokens != null)
+            return tokens.getAuthorizationHeader();
+        return null;
+    }
+
+    public String getVoicemailAuthorizationHeader() {
+        if (voicemailTokens != null)
+            return voicemailTokens.getAuthorizationHeader();
         if (tokens != null)
             return tokens.getAuthorizationHeader();
         return null;
@@ -167,13 +192,13 @@ public class AuthenticatedUser implements Actor {
     @Override
     public String toString() {
         return "AuthenticatedUser{" +
-               "email='" + email + '\'' +
-               ", machine=" + machine +
-               ", displayName='" + displayName + '\'' +
-               ", department='" + department + '\'' +
-               ", orgId='" + orgId + '\'' +
-               ", created=" + created +
-               ", userId='" + userId + '\'' +
-               '}';
+                "email='" + email + '\'' +
+                ", machine=" + machine +
+                ", displayName='" + displayName + '\'' +
+                ", department='" + department + '\'' +
+                ", orgId='" + orgId + '\'' +
+                ", created=" + created +
+                ", userId='" + userId + '\'' +
+                '}';
     }
 }

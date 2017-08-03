@@ -29,7 +29,7 @@ public class Conversation extends ActivityObject {
     private Content avatar;
     private Uri avatarEncryptionKeyUrl;
     private int shareCount;
-    private String aclUrl;
+    private Uri aclUrl;
 
     /**
      * defaultEncryptionKeyUrl is used to encrypt outgoing messages
@@ -292,11 +292,11 @@ public class Conversation extends ActivityObject {
         }
     }
 
-    public String getAclUrl() {
+    public Uri getAclUrl() {
         return aclUrl;
     }
 
-    public void setAclUrl(String aclUrl) {
+    public void setAclUrl(Uri aclUrl) {
         this.aclUrl = aclUrl;
     }
 

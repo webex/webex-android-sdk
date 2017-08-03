@@ -1,9 +1,12 @@
 package com.cisco.spark.android.model;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
 public class ErrorDetail {
     public enum CustomErrorCode {
+        Unknown(0),
         SideboardingExistingParticipant(1403001),
         SideboardingFailed(1403003),
         MissingEntitlement(1403021),
@@ -11,25 +14,28 @@ public class ErrorDetail {
         ActionNotAllowedIn1on1(1403023),
         RoomAlreadyLocked(1403024),
         ModeratorAction(1403025),
+        ClientTempIdAlreadyExists(1409001),
         KmsMessageOperationFailed(1900000),
         LocusNotPartOfRoster(2401002),
         LocusExceededMaxNumberParticipantsFreeUser(2403001),
         LocusExceededMaxNumberParticipantsPaidUser(2403002),
         LocusExceededMaxNumberParticipantsTeamMember(2403003),
+        LocusMeetingIsInactive(2403004),
+        LocusUserIsNotAuthorized(2403010),
+        LocusMeetingNotFound(2403014),
+        LocusInvalidWebExSite(2403015),
         LocusExceededMaxRosterSizeFreePaidUser(2423001),
         LocusExceededMaxRosterSizeTeamMember(2423002),
         LocusMeetingIsLocked(2423003),
-        LocusMeetingIsInactive(2403004),
         LocusLockedWhileTerminatingPreviousMeeting(2423004),
         LocusRequiresModeratorPINOrGuest(2423005),
         LocusRequiresModeratorPINorGuestPIN(2423006),
         LocusMeetingNotStarted(2423010),
-        LocusMeetingNotFound(2403014),
-        LocusInvalidWebExSite(2403015);
+        NewUserInDirSycnedOrg(400110);
 
         private int errorCode;
 
-        private static final SparseArray<CustomErrorCode> errorCodes = new SparseArray<CustomErrorCode>();
+        private static final SparseArray<CustomErrorCode> errorCodes = new SparseArray<>();
 
         static {
             for (CustomErrorCode errorCode : CustomErrorCode.values()) {
@@ -37,7 +43,7 @@ public class ErrorDetail {
             }
         }
 
-        private CustomErrorCode(int errorCode) {
+        CustomErrorCode(int errorCode) {
             this.errorCode = errorCode;
         }
 
@@ -45,25 +51,33 @@ public class ErrorDetail {
             return errorCode;
         }
 
+        @NonNull
         public static CustomErrorCode fromErrorCode(int errorCode) {
-            return errorCodes.get(errorCode);
+            CustomErrorCode code = errorCodes.get(errorCode);
+            return code == null ? Unknown : code;
         }
     }
 
+    @Nullable
     private Integer errorCode;
     private String message;
     private String trackingId;
     private String stackTrace;
 
-    public ErrorDetail(Integer errorCode, String message, String trackingId, String stackTrace) {
+    public ErrorDetail(@Nullable Integer errorCode, String message, String trackingId, String stackTrace) {
         this.errorCode = errorCode;
         this.message = message;
         this.trackingId = trackingId;
         this.stackTrace = stackTrace;
     }
 
-    public Integer getErrorCode() {
-        return errorCode;
+    public int getErrorCode() {
+        return errorCode == null ? CustomErrorCode.Unknown.getErrorCode() : errorCode;
+    }
+
+    @NonNull
+    public CustomErrorCode extractCustomErrorCode() {
+        return CustomErrorCode.fromErrorCode(getErrorCode());
     }
 
     public String getMessage() {

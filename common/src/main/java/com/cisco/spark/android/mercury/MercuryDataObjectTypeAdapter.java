@@ -1,6 +1,7 @@
 package com.cisco.spark.android.mercury;
 
 import com.cisco.spark.android.log.Lns;
+import com.cisco.spark.android.mercury.events.CalendarMeetingEvent;
 import com.cisco.spark.android.mercury.events.ConversationActivityEvent;
 import com.cisco.spark.android.mercury.events.KeyPushEvent;
 import com.cisco.spark.android.mercury.events.KmsAckEvent;
@@ -11,6 +12,7 @@ import com.cisco.spark.android.mercury.events.LyraActivityEvent;
 import com.cisco.spark.android.mercury.events.LyraSpaceAudioMicrophonesMuteActionEvent;
 import com.cisco.spark.android.mercury.events.LyraSpaceAudioVolumeChangeEvent;
 import com.cisco.spark.android.mercury.events.LyraSpaceAudioVolumeSetEvent;
+import com.cisco.spark.android.mercury.events.RoapMessageEvent;
 import com.cisco.spark.android.mercury.events.RoomControlEvent;
 import com.cisco.spark.android.mercury.events.RoomDeviceEnteredEvent;
 import com.cisco.spark.android.mercury.events.RoomDeviceExitedEvent;
@@ -23,6 +25,7 @@ import com.cisco.spark.android.mercury.events.RoomSetUpgradeChannelEvent;
 import com.cisco.spark.android.mercury.events.RoomUpdatedEvent;
 import com.cisco.spark.android.mercury.events.UserFeatureUpdate;
 import com.cisco.spark.android.mercury.events.UserRecentSessionsEvent;
+import com.cisco.spark.android.mercury.events.VoicemailInfoEvent;
 import com.cisco.spark.android.mercury.events.WhiteboardActivityEvent;
 import com.cisco.spark.android.presence.PresenceStatusResponse;
 import com.cisco.spark.android.sync.ConversationContract;
@@ -96,6 +99,9 @@ public class MercuryDataObjectTypeAdapter implements JsonDeserializer<MercuryDat
                 case LOCUS_DIFFERENCE:
                     data = jsonDeserializationContext.<LocusDeltaEvent>deserialize(jsonElement, LocusDeltaEvent.class);
                     break;
+                case LOCUS_ROAP_MESSAGE:
+                    data = jsonDeserializationContext.<RoapMessageEvent>deserialize(jsonElement, RoapMessageEvent.class);
+                    break;
                 case START_TYPING:
                 case STOP_TYPING_EVENT:
                     data = jsonDeserializationContext.<TypingEvent>deserialize(jsonElement, TypingEvent.class);
@@ -154,6 +160,14 @@ public class MercuryDataObjectTypeAdapter implements JsonDeserializer<MercuryDat
                     break;
                 case MERCURY_REGISTRATION_STATUS:
                     data = jsonDeserializationContext.<MercuryRegistration>deserialize(jsonElement, MercuryRegistration.class);
+                    break;
+                case VOICEMAIL_INFO:
+                    data = jsonDeserializationContext.<VoicemailInfoEvent>deserialize(jsonElement, VoicemailInfoEvent.class);
+                    break;
+                case CALENDAR_MEETING_CREATE:
+                case CALENDAR_MEETING_UPDATE:
+                case CALENDAR_MEETING_DELETE:
+                    data = jsonDeserializationContext.<CalendarMeetingEvent>deserialize(jsonElement, CalendarMeetingEvent.class);
                     break;
                 default:
                     Ln.w(false, "Unknown Mercury Event Type: %s", eventTypeString);

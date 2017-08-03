@@ -5,7 +5,16 @@ package com.cisco.spark.android.model;
  * the format of a single "url" field.
  */
 public class UrlResponse {
+
     private String url;
+
+    public UrlResponse() {
+
+    }
+
+    public UrlResponse(String url) {
+        this.url = url;
+    }
 
     public String getUrl() {
         return url;

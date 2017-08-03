@@ -34,4 +34,8 @@ public class NetworkReachability {
             bus.post(new NetworkReachabilityChangedEvent(isConnected));
         }
     }
+
+    public NetworkInfo getNetworkInfo() {
+        return connectivityManager.getActiveNetworkInfo();
+    }
 }

@@ -52,6 +52,8 @@ public class PresenceUtils {
                 text = formatUntilString(context, R.string.presence_status_ooo, R.string.presence_status_ooo_until, expiration);
                 break;
             case PRESENCE_STATUS_UNKNOWN:
+                text = context.getString(R.string.presence_status_unknown);
+                break;
             default:
                 break;
         }

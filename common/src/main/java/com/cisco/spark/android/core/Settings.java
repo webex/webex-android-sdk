@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 
 import com.cisco.spark.android.R;
-import com.cisco.spark.android.model.Team;
 import com.cisco.spark.android.notification.Gcm;
 import com.cisco.spark.android.notification.SnoozeStore;
 import com.cisco.spark.android.util.CollectionUtils;
@@ -16,6 +15,7 @@ import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.google.gson.Gson;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +29,6 @@ public class Settings implements SnoozeStore {
     private final SharedPreferences defaultSharedPreferences;
     private final Context context;
     private boolean useCommit;
-    private String emailHasPassword;
 
     public Settings(SharedPreferences userPreferences, Context context, Gson gson) {
         this.preferences = userPreferences;
@@ -117,28 +116,20 @@ public class Settings implements SnoozeStore {
         put(defaultSharedPreferences, R.string.pref_key_encrypted_conversation_icons, b);
     }
 
-    public void setEmail(String email) {
-        put(defaultSharedPreferences, R.string.pref_key_email, email);
+    public void setInstallReferrer(String referrer) {
+        put(defaultSharedPreferences, R.string.pref_key_install_referrer, referrer);
     }
 
-    public String getEmail() {
-        return get(defaultSharedPreferences, R.string.pref_key_email, (String) null);
+    public String getInstallReferrer() {
+        return get(defaultSharedPreferences, R.string.pref_key_install_referrer, "");
     }
 
-    public void setIsEmailEdited(boolean value) {
-        put(defaultSharedPreferences, R.string.pref_key_edited, value);
+    public void setOnboardingEmail(String email) {
+        put(defaultSharedPreferences, R.string.pref_key_onboarding_email, email);
     }
 
-    public boolean isEmailEdited() {
-        return get(defaultSharedPreferences, R.string.pref_key_edited, false);
-    }
-
-    public boolean isEmailVerified() {
-        return get(defaultSharedPreferences, R.string.pref_key_is_email_verified, false);
-    }
-
-    public void setEmailVerified(boolean isVerified) {
-        put(defaultSharedPreferences, R.string.pref_key_is_email_verified, isVerified);
+    public String getOnboardingEmail() {
+        return get(defaultSharedPreferences, R.string.pref_key_onboarding_email, (String) null);
     }
 
     public void setDeviceId(String deviceId) {
@@ -147,22 +138,6 @@ public class Settings implements SnoozeStore {
 
     public String getDeviceId() {
         return get(defaultSharedPreferences, R.string.pref_key_device_id, (String) null);
-    }
-
-    public void setMessageId(String messageId) {
-        put(defaultSharedPreferences, R.string.pref_key_message_id, messageId);
-    }
-
-    public String getMessageId() {
-        return get(defaultSharedPreferences, R.string.pref_key_message_id, (String) null);
-    }
-
-    public void setUserJustCreated(boolean value) {
-        put(defaultSharedPreferences, R.string.pref_key_user_created, value);
-    }
-
-    public boolean getUserJustCreated() {
-        return get(defaultSharedPreferences, R.string.pref_key_user_created, false);
     }
 
     public void setWebExBannerDismissed(boolean b) {
@@ -182,14 +157,18 @@ public class Settings implements SnoozeStore {
 
     public boolean showWebExInstallBanner() {
         boolean bannerDismissed = get(defaultSharedPreferences, R.string.pref_key_show_webex_install_banner, false);
-        boolean webexInstalled = isPackageInstalled(context, WEBEX_MEETINGS_PACKAGE_NAME);
+        boolean webexInstalled = isCiscoWebexMeetingsAppInstalled();
 
         return !(webexInstalled || bannerDismissed);
     }
 
+    public boolean isCiscoWebexMeetingsAppInstalled() {
+        return  isPackageInstalled(context, WEBEX_MEETINGS_PACKAGE_NAME);
+    }
+
     public boolean showWebExInstallReminder() {
         boolean bannerDismissed = get(defaultSharedPreferences, R.string.pref_key_show_webex_install_banner, false);
-        boolean webexInstalled = isPackageInstalled(context, WEBEX_MEETINGS_PACKAGE_NAME);
+        boolean webexInstalled = isCiscoWebexMeetingsAppInstalled();
 
         return (!webexInstalled && bannerDismissed);
     }
@@ -218,6 +197,9 @@ public class Settings implements SnoozeStore {
         return get(defaultSharedPreferences, R.string.pref_key_hardware_codec_enabled, false);
     }
 
+    public boolean isSw720pEnabed() {
+        return get(defaultSharedPreferences, R.string.pref_key_enable_sw720p, false);
+    }
     public boolean isAlwaysOnProximityEnabled() {
         return get(defaultSharedPreferences, R.string.pref_key_always_on_proximity_enabled, false);
     }
@@ -307,7 +289,12 @@ public class Settings implements SnoozeStore {
     }
 
     public Set<String> getCalendarsToUse() {
-        return get(defaultSharedPreferences, R.string.pref_key_calendars_to_display, (Set<String>) null);
+        Set<String> tempSet = get(defaultSharedPreferences, R.string.pref_key_calendars_to_display, (Set<String>) null);
+        if (tempSet != null) {
+            return new HashSet<>(get(defaultSharedPreferences, R.string.pref_key_calendars_to_display, (Set<String>) null));
+        } else {
+            return null;
+        }
     }
 
     public void setCalendarsToUse(Set<String> calendars) {
@@ -334,12 +321,20 @@ public class Settings implements SnoozeStore {
         put(defaultSharedPreferences, R.string.pref_key_spark_board_tour, seen);
     }
 
-    public boolean hasSeenSparkVideoSystemTour() {
-        return get(defaultSharedPreferences, R.string.pref_key_spark_video_system_tour, false);
+    public boolean hasSeenSparkRoomDeviceTour() {
+        return get(defaultSharedPreferences, R.string.pref_key_spark_room_device_tour, false);
     }
 
-    public void setHasSeenSparkVideoSystemTour(boolean seen) {
-        put(defaultSharedPreferences, R.string.pref_key_spark_video_system_tour, seen);
+    public void setHasSeenSparkRoomDeviceTour(boolean seen) {
+        put(defaultSharedPreferences, R.string.pref_key_spark_room_device_tour, seen);
+    }
+
+    public boolean hasSeenSparkBrickletRemovalTour() {
+        return get(defaultSharedPreferences, R.string.pref_key_spark_bricklet_removal_tour, false);
+    }
+
+    public void setHasSeenSparkBrickletRemovalTour(boolean seen) {
+        put(defaultSharedPreferences, R.string.pref_key_spark_bricklet_removal_tour, seen);
     }
 
     public boolean hasSeenRoomTour() {
@@ -372,6 +367,38 @@ public class Settings implements SnoozeStore {
 
     public void setHasSeenTeamRoomTour(boolean seen) {
         put(defaultSharedPreferences, R.string.pref_key_team_room_tour, seen);
+    }
+
+    public boolean hasSeenSpaceBallCoachMark() {
+        return get(defaultSharedPreferences, R.string.pref_key_space_ball_coach_mark, false);
+    }
+
+    public void setHasSeenSpaceBallCoachMark(boolean seen) {
+        put(defaultSharedPreferences, R.string.pref_key_space_ball_coach_mark, seen);
+    }
+
+    public boolean hasSeenBindingCoachMark() {
+        return get(defaultSharedPreferences, R.string.pref_key_binding_coach_mark, false);
+    }
+
+    public void setHasSeenBindingCoachMark(boolean seen) {
+        put(defaultSharedPreferences, R.string.pref_key_binding_coach_mark, seen);
+    }
+
+    public boolean hasSeenDeviceSelectorCoachMark() {
+        return get(defaultSharedPreferences, R.string.pref_key_device_selector_coach_mark, false);
+    }
+
+    public void setHasSeenDeviceSelectorCoachMark(boolean seen) {
+        put(defaultSharedPreferences, R.string.pref_key_device_selector_coach_mark, seen);
+    }
+
+    public boolean hasSeenRemoteControlCoachMark() {
+        return get(defaultSharedPreferences, R.string.pref_key_remote_control_coach_mark, false);
+    }
+
+    public void setHasSeenRemoteControlCoachMark(boolean seen) {
+        put(defaultSharedPreferences, R.string.pref_key_remote_control_coach_mark, seen);
     }
 
     public void setCurrentFilter(int filter) {
@@ -414,14 +441,6 @@ public class Settings implements SnoozeStore {
         return get(defaultSharedPreferences, R.string.pref_key_call_out_last_input_type_used, 0);
     }
 
-    public boolean hasLoadedStickyPack() {
-        return get(defaultSharedPreferences, R.string.pref_key_has_loaded_sticky_pack, false);
-    }
-
-    public void setHasLoadedStickyPack(boolean hasLoadedStickyPack) {
-        put(defaultSharedPreferences, R.string.pref_key_has_loaded_sticky_pack, hasLoadedStickyPack);
-    }
-
     public boolean hasLoadedMentions() {
         return get(defaultSharedPreferences, R.string.pref_key_has_loaded_mentions, false);
     }
@@ -446,26 +465,6 @@ public class Settings implements SnoozeStore {
         put(defaultSharedPreferences, R.string.pref_key_ignore_pairing_permissions, ignorePairingPermissins);
     }
 
-    public void putOnboardingTeam(Team team) {
-        put(defaultSharedPreferences, R.string.pref_key_onboarding_team, gson.toJson(team));
-    }
-
-    public Team getOnboardingTeam() {
-        String json = defaultSharedPreferences.getString(context.getResources().getString(R.string.pref_key_onboarding_team), null);
-        if (json != null) {
-            return gson.fromJson(json, Team.class);
-        }
-        return null;
-    }
-
-    public void setHasPassword(boolean hasPassword) {
-        put(defaultSharedPreferences, R.string.pref_key_email_has_password, hasPassword);
-    }
-
-    public boolean hasPassword() {
-        return get(defaultSharedPreferences, R.string.pref_key_email_has_password, false);
-    }
-
     public void setHasExplainedPhoneStatePermission(boolean hasExplained) {
         put(defaultSharedPreferences, R.string.pref_key_has_explained_phone_state_permissions, hasExplained);
     }
@@ -480,9 +479,17 @@ public class Settings implements SnoozeStore {
                 getPrefKey(R.string.pref_key_allow_unsecured_connection),
                 getPrefKey(R.string.pref_key_home_tour),
                 getPrefKey(R.string.pref_key_room_tour),
+                getPrefKey(R.string.pref_key_spark_board_tour),
+                getPrefKey(R.string.pref_key_spark_room_device_tour),
+                getPrefKey(R.string.pref_key_spark_bricklet_removal_tour),
+                getPrefKey(R.string.pref_key_space_ball_coach_mark),
+                getPrefKey(R.string.pref_key_binding_coach_mark),
+                getPrefKey(R.string.pref_key_device_selector_coach_mark),
+                getPrefKey(R.string.pref_key_remote_control_coach_mark),
                 getPrefKey(R.string.pref_key_num_security_enforcement_checks),
                 getPrefKey(R.string.pref_key_num_security_alert_settings_selected),
                 getPrefKey(R.string.pref_key_last_security_alert_time),
+                getPrefKey(R.string.pref_key_onboarding_email),
                 Gcm.PROPERTY_BUILD_TIME,
                 Gcm.PROPERTY_REG_ID
         );
@@ -519,12 +526,8 @@ public class Settings implements SnoozeStore {
         return uuid;
     }
 
-    public void removePreloginUserId() {
-        put(defaultSharedPreferences, R.string.pref_key_prelogin_userid, (String) null);
-    }
-
     public boolean shouldAllowScreenshots() {
-        return get(defaultSharedPreferences, R.string.pref_key_allow_screenshots, false);
+        return get(defaultSharedPreferences, R.string.pref_key_allow_screenshots, true);
     }
 
     // FIXME: This is the wrong way to expose the shared preferences. Should be injected by dagger instead.
@@ -553,9 +556,7 @@ public class Settings implements SnoozeStore {
     }
 
     private void put(SharedPreferences prefs, int id, final Set<String> value) {
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();
-        apply(editor.putStringSet(getPrefKey(id), value));
+        apply(prefs.edit().putStringSet(getPrefKey(id), value));
     }
 
     private void apply(SharedPreferences.Editor editor) {

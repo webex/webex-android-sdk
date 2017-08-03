@@ -1,7 +1,11 @@
 package com.cisco.spark.android.lyra;
 
+import android.net.Uri;
 import com.cisco.spark.android.client.LyraClient;
 import com.cisco.spark.android.core.ApiClientProvider;
+import com.cisco.spark.android.core.Injector;
+import com.cisco.spark.android.sync.operationqueue.RoomBindOperation;
+import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
 import com.github.benoitdion.ln.Ln;
 
 import de.greenrobot.event.EventBus;
@@ -13,30 +17,18 @@ public class CloudBindingBackend implements BindingBackend {
 
     private LyraClient lyraClient;
     private ApiClientProvider apiClientProvider;
+    private OperationQueue operationQueue;
+    private Injector injector;
 
-    public CloudBindingBackend(ApiClientProvider apiClientProvider, EventBus bus) {
+    public CloudBindingBackend(ApiClientProvider apiClientProvider, EventBus bus, Injector injector, OperationQueue operationQueue) {
         this.apiClientProvider = apiClientProvider;
+        this.operationQueue = operationQueue;
+        this.injector = injector;
     }
 
     @Override
-    public void bind(String roomIdentity, BindingRequest bindingRequest, final BindingCallback callback) {
-        Call<BindingResponse> call = getLyraClient().bind(roomIdentity, bindingRequest);
-        call.enqueue(new Callback<BindingResponse>() {
-            @Override
-            public void onResponse(Call<BindingResponse> call, Response<BindingResponse> response) {
-                if (response.isSuccessful()) {
-                    callback.onSuccess();
-                } else {
-                    Ln.w("bind to room error: %s", response.raw().toString());
-                    callback.onError();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<BindingResponse> call, Throwable t) {
-                callback.onError();
-            }
-        });
+    public void bind(Uri conversationUrl, String roomIdentity, String conversationId) {
+        operationQueue.submit(new RoomBindOperation(injector, conversationUrl, roomIdentity, conversationId));
     }
 
     @Override
@@ -46,16 +38,16 @@ public class CloudBindingBackend implements BindingBackend {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    callback.onSuccess();
+                    callback.onSuccess(response);
                 } else {
                     Ln.w("unbind to room error: %s", response.raw().toString());
-                    callback.onError();
+                    callback.onError(response);
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                callback.onError();
+                callback.onError(null);
             }
         });
     }

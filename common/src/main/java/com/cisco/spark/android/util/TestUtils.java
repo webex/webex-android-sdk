@@ -1,5 +1,7 @@
 package com.cisco.spark.android.util;
 
+import android.content.Context;
+import android.provider.Settings;
 import android.support.v4.content.AsyncTaskLoader;
 
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
@@ -27,9 +29,18 @@ public class TestUtils {
     }
 
 
+    public static boolean isPreLaunchTest(Context context) {
+        String testLabSetting = Settings.System.getString(context.getContentResolver(), "firebase.test.lab");
+        if ("true".equals(testLabSetting)) {
+            return true;
+        }
+        return false;
+    }
+
     public static boolean isInstrumentation() {
         if (isInstrumentation == null) {
             isInstrumentation = false;
+
             Set<Thread> runningThreads = Thread.getAllStackTraces().keySet();
 
             for (Thread thread : runningThreads) {

@@ -83,6 +83,9 @@ public class PostContentActivityOperation extends ActivityOperation {
     @Inject
     transient DeviceRegistration deviceRegistration;
 
+    @Inject
+    transient Toaster toaster;
+
     protected Comment comment;
     protected ItemCollection<File> files;
     protected int participantCount;
@@ -438,7 +441,7 @@ public class PostContentActivityOperation extends ActivityOperation {
 
         if (items.isEmpty()) {
             Ln.w("Canceling PostContentOperation because items list is empty");
-            Toaster.showLong(context, R.string.error_sending_message);
+            toaster.showLong(context, R.string.error_sending_message);
             cancel();
             return SyncState.FAULTED;
         }
@@ -453,7 +456,7 @@ public class PostContentActivityOperation extends ActivityOperation {
             }
         } catch (FileNotFoundException e) {
             Ln.e(e, "Failed sending file");
-            Toaster.showLong(context, R.string.error_file_not_found);
+            toaster.showLong(context, R.string.error_file_not_found);
             setErrorMessage("File not found");
             return SyncState.FAULTED;
         }
@@ -526,10 +529,10 @@ public class PostContentActivityOperation extends ActivityOperation {
                 case DEPENDENCY:
                     break;
                 case CANCELED:
-                    Toaster.showLong(context, R.string.error_message_canceled);
+                    toaster.showLong(context, R.string.error_message_canceled);
                     break;
                 default:
-                    Toaster.showLong(context, R.string.error_sending_message);
+                    toaster.showLong(context, R.string.error_sending_message);
             }
         }
     }

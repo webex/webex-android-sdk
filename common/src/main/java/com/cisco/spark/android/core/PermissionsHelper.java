@@ -16,6 +16,7 @@ public class PermissionsHelper {
     public static final int PERMISSIONS_CALLING_REQUEST = 1;
     public static final int REQUEST_CODE_NATIVE_CONTACTS_INTEGRATION = 2;
     public static final int PERMISSIONS_STORAGE_REQUEST = 3;
+    public static final int PERMISSIONS_JOINHUB_CALENDAR = 4;
     private final Context context;
 
     @Inject
@@ -179,5 +180,12 @@ public class PermissionsHelper {
         boolean shouldShowRationaleForWritePermission = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         return userDeniedPermission && !shouldShowRationaleForReadPermission && !shouldShowRationaleForWritePermission;
+    }
+
+    public static boolean hasUserPermanentlyDeniedCalendarPermission(Activity activity, String[]permissions, int[] grantResults) {
+        boolean userDeniedPermission = !resultForCalendarPermission(permissions, grantResults);
+        boolean shouldShowRationaleForCalendarPermission = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_CALENDAR);
+
+        return userDeniedPermission && !shouldShowRationaleForCalendarPermission;
     }
 }

@@ -1,16 +1,27 @@
 package com.cisco.spark.android.locus.model;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
-import static com.cisco.spark.android.locus.model.LocusParticipant.Type.*;
-import static junit.framework.Assert.*;
-import static org.mockito.Mockito.*;
+import static com.cisco.spark.android.locus.model.LocusParticipant.Type.ANONYMOUS;
+import static com.cisco.spark.android.locus.model.LocusParticipant.Type.MEETING_BRIDGE;
+import static com.cisco.spark.android.locus.model.LocusParticipant.Type.RESOURCE_ROOM;
+import static com.cisco.spark.android.locus.model.LocusParticipant.Type.USER;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+@RunWith(RobolectricTestRunner.class)
+@Config(manifest = Config.NONE)
 public class LocusDataTest {
 
     @Test
@@ -89,7 +100,11 @@ public class LocusDataTest {
     }
 
     private LocusParticipant getParticipant(LocusParticipant.Type type, String name, LocusParticipant.State joinState) {
-        return getParticipant(type, name, joinState, new LocusParticipantDevice());
+        LocusParticipantDevice device = new LocusParticipantDevice.Builder()
+                .setDeviceType("ANDROID")
+                .setState(LocusParticipant.State.JOINED)
+                .build();
+        return getParticipant(type, name, joinState, device);
     }
 
     private LocusParticipant getParticipant(LocusParticipant.Type type, String name, LocusParticipant.State joinState, LocusParticipantDevice device) {

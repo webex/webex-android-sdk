@@ -1,5 +1,6 @@
 package com.cisco.spark.android.media;
 
+import com.webex.wme.MediaConnection;
 import com.webex.wme.MediaTrack;
 
 import java.util.Arrays;
@@ -18,6 +19,18 @@ public class MediaHelper {
             return "Video";
         } else {
             return "Unknown";
+        }
+    }
+
+    public static String getMediaTypeString(MediaConnection.MediaType mediaType) {
+        if (mediaType == MediaConnection.MediaType.Audio) {
+            return getMediaTypeString(MediaSessionEngine.AUDIO_MID);
+        } else if (mediaType == MediaConnection.MediaType.Video) {
+            return getMediaTypeString(MediaSessionEngine.VIDEO_MID);
+        } else if (mediaType == MediaConnection.MediaType.Sharing) {
+            return getMediaTypeString(MediaSessionEngine.SHARE_MID);
+        } else {
+            return getMediaTypeString(-1);
         }
     }
 

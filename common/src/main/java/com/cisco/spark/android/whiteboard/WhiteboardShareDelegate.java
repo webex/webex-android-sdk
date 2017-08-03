@@ -3,6 +3,7 @@ package com.cisco.spark.android.whiteboard;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.cisco.spark.android.acl.Acl;
 import com.cisco.spark.android.acl.AclLinkRequest;
@@ -12,11 +13,12 @@ import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.Component;
 import com.cisco.spark.android.events.KmsKeyEvent;
 import com.cisco.spark.android.locus.events.LocusDataCacheChangedEvent;
+import com.cisco.spark.android.locus.events.WhiteboardShareErrorEvent;
 import com.cisco.spark.android.locus.model.Locus;
 import com.cisco.spark.android.locus.model.LocusData;
 import com.cisco.spark.android.locus.model.LocusDataCache;
 import com.cisco.spark.android.locus.model.LocusKey;
-import com.cisco.spark.android.locus.model.LocusParticipant;
+import com.cisco.spark.android.locus.model.LocusParticipantInfo;
 import com.cisco.spark.android.locus.model.MediaShare;
 import com.cisco.spark.android.locus.service.LocusService;
 import com.cisco.spark.android.model.KeyManager;
@@ -40,7 +42,11 @@ import retrofit2.Response;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
-import static com.cisco.spark.android.whiteboard.WhiteboardShareDelegate.ShareRequest.*;
+import static com.cisco.spark.android.whiteboard.WhiteboardShareDelegate.ShareRequest.NOT_SHARING;
+import static com.cisco.spark.android.whiteboard.WhiteboardShareDelegate.ShareRequest.REQUESTED;
+import static com.cisco.spark.android.whiteboard.WhiteboardShareDelegate.ShareRequest.REQUESTING;
+import static com.cisco.spark.android.whiteboard.WhiteboardShareDelegate.ShareRequest.SHARING;
+import static com.cisco.spark.android.whiteboard.WhiteboardShareDelegate.ShareRequest.STOP_REQUESTING;
 import static com.cisco.spark.android.whiteboard.util.WhiteboardUtils.getIdFromUrl;
 
 public class WhiteboardShareDelegate implements Component {
@@ -66,6 +72,7 @@ public class WhiteboardShareDelegate implements Component {
         // Non-fatals
         CREATE_ACL(false),
         LINK_ACL(false),
+        FLOOR_NOT_GRANTED(false),
 
         UNKNOWN(false);
 
@@ -99,6 +106,8 @@ public class WhiteboardShareDelegate implements Component {
     private ShareRequest shareState;
 
     private PublishRelay<ShareState> shareStateStream;
+
+    private Object shareStateLock = new Object();
 
     /**
      * The dependencies/coupling here need to be fixed, but we need to do this in small steps so we don't break anything.
@@ -223,13 +232,13 @@ public class WhiteboardShareDelegate implements Component {
         }
 
         List<String> userIds = new ArrayList<>();
-        for (LocusParticipant locusParticipant : locus.getParticipants()) {
-            if (isValidPrivateShareRecipient(locusParticipant)) {
-                userIds.add(locusParticipant.getPerson().getId());
-            }
+        List<LocusParticipantInfo> ciUsers = locus.getCiUsers(true);
+
+        for (LocusParticipantInfo ciUser : ciUsers) {
+            userIds.add(ciUser.getId());
         }
 
-        if (userIds.isEmpty()) {
+        if (userIds.size() == 1) {
             shareFailed(ShareRequestErrorState.NO_USERS, "Couldn't find any valid users to add to KMS");
             return null;
         }
@@ -237,11 +246,6 @@ public class WhiteboardShareDelegate implements Component {
         String locusKmsMessage = conversationProcessor.createNewResource(userIds,
                                                                          Collections.singletonList(key.getKeyId()));
         return locusService.createAcl(locusKey, locusKmsMessage);
-    }
-
-    private boolean isValidPrivateShareRecipient(LocusParticipant locusParticipant) {
-        return (locusParticipant.getType() == LocusParticipant.Type.USER && !locusParticipant.getPerson().isExternal()) ||
-               locusParticipant.getType() == LocusParticipant.Type.RESOURCE_ROOM;
     }
 
     private void unlinkAcl(Channel channel, LocusKey locusKey) {
@@ -330,7 +334,7 @@ public class WhiteboardShareDelegate implements Component {
         }
 
         if (response.isSuccessful()) {
-            shareState = ShareRequest.REQUESTED;
+            setShareState(ShareRequest.REQUESTED);
             callControlService.shareWhiteboard(shareRequestChannel.getChannelUrl());
         } else {
             shareFailed(ShareRequestErrorState.LINK_ACL, "Failed to link ACLs");
@@ -374,7 +378,12 @@ public class WhiteboardShareDelegate implements Component {
         }
 
         setShareState(ShareRequest.REQUESTED);
-        callControlService.shareWhiteboard(channel.getChannelUrl());
+
+        if (!TextUtils.isEmpty(channel.getChannelUrl())) {
+            callControlService.shareWhiteboard(channel.getChannelUrl());
+        } else {
+            Ln.e("Shared whiteboard failed because no valid channelUrl");
+        }
     }
 
     @Nullable
@@ -431,8 +440,23 @@ public class WhiteboardShareDelegate implements Component {
         return sharedBoardId;
     }
 
-    public synchronized void onEventAsync(LocusDataCacheChangedEvent event) {
+    public void onEventAsync(WhiteboardShareErrorEvent event) {
+        shareFailed(ShareRequestErrorState.FLOOR_NOT_GRANTED, event.getErrorMessage());
+    }
 
+    public void onEventAsync(SelfRemovedFromAclEvent event) {
+
+        if (!event.isSuccess()) {
+            return;
+        }
+
+        if (event.getChannelId().equals(sharedBoardId)) {
+            Ln.i("Stopping share due to deleted board %s", event.getChannelId());
+            stopShare();
+        }
+    }
+
+    public synchronized void onEventAsync(LocusDataCacheChangedEvent event) {
         if (!whiteboardService.isWhiteboardEnabled()) {
             return;
         }
@@ -445,17 +469,20 @@ public class WhiteboardShareDelegate implements Component {
         if (locusKey != null && (data = locusDataCache.getLocusData(locusKey)) != null &&
             (locus = data.getLocus()) != null && (whiteboardMedia = locus.getWhiteboardMedia()) != null) {
 
-            String eventBoardId = getIdFromUrl(whiteboardMedia.getResourceUrl());
-
-            if (whiteboardMedia.isMediaShareGranted() && shareRequestChannel != null) {
-
-                if (sharedBoardId == null || !sharedBoardId.equals(eventBoardId) ||
-                    shareRequestChannel.getChannelId().equals(eventBoardId)) {
+            if (whiteboardMedia.isMediaShareGranted()) {
+                String eventBoardId = getIdFromUrl(whiteboardMedia.getResourceUrl());
+                if (sharedBoardId == null
+                        || !sharedBoardId.equals(eventBoardId)
+                        ||  shareRequestChannel != null && shareRequestChannel.getChannelId().equals(eventBoardId)) {
 
                     sharedBoardId = eventBoardId;
                     setShareState(SHARING);
                     return;
                 }
+            } else if (shareState == SHARING) {
+                sharedBoardId = null;
+                setShareState(NOT_SHARING);
+                return;
             }
         }
 
@@ -476,13 +503,14 @@ public class WhiteboardShareDelegate implements Component {
 
     private synchronized void setShareState(ShareRequest newState, @Nullable ShareRequestErrorState errorState,
                                             @Nullable String message) {
+        synchronized (shareStateLock) {
+            if (newState == NOT_SHARING) {
+                sharedBoardId = null;
+            }
 
-        if (newState == NOT_SHARING) {
-            sharedBoardId = null;
+            shareState = newState;
+            shareStateStream.call(new ShareState(newState, errorState, message));
         }
-
-        shareState = newState;
-        shareStateStream.call(new ShareState(newState, errorState, message));
     }
 
     private synchronized void setShareState(ShareRequest newState) {
@@ -500,13 +528,15 @@ public class WhiteboardShareDelegate implements Component {
         Ln.e(message);
     }
 
-    public synchronized boolean isRequesting(String boardId) {
+    public boolean isRequesting(String boardId) {
         return ongoingRequest() && shareRequestChannel != null && boardId != null &&
                boardId.equals(shareRequestChannel.getChannelId());
     }
 
-    private synchronized boolean ongoingRequest() {
-        return shareState == REQUESTING || shareState == REQUESTED || shareState == STOP_REQUESTING;
+    private boolean ongoingRequest() {
+        synchronized (shareStateLock) {
+            return shareState == REQUESTING || shareState == REQUESTED || shareState == STOP_REQUESTING;
+        }
     }
 
     public static class ShareState {

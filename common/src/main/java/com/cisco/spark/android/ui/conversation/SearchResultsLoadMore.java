@@ -9,7 +9,7 @@ public class SearchResultsLoadMore {
     public SearchResultsLoadMore(int position, int extraCount, String loadMoreText, int sectionNum) {
         this.position = position;
         this.extraCount = extraCount;
-        this.loadMoreText = String.format(loadMoreText, extraCount);
+        this.loadMoreText = loadMoreText;
         this.sectionNum = sectionNum;
     }
 

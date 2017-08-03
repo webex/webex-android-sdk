@@ -2,12 +2,13 @@ package com.cisco.spark.android.locus.requests;
 
 import android.net.Uri;
 
+import com.cisco.spark.android.features.CoreFeatures;
 import com.cisco.spark.android.locus.model.MediaConnection;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class JoinLocusRequest {
+public class JoinLocusRequest extends DeltaRequest {
     private Uri deviceUrl;
     private List<MediaConnection> localMedias;
     private String usingResource;
@@ -16,6 +17,12 @@ public class JoinLocusRequest {
     // Boolean object so that we can provide with null value and avoid serialization when necessary
     private Boolean moderator = null;
     private String pin = null;
+    private String correlationId;
+
+
+    public JoinLocusRequest(CoreFeatures coreFeatures) {
+        super(coreFeatures);
+    }
 
     public Uri getDeviceUrl() {
         return deviceUrl;
@@ -78,5 +85,13 @@ public class JoinLocusRequest {
 
     public void setPin(String pin) {
         this.pin = pin;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
     }
 }

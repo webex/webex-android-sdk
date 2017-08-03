@@ -1,14 +1,15 @@
 package com.cisco.spark.android.client;
 
-import retrofit.*;
-import retrofit.client.*;
+import retrofit2.Call;
 
-public class VoidCallback implements Callback<Void> {
+public class VoidCallback implements retrofit2.Callback<Void> {
+    public static final VoidCallback instance = new VoidCallback();
+
     @Override
-    public void success(Void aVoid, Response response) {
+    public void onResponse(Call<Void> call, retrofit2.Response<Void> response) {
     }
 
     @Override
-    public void failure(RetrofitError error) {
+    public void onFailure(Call<Void> call, Throwable t) {
     }
 }

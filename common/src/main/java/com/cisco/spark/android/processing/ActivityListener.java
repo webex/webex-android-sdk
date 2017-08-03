@@ -3,10 +3,12 @@ package com.cisco.spark.android.processing;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.events.ActivityDecryptedEvent;
 import com.cisco.spark.android.mercury.AlertType;
 import com.cisco.spark.android.mercury.events.ConversationActivityEvent;
 import com.cisco.spark.android.model.Activity;
+import com.cisco.spark.android.util.Strings;
 import com.github.benoitdion.ln.Ln;
 
 import java.util.HashSet;
@@ -99,18 +101,30 @@ public class ActivityListener {
             }
             if (alertTypes.containsKey(activity.getId())) {
                 activity.setAlertType(alertTypes.get(activity.getId()));
-                verboseLog("Escalate alertType", activity);
+                if (BuildConfig.DEBUG) {
+                    verboseLog("Escalate alertType", activity);
+                } else {
+                    Ln.i("Escalate alertType to %s for activity md5{%s}", alertTypes.get(activity.getId()), Strings.md5(activity.getId()));
+                }
             }
 
             if (add(activity.getId())) {
                 if (!TextUtils.equals(activity.getClientTempId(), activity.getId())
                         && activity.getClientTempId() != null
                         && !add(activity.getClientTempId())) {
-                    Ln.v("Not publishing activity because we already did this one by clientTempId " + activity);
+                    if (BuildConfig.DEBUG) {
+                        Ln.v("Not publishing activity because we already did this one by clientTempId: " + activity);
+                    } else {
+                        Ln.i("Not publishing activity because already handled by activity clientTempId: md5{%s}", Strings.md5(activity.getClientTempId()));
+                    }
                     continue;
                 }
             } else {
-                Ln.v("Not publishing activity because we already did this one " + activity);
+                if (BuildConfig.DEBUG) {
+                    Ln.v("Not publishing activity because we already did this one " + activity);
+                } else {
+                    Ln.i("Not publishing activity because already handled by activity activityId: md5{%s}", Strings.md5(activity.getId()));
+                }
                 if (activity.getClientTempId() != null)
                     add(activity.getClientTempId());
                 continue;
@@ -144,10 +158,13 @@ public class ActivityListener {
         }
     }
 
-    public void setActivityMetadata(@NonNull String activityId, @NonNull AlertType alertType, boolean isEscalation) {
+    // ClientTempId is required as we might have seen this before with the temp id to correlate
+    // escalations, if escalation, clear both activityId and tempId.
+    public void setActivityMetadata(@NonNull String activityId, String clientTempId, @NonNull AlertType alertType, boolean isEscalation) {
         if (isEscalation) {
             synchronized (seenActivityIds) {
                 seenActivityIds.remove(activityId);
+                seenActivityIds.remove(clientTempId);
             }
         }
         alertTypes.put(activityId, alertType);

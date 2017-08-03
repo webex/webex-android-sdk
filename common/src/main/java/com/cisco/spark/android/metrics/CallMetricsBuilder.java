@@ -8,6 +8,7 @@ import com.cisco.spark.android.callcontrol.CallInitiationOrigin;
 import com.cisco.spark.android.metrics.value.AudioControlMetricValue;
 import com.cisco.spark.android.metrics.value.CallAlertMetricValue;
 import com.cisco.spark.android.metrics.value.CallEndMetricValue;
+import com.cisco.spark.android.metrics.value.CallJoinMetricValue;
 import com.cisco.spark.android.metrics.value.CallNumericDialPrevented;
 import com.cisco.spark.android.metrics.value.CallRequestMetricValue;
 import com.cisco.spark.android.metrics.value.CallStunTraceMetricValue;
@@ -15,6 +16,7 @@ import com.cisco.spark.android.metrics.value.CallToggleAudioOnlyMetricValue;
 import com.cisco.spark.android.util.DateUtils;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
+import com.segment.analytics.Properties;
 
 import java.util.Date;
 
@@ -32,6 +34,7 @@ public class CallMetricsBuilder extends SplunkMetricsBuilder {
     public static final String VOLUME_ACTION = "lyraVolumeAction";
     public static final String CALL_SWITCH_TO_AUDIO_ONLY = "callSwitchToAudioOnly";
     public static final String CALL_SWITCH_TO_VIDEO = "callSwitchToVideo";
+    public static final String CALL_JOIN = "callJoin";
 
     public CallMetricsBuilder(MetricsEnvironment environment) {
         super(environment);
@@ -43,7 +46,7 @@ public class CallMetricsBuilder extends SplunkMetricsBuilder {
                                              Date requestTimestamp, int participants, String participantID, String mediaStatistics,
                                              String packetStatistics, String networkType, String resourceType, String resourceId,
                                              Gson gson, Uri deviceUrl, CallInitiationOrigin callInitiationOrigin,
-                                             String joinLocusTrackingID, String wmeVersion, CallEndReason endReason) {
+                                             String joinLocusTrackingID, String wmeVersion, CallEndReason endReason, SegmentService segmentService) {
         long audioStart = 0, videoStart = 0;
         long endTime = new Date().getTime();
         int callToAudio, callToVideo, callToAV, callDuration;
@@ -90,6 +93,15 @@ public class CallMetricsBuilder extends SplunkMetricsBuilder {
                 participantID, isGroupMeetup, isNonStandard, isZtm, isSimulcast, isFilmstrip, containsNonUser, usedTcpFallback, cameraFailed, packetStatistics, networkType, gson, mediaStatistics,
                 isPaired, resourceType, resourceId, callInitiationOrigin, joinLocusTrackingID, wmeVersion, endReason));
 
+
+        if (segmentService != null) {
+            String callOrigin = callInitiationOrigin != null ? callInitiationOrigin.getValue() : "Unknown";
+            Properties segmentMetricProperties = new SegmentService.PropertiesBuilder()
+                    .setCallSource(callOrigin)
+                    .build();
+            segmentService.reportMetric(SegmentService.JOINED_CALL_EVENT, segmentMetricProperties);
+        }
+
         return this;
     }
 
@@ -115,13 +127,14 @@ public class CallMetricsBuilder extends SplunkMetricsBuilder {
                                            boolean isGroup, boolean isNonStandard, boolean isSimulcast, boolean isFilmstrip,
                                            boolean iceFailed, boolean cameraFailed, String resourceType, String resourceId, String wmeVersion, Gson gson, String networkType,
                                            boolean usedTcpFallback, boolean containsNonUser, String joinLocusTrackingID,
-                                           boolean isInbound, CallInitiationOrigin callInitiationOrigin, CallEndReason endReason) {
+                                           boolean isInbound, CallInitiationOrigin callInitiationOrigin, CallEndReason endReason,
+                                           SegmentService segmentService) {
 
         boolean isPaired = (!TextUtils.isEmpty(resourceId) && !TextUtils.isEmpty(resourceType));
 
         addCallMetrics(locusId, 0, null, null, isInbound, isGroup, usedTcpFallback, cameraFailed, containsNonUser, isNonStandard, false, isPaired, isSimulcast, isFilmstrip,
                 requestTimestamp, 0, null, null, null, networkType, resourceType, resourceId, gson, deviceUri,
-                callInitiationOrigin, joinLocusTrackingID, wmeVersion, endReason);
+                callInitiationOrigin, joinLocusTrackingID, wmeVersion, endReason, segmentService);
 
         return this;
     }
@@ -156,4 +169,9 @@ public class CallMetricsBuilder extends SplunkMetricsBuilder {
         return this;
     }
 
+    public MetricsBuilder addJoinLocus(String locusId, Uri deviceUrl, String usingResource, String result, String errorMessage) {
+        CallJoinMetricValue value = new CallJoinMetricValue(locusId, deviceUrl, usingResource, result, errorMessage);
+        reportValue(CALL_JOIN, value);
+        return this;
+    }
 }

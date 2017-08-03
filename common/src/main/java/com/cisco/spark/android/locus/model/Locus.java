@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import rx.functions.Func1;
+
 public class Locus {
 
     // fields set by gson
@@ -81,10 +83,28 @@ public class Locus {
         return controls;
     }
 
-    public List<LocusParticipant> getParticipants() {
-        return this.participants;
+    public LocusRecordControl getRecordControl() {
+        return controls == null ? null : controls.getRecord();
     }
 
+    public List<LocusParticipant> getRawParticipants() {
+        return participants;
+    }
+
+    /**
+     * returns a filtered list of participants: ones where the new "removed" property is false
+     * this was added for large meetings, when a participant no longer has access to meeting
+     *
+     * @return subset of participants collection, where removed=false
+     */
+    public List<LocusParticipant> getParticipants() {
+        ArrayList<LocusParticipant> filtered = new ArrayList<>(participants.size());
+        for (LocusParticipant part : participants) {
+            if (!part.isRemoved())
+                filtered.add(part);
+        }
+        return filtered;
+    }
 
     public @Nullable LocusSelfRepresentation getSelf() {
         return this.self;
@@ -156,6 +176,21 @@ public class Locus {
         return false;
     }
 
+
+    public LocusParticipantDevice getMyDevice(Uri deviceUrl) {
+        if (getSelf() != null) {
+            List<LocusParticipantDevice> deviceList = getSelf().getDevices();
+            if (deviceList != null) {
+                for (LocusParticipantDevice device : deviceList) {
+                    if (device.getUrl().equals(deviceUrl)) {
+                        return device;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public boolean isJoinedFromOtherDevice(Uri deviceUrl) {
         if (getSelf() != null) {
             if (getFullState().isActive() && getSelf().getState().equals(LocusParticipant.State.JOINED)) {
@@ -166,6 +201,64 @@ public class Locus {
                             return true;
                         }
                     }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Is there any participant who is joined or in lobby?
+     * @return
+     */
+
+    public boolean isAnyoneJoined() {
+        List<LocusParticipant> locusParticipants = getParticipants();
+        if (locusParticipants != null) {
+            for (LocusParticipant participant : locusParticipants) {
+                if (participant.isJoined() || participant.isInLobby()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Do we have invitee (non-host) participants
+
+     */
+
+    public boolean isAnyNonHostJoined() {
+        LocusParticipantInfo host = getHost();
+        List<LocusParticipant> locusParticipants = getParticipants();
+        if (host != null && locusParticipants != null) {
+            String hostId = host.getId();
+            for (LocusParticipant participant : locusParticipants) {
+                if (hostId != null &&
+                        participant.getPerson() != null &&
+                        participant.getPerson().getId() != null &&
+                        !participant.getPerson().getId().equals(hostId) &&
+                        participant.isJoined()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    public boolean isHostJoined() {
+        LocusParticipantInfo host = getHost();
+        List<LocusParticipant> locusParticipants = getParticipants();
+        if (host != null && locusParticipants != null) {
+            String hostId = host.getId();
+            for (LocusParticipant participant : locusParticipants) {
+                if (hostId != null && participant.getPerson() != null &&
+                        participant.getPerson().getId() != null &&
+                        participant.getPerson().getId().equals(hostId) &&
+                        participant.isJoined()) {
+                    return true;
                 }
             }
         }
@@ -253,17 +346,6 @@ public class Locus {
         return null;
     }
 
-    public MediaShare getReleasedFloor() {
-        if (getMediaShares() != null) {
-            for (MediaShare mediaShare : getMediaShares()) {
-                if (mediaShare.isValidType() && mediaShare.getFloor() != null && Floor.RELEASED.equals(mediaShare.getFloor().getDisposition())) {
-                    return mediaShare;
-                }
-            }
-        }
-        return null;
-    }
-
     public MediaShare getShareContentMedia() {
         if (getMediaShares() != null) {
             for (MediaShare mediaShare : getMediaShares()) {
@@ -320,6 +402,13 @@ public class Locus {
         return floor != null ? floor.getBeneficiary() : null;
     }
 
+    public void setFloorBeneficiary(LocusParticipant participant) {
+        Floor floor = getFloor();
+        if (floor != null) {
+            floor.setBeneficiary(participant);
+        }
+    }
+
     public boolean isHeld() {
         if (getSelf() != null && getSelf().getIntents() != null) {
             for (LocusParticipant.Intent intent : getSelf().getIntents()) {
@@ -331,15 +420,28 @@ public class Locus {
         return false;
     }
 
-    public List<LocusParticipantInfo> getUsers() {
-        List<LocusParticipantInfo> users = new ArrayList<>();
-        for (LocusParticipant participant : participants) {
-            users.add(participant.getPerson());
+    public List<LocusParticipantInfo> getCiUsers(boolean includeSelf) {
+        LocusSelfRepresentation self = getSelf();
+        if (includeSelf || self == null) {
+            return getParticipants(LocusParticipant::isValidCiUser);
+        } else {
+            return getParticipants(lpi -> {
+                return lpi.isValidCiUser() && !lpi.getId().equals(self.getId());
+            });
         }
-        return users;
     }
 
+    public List<LocusParticipantInfo> getParticipants(Func1<LocusParticipant, Boolean> matches) {
 
+        List<LocusParticipantInfo> users = new ArrayList<>();
+        for (LocusParticipant participant : participants) {
+            if (matches.call(participant)) {
+                users.add(participant.getPerson());
+            }
+        }
+
+        return users;
+    }
 
     public boolean isMeeting() {
         return fullState.getType() == LocusState.Type.MEETING;
@@ -381,18 +483,18 @@ public class Locus {
             return this;
         }
 
-        public Builder setFloorGranted() {
-            return setFloorChanged(MediaShare.SHARE_CONTENT_TYPE, Floor.GRANTED);
+        public Builder setContentFloorGranted() {
+            return addMediaShare(MediaShare.SHARE_CONTENT_TYPE, Floor.GRANTED);
         }
 
-        public Builder setFloorReleased() {
-            return setFloorChanged(MediaShare.SHARE_CONTENT_TYPE, Floor.RELEASED);
+        public Builder setContentFloorReleased() {
+            return addMediaShare(MediaShare.SHARE_CONTENT_TYPE, Floor.RELEASED);
         }
 
-        public Builder setFloorChanged(String type, String floorState) {
-            MediaShare mediaShare = new MediaShare(Uri.parse(""), new Floor(floorState));
+        public Builder addMediaShare(String type, String floorState) {
+            MediaShare mediaShare = new MediaShare(Uri.parse(""),
+                    floorState != null ? new Floor(floorState) : null);
             mediaShare.setName(type);
-            locus.mediaShares = new ArrayList<>();
             locus.mediaShares.add(mediaShare);
             return this;
         }

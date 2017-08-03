@@ -15,7 +15,8 @@ public class SnapshotSyncQueue {
     public SnapshotRequest poll() {
         SnapshotRequest request = snapshotRequestsQ.poll();
         if (request != null && request.isTimeOutRequest()) {
-            Ln.i(String.format("SnapshotSyncQueue: This request timeout over %1 seconds, been removed due to timeout. RequestId: %2 ", SnapshotRequest.TIMEOUT_DURATION, request.getRequestId()));
+            Ln.i("SnapshotSyncQueue: This request timeout over " + SnapshotRequest.TIMEOUT_DURATION + " seconds.");
+            Ln.i("SnapshotSyncQueue: This request " + request.getRequestId() + " has been removed due to timeout.");
             poll();
         }
         return request;

@@ -124,6 +124,15 @@ public class LocusSelfRepresentation extends LocusParticipant {
             return this;
         }
 
+        public Builder addSuggestedMedia(SuggestedMedia suggestedMedia) {
+            if (self.suggestedMedia == null) {
+                self.suggestedMedia = new ArrayList<>();
+            }
+
+            self.suggestedMedia.add(suggestedMedia);
+            return this;
+        }
+
         public LocusSelfRepresentation build() {
             return self;
         }

@@ -25,6 +25,8 @@ public class LocusParticipant {
     protected LocusParticipantControls controls;
     protected List<SuggestedMedia> suggestedMedia;
     protected boolean moderator;
+    protected boolean resourceGuest;
+    private boolean removed;
 
     public LocusParticipant() {
     }
@@ -174,6 +176,10 @@ public class LocusParticipant {
         return status;
     }
 
+    public void setStatus(LocusParticipantStatus newStatus) {
+        status = newStatus;
+    }
+
     public boolean isGuest() {
         return guest;
     }
@@ -210,6 +216,14 @@ public class LocusParticipant {
         this.moderator = moderator;
     }
 
+    public boolean isResourceGuest() {
+        return resourceGuest;
+    }
+
+    public boolean isRemoved() {
+        return removed;
+    }
+
     /**
      * Get an unique reference for a room resource
      * Currently the assumption is that emails are not unique so we should use the UUID.
@@ -225,6 +239,10 @@ public class LocusParticipant {
         return null;
     }
 
+    public boolean isValidCiUser() {
+        return (getType() == LocusParticipant.Type.USER && !getPerson().isExternal()) ||
+               getType() == LocusParticipant.Type.RESOURCE_ROOM;
+    }
 
     public boolean isVideoMuted() {
         return MediaDirection.RECVONLY.equals(getStatus().getVideoStatus());
@@ -267,6 +285,20 @@ public class LocusParticipant {
 
     public boolean isMySelf(UUID myId) {
         return getId().equals(myId);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object instanceof LocusParticipant) {
+            LocusParticipant that = (LocusParticipant) object;
+            return this.id.equals(that.id);
+        } else
+            return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
     }
 
     public static class Builder {
@@ -344,6 +376,31 @@ public class LocusParticipant {
                 participant.devices = new ArrayList<>();
             }
             participant.devices.add(device);
+            return this;
+        }
+
+        public Builder setCreator(boolean isCreator) {
+            participant.isCreator = isCreator;
+            return this;
+        }
+
+        public Builder setControls(LocusParticipantControls controls) {
+            participant.controls = controls;
+            return this;
+        }
+
+        public Builder setGuest(boolean isGuest) {
+            participant.guest = isGuest;
+            return this;
+        }
+
+        public Builder setResourceGuest(boolean isResourceGuest) {
+            participant.resourceGuest = isResourceGuest;
+            return this;
+        }
+
+        public Builder setModerator(boolean isModerator) {
+            participant.moderator = isModerator;
             return this;
         }
 

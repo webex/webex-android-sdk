@@ -12,6 +12,7 @@ class VideoMultitaskComponentImpl implements VideoMultitaskComponent {
 
     }
 
+
     @Override
     public void transitionToFullscreen() {
 
@@ -47,8 +48,16 @@ class VideoMultitaskComponentImpl implements VideoMultitaskComponent {
 
     }
 
+
+
+
     @Override
-    public void endCall() {
+    public void endCall(LocusKey locusKey) {
+
+    }
+
+    @Override
+    public void setScreenSharing(boolean isScreenSharing) {
 
     }
 

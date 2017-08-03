@@ -14,10 +14,12 @@ import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.metrics.EncryptionDurationMetricManager;
 import com.cisco.spark.android.metrics.MetricsReporter;
+import com.cisco.spark.android.metrics.SegmentService;
 import com.cisco.spark.android.model.Activity;
 import com.cisco.spark.android.model.Conversation;
 import com.cisco.spark.android.model.KeyManager;
 import com.cisco.spark.android.model.KeyObject;
+import com.cisco.spark.android.model.ObjectType;
 import com.cisco.spark.android.model.Person;
 import com.cisco.spark.android.model.Place;
 import com.cisco.spark.android.model.User;
@@ -95,6 +97,10 @@ public abstract class ActivityOperation extends Operation implements Conversatio
     @Inject
     transient protected ActorRecordProvider actorRecordProvider;
 
+
+    @Inject
+    transient SegmentService segmentService;
+
     /**
      * The activity being sent
      */
@@ -170,13 +176,19 @@ public abstract class ActivityOperation extends Operation implements Conversatio
             return SyncState.PREPARING;
         }
 
+        //check that the activityId matches the operationId in the db. If it doesn't, we know the operation has succeeded and we don't need to continue
+        String activityId = ConversationContentProviderQueries.getOneValue(getContentResolver(), ActivityEntry.ACTIVITY_ID,
+                ActivityEntry.SYNC_OPERATION_ID + "=?", new String[] {getOperationId()});
+        if (activityId != null && !activityId.equals(getOperationId())) {
+            Ln.i("Operation " + getOperationId() + " already succeeded, we don't need to continue");
+            return SyncState.SUCCEEDED;
+        }
+
         String newConversationId = convValues.getString(ConversationContract.ConversationEntry.CONVERSATION_ID.name());
 
         // This happens if the activity's target was a provisional conversation. Get the 'real' conversation id from the db.
         if (!TextUtils.isEmpty(newConversationId) && !TextUtils.equals(conversationId, newConversationId)) {
-            Ln.d("updating conversation id for activity " + activity + ": " + conversationId + " => " + newConversationId);
-            conversationId = newConversationId;
-            activity.setTarget(new Conversation(conversationId));
+            setConversationId(conversationId, newConversationId);
         }
 
         if (activity.getType().isEncryptable()) {
@@ -219,8 +231,14 @@ public abstract class ActivityOperation extends Operation implements Conversatio
     protected SyncState doWork() throws IOException {
         Bundle convValues = ConversationContentProviderQueries.getConversationById(getContentResolver(), getConversationId());
 
+
         if (convValues != null) {
-            conversationId = convValues.getString(ConversationContract.ConversationEntry.CONVERSATION_ID.name());
+            String newConversationId = convValues.getString(ConversationContract.ConversationEntry.CONVERSATION_ID.name());
+
+            // This happens if the activity's target was a provisional conversation. Get the 'real' conversation id from the db.
+            if (!TextUtils.isEmpty(newConversationId) && !TextUtils.equals(conversationId, newConversationId)) {
+                setConversationId(conversationId, newConversationId);
+            }
         }
 
         if (activity.getType().isEncryptable()) {
@@ -377,7 +395,7 @@ public abstract class ActivityOperation extends Operation implements Conversatio
      * Normally when an Activity fails we want to remove it from the stream
      */
     protected void rollbackActivityEntry() {
-        // Message and Sticker activities aren't deleted on fail because the user has an opportunity to retry
+        // Message activity is not deleted on fail because the user has an opportunity to retry
         if (!isSafeToRemove())
             return;
 
@@ -462,5 +480,25 @@ public abstract class ActivityOperation extends Operation implements Conversatio
     public RetryPolicy buildRetryPolicy() {
         return RetryPolicy.newJobTimeoutPolicy(5, TimeUnit.MINUTES)
                 .withRetryDelay(1, TimeUnit.SECONDS);
+    }
+
+    /**
+     * This function is used to update the conversation id on the operation from the provisional id to
+     * the real conversation id once it has been updated.
+     *
+     * @param oldConversationId The old, provisional id for the conversation
+     * @param newConversationId The new conversation id that we need to update to
+     */
+    private void setConversationId(String oldConversationId, String newConversationId) {
+        Ln.d("updating conversation id for activity " + activity + ": " + oldConversationId + " => " + newConversationId);
+
+        // Update the conversation id on the operation
+        conversationId = newConversationId;
+
+        // Additionally, if the id on the target is the provisional id and the target was a conversation,
+        // update the target to the be a conversation with the new conversation id
+        if (activity.getTarget().getId().equals(oldConversationId) && activity.getTarget().getObjectType().equals(ObjectType.conversation)) {
+            activity.setTarget(new Conversation(newConversationId));
+        }
     }
 }

@@ -1,15 +1,18 @@
 package com.cisco.spark.android.client;
 
+import com.cisco.spark.android.status.HealthCheckResponse;
 import com.cisco.spark.android.wdm.FeatureToggle;
 
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
+import rx.Observable;
 
 
 public interface FeatureClient {
@@ -30,4 +33,7 @@ public interface FeatureClient {
 
     @POST("features/users/{userId}/toggles")
     Call<Void> toggleFeatures(@Path("userId") String userId, @Body List<FeatureToggle> features);
+
+    @GET("ping")
+    Observable<Response<HealthCheckResponse>> ping();
 }

@@ -1,40 +1,38 @@
 package com.cisco.spark.android.media;
 
-import com.cisco.spark.android.app.AudioManager;
+import android.bluetooth.BluetoothA2dp;
+import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothProfile;
 
-import com.github.benoitdion.ln.Ln;
+import com.cisco.spark.android.app.AudioDeviceConnectionManager;
 
+import static com.cisco.spark.android.app.AndroidAudioManager.lnAudio;
 
 public class BluetoothServiceListener implements BluetoothProfile.ServiceListener {
 
-    private AudioManager audioManager;
+    private AudioDeviceConnectionManager audioDeviceConnectionManager;
 
-    public BluetoothServiceListener(AudioManager audioManager) {
-        this.audioManager = audioManager;
+    public BluetoothServiceListener(AudioDeviceConnectionManager audioDeviceConnectionManager) {
+        this.audioDeviceConnectionManager = audioDeviceConnectionManager;
     }
 
     public void onServiceConnected(int profile, BluetoothProfile proxy) {
-        Ln.i("BluetoothServiceListener.onServiceConnected");
-        if (BluetoothProfile.HEADSET == profile || BluetoothProfile.A2DP == profile) {
-            if (audioManager.isWiredHeadsetOrBluetoothConnected()) {
-                audioManager.setSpeakerphoneOn(false);
-            } else {
-                audioManager.setSpeakerphoneOn(true);
-            }
+        lnAudio.i("BluetoothServiceListener.onServiceConnected, profile = " + (profile == BluetoothProfile.HEADSET ? "HEADSET" : "A2DP"));
+
+        if (BluetoothProfile.HEADSET == profile) {
+            audioDeviceConnectionManager.setBluetoothHeadset((BluetoothHeadset) proxy);
+        } else if (BluetoothProfile.A2DP == profile) {
+            audioDeviceConnectionManager.setBluetoothA2dp((BluetoothA2dp) proxy);
         }
     }
 
     public void onServiceDisconnected(int profile) {
-        Ln.i("BluetoothServiceListener.onServiceDisconnected");
-        if (BluetoothProfile.HEADSET == profile || BluetoothProfile.A2DP == profile) {
-            if (audioManager.isWiredHeadsetOrBluetoothConnected()) {
-                Ln.i("BluetoothAdapterListener, WiredHeadset is on set audio path to speakerphone false");
-                audioManager.setSpeakerphoneOn(false);
-            } else {
-                Ln.i("BluetoothAdapterListener, WiredHeadset is off set audio path to speakerphone true");
-                audioManager.setSpeakerphoneOn(true);
-            }
+        lnAudio.i("BluetoothServiceListener.onServiceDisconnected, profile = " + (profile == BluetoothProfile.HEADSET ? "HEADSET" : "A2DP"));
+
+        if (BluetoothProfile.HEADSET == profile) {
+            audioDeviceConnectionManager.setBluetoothHeadset(null);
+        } else if (BluetoothProfile.A2DP == profile) {
+            audioDeviceConnectionManager.setBluetoothA2dp(null);
         }
     }
 }

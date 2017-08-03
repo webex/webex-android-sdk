@@ -14,6 +14,15 @@ public class LocusScheduledMeeting {
     private int durationMinutes;
     private String meetingSubject;
     private Uri decryptionKeyUrl;
+    /**
+     * equivalent to {@link com.cisco.spark.android.model.CalendarMeeting#id}
+     */
+    private String meetingId;
+
+    /**
+     * equivalent to {@link com.cisco.spark.android.model.CalendarMeeting#seriesId}
+     */
+    private String icalUid;
 
     public UUID getOrganizer() {
         return organizer;
@@ -41,6 +50,14 @@ public class LocusScheduledMeeting {
 
     public Uri getDecryptionKeyUrl() {
         return decryptionKeyUrl;
+    }
+
+    public String getIcalUid() {
+        return icalUid;
+    }
+
+    public String getMeetingId() {
+        return meetingId;
     }
 
 }

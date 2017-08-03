@@ -131,8 +131,8 @@ public class UIServiceAvailability {
     }
 
     private synchronized void reset() {
-        clearServiceAvailabilityEvent();
         availability = Availability.CONNECTED;
+        clearServiceAvailabilityEvent();
     }
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
@@ -152,6 +152,7 @@ public class UIServiceAvailability {
 
     @SuppressWarnings("UnusedDeclaration") // Called by the event bus.
     public void onEventAsync(UIForegroundTransition event) {
+        reset();
         update();
     }
 

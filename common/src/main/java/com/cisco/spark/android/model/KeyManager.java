@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -55,7 +56,6 @@ import javax.inject.Singleton;
 import de.greenrobot.event.EventBus;
 import retrofit2.Response;
 import rx.Observable;
-import rx.functions.Func1;
 
 @Singleton
 public class KeyManager {
@@ -79,6 +79,7 @@ public class KeyManager {
 
     public static int defaultUnboundKeyLimit = 10;
     public static final String SHARED_KEY_ID = "Shared-key-with-kms";
+    private static final int FETCH_KEY_DELAY = 10;
 
     /* For every KmsMessage request that goes out to the KMS, the KmsRequest, type(CREATE_EPHEMERAL, PING, UNBOUND_KEYS) and requestId are stored in KmsMessagesRequestMap .
     *  When we receive a KmsMessageResponseEvent, the KmsRequest is retrieved from KmsMessagesRequestMap based on requestId. KmsApi library needs the KmsRequest object to derive Ephemeral Keys from the KmsResponse etc.
@@ -211,12 +212,16 @@ public class KeyManager {
             return Observable.just(boundKey);
         } else {
             // A sync has been triggered
-            return keyRelay.filter(new Func1<KeyObject, Boolean>() {
-                @Override
-                public Boolean call(KeyObject keyObject) {
-                    return uri.equals(keyObject.getKeyUrl());
-                }
-            });
+            return keyRelay.filter(keyObject -> uri.equals(keyObject.getKeyUrl()));
+        }
+    }
+
+    public Observable<KeyObject> getBoundKeyDelaySync(@NonNull final Uri uri) {
+        KeyObject boundKey = getBoundKey(uri);
+        if (boundKey != null) {
+            return Observable.just(boundKey);
+        } else {
+            return Observable.timer(FETCH_KEY_DELAY, TimeUnit.SECONDS).map(ko -> getBoundKey(uri));
         }
     }
 
@@ -477,12 +482,24 @@ public class KeyManager {
 
     public KmsInfo getKmsInfo() {
         if (kmsInfo == null) {
-            AuthenticatedUser user = authenticatedUserProvider.getAuthenticatedUserOrNull();
-            if (user == null)
-                return null;
-            String requestId = UUID.randomUUID().toString();
+            synchronized (sync) {
+                if (kmsInfo == null) {
+                    AuthenticatedUser user = authenticatedUserProvider.getAuthenticatedUserOrNull();
+                    if (user == null)
+                        return null;
+                    String requestId = UUID.randomUUID().toString();
 
-            kmsInfo = apiClientProvider.getSecurityClient().getKmsInfo(requestId, getDeviceId(), user.getUserId());
+                    try {
+                        Response<KmsInfo> response = apiClientProvider.getSecurityClient().getKmsInfo(requestId, getDeviceId(), user.getUserId()).execute();
+                        if (response.isSuccessful())
+                            kmsInfo = response.body();
+                        else
+                            Ln.e("Failed getting KMS info : " + LoggingUtils.toString(response));
+                    } catch (IOException e) {
+                        Ln.e(e, "Failed getting KMS info");
+                    }
+                }
+            }
         }
         return kmsInfo;
     }

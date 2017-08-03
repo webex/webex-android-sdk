@@ -43,7 +43,7 @@ public interface RoomServiceClient {
     /**
      * The client announces it is leaving the room, needing to re-gain pairing to be in proximity again
      *
-     * It is not part of the standard client api, but is used when the user manually override
+     * It is not part of the standard client API, but is used when the user manually override
      * proximity toggle to immediately notify RoomsService and the Room that the client is no
      * longer in proximity
      */

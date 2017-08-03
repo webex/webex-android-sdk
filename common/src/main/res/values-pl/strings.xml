@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
     <!-- Generic Strings -->
-    <string name="settings">Ustawienia</string>
-    <string name="general">Ogólne</string>
+    <string name="settings">Karta uprawnienia funkcji bliskości</string>
+    <string name="general">Wskazuje, czy użytkownik odrzucił kartę uprawnienia funkcji bliskości</string>
 
     <!-- Preference keys: do not translate -->
 
+    <!-- User level default Custom notifications -->
+
+    <!-- Always on proximity -->
 
     <!-- This is an android system preference key to get the whole preference screen. It\'s being used
          to remove a preference category that has been inflated from an xml file in ConversationDetailsFragment -->
+
+
 
     <!-- Show if the user has ignored the pairing permission card in dev console  -->
     <string name="pref_key_title_ignore_permission_microphone">Karta uprawnienia funkcji bliskości</string>
@@ -46,7 +51,7 @@
     <string name="empty_space">&lt;Obszar jest pusty&gt;</string>
     <string name="more" tools:ignore="PluralsCandidate">%d więcej</string>
     <string name="your_pmr">Twój osobisty pokój spotkań</string>
-    <string name="other_pmr">Osobista sala konferencyjna dla %s</string>
+    <string name="other_pmr">%s Nie można się było z Tobą skontaktować.</string>
 
     <string name="call_banner_answered" tools:ignore="StringFormatCount">Ktoś dzwonił.</string>
     <string name="call_banner_x_declined">Użytkownik %1$s był niedostępny.</string>
@@ -67,7 +72,6 @@
     <string name="error_remove_participant">Nie można usunąć uczestnika z obszaru.</string>
     <string name="uploading_space_avatar">Przesyłanie obrazu obszaru</string>
     <string name="error_setting_space_avatar">Nie udało się ustawić obrazu obszaru.</string>
-    <string name="error_cropping_space_avatar">Nie udało się przyciąć obrazu obszaru</string>
     <string name="file_too_large">Zbyt duży obraz, wybierz inny</string>
 
     <string name="max_participants_warning_text">Nie można połączyć się z obszarem Spark, w którym liczba osób przekracza %d.</string>
@@ -91,29 +95,37 @@
     <string name="call_resumed">Połączenie wznowione</string>
 
     <string name="call_other_person_invited_others">Powiadamianie innych</string>
-    <string name="call_other_person_invited_x">Powiadamianie: %s</string>
+    <string name="call_other_person_invited_x">Uczestnik anulowany %s</string>
     <string name="call_other_person_declined">Inna osoba odrzuciła</string>
     <string name="call_other_person_busy">Inna osoba jest zajęta</string>
     <string name="call_participant_left">Uczestnik wyszedł</string>
-    <string name="call_participant_joined">Łączenie</string>
     <string name="call_participant_cancelled">Uczestnik anulowany</string>
     <string name="call_participant_expelled">Moderator usunął Cię ze spotkania</string>
     <string name="name_was_unavailable">Użytkownik %s był niedostępny</string>
 
-    <string name="error_file_not_found">Wybranego pliku nie odnaleziono w pamięci.</string>
+    <string name="error_file_not_found">Pokaż dodatkowe informacje dotyczące spotkania</string>
+
+    <!-- Spark Space URL -->
+    <string name="dial">Wybierz numer:</string>
+    <string name="video_address">Adres pliku wideo</string>
+    <string name="meeting_number">Wprowadź nazwę obszaru</string>
+    <string name="video_address_not_available">Adres niedostępny</string>
+    <string name="meeting_number_not_available">Numer spotkania jest niedostępny</string>
+    <string name="show_additional_meeting_info">Pokaż dodatkowe informacje dotyczące spotkania</string>
+    <string name="hide_additional_meeting_info">Ukryj dodatkowe informacje dotyczące spotkania</string>
 
     <!-- Search Modifiers -->
     <string name="search_hint_for_modifier">Wprowadź nazwisko osoby</string>
     <string name="search_hint_with_modifier">Wprowadź nazwisko osoby</string>
     <string name="search_hint_in_modifier">Wprowadź nazwę obszaru</string>
-    <string name="search_modifier_list_header">Wybierz modyfikator w celu zawężenia kryteriów wyszukiwania</string>
+    <string name="search_modifier_list_header">Filtry wyszukiwania</string>
     <string name="search_modifier_option_from_keyword"><b>od:</b></string>
-    <string name="search_modifier_option_from">Wyświetl <b>wiadomości</b> i <b>pliki</b> od danej <b>osoby</b></string>
+    <string name="search_modifier_option_from"><i>Wyświetl wiadomości i pliki od danej osoby</i></string>
     <string name="search_modifier_option_in_keyword"><b>w:</b></string>
-    <string name="search_modifier_option_in">Wyświetl <b>wiadomości</b> i <b>pliki</b> dla danego <b>obszaru</b></string>
+    <string name="search_modifier_option_in"><i>Wyświetl wiadomości i pliki w danym obszarze</i></string>
 
     <!-- Presence Status Messages -->
-    <string name="do_not_disturb">Nie przeszkadzać</string>
+    <string name="do_not_disturb">Poza biurem do</string>
     <string name="presence_status_active">Aktywny</string>
     <string name="presence_status_earlier">Użytkownik aktywny wcześniej w dniu dzisiejszym</string>
     <string name="presence_status_yesterday">Użytkownik aktywny wczoraj</string>
@@ -127,6 +139,7 @@
     <string name="presence_status_pending">Oczekiwanie na aktywację</string>
     <string name="presence_status_ooo">Poza biurem</string>
     <string name="presence_status_ooo_until">Poza biurem do %s</string>
+    <string name="presence_status_unknown">Nieznany stan</string>
 
     <plurals name="presence_status_inactive_hours">
         <item quantity="one">Użytkownik aktywny %d godzinę temu</item>
@@ -145,5 +158,7 @@
     <!-- Day Markers -->
     <string name="day_marker_today">Dzisiaj</string>
     <string name="day_marker_yesterday">Wczoraj</string>
+
+    <string name="message_failed_notification">Nie udało się wysłać wiadomości.</string>
 
 </resources>

@@ -14,7 +14,13 @@ import com.cisco.spark.android.content.ContentUploadMonitor;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.metrics.MetricsReporter;
+import com.cisco.spark.android.metrics.TimingProvider;
+import com.cisco.spark.android.metrics.model.GenericMetric;
+import com.cisco.spark.android.metrics.value.ClientMetricField;
+import com.cisco.spark.android.metrics.value.ClientMetricNames;
+import com.cisco.spark.android.metrics.value.ClientMetricTag;
 import com.cisco.spark.android.metrics.value.EncryptionMetrics;
+import com.cisco.spark.android.metrics.value.GenericMetricTagEnums;
 import com.cisco.spark.android.model.CompleteContentUploadSession;
 import com.cisco.spark.android.model.ContentUploadSession;
 import com.cisco.spark.android.model.File;
@@ -66,11 +72,15 @@ public class ContentUploadOperation extends Operation implements ConversationOpe
     @Inject
     transient OperationQueue operationQueue;
 
+
     @Inject
     transient MetricsReporter metricsReporter;
 
     @Inject
     transient ContentUploadMonitor uploadMonitor;
+
+    @Inject
+    transient TimingProvider timingProvider;
 
     public ContentUploadOperation(Injector injector, String conversationId, File content) {
         this(injector, conversationId, new ArrayList<File>());
@@ -133,6 +143,13 @@ public class ContentUploadOperation extends Operation implements ConversationOpe
             // Since images and content can be shared together, we need to keep a separate counter for the number of images
             for (int i = 0; i < files.size(); i++) {
                 File contentFile = files.get(i);
+                timingProvider.get(contentFile.getUrlOrSecureLocation().toString());
+
+                GenericMetric metric = GenericMetric.buildOperationalMetric(ClientMetricNames.CLIENT_POST_CONTENT);
+                GenericMetric thumbnailMetric = GenericMetric.buildOperationalMetric(ClientMetricNames.CLIENT_POST_CONTENT);
+                metric.addTag(ClientMetricTag.METRIC_TAG_DATA_TYPE, GenericMetricTagEnums.DataTypeMetricTagValue.DATA_TYPE_FILE);
+                thumbnailMetric.addTag(ClientMetricTag.METRIC_TAG_DATA_TYPE, GenericMetricTagEnums.DataTypeMetricTagValue.DATA_TYPE_THUMBNAIL);
+
                 Ln.d("uploading " + contentFile);
 
                 // If the file is local, we need to perform the upload, otherwise it was already successfully uploaded
@@ -141,8 +158,12 @@ public class ContentUploadOperation extends Operation implements ConversationOpe
                     File thumbnailFileModel = null;
                     // Upload Thumbnail
                     if (thumbnailImage != null && thumbnailImage.getUrl().getScheme().equals(ContentResolver.SCHEME_FILE)) {
+
                         java.io.File thumbnailFile = new java.io.File(new URI(thumbnailImage.getUrl().toString()));
-                        thumbnailFileModel = uploadFile(thumbnailFile, true);
+                        thumbnailFileModel = uploadFile(thumbnailFile, true, thumbnailMetric);
+                        thumbnailMetric.addField(ClientMetricField.METRIC_FIELD_CONTENT_SIZE,  thumbnailFile.length());
+                        operationQueue.postGenericMetric(thumbnailMetric);
+
                         if (thumbnailFileModel == null) {
                             Ln.i("Failed to upload thumbnail");
                             return SyncState.READY;
@@ -155,7 +176,10 @@ public class ContentUploadOperation extends Operation implements ConversationOpe
                     // Upload File
                     java.io.File fileToUpload = new java.io.File(new URI(contentFile.getUrlOrSecureLocation().toString()));
 
-                    File uploadedFile = uploadFile(fileToUpload, contentFile.isHidden());
+                    File uploadedFile = uploadFile(fileToUpload, contentFile.isHidden(), metric);
+                    metric.addField(ClientMetricField.METRIC_FIELD_CONTENT_SIZE, fileToUpload.length());
+                    metric.addField(ClientMetricField.METRIC_FIELD_PERCIEVED_DURATION, timingProvider.get(contentFile.getUrlOrSecureLocation().toString()));
+
                     if (uploadedFile == null || uploadedFile.getUrl() == null) {
                         Ln.i("Failed to upload file");
                         return SyncState.READY;
@@ -170,6 +194,8 @@ public class ContentUploadOperation extends Operation implements ConversationOpe
                     contentManager.addUploadedContent(fileToUpload, uploadedFile.getUrl(), Cache.MEDIA);
 
                     Ln.v("Uploaded file " + contentFile.getUrl());
+                    metric.addField(ClientMetricField.METRIC_FIELD_PERCIEVED_DURATION, timingProvider.get(contentFile.getUrlOrSecureLocation().toString()).finish());
+                    operationQueue.postGenericMetric(metric);
                 }
             }
         } catch (Throwable e) {
@@ -192,7 +218,7 @@ public class ContentUploadOperation extends Operation implements ConversationOpe
     //
     // Uploads a file. This creates Files space and then uploads the file.
     //
-    private File uploadFile(final java.io.File file, boolean hidden) {
+    private File uploadFile(final java.io.File file, boolean hidden, GenericMetric metric) {
         boolean isImage = MimeUtils.isImageExt(MimeUtils.getExtension(file.getName()));
         boolean isThumbnail = contentManager.isThumbnailFile(file);
         Uri spaceUri = hidden ? spaceUrlHidden : spaceUrl;
@@ -201,9 +227,9 @@ public class ContentUploadOperation extends Operation implements ConversationOpe
         try {
             long startTime = System.currentTimeMillis();
 
-            wx2file = uploadFileToSwift(spaceUri, file);
+            wx2file = uploadFileToSwift(spaceUri, file, metric);
             if (wx2file != null) {
-                EncryptionMetrics.ContentMetric metric = new EncryptionMetrics.ContentMetric(
+                EncryptionMetrics.ContentMetric encryptionMetric = new EncryptionMetrics.ContentMetric(
                         EncryptionMetrics.ContentMetric.Direction.up,
                         file.length(),
                         System.currentTimeMillis() - startTime,
@@ -211,11 +237,9 @@ public class ContentUploadOperation extends Operation implements ConversationOpe
                                 ? EncryptionMetrics.ContentMetric.Kind.thumbnail
                                 : EncryptionMetrics.ContentMetric.Kind.fromFilename(file.getName()));
 
-                metricsReporter.enqueueMetricsReport(metricsReporter.newEncryptionSplunkMetricsBuilder().reportValue(metric).build());
+                metricsReporter.enqueueMetricsReport(metricsReporter.newEncryptionSplunkMetricsBuilder().reportValue(encryptionMetric).build());
 
                 Ln.d("File uploaded successfully. file:'%s'", file.toString());
-
-                contentLoader.reportMetrics(true, true, isThumbnail, isImage, true);
             }
         } catch (IOException e) {
             Ln.e(e, "Failed uploading file to space " + spaceUri);
@@ -227,7 +251,7 @@ public class ContentUploadOperation extends Operation implements ConversationOpe
         return wx2file;
     }
 
-    public com.cisco.spark.android.model.File uploadFileToSwift(Uri spaceUri, java.io.File file) throws IOException {
+    public com.cisco.spark.android.model.File uploadFileToSwift(Uri spaceUri, java.io.File file, GenericMetric metric) throws IOException {
         WebExFilesClient filesClient = apiClientProvider.getFilesClient();
         Uri uploadSessionUri = spaceUri.buildUpon().appendPath("upload_sessions").build();
 
@@ -241,21 +265,37 @@ public class ContentUploadOperation extends Operation implements ConversationOpe
             mimeType = "application/unknown";
         }
 
-        CountedTypedOutput typedOutput = new TypedSecureContentReference(mimeType, file);
+        CountedTypedOutput typedOutput = new TypedSecureContentReference(mimeType, file, timingProvider);
         uploadMonitor.addProgressProvider(Uri.fromFile(file).toString(), typedOutput);
 
+
+        timingProvider.get(Uri.fromFile(file).toString()).start();
         Response<ContentUploadSession> sessionResponse = filesClient.createUploadSession(uploadSessionUri.toString()).execute();
+        metric.addField(ClientMetricField.METRIC_FIELD_SERVER_INTERACTION_DURATION, timingProvider.get(Uri.fromFile(file).toString()).finish());
 
         if (!sessionResponse.isSuccessful()) {
             setErrorMessage(String.format(Locale.US, "Failed to create upload session: %s", sessionResponse.message()));
+            metric.addNetworkStatus(sessionResponse);
             return null;
         }
 
         ContentUploadSession session = sessionResponse.body();
 
-        filesClient.uploadFile(session.getUploadUrl().toString(), typedOutput).execute();
+        timingProvider.get(String.format(Locale.getDefault(), "%d_first", file.hashCode())).start();
+        Response<Void> uploadResponse = filesClient.uploadFile(session.getUploadUrl().toString(), typedOutput).execute();
+        if (!uploadResponse.isSuccessful()) {
+            setErrorMessage(String.format(Locale.US, "Failed to upload file: %s", uploadResponse.message()));
+            metric.addNetworkStatus(uploadResponse);
+            return null;
+        }
+
+        metric.addField(ClientMetricField.METRIC_FIELD_STORAGE_TRADCKING_ID, uploadResponse.raw().header("X-Trans-Id"));
+        metric.addField(ClientMetricField.METRIC_FIELD_DURATION_TO_FIRST_RECORD, timingProvider.get(String.format(Locale.getDefault(), "%d_first", file.hashCode())).getTotalDuration());
+        metric.addField(ClientMetricField.METRIC_FIELD_DURATION_FROM_FIRST_RECORD_TO_END, timingProvider.get(String.format(Locale.getDefault(), "%d_total", file.hashCode())).getTotalDuration());
 
         Response<File> updateSessionResponse = filesClient.updateUploadSession(session.getFinishUploadUrl().toString(), new CompleteContentUploadSession((int) file.length())).execute();
+        metric.addNetworkStatus(updateSessionResponse);
+
         if (!updateSessionResponse.isSuccessful()) {
             setErrorMessage(String.format(Locale.US, "Failed to update upload session: %s", updateSessionResponse.message()));
             return null;

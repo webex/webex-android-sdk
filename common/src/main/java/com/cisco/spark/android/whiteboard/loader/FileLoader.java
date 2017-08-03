@@ -1,16 +1,19 @@
 package com.cisco.spark.android.whiteboard.loader;
 
+import android.accounts.NetworkErrorException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.LruCache;
+import android.util.Pair;
 
 import com.cisco.crypto.scr.SecureContentReference;
 import com.cisco.spark.android.client.ConversationClient;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.util.BitmapUtils;
+import com.cisco.spark.android.util.SchedulerProvider;
 import com.cisco.spark.android.util.Strings;
 import com.cisco.spark.android.whiteboard.util.FileUtilities;
 import com.github.benoitdion.ln.Ln;
@@ -23,28 +26,30 @@ import java.io.InputStream;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 import rx.Observable;
+import rx.exceptions.Exceptions;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Action2;
 import rx.functions.Action3;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 public class FileLoader {
 
     public static final int THUMBNAIL_MAX_PIXELS = 756 * 426; // Size of thumbnails in whiteboard grid
-    public static final int SMALL_MAX_PIXELS = 200 * 200;
+    public static final int SMALL_MAX_PIXELS = 426 * 756;
     public static final int BIG_MAX_PIXELS = 1080 * 1920;
 
     //32MB
     private static final int MAX_BYTE_CACHE = 32 * 1024 * 1024;
 
     private final ApiClientProvider mApiClientProvider;
+    private final SchedulerProvider mSchedulerProvider;
 
     LruCache<String, byte[]> mLruCache;
 
-    public FileLoader(ApiClientProvider clientProvider) {
+    public FileLoader(ApiClientProvider clientProvider, SchedulerProvider schedulerProvider) {
         mApiClientProvider = clientProvider;
+        mSchedulerProvider = schedulerProvider;
         mLruCache = new LruCache<>(MAX_BYTE_CACHE);
     }
 
@@ -61,37 +66,40 @@ public class FileLoader {
 
         final String key = Strings.sha256(contentReference.getLoc());
 
+        byte[] bitmap;
         synchronized (FileLoader.this) {
-            byte[] bitmap = mLruCache.get(key);
+            bitmap = mLruCache.get(key);
+        }
 
-            if (bitmap != null) {
-                if (bitmap.length == 0) {
-                    Ln.e(new Exception("Retried from cache a bitmap with length 0"));
-                } else if (successCallback != null) {
-                    Observable.just(bitmap).observeOn(Schedulers.newThread()).subscribe(new Action1<byte[]>() {
-                        @Override
-                        public void call(byte[] b) {
-                            successCallback.call(getScaledBitmap(b), contentReference, true);
-                        }
-                    }, new Action1<Throwable>() {
-                        @Override
-                        public void call(Throwable throwable) {
-                            Ln.e(throwable);
-                        }
-                    });
-                    return;
-                }
+        if (bitmap != null) {
+            if (bitmap.length == 0) {
+                Ln.e(new Exception("Retried from cache a bitmap with length 0"));
+            } else if (successCallback != null) {
+                Observable.just(bitmap).observeOn(mSchedulerProvider.file()).subscribe(new Action1<byte[]>() {
+                    @Override
+                    public void call(byte[] b) {
+                        successCallback.call(getScaledBitmap(b), contentReference, true);
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        Ln.e(throwable);
+                    }
+                });
+                return;
             }
         }
 
         Observable.just(mApiClientProvider.getConversationClient())
-                .observeOn(Schedulers.newThread())
+                .observeOn(mSchedulerProvider.file())
                 .compose(downloadFile(contentReference))
-                .observeOn(Schedulers.computation())
                 .compose(scaleBitmap(key, contentReference, successCallback))
                 .subscribe(new Action1<Boolean>() {
                     @Override
-                    public void call(Boolean b) {
+                    public void call(Boolean successful) {
+                        if (!successful) {
+                            getPreview(contentReference, successCallback, failureCallback, attempts - 1);
+                        }
                     }
                 }, new Action1<Throwable>() {
                     @Override
@@ -115,37 +123,42 @@ public class FileLoader {
         final String baseKey = Strings.sha256(contentReference.getLoc());
         final String key = baseKey + (isSmall ? "s" : "b");
 
-        synchronized (FileLoader.this) {
-            byte[] bitmap = mLruCache.get(key);
+        byte[] bitmap;
 
-            if (bitmap != null) {
-                if (bitmap.length == 0) {
-                    Ln.e(new Exception("Retried from cache a bitmap with length 0"));
-                } else if (successCallback != null) {
-                    Observable.just(bitmap).observeOn(Schedulers.newThread()).subscribe(new Action1<byte[]>() {
-                        @Override
-                        public void call(byte[] b) {
-                            successCallback.call(FileLoader.this.getScaledBitmap(b), contentReference);
-                        }
-                    }, new Action1<Throwable>() {
-                        @Override
-                        public void call(Throwable throwable) {
-                            Ln.e(throwable);
-                        }
-                    });
-                    return;
-                }
+        synchronized (FileLoader.this) {
+            bitmap = mLruCache.get(key);
+        }
+
+        if (bitmap != null) {
+            if (bitmap.length == 0) {
+                Ln.e(new Exception("Retried from cache a bitmap with length 0"));
+            } else if (successCallback != null) {
+                Observable.just(bitmap).observeOn(mSchedulerProvider.file()).subscribe(new Action1<byte[]>() {
+                    @Override
+                    public void call(byte[] b) {
+                        successCallback.call(FileLoader.this.getScaledBitmap(b), contentReference);
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        Ln.e(throwable);
+                    }
+                });
+                return;
             }
         }
 
         Observable.just(mApiClientProvider.getConversationClient())
-                .observeOn(Schedulers.newThread())
+                .observeOn(mSchedulerProvider.file())
                 .compose(downloadFile(contentReference))
+                .observeOn(mSchedulerProvider.computation())
                 .compose(scaleBitmapBigAndSmall(baseKey, contentReference, isSmall, successCallback))
-                .observeOn(Schedulers.computation())
                 .subscribe(new Action1<Boolean>() {
                     @Override
-                    public void call(Boolean b) {
+                    public void call(Boolean successful) {
+                        if (!successful) {
+                            FileLoader.this.getPage(contentReference, successCallback, failureCallback, isSmall, attempts - 1);
+                        }
                     }
                 }, new Action1<Throwable>() {
                     @Override
@@ -157,6 +170,22 @@ public class FileLoader {
                     @Override
                     public void call() {
                     }
+                });
+    }
+
+    public Observable<Pair<InputStream, Long>> getVideoStream(final SecureContentReference contentReference) {
+        return Observable.just(mApiClientProvider.getConversationClient())
+                .observeOn(mSchedulerProvider.file())
+                .retry(3)
+                .compose(downloadFile(contentReference))
+                .observeOn(mSchedulerProvider.computation())
+                .map(response -> {
+                    InputStream stream = getInputStream(contentReference, response);
+                    if (stream != null) {
+                        return new Pair<>(stream, ((ResponseBody) response.body()).contentLength());
+                    }
+
+                    throw Exceptions.propagate(new NetworkErrorException("Failed to get file stream"));
                 });
     }
 
@@ -208,15 +237,26 @@ public class FileLoader {
                                 } catch (IOException e) {
                                     Ln.e(e);
                                 }
-                                putInCache(key, scaledBitmap);
+                                putInCache(key, scaledBitmap, true);
 
-                                if (callBack != null) {
-                                    callBack.call(scaledBitmap, contentReference, false);
-                                } else {
-                                    scaledBitmap.recycle();
+                                scaledBitmap.recycle();
+
+                                byte[] bitmap;
+
+                                synchronized (FileLoader.this) {
+                                    bitmap = mLruCache.get(key);
                                 }
 
-                                return true;
+                                if (bitmap != null) {
+                                    if (bitmap.length == 0) {
+                                        Ln.e(new Exception("Retried from cache a bitmap with length 0"));
+                                    } else if (callBack != null) {
+                                        callBack.call(getScaledBitmap(bitmap), contentReference, false);
+                                        return true;
+                                    }
+                                }
+
+                                return false;
                             }
                         });
             }
@@ -229,7 +269,7 @@ public class FileLoader {
             @Override
             public Observable<Boolean> call(Observable<Response> observable) {
                 return observable
-                        .observeOn(Schedulers.computation())
+                        .observeOn(mSchedulerProvider.file())
                         .map(new Func1<Response, Boolean>() {
                             @Override
                             public Boolean call(Response response) {
@@ -247,23 +287,40 @@ public class FileLoader {
                                     Ln.e(e);
                                 }
 
-                                putInCache(baseKey + "s", smallBitmap);
+                                putInCache(baseKey + "s", smallBitmap, true);
                                 putInCache(baseKey + "b", bigBitmap);
 
                                 if (callBack != null) {
                                     if (small) {
                                         bigBitmap.recycle();
-                                        callBack.call(smallBitmap, contentReference);
+                                        smallBitmap.recycle();
+
+                                        byte[] bitmap;
+
+                                        synchronized (FileLoader.this) {
+                                            bitmap = mLruCache.get(baseKey + "s");
+                                        }
+
+                                        if (bitmap != null) {
+                                            if (bitmap.length == 0) {
+                                                Ln.e(new Exception("Retried from cache a bitmap with length 0"));
+                                            } else {
+                                                callBack.call(FileLoader.this.getScaledBitmap(bitmap), contentReference);
+                                                return true;
+                                            }
+                                        }
                                     } else {
                                         smallBitmap.recycle();
                                         callBack.call(bigBitmap, contentReference);
+                                        return true;
                                     }
                                 } else {
                                     bigBitmap.recycle();
                                     smallBitmap.recycle();
+                                    return true;
                                 }
 
-                                return true;
+                                return false;
                             }
                         });
             }
@@ -334,8 +391,12 @@ public class FileLoader {
     }
 
     public void putInCache(String key, Bitmap bitmap) {
+        putInCache(key, bitmap, false);
+    }
+
+    public void putInCache(String key, Bitmap bitmap, boolean compress) {
         synchronized (this) {
-            mLruCache.put(key, FileUtilities.getByteArray(bitmap));
+            mLruCache.put(key, FileUtilities.getByteArray(bitmap, compress));
         }
     }
 
@@ -357,5 +418,9 @@ public class FileLoader {
                     }
             }
         }
+    }
+
+    public byte[] getFromCache(String key) {
+        return mLruCache.get(key);
     }
 }

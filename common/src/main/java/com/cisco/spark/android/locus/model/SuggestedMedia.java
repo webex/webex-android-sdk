@@ -16,4 +16,11 @@ public class SuggestedMedia {
     public String getDirection() {
         return direction;
     }
+
+    //used for testing
+    public SuggestedMedia(String mediaType, String mediaContent, String direction) {
+        this.mediaType = mediaType;
+        this.mediaContent = mediaContent;
+        this.direction = direction;
+    }
 }

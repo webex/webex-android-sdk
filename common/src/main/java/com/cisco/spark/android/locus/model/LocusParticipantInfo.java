@@ -11,7 +11,6 @@ public class LocusParticipantInfo {
     private String id;
     private String email;
     private String name;
-    private String callbackAddress;
     private String phoneNumber;
     private String sipUrl;
     private String telUrl;
@@ -70,14 +69,6 @@ public class LocusParticipantInfo {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getCallbackAddress() {
-        return callbackAddress;
-    }
-
-    public void setCallbackAddress(String callbackAddress) {
-        this.callbackAddress = callbackAddress;
     }
 
     public String getPhoneNumber() {

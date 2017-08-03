@@ -11,6 +11,6 @@ public interface AnnounceCallback {
 
     void onTimeout();
 
-    void onError();
+    void onError(String errorCode);
 
 }

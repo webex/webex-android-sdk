@@ -2,13 +2,12 @@ package com.cisco.spark.android.provisioning;
 
 import com.cisco.spark.android.model.LogMetadataRequest;
 import com.cisco.spark.android.model.UrlResponse;
-import com.cisco.spark.android.provisioning.model.EmailVerificationRequest;
-import com.cisco.spark.android.provisioning.model.EmailVerificationResponse;
-import com.cisco.spark.android.provisioning.model.VerificationPollRequest;
-import com.cisco.spark.android.provisioning.model.VerificationPollingResult;
+import com.cisco.spark.android.provisioning.model.UserActivationRequest;
+import com.cisco.spark.android.provisioning.model.UserActivationResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.Header;
 import retrofit2.http.POST;
 
 import static com.cisco.spark.android.client.AdminClient.LogURLResponse;
@@ -31,9 +30,6 @@ public interface ProvisioningClient {
     @POST("logs/meta")
     public Call<UrlResponse> setLogMetadata(@Body LogMetadataRequest request);
 
-    @POST("users/email/verify")
-    public Call<EmailVerificationResponse> postVerifyEmail(@Body EmailVerificationRequest request);
-
-    @POST("users/poll")
-    public Call<VerificationPollingResult> postPollVerification(@Body VerificationPollRequest request);
+    @POST("users/activations")
+    public Call<UserActivationResponse> postActivation(@Header("X-Prelogin-UserId") String header, @Body UserActivationRequest request);
 }

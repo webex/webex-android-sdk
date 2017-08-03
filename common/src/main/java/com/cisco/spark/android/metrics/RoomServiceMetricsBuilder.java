@@ -21,6 +21,9 @@ public class RoomServiceMetricsBuilder extends SplunkMetricsBuilder {
     private static final String RE_ENTERED_ROOM_TAG = "altoReEnteredRoom";
     private static final String ENTERED_ROOM_TAG = "altoEnteredRoom";
 
+    private static final String ANDROID_ULTRASONIC_PAIRING_ERROR = "androidUltrasonicPairingError";
+    private static final String ANDROID_AUDIO_RECORDING_ERROR = "androidAudioRecordingError";
+
     public RoomServiceMetricsBuilder(MetricsEnvironment environment) {
         super(environment);
     }
@@ -80,4 +83,13 @@ public class RoomServiceMetricsBuilder extends SplunkMetricsBuilder {
         return this;
     }
 
+    public MetricsBuilder reportFailedUltrasonicPairing(String errorMessage) {
+        reportValue(ANDROID_ULTRASONIC_PAIRING_ERROR, errorMessage);
+        return this;
+    }
+
+    public MetricsBuilder reportFailedAudioRecording(String errorMessage) {
+        reportValue(ANDROID_AUDIO_RECORDING_ERROR, errorMessage);
+        return this;
+    }
 }

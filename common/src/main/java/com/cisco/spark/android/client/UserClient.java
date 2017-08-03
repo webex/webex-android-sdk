@@ -8,17 +8,20 @@ import com.cisco.spark.android.model.User;
 import com.cisco.spark.android.model.UserEmailRequest;
 import com.cisco.spark.android.model.UserIdentityKey;
 import com.cisco.spark.android.model.UserSession;
+import com.cisco.spark.android.status.HealthCheckResponse;
 
 import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
+import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import rx.Observable;
 
 public interface UserClient {
 
@@ -42,4 +45,7 @@ public interface UserClient {
 
     @POST("users?shouldCreateUsers=1")
     Call<Map<String, UserIdentityKey>> getOrCreateUserID(@Header("Authorization") String authorization, @Body List<UserEmailRequest> emails);
+
+    @GET("ping")
+    Observable<Response<HealthCheckResponse>> ping();
 }

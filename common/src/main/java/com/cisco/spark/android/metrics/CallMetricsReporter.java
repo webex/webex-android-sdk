@@ -5,6 +5,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.core.Settings;
 import com.cisco.spark.android.media.MediaSession;
 import com.cisco.spark.android.wdm.DeviceRegistration;
@@ -45,12 +46,14 @@ public class CallMetricsReporter {
     private final Gson gson;
     private final ConnectivityManager connectivityManager;
     private final RoomService roomService;
+    private final SegmentService segmentService;
     private MediaSession mediaSession;
 
     @Inject
     public CallMetricsReporter(DeviceRegistration deviceRegistration, MetricsReporter metricsReporter, MediaEngine mediaEngine,
                                Settings settings, LocusDataCache locusDataCache,
-                               Gson gson, ConnectivityManager connectivityManager, RoomService roomService) {
+                               Gson gson, ConnectivityManager connectivityManager,
+                               RoomService roomService, SegmentService segmentService) {
         this.deviceRegistration = deviceRegistration;
         this.metricsReporter = metricsReporter;
         this.mediaEngine = mediaEngine;
@@ -59,6 +62,7 @@ public class CallMetricsReporter {
         this.gson = gson;
         this.connectivityManager = connectivityManager;
         this.roomService = roomService;
+        this.segmentService = segmentService;
     }
 
     public void setMediaSession(MediaSession mediaSession) {
@@ -90,12 +94,10 @@ public class CallMetricsReporter {
     }
 
 
-    public void reportCallCancelledMetrics(LocusKey locusKey, String joinLocusTrackingID) {
+    public void reportCallCancelledMetrics(Call call) {
         Ln.i("reportCallCancelledMetrics");
 
-        LocusData call = locusDataCache.getLocusData(locusKey);
-
-        if (call == null)
+        if (call == null || call.getLocusData() == null)
             return;
 
         // don't report metrics if custom call related settings are enabled
@@ -115,9 +117,10 @@ public class CallMetricsReporter {
         }
 
 
+        LocusData locusData = call.getLocusData();
         boolean isFilmstrip = deviceRegistration.getFeatures().isMultistreamEnabled();
-        boolean containsNonUsers = call.containsNonUsers();
-        boolean isInbound = !call.getLocus().getSelf().isCreator();
+        boolean containsNonUsers = locusData.containsNonUsers();
+        boolean isInbound = !locusData.getLocus().getSelf().isCreator();
 
         String resourceType = null;
         String resourceId = null;
@@ -132,50 +135,48 @@ public class CallMetricsReporter {
         String requestTimestamp = DateUtils.formatUTCDateString(new Date());
         CallMetricsBuilder metricsBuilder = metricsReporter.newCallMetricsBuilder();
         MetricsReportRequest request = metricsBuilder
-                .addCallCancelled(call.getKey().getLocusId(), deviceRegistration.getUrl(), call.getStartTime(),
-                        call.isBridge(), false, isSimulcast, isFilmstrip, iceFailed, cameraFailed,
+                .addCallCancelled(call.getLocusKey().getLocusId(), deviceRegistration.getUrl(), locusData.getStartTime(),
+                        locusData.isBridge(), false, isSimulcast, isFilmstrip, iceFailed, cameraFailed,
                         resourceType, resourceId, getPrettyWmeVersion(), gson,
-                        getNetworkType(), usedTcpFallback, containsNonUsers, joinLocusTrackingID, isInbound,
-                        call.getCallInitiationOrigin(), call.getCallEndReason()
+                        getNetworkType(), usedTcpFallback, containsNonUsers, call.getJoinLocusTrackingID(), isInbound,
+                        call.getCallInitiationOrigin(), call.getCallEndReason(), segmentService
                 ).build();
         metricsReporter.enqueueMetricsReport(request);
     }
 
-    public void reportJoinMetrics(LocusKey locusKey) {
+    public void reportJoinMetrics(Call call) {
         Ln.i("reportJoinMetrics");
+
+        if (call == null || call.getLocusData() == null)
+            return;
 
         // don't report metrics if custom call related settings are enabled
         if (isCustomCallSettingEnabled()) {
             return;
         }
 
-        LocusData call = locusDataCache.getLocusData(locusKey);
-
-        if (call == null)
-            return;
 
         CallMetricsBuilder metricsBuilder;
-        if (isTestUserInCall(call.getLocus())) {
+        LocusData locusData = call.getLocusData();
+        if (isTestUserInCall(locusData.getLocus())) {
             metricsBuilder = metricsReporter.newCallMetricsBuilder(MetricsEnvironment.ENV_TEST);
         } else {
             metricsBuilder = metricsReporter.newCallMetricsBuilder();
         }
 
         MetricsReportRequest request = metricsBuilder.
-                addCallRequest(call.getKey().getLocusId(), deviceRegistration.getUrl(),
-                        call.getLocus().getFullState().getLastActive(),
-                        call.getLocus().getSelf().getId().toString()).build();
+                addCallRequest(locusData.getKey().getLocusId(), deviceRegistration.getUrl(),
+                        locusData.getLocus().getFullState().getLastActive(),
+                        locusData.getLocus().getSelf().getId().toString()).build();
 
         metricsReporter.enqueueMetricsReport(request);
     }
 
-    public void reportLeaveMetrics(final LocusKey locusKey, String joinLocusTrackingID) {
+    public void reportLeaveMetrics(Call call) {
         Ln.i("reportLeaveMetrics");
         Ln.i("MetricsReporter: Begin Metrics Report");
 
-        LocusData call = locusDataCache.getLocusData(locusKey);
-
-        if (call == null) {
+        if (call == null || call.getLocusData() == null) {
             Ln.i("reportLeaveMetrics, no call info");
             return;
         }
@@ -205,8 +206,9 @@ public class CallMetricsReporter {
         }
 
 
-        boolean isInbound = !call.getLocus().getSelf().isCreator();
-        String participantId = call.getLocus().getSelf().getId().toString();
+        LocusData locusData = call.getLocusData();
+        boolean isInbound = !locusData.getLocus().getSelf().isCreator();
+        String participantId = locusData.getLocus().getSelf().getId().toString();
         Uri deviceUrl = null;
         if (deviceRegistration.getUrl() != null) {
             deviceUrl = deviceRegistration.getUrl();
@@ -227,8 +229,8 @@ public class CallMetricsReporter {
 
         CallMetricsBuilder metricsBuilder = metricsReporter.newCallMetricsBuilder();
 
-        boolean containsNonUsers = call.containsNonUsers();
-        boolean testUserInCall = isTestUserInCall(call.getLocus());
+        boolean containsNonUsers = locusData.containsNonUsers();
+        boolean testUserInCall = isTestUserInCall(locusData.getLocus());
         if (testUserInCall) {
             Ln.i("reportLeaveMetrics, test user on call");
             isNonStandard = true;
@@ -237,14 +239,14 @@ public class CallMetricsReporter {
         boolean isFilmstrip = deviceRegistration.getFeatures().isMultistreamEnabled();
 
         MetricsReportRequest request = metricsBuilder
-                .addCallMetrics(call.getKey().getLocusId(), startTime, audioStart,
-                        videoStart, isInbound, call.isBridge(), usedTcpFallback, cameraFailed,
-                        containsNonUsers, isNonStandard, locusDataCache.isZtmCall(locusKey), isPaired,
-                        isSimulcast, isFilmstrip, call.getLocus().getFullState().getLastActive(), call.getLocus().getParticipants().size(),
+                .addCallMetrics(call.getLocusKey().getLocusId(), startTime, audioStart,
+                        videoStart, isInbound, locusData.isBridge(), usedTcpFallback, cameraFailed,
+                        containsNonUsers, isNonStandard, locusDataCache.isZtmCall(call.getLocusKey()), isPaired,
+                        isSimulcast, isFilmstrip, locusData.getLocus().getFullState().getLastActive(), locusData.getLocus().getParticipants().size(),
                         participantId, sessionStats, packetStats,
                         getNetworkType(), resourceType, resourceId,
-                        gson, deviceUrl, call.getCallInitiationOrigin(), joinLocusTrackingID, getPrettyWmeVersion(),
-                        call.getCallEndReason()
+                        gson, deviceUrl, call.getCallInitiationOrigin(), call.getJoinLocusTrackingID(), getPrettyWmeVersion(),
+                        call.getCallEndReason(), segmentService
                 ).build();
         metricsReporter.enqueueMetricsReport(request);
         Ln.i("= Call Metrics Report =" + gson.toJson(request.getMetrics().get(0).getValue()) + "= End Metrics Report =");
@@ -261,13 +263,12 @@ public class CallMetricsReporter {
     }
 
 
-    public void reportCallStunTraceMetrics(LocusKey locusKey, String detail) {
+    public void reportCallStunTraceMetrics(Call call, String detail) {
         Ln.i("reportCallStunTraceMetrics");
 
-        LocusData call = locusDataCache.getLocusData(locusKey);
-
-        if (call == null)
+        if (call == null || call.getLocusData() == null) {
             return;
+        }
 
         // don't report metrics if custom call related settings are enabled
         if (isCustomCallSettingEnabled()) {
@@ -277,8 +278,8 @@ public class CallMetricsReporter {
         String requestTimestamp = DateUtils.formatUTCDateString(new Date());
         CallMetricsBuilder metricsBuilder = metricsReporter.newCallMetricsBuilder();
         MetricsReportRequest request = metricsBuilder
-                .addCallStunTrace(call.getKey().getLocusId(), deviceRegistration.getUrl(),
-                        requestTimestamp, DateUtils.formatUTCDateString(call.getStartTime()), detail, gson).build();
+                .addCallStunTrace(call.getLocusKey().getLocusId(), deviceRegistration.getUrl(),
+                        requestTimestamp, DateUtils.formatUTCDateString(call.getLocusData().getStartTime()), detail, gson).build();
         metricsReporter.enqueueMetricsReport(request);
     }
 
@@ -297,12 +298,8 @@ public class CallMetricsReporter {
     }
 
 
-    public void reportCallAudioToggleMetrics(LocusKey locusKey, boolean isAudioCall) {
-        Ln.i("reportCallAudioToggleMetrics, isAudioCall = " + isAudioCall);
-
-        LocusData call = locusDataCache.getLocusData(locusKey);
-        if (call == null)
-            return;
+    public void reportCallAudioToggleMetrics(Call call) {
+        Ln.i("reportCallAudioToggleMetrics, isAudioCall = " + call.isAudioCall());
 
         // don't report metrics if custom call related settings are enabled
         if (isCustomCallSettingEnabled()) {
@@ -313,7 +310,7 @@ public class CallMetricsReporter {
         long callDuration = System.currentTimeMillis() - startTime;
 
         String tag;
-        if (isAudioCall) {
+        if (call.isAudioCall()) {
             tag = CALL_SWITCH_TO_AUDIO_ONLY;
         } else {
             tag = CALL_SWITCH_TO_VIDEO;
@@ -322,8 +319,8 @@ public class CallMetricsReporter {
         String requestTimestamp = DateUtils.formatUTCDateString(new Date());
         CallMetricsBuilder metricsBuilder = metricsReporter.newCallMetricsBuilder();
         MetricsReportRequest request = metricsBuilder
-                .addCallToggleAudioOnly(tag, call.getKey().getLocusId(), deviceRegistration.getUrl(),
-                        requestTimestamp, DateUtils.formatUTCDateString(call.getStartTime()),
+                .addCallToggleAudioOnly(tag, call.getLocusKey().getLocusId(), deviceRegistration.getUrl(),
+                        requestTimestamp, DateUtils.formatUTCDateString(call.getLocusData().getStartTime()),
                         call.getCallInitiationOrigin(), callDuration, getNetworkType())
                 .build();
         metricsReporter.enqueueMetricsReport(request);
@@ -355,6 +352,15 @@ public class CallMetricsReporter {
         reportAudioControlMetrics(durationTime, roomId, CallMetricsBuilder.VOLUME_ACTION);
     }
 
+    public void reportJoinLocusMetrics(LocusKey locusKey, String usingResource, String result, String errorMessage) {
+        Ln.i("reportJoinLocusMetrics");
+        CallMetricsBuilder metricsBuilder;
+        metricsBuilder = metricsReporter.newCallMetricsBuilder();
+        MetricsReportRequest request = metricsBuilder.
+                addJoinLocus(locusKey == null ? null : locusKey.getLocusId(), deviceRegistration.getUrl(), usingResource, result, errorMessage).build();
+        metricsReporter.enqueueMetricsReport(request);
+    }
+
     private boolean isTestUserInCall(Locus locus) {
         // check if any of the participants are test users
         Ln.i("isTestUserInCall, number participants = " + locus.getParticipants().size());
@@ -372,13 +378,13 @@ public class CallMetricsReporter {
     private boolean isCustomCallSettingEnabled() {
         boolean customCallSettingsEanbled = settings.getMediaOverrideIpAddress().length() > 0 || settings.getLinusName().length() > 0
                 || !"default".equalsIgnoreCase(settings.getAudioCodec())
-                || settings.getCustomWdmUrl().length() > 0 || settings.getCustomCallFeature().length() > 0
-                || mediaEngine.getVersion().startsWith("1.0");
+                || settings.getCustomWdmUrl().length() > 0 || settings.getCustomCallFeature().length() > 0;
+
 
         if (customCallSettingsEanbled) {
-            Ln.i("Custom Settings Enabled: mediaOverrideIpAddress=%s, linusName=%s, audioCodec=%s, customWdm=%s, customCallFeature=%s, mediaEngineVersion=%s",
+            Ln.i("Custom Settings Enabled: mediaOverrideIpAddress=%s, linusName=%s, audioCodec=%s, customWdm=%s, customCallFeature=%s",
                     settings.getMediaOverrideIpAddress(), settings.getLinusName(), settings.getAudioCodec(),
-                    settings.getCustomWdmUrl(), settings.getCustomCallFeature(), mediaEngine.getVersion());
+                    settings.getCustomWdmUrl(), settings.getCustomCallFeature());
         } else {
             Ln.i("No custom call settings enabled");
         }

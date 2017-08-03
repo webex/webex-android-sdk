@@ -9,6 +9,7 @@ import com.cisco.spark.android.sync.ConversationContract;
  */
 public class ActivityReference {
     String activityId;
+    String actorId;
     String conversationId;
     ConversationContract.ActivityEntry.Type type;
     long publishTime;
@@ -25,6 +26,7 @@ public class ActivityReference {
             c.moveToFirst();
 
         activityId = c.getString(ConversationContract.ActivityEntry.ACTIVITY_ID.ordinal());
+        actorId = c.getString(ConversationContract.ActivityEntry.ACTOR_ID.ordinal());
         conversationId = c.getString(ConversationContract.ActivityEntry.CONVERSATION_ID.ordinal());
         publishTime = c.getLong(ConversationContract.ActivityEntry.ACTIVITY_PUBLISHED_TIME.ordinal());
         type = ConversationContract.ActivityEntry.Type.values()[c.getInt(ConversationContract.ActivityEntry.ACTIVITY_TYPE.ordinal())];
@@ -46,6 +48,10 @@ public class ActivityReference {
 
     public String getActivityId() {
         return activityId;
+    }
+
+    public String getActorId() {
+        return actorId;
     }
 
     public ConversationContract.ActivityEntry.Source getActivitySource() {

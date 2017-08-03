@@ -9,4 +9,6 @@ public interface VideoMultitaskComponent extends Component, VideoOverlay {
 
     void transitionToFullscreen();
 
+    void setScreenSharing(boolean isScreenSharing);
+
 }

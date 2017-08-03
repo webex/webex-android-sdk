@@ -1,6 +1,8 @@
 package com.cisco.spark.android.sync.operationqueue.core;
 
 import com.cisco.spark.android.sync.ConversationContract;
+import com.cisco.spark.android.util.Clock;
+import com.cisco.spark.android.util.SystemClock;
 import com.github.benoitdion.ln.Ln;
 
 import java.security.SecureRandom;
@@ -26,14 +28,17 @@ public class RetryPolicy {
     private long initialDelay = 0;
     private long exponentialBackoffMax = 0;
 
-    private final long startTime = System.currentTimeMillis();
+    private long startTime = System.currentTimeMillis();
     private long attemptStartedTime = startTime;
     private long timeOfNextAttempt;
     private int attemptsLeft = maxAttempts;
     private ConversationContract.SyncOperationEntry.SyncStateFailureReason failureReason;
 
+    private transient Clock clock = new SystemClock();
+
     protected RetryPolicy() {
     }
+
 
     /**
      * Copy constructor, grabs the parameters from the input but times and attempts
@@ -106,6 +111,10 @@ public class RetryPolicy {
         exponentialBackoffMax = 0;
     }
 
+    public void addAttempt() {
+        this.attemptsLeft++;
+    }
+
     /**
      * Maximum age for a single attempt. Use caution with asyncTasks because we have no way of
      * knowing how much work was done; a retry might cause duplicate work (resulting in duplicate
@@ -149,17 +158,27 @@ public class RetryPolicy {
     }
 
     /**
+     * Use Clock instead of System methods in SparkBoard to make time advancing in tests possible
+     * @param clock Reference to the Clock object to use
+     */
+    public RetryPolicy withClock(Clock clock) {
+        this.clock = clock;
+        startTime = this.clock.now();
+        return this;
+    }
+
+    /**
      * The following functions are called by the queue Walker to manage the states
      */
 
     public void onWorkStarted() {
-        attemptStartedTime = System.currentTimeMillis();
+        attemptStartedTime = clock.now();
         attemptsLeft--;
         Ln.d(startTime + " : Operation attempt started at " + attemptStartedTime);
     }
 
     public boolean shouldAbortAttempt() {
-        if (System.currentTimeMillis() - attemptStartedTime >= attemptTimeout) {
+        if (clock.now() - attemptStartedTime >= attemptTimeout) {
             Ln.d(startTime + " : Aborting attempt because it's more than " + attemptTimeout + " ms old");
             return true;
         }
@@ -167,7 +186,7 @@ public class RetryPolicy {
     }
 
     public boolean shouldBail() {
-        if (System.currentTimeMillis() - startTime >= jobTimeout) {
+        if (clock.now() - startTime >= jobTimeout) {
             Ln.d(startTime + " : Bailing because operation is more than " + jobTimeout + " ms old");
             failureReason = ConversationContract.SyncOperationEntry.SyncStateFailureReason.TIMED_OUT;
             return true;
@@ -189,13 +208,12 @@ public class RetryPolicy {
         if (shouldBail())
             return SyncState.FAULTED;
 
-        if (startTime + initialDelay > System.currentTimeMillis()) {
+        if (startTime + initialDelay > clock.now())
             return SyncState.PREPARING;
-        }
 
         switch (state) {
             case READY:
-                if (timeOfNextAttempt <= System.currentTimeMillis())
+                if (timeOfNextAttempt <= clock.now())
                     return onFailedAttempt();
                 // else wait politely for the next attempt
                 break;
@@ -209,7 +227,7 @@ public class RetryPolicy {
 
     public SyncState onFailedAttempt() {
         Ln.d("onFailedAttempt");
-        timeOfNextAttempt = System.currentTimeMillis() + retryDelay;
+        timeOfNextAttempt = clock.now() + retryDelay;
         attemptStartedTime = timeOfNextAttempt;
 
         if (exponentialBackoffMax > 0) {
@@ -232,7 +250,7 @@ public class RetryPolicy {
     }
 
     public boolean shouldStart() {
-        boolean ret = attemptsLeft > 0 && System.currentTimeMillis() >= timeOfNextAttempt;
+        boolean ret = attemptsLeft > 0 && clock.now() >= timeOfNextAttempt;
         if (!ret)
             Ln.v(this.toString());
         return ret && !shouldBail();
@@ -248,7 +266,7 @@ public class RetryPolicy {
 
     @Override
     public String toString() {
-        long now = System.currentTimeMillis();
+        long now = clock.now();
         return "attemptsLeft:" + attemptsLeft + " next try in " + (Math.max(0, timeOfNextAttempt - now)) + "ms jobTimeout in " + (Math.max(0, startTime + jobTimeout - now)) + "ms";
     }
 

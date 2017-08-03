@@ -11,8 +11,7 @@ import com.cisco.spark.android.sync.CallSession;
 import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.ConversationKeyUpdate;
 import com.cisco.spark.android.sync.DisplayableFileSet;
-import com.cisco.spark.android.sync.ImageURI;
-import com.cisco.spark.android.sync.EventUpdate;
+import com.cisco.spark.android.sync.SparkMeetingWidget;
 import com.cisco.spark.android.sync.Message;
 import com.cisco.spark.android.sync.NewTeamConversation;
 import com.cisco.spark.android.sync.ParticipantUpdate;
@@ -278,10 +277,11 @@ public class Activity extends ActivityObject {
             case LEFT_CONVERSATION:
             case PHOTO:
             case FILE:
-            case SCHEDULED_SYNCUP:
+            case SCHEDULE_SPARK_MEETING:
+            case UPDATE_SPARK_MEETING:
+            case DELETE_SPARK_MEETING:
             case CALL_SESSION:
             case TOMBSTONE:
-            case IMAGE_URI:
             case NEW_TEAM_CONVERSATION:
             case WHITEBOARD:
                 return true;
@@ -301,8 +301,9 @@ public class Activity extends ActivityObject {
             case FILE:
             case CREATE_CONVERSATION:
             case CALL_SESSION:
-            case SCHEDULED_SYNCUP:
-            case IMAGE_URI:
+            case SCHEDULE_SPARK_MEETING:
+            case UPDATE_SPARK_MEETING:
+            case DELETE_SPARK_MEETING:
             case WHITEBOARD:
                 return true;
         }
@@ -318,8 +319,9 @@ public class Activity extends ActivityObject {
             case MESSAGE:
             case FILE:
             case CREATE_CONVERSATION:
-            case SCHEDULED_SYNCUP:
-            case IMAGE_URI:
+            case SCHEDULE_SPARK_MEETING:
+            case UPDATE_SPARK_MEETING:
+            case DELETE_SPARK_MEETING:
             case CALL_SESSION:
             case WHITEBOARD:
                 return true;
@@ -389,10 +391,6 @@ public class Activity extends ActivityObject {
 
     public boolean isShareWhiteboard() {
         return object instanceof Content && verb.equals(Verb.share) && ((Content) object).isWhiteboard();
-    }
-
-    public boolean isImageURI() {
-        return (verb.equals(Verb.post) && object != null && object.isImageURI() && target != null && target.isConversation());
     }
 
     public boolean isAcknowledgeActivity() {
@@ -501,13 +499,29 @@ public class Activity extends ActivityObject {
         return verb.equals(Verb.updateKey) && object != null && object.isConversation();
     }
 
-    public boolean isScheduledSyncUp() {
-        return (verb.equals(Verb.schedule) || verb.equals(Verb.update) || verb.equals(Verb.cancel))
+    public boolean isCreateSparkMeetingWidget() {
+        return (verb.equals(Verb.schedule))
                 && object != null
                 && object.isEvent()
                 && target.getId() != null
                 && ((EventObject) object).getStartTime() != null
                 && ((EventObject) object).getEndTime() != null;
+    }
+
+    public boolean isUpdateSparkMeetingWidget() {
+        return (verb.equals(Verb.update))
+                && object != null
+                && object.isEvent()
+                && target.getId() != null
+                && ((EventObject) object).getStartTime() != null
+                && ((EventObject) object).getEndTime() != null;
+    }
+
+    public boolean isDeleteSparkMeetingWidget() {
+        return (verb.equals(Verb.delete))
+                && object != null
+                && object.isEvent()
+                && target.getId() != null;
     }
 
     public boolean isCancel() {
@@ -602,17 +616,20 @@ public class Activity extends ActivityObject {
         else if (isUpdateKeyActivity())
             activityType = ConversationContract.ActivityEntry.Type.UPDATE_KEY;
 
-        else if (isScheduledSyncUp())
-            activityType = ConversationContract.ActivityEntry.Type.SCHEDULED_SYNCUP;
+        else if (isCreateSparkMeetingWidget())
+            activityType = ConversationContract.ActivityEntry.Type.SCHEDULE_SPARK_MEETING;
+
+        else if (isUpdateSparkMeetingWidget())
+            activityType = ConversationContract.ActivityEntry.Type.UPDATE_SPARK_MEETING;
+
+        else if (isDeleteSparkMeetingWidget())
+            activityType = ConversationContract.ActivityEntry.Type.DELETE_SPARK_MEETING;
 
         else if (isLocusSessionSummary())
             activityType = ConversationContract.ActivityEntry.Type.CALL_SESSION;
 
         else if (isTombstone())
             activityType = ConversationContract.ActivityEntry.Type.TOMBSTONE;
-
-        else if (isImageURI())
-            activityType = ConversationContract.ActivityEntry.Type.IMAGE_URI;
 
         else if (isAddNewTeamConversation())
             activityType = ConversationContract.ActivityEntry.Type.NEW_TEAM_CONVERSATION;
@@ -675,12 +692,12 @@ public class Activity extends ActivityObject {
                 break;
             case UPDATE_KEY:
                 return gson.toJson(ConversationKeyUpdate.fromActivity(this));
-            case SCHEDULED_SYNCUP:
-                return gson.toJson(EventUpdate.fromActivity(this));
+            case SCHEDULE_SPARK_MEETING:
+            case UPDATE_SPARK_MEETING:
+            case DELETE_SPARK_MEETING:
+                return gson.toJson(SparkMeetingWidget.fromActivity(this));
             case CALL_SESSION:
                 return gson.toJson(CallSession.fromLocusSessionSummary(self.getKey(), (LocusSessionSummary) this.getObject()));
-            case IMAGE_URI:
-                return gson.toJson(new ImageURI(this));
             case NEW_TEAM_CONVERSATION:
                 return gson.toJson(new NewTeamConversation(getActor().getKey(), getObject().getId(), provider));
         }
@@ -689,6 +706,13 @@ public class Activity extends ActivityObject {
 
     public String getContentDataId() {
         if (object != null && object.isContent())
+            return getObject().getId();
+
+        return null;
+    }
+
+    public String getSparkMeetingId() {
+        if (object != null && object.isEvent())
             return getObject().getId();
 
         return null;
@@ -758,7 +782,6 @@ public class Activity extends ActivityObject {
         try {
             switch (type) {
                 case MESSAGE:
-                case IMAGE_URI:
                     return gson.fromJson(data, Message.class).getActorKey();
                 case TOMBSTONE:
                     return gson.fromJson(data, Tombstone.class).getActor();
@@ -779,8 +802,10 @@ public class Activity extends ActivityObject {
                 case UPDATE_CONTENT:
                 case WHITEBOARD:
                     return gson.fromJson(data, DisplayableFileSet.class).getActorKey();
-                case SCHEDULED_SYNCUP:
-                    return gson.fromJson(data, EventUpdate.class).getActorKey();
+                case SCHEDULE_SPARK_MEETING:
+                case UPDATE_SPARK_MEETING:
+                case DELETE_SPARK_MEETING:
+                    return gson.fromJson(data, SparkMeetingWidget.class).getActorKey();
                 case CALL_SESSION:
                     return gson.fromJson(data, CallSession.class).getActorKey();
             }
@@ -796,7 +821,6 @@ public class Activity extends ActivityObject {
         try {
             switch (type) {
                 case MESSAGE:
-                case IMAGE_URI:
                     return gson.fromJson(data, Message.class).getProvider();
                 case ADD_PARTICIPANT:
                 case LEFT_CONVERSATION:
@@ -813,8 +837,10 @@ public class Activity extends ActivityObject {
                 case UPDATE_CONTENT:
                 case WHITEBOARD:
                     return gson.fromJson(data, DisplayableFileSet.class).getProvider();
-                case SCHEDULED_SYNCUP:
-                    return gson.fromJson(data, EventUpdate.class).getProvider();
+                case SCHEDULE_SPARK_MEETING:
+                case UPDATE_SPARK_MEETING:
+                case DELETE_SPARK_MEETING:
+                    return gson.fromJson(data, SparkMeetingWidget.class).getProvider();
             }
         } catch (Exception e) {
             Ln.v(e, "Failed getting provider from json " + data + " : " + type);

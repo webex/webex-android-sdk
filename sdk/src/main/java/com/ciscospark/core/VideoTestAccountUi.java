@@ -13,8 +13,9 @@ class VideoTestAccountUi implements AccountUi {
 
     }
 
+
     @Override
-    public void logout(Context context, Activity parent, boolean isTeardown) {
+    public void logout(Context context, Activity parent, boolean isTeardown, boolean showAlert) {
 
     }
 }

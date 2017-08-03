@@ -2,6 +2,8 @@ package com.cisco.spark.android.client;
 
 import com.cisco.spark.android.acl.Acl;
 import com.cisco.spark.android.acl.AclLinkRequest;
+import com.cisco.spark.android.acl.AclLinkResponse;
+import com.cisco.spark.android.status.HealthCheckResponse;
 import com.cisco.spark.android.whiteboard.WhiteboardKmsMessage;
 
 import okhttp3.ResponseBody;
@@ -13,6 +15,7 @@ import retrofit2.http.PUT;
 import retrofit2.http.Url;
 import retrofit2.http.HTTP;
 import retrofit2.http.Path;
+import rx.Observable;
 
 public interface AclClient {
 
@@ -25,4 +28,8 @@ public interface AclClient {
     @HTTP(method = "DELETE", path = "acls/{aclId}/people/{userId}", hasBody = true)
     Call<Void> removeUserFromAcl(@Path("aclId") String aclId, @Path("userId") String userId, @Body WhiteboardKmsMessage kmsMessage);
 
+    @PUT("acls/{boardAclId}/links")
+    Call<AclLinkResponse> addOrRemoveAclLink(@Path("boardAclId") String boardAclId, @Body AclLinkRequest request);
+    @GET("ping")
+    Observable<Response<HealthCheckResponse>> ping();
 }

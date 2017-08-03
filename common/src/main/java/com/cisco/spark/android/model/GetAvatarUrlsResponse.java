@@ -1,34 +1,30 @@
 package com.cisco.spark.android.model;
 
+import android.net.Uri;
+
+import com.cisco.spark.android.sync.ContentManager;
+
 import java.util.Map;
 
 public class GetAvatarUrlsResponse {
 
-    private Map<String, Map<Integer, SingleAvatarInfo>> avatarUrlsMap;
+    private Map<String, Map<Integer, SingleUserAvatarUrlsInfo>> avatarUrlsMap;
 
-    public Map<String, Map<Integer, SingleAvatarInfo>> getAvatarUrlsMap() {
+    private Map<Uri, ContentManager.CacheRecordRequestParameters> parametersMap;
+
+    public Map<String, Map<Integer, SingleUserAvatarUrlsInfo>> getAvatarUrlsMap() {
         return avatarUrlsMap;
     }
 
-    public void setAvatarUrlsMap(Map<String, Map<Integer, SingleAvatarInfo>> avatarUrlsMap) {
+    public void setAvatarUrlsMap(Map<String, Map<Integer, SingleUserAvatarUrlsInfo>> avatarUrlsMap) {
         this.avatarUrlsMap = avatarUrlsMap;
     }
 
-    public static class SingleAvatarInfo {
-        private int size;
-        private String url;
-        private boolean defaultAvatar;
+    public Map<Uri, ContentManager.CacheRecordRequestParameters> getParametersMap() {
+        return parametersMap;
+    }
 
-        public int getSize() {
-            return size;
-        }
-
-        public String getUrl() {
-            return url;
-        }
-
-        public boolean isDefaultAvatar() {
-            return defaultAvatar;
-        }
+    public void setParametersMap(Map<Uri, ContentManager.CacheRecordRequestParameters> parametersMap) {
+        this.parametersMap = parametersMap;
     }
 }

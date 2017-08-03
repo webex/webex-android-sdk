@@ -36,7 +36,7 @@ public class EncryptionMetrics {
         }
 
         public enum Kind {
-            image, video, doc, sticky, thumbnail, unknown;
+            image, video, doc, thumbnail, unknown;
 
             public static Kind fromFilename(String filename) {
                 switch (MimeUtils.getContentTypeByFilename(filename)) {

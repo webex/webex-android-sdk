@@ -26,6 +26,8 @@ import com.cisco.wx2.sdk.kms.KmsResponseBody;
 import com.github.benoitdion.ln.Ln;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -98,6 +100,7 @@ public class UpdateEncryptionKeyOperation extends ActivityOperation {
         }
 
         if (newKey == null) {
+            // This will set newKey if possible, and update the outgoing activity
             setActivityObject();
         }
 
@@ -113,6 +116,13 @@ public class UpdateEncryptionKeyOperation extends ActivityOperation {
     @Override
     protected SyncState doWork() throws IOException {
         super.doWork();
+
+        // If the conv already has a default key, take no further action
+        if (remoteConversationHasDefaultKey()) {
+            Ln.i("Skipping key update ; conversation already has a default key");
+            return SyncState.SUCCEEDED;
+        }
+
         setActivityObject();
 
         if (newKey == null)
@@ -135,26 +145,16 @@ public class UpdateEncryptionKeyOperation extends ActivityOperation {
             return SyncState.PREPARING;
         }
 
-        if (!cr.isEncryptedConversation()) {
-            ln.i("Conversation " + conversationId + " is not encrypted. Creating a new resource");
-            Operation createResourceOperation = operationQueue.createKmsResource(conversationId, participantUuids);
-            setDependsOn(createResourceOperation);
-            getRetryPolicy().scheduleNow();
-            return SyncState.PREPARING;
-        }
-
-        if (activity.getEncryptedKmsMessage() == null) {
-            activity.setEncryptedKmsMessage(encryptedConversationProcessor
-                    .associateNewEncryptionKeyUsingKmsMessagingApi(cr.getKmsResourceObject(), newKey));
-        }
+        activity.setEncryptedKmsMessage(encryptedConversationProcessor
+                .createNewResource(new ArrayList<>(participantUuids), Collections.singletonList(newKey.getKeyId())));
 
         Response<Activity> response = postActivity(activity);
 
         if (response.isSuccessful()) {
             Activity result = response.body();
             KmsResponseBody kmsResult = CryptoUtils.decryptKmsMessage(result.getEncryptedKmsMessage(), keyManager.getSharedKeyAsJWK());
-            if (kmsResult != null && kmsResult.getKey() != null && kmsResult.getKey().getResourceUri() != null) {
-                cr.setKmsResourceObject(new KmsResourceObject(kmsResult.getKey().getResourceUri()));
+            if (kmsResult != null && kmsResult.getResource() != null && kmsResult.getResource().getUri() != null) {
+                cr.setKmsResourceObject(new KmsResourceObject(kmsResult.getResource().getUri()));
                 writeNewKroToDb(cr.getKmsResourceObject());
                 writeNewKeyToDb();
                 return SyncState.SUCCEEDED;
@@ -163,19 +163,26 @@ public class UpdateEncryptionKeyOperation extends ActivityOperation {
             KmsResponseBody kmsResponseBody = CryptoUtils.extractKmsResponseBody(response, gson, keyManager.getSharedKeyAsJWK());
             if (kmsResponseBody != null) {
                 String message = kmsResponseBody.getReason();
-                Ln.w("Kms Response: " + message);
+                Ln.w("Kms Response: " + message + " : " + kmsResponseBody.getStatus());
                 setErrorMessage(message);
-
-                if (kmsResponseBody.getStatus() == 403) {
-                    Ln.d("Issuing a create resource kmsMessage");
-                    Operation op = operationQueue.createKmsResource(conversationId, participantUuids);
-                    this.setDependsOn(op);
-                    return SyncState.READY;
-                }
             }
         }
 
         return SyncState.READY;
+    }
+
+    private boolean remoteConversationHasDefaultKey() {
+        Response<Conversation> response = null;
+        try {
+            response = apiClientProvider.getConversationClient().getConversation(conversationId).execute();
+            if (response.isSuccessful()) {
+                return response.body().getDefaultActivityEncryptionKeyUrl() != null;
+            }
+        } catch (IOException e) {
+            Ln.e(e);
+        }
+
+        throw new RuntimeException("Failed getting conversation from service: " + LoggingUtils.toString(response));
     }
 
     private ConversationRecord getConversationRecord() throws IOException {

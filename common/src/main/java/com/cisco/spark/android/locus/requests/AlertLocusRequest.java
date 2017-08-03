@@ -2,8 +2,14 @@ package com.cisco.spark.android.locus.requests;
 
 import android.net.Uri;
 
-public class AlertLocusRequest {
+import com.cisco.spark.android.features.CoreFeatures;
+
+public class AlertLocusRequest extends DeltaRequest {
     private Uri deviceUrl;
+
+    public AlertLocusRequest(CoreFeatures coreFeatures) {
+        super(coreFeatures);
+    }
 
     public Uri getDeviceUrl() {
         return deviceUrl;

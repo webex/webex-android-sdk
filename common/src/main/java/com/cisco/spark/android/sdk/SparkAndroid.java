@@ -1,5 +1,6 @@
 package com.cisco.spark.android.sdk;
 
+import com.cisco.spark.android.core.Component;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.cisco.spark.android.wdm.DeviceInfo;
 
@@ -21,6 +22,11 @@ public class SparkAndroid implements SdkClient {
     }
 
     @Override
+    public boolean componentEnabled(Component component) {
+        return true;
+    }
+
+    @Override
     public boolean conversationCachingEnabled() {
         return true;
     }
@@ -31,7 +37,27 @@ public class SparkAndroid implements SdkClient {
     }
 
     @Override
-    public boolean supportsReducedScopes() {
+    public boolean shouldClearRemoteBoardStore() {
+        return false; // Never clear the remote store
+    }
+
+    @Override
+    public boolean supportsHybridKms() {
         return true;
+    }
+
+    @Override
+    public boolean supportsVoicemailScopes() {
+        return true;
+    }
+
+    @Override
+    public boolean isMobileDevice() {
+        return true;
+    }
+
+    @Override
+    public String generateClientInfo() {
+        return "";
     }
 }

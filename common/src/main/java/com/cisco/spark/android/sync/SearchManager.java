@@ -362,6 +362,37 @@ public class SearchManager {
         }
     }
 
+
+    public void updateActivitySearchSync(Collection<Activity> activities) {
+        Batch batch = batchProvider.get();
+        Ln.d("Updating search index for " + activities.size() + " searchable messages");
+
+        for (Activity activity : activities) {
+            MessageSearchReferenceObject messageSearchReferenceObject = new MessageSearchReferenceObject(activity);
+            if (messageSearchReferenceObject.getType() != ActivityEntry.Type.MESSAGE) {
+                continue;
+            }
+            String conversationId = messageSearchReferenceObject.getConversationId();
+            Message message = messageSearchReferenceObject.getMessageObject();
+            String actorUUID = (message.getActorKey() != null) ? message.getActorKey().getUuid() : null;
+
+            updateMessageSearchRecord(batch,
+                    conversationId,
+                    message.getText(),
+                    NameUtils.getShortName(messageSearchReferenceObject.getAuthorName()),
+                    actorUUID,
+                    messageSearchReferenceObject.getActivityId(),
+                    messageSearchReferenceObject.getPublishedTime(),
+                    getConversationName(conversationId),
+                    messageSearchReferenceObject.getType(),
+                    messageSearchReferenceObject.getActivityTempId(),
+                    messageSearchReferenceObject.getFileSharedCount(),
+                    getOneOnOneParticipant(conversationId));
+        }
+        if (apiTokenProvider.isAuthenticated())
+            batch.apply();
+    }
+
     public void updateActivitySearch(ActivityEntry.Type type, Message message, String activityId, String conversationId, long publishedTime, String activityTempId) {
         if (isMessageSearchEnabled() || isContentSearchEnabled()) {
             addActivityToSearch(new MessageSearchReferenceObject(activityId, conversationId, message, type, publishedTime, activityTempId));

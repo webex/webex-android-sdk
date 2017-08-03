@@ -3,11 +3,13 @@ package com.cisco.spark.android.log;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.core.PSUtils;
 import com.cisco.spark.android.media.MediaSessionEngine;
+import com.cisco.spark.android.sync.ContentManager;
 import com.cisco.spark.android.util.FileUtils;
 import com.cisco.spark.android.util.ZipUtils;
 
@@ -86,9 +88,6 @@ public class LogFilePrint implements Runnable {
         // The upper range of log files MUST be set before getNewLogFile() is called.
         if (BuildConfig.DEBUG) {
             maxLogFiles = MAX_DEBUG_LOG_FILES;
-            if (context.getExternalCacheDir() != null) {
-                rootLogDir = context.getExternalCacheDir().toString();
-            }
         } else {
             maxLogFiles = MAX_RELEASE_LOG_FILES;
         }
@@ -120,6 +119,10 @@ public class LogFilePrint implements Runnable {
     }
 
     public Uri generateZippedLogs() {
+        return generateZippedLogs(false);
+    }
+
+    public Uri generateZippedLogs(boolean isUpload) {
         File zipFile = getZipFile();
         if (zipFile != null) {
             // TODO: Temporary?  If a team member, they may have captured audio samples, so pull them into directory before zipping
@@ -128,7 +131,11 @@ public class LogFilePrint implements Runnable {
             ZipUtils.zipDirectory(getLogDirectory(), getZipFile());
             // TODO: Remove when no longer needed!
             removeAudioSampleFiles();
-            return Uri.fromFile(getZipFile());
+            if (isUpload) {
+                return Uri.fromFile(getZipFile());
+            } else {
+                return FileProvider.getUriForFile(context, ContentManager.FILEPROVIDER_AUTHORITY, getZipFile());
+            }
         } else {
             return null;
         }

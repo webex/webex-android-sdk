@@ -42,7 +42,6 @@ import com.cisco.spark.android.callcontrol.events.CallControlFloorReleasedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlHeldEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlInvalidLocusEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlJoinedLobbyEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlJoinedMeetingEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLeaveLocusEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocalAudioMutedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocalVideoMutedEvent;
@@ -305,6 +304,8 @@ public class Phone {
         this.mspark.getStrategy().accessToken(new AuthorizeListener() {
             @Override
             public void onSuccess(OAuth2AccessToken accessToken) {
+
+
                 tokens.update(accessToken);
                 String email1 = "";
                 String name1 = "";
@@ -401,8 +402,8 @@ public class Phone {
 
             //call is setup
             Log.i(TAG, "DialoutCall");
-
-            this.callControlService.cancelCall(true);
+            this.callControlService.cancelCall(null,CallControlService.CancelReason.LOCAL_CANCELLED);
+            //this.callControlService.cancelCall(true);
             return;
 
         }
@@ -412,7 +413,8 @@ public class Phone {
             //call is not setup
             Log.i(TAG, "cancelCall");
 
-            this.callControlService.cancelCall(true);
+            //this.callControlService.cancelCall(true);
+            this.callControlService.cancelCall(null,CallControlService.CancelReason.LOCAL_CANCELLED);
             return;
         }
         if (this.mActiveCall.status == Call.CallStatus.CONNECTED) {
@@ -877,6 +879,7 @@ public class Phone {
         Log.i(TAG, "CallControlSelfParticipantLeftEvent is received ");
         //no Activecall
         if (this.mActiveCall == null) {
+            Log.i(TAG, "onEventMainThread: mActiveCall is Null");
             return;
         }
         Log.i(TAG, "event.lockskey is " + event.getLocusKey().toString());
@@ -1220,15 +1223,6 @@ public class Phone {
 
     }
 
-    /**
-     * @param event the event
-     * @deprecated
-     */
-    public void onEventMainThread(CallControlJoinedMeetingEvent event) {
-
-        Log.i(TAG, "CallControlJoinedMeetingEvent is received ");
-
-    }
 
 
     /**
