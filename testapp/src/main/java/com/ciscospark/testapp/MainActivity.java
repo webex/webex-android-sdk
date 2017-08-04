@@ -32,7 +32,7 @@ import android.widget.Button;
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.ciscospark.SparkError;
 import com.ciscospark.auth.AuthorizeListener;
-import com.ciscospark.auth.OAuthWebViewStrategy;
+import com.ciscospark.auth.OAuthWebViewAuthenticator;
 
 public class MainActivity extends Activity implements AuthorizeListener {
 
@@ -45,7 +45,7 @@ public class MainActivity extends Activity implements AuthorizeListener {
     String redirect = "AndroidDemoApp://response";
     String scope = "spark:all spark:kms";
     String email = "";
-    OAuthWebViewStrategy strategy;
+    OAuthWebViewAuthenticator strategy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +53,7 @@ public class MainActivity extends Activity implements AuthorizeListener {
         setContentView(R.layout.activity_main);
         webView = (WebView) findViewById(R.id.webview);
 
-        strategy = new OAuthWebViewStrategy(clientId, clientSec, redirect, scope, email, webView);
+        strategy = new OAuthWebViewAuthenticator(clientId, clientSec, redirect, scope, email, webView);
 
         webView.loadUrl("https://developer.ciscospark.com/");
         btn = (Button) findViewById(R.id.button);

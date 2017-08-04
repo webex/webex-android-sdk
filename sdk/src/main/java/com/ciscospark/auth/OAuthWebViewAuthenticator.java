@@ -51,13 +51,13 @@ import static com.ciscospark.auth.AuthorizeListener.AuthError.SERVER_ERROR;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class OAuthWebViewStrategy implements AuthorizationStrategy {
+public class OAuthWebViewAuthenticator implements Authenticator {
     private String mBaseUrl = OAUTH_BASE_URL;
     private WebView mWebView;
     private String mState;
     private AuthorizeListener mAuthListener;
-    private OAuthStrategy mOAuthStategyDelegate = null;
-    static final String TAG = "OAuthWebViewStrategy";
+    private OAuthAuthenticator mOAuthStategyDelegate = null;
+    static final String TAG = "OAuthWebViewAuthenticator";
     static final String OAUTH_BASE_URL = "https://api.ciscospark.com/v1/";
 
 
@@ -69,11 +69,11 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
      * @param email
      * @param webView
      */
-    public OAuthWebViewStrategy(String clientId, String clientSecret, String redirectUri,
-                                String scope, String email, WebView webView) {
+    public OAuthWebViewAuthenticator(String clientId, String clientSecret, String redirectUri,
+                                     String scope, String email, WebView webView) {
         super();
         this.mWebView = webView;
-        mOAuthStategyDelegate = new OAuthStrategy(clientId, clientSecret, redirectUri, scope, email, "");
+        mOAuthStategyDelegate = new OAuthAuthenticator(clientId, clientSecret, redirectUri, scope, email, "");
 
         initWebView();
     }

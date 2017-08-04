@@ -30,7 +30,7 @@ import com.cisco.spark.android.authenticator.OAuth2AccessToken;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public interface AuthorizationStrategy {
+public interface Authenticator {
 
     void authorize(AuthorizeListener listener);
 
@@ -39,5 +39,4 @@ public interface AuthorizationStrategy {
     OAuth2AccessToken getToken();
 
     boolean isAuthorized();
-
 }

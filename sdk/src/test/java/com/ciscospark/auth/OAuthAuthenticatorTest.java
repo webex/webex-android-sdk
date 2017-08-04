@@ -40,13 +40,22 @@ import static org.junit.Assert.assertTrue;
  * @version 0.1
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class JWTStrategyTest {
-    private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMiIsIm5hbWUiOiJ1c2VyICMyIiwiaXNzIjoiWTJselkyOXpjR0Z5YXpvdkwzVnpMMDlTUjBGT1NWcEJWRWxQVGk5aU5tSmtNemRtTUMwNU56RXhMVFEzWldVdE9UUTFOUzAxWWpZNE1tUTNNRFV6TURZIn0.5VvjLtuD-jn9hXtLthnGDdhxlIHaoKZbI80y1vK2-bY";
-    private JWTStrategy strategy;
+public class OAuthAuthenticatorTest {
+    String clientId = "Cc580d5219555f0df8b03d99f3e020381eae4eee0bad1501ad187480db311cce4";
+    String clientSec = "d4e9385b2e5828eef376077995080ea4aa42b5c92f1b6af8f3a59fc6a4e79f6a";
+    String redirect = "AndroidDemoApp://response";
+    // Every time get the code from browser manually, or test will fail.
+    // Visit flowing link in browser to get the code:
+    // "https://api.ciscospark.com/v1/authorize?client_id=Cc580d5219555f0df8b03d99f3e020381eae4eee0bad1501ad187480db311cce4&response_type=code&redirect_uri=AndroidDemoApp%3A%2F%2Fresponse&scope=spark%3Aall%20spark%3Akms"
+    String code = "MmI5ZDkwY2ItYTUyNi00ODM2LTljZTctZGU5ZjdjNWRkZDBlMWMzN2Q1YWItNTM1";
+    String email = "xionxiao@cisco.com";
+    String scope = "spark:all spark:kms";
+
+    OAuthAuthenticator strategy;
 
     @Before
     public void init() throws Exception {
-        strategy = new JWTStrategy(auth_token);
+        strategy = new OAuthAuthenticator(clientId, clientSec, redirect, scope, email, code);
     }
 
     @Test
@@ -61,17 +70,15 @@ public class JWTStrategyTest {
                 assertFalse(token.getAccessToken().isEmpty());
                 System.out.println(token.getAccessToken());
                 System.out.println("expires in: " + token.getExpiresIn());
+                System.out.println("success");
             }
 
             @Override
             public void onFailed(SparkError error) {
-                //assertFalse(true);
-                System.out.println("failed");
-                System.out.println(error.toString());
+                assertFalse("Every time get the code from browser manually, or test will fail.", true);
             }
         });
-
-        Thread.sleep(5 * 1000);
+        Thread.sleep(10 * 1000);
     }
 
     @Test
@@ -84,20 +91,38 @@ public class JWTStrategyTest {
 
     @Test
     public void c_authorizeFailed() throws Exception {
-        strategy = new JWTStrategy("Wrong token");
+        strategy.setAuthCode("wrong_code");
         strategy.authorize(new AuthorizeListener() {
             @Override
             public void onSuccess() {
+                // not go here
                 assertFalse(true);
             }
 
             @Override
             public void onFailed(SparkError error) {
-                assertFalse(strategy.isAuthorized());
-                System.out.println(error.toString());
+                assertTrue(true);
             }
         });
+        Thread.sleep(10 * 1000);
+    }
 
-        Thread.sleep(5 * 1000);
+    @Test
+    public void d_authorizeFailed() throws Exception {
+        strategy.setScope("wrong_scope");
+        strategy.authorize(new AuthorizeListener() {
+            @Override
+            public void onSuccess() {
+                // not go here
+                assertFalse(true);
+            }
+
+            @Override
+            public void onFailed(SparkError error) {
+                assertTrue(true);
+            }
+        });
+        Thread.sleep(10 * 1000);
     }
 }
+

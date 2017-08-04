@@ -43,7 +43,6 @@ public class Phone {
     private OAuth2AccessToken access_token;
     private static final String TAG = "Phone";
 
-    /*
     @Inject
     ApplicationController applicationController;
 
@@ -55,7 +54,6 @@ public class Phone {
 
     @Inject
     CallControlService callControlService;
-    */
 
     @Inject
     MediaEngine mediaEngine;

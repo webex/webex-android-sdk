@@ -53,14 +53,14 @@ import com.ciscospark.SparkError;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class JWTStrategy implements AuthorizationStrategy {
+public class JWTAuthenticator implements Authenticator {
     private JwtToken mToken = null;
     private String mAuthCode;
     private AuthService mAuthService;
 
     static final String JWT_BASE_URL = "https://api.ciscospark.com/v1/jwt/";
 
-    public JWTStrategy(String authcode) {
+    public JWTAuthenticator(String authcode) {
         setAuthCode(authcode);
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -72,7 +72,7 @@ public class JWTStrategy implements AuthorizationStrategy {
     }
 
     /* Used for mock test */
-    JWTStrategy(String authCode, String base_url) {
+    JWTAuthenticator(String authCode, String base_url) {
         setAuthCode(authCode);
 
         Retrofit retrofit = new Retrofit.Builder()

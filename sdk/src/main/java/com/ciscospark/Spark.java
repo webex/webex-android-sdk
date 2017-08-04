@@ -22,7 +22,7 @@
 
 package com.ciscospark;
 
-import com.ciscospark.auth.AuthorizationStrategy;
+import com.ciscospark.auth.Authenticator;
 import com.ciscospark.auth.AuthorizeListener;
 import com.ciscospark.membership.MembershipClient;
 import com.ciscospark.message.MessageClient;
@@ -37,7 +37,7 @@ import com.ciscospark.team.TeamMembershipClient;
  * @version 0.1
  */
 public class Spark {
-    private AuthorizationStrategy strategy;
+    private Authenticator authenticator;
 
     /**
      * Get current sdk version
@@ -48,24 +48,24 @@ public class Spark {
         return "0.1";
     }
 
-    public void init(AuthorizationStrategy strategy) {
-        this.strategy = strategy;
+    public void init(Authenticator authenticator) {
+        this.authenticator = authenticator;
     }
 
     public void authorize(AuthorizeListener listener) {
-        strategy.authorize(listener);
+        authenticator.authorize(listener);
     }
 
     public void deauthorize() {
-        strategy.deauthorize();
+        authenticator.deauthorize();
     }
 
     public boolean isAuthorized() {
-        return strategy.isAuthorized();
+        return authenticator.isAuthorized();
     }
 
     public Phone phone() {
-        return new Phone(strategy.getToken());
+        return new Phone(authenticator.getToken());
     }
 
     public MessageClient messages() {

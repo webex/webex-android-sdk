@@ -25,7 +25,7 @@ package com.ciscospark;
 import android.util.Log;
 
 import com.ciscospark.auth.AuthorizeListener;
-import com.ciscospark.auth.JWTStrategy;
+import com.ciscospark.auth.JWTAuthenticator;
 
 import org.junit.Test;
 
@@ -49,7 +49,7 @@ public class SparkTest {
     @Test
     public void authorize() throws Exception {
         Spark spark = new Spark();
-        JWTStrategy strategy = new JWTStrategy(auth_token);
+        JWTAuthenticator strategy = new JWTAuthenticator(auth_token);
         spark.init(strategy);
         spark.authorize(new AuthorizeListener() {
             @Override

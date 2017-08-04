@@ -43,7 +43,7 @@ import retrofit2.http.POST;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class OAuthStrategy implements AuthorizationStrategy {
+public class OAuthAuthenticator implements Authenticator {
     static final String AUTHORIZATION_CODE = "authorization_code";
     private String mClientId;
     private String mClientSecret;
@@ -65,12 +65,12 @@ public class OAuthStrategy implements AuthorizationStrategy {
      * @param redirectUri
      * @param authCode
      */
-    public OAuthStrategy(String clientId,
-                         String clientSecret,
-                         String redirectUri,
-                         String scope,
-                         String email,
-                         String authCode) {
+    public OAuthAuthenticator(String clientId,
+                              String clientSecret,
+                              String redirectUri,
+                              String scope,
+                              String email,
+                              String authCode) {
         this.setClientId(clientId);
         this.setClientSecret(clientSecret);
         this.setScope(scope);
