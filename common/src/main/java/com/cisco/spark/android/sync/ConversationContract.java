@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.SparseArray;
 
+import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.flag.FlagOperation;
 import com.cisco.spark.android.model.Verb;
 import com.cisco.spark.android.presence.operation.FetchPresenceStatusOperation;
@@ -137,7 +138,10 @@ public class ConversationContract {
     public static final int SCHEMA_VERSION = Integer.valueOf(SCHEMA_VERSION_AND_HASH[0]);
     public static final String DB_SCHEMA_HASH = SCHEMA_VERSION_AND_HASH[1];
 
-    public static final String CONTENT_AUTHORITY = "com.cisco.spark.android.sync.conversation";
+    //sdk
+    public static final String CONTENT_AUTHORITY = "com.cisco.wx2.sdk.video.api.android.sync.conversation";
+    //public static final String CONTENT_AUTHORITY = "com.cisco.spark.android.sync.conversation";
+
     private static final String CONTENT_TYPE_PREFIX = "vnd.android.cursor.dir/vnd.com.cisco.wx2.";
     private static final String CONTENT_ITEM_TYPE_PREFIX = "vnd.android.cursor.item/vnd.com.cisco.wx2.";
 
