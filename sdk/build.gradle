@@ -49,27 +49,68 @@ android {
     }
 }
 
-configurations {
-    //devDebugCompile
-}
-
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:multidex:1.0.1'
-    compile 'com.android.support:appcompat-v7:25.1.1'
-    compile 'com.android.support:design:25.1.1'
     compile 'com.squareup.okhttp3:mockwebserver:3.7.0'
-    compile libs.okhttp_logging
+
+    compile libs.supportv13
+    compile libs.supportannotation
+    compile libs.appcompatv7
+    compile libs.recyclerviewv7
+    compile libs.cardviewv7
+    compile libs.supportdesign
+    compile libs.gridlayout
+
     compile libs.gson
+
+    compile libs.dagger
+    provided libs.daggercompiler
+
     compile libs.retrofit
     compile libs.retrofit_gsonconverter
-    compile libs.websocket
-    compile libs.dagger
-    compile libs.ln
-    provided libs.daggercompiler
+    compile libs.retrofit_rxjava
+
+    compile libs.okhttp
+    compile libs.okhttp_logging
+
     compile libs.eventbus
-    provided libs.leak_canary
-    provided libs.leak_canary_disabled
+
+    compile libs.spongycastle_prov
+    compile libs.spongycastle_core
+    compile libs.kms
+
+    compile libs.ln
+
+    compile libs.wmeaar
+
+    compile libs.rxjava
+    compile libs.rxandroid
+
+    compile libs.will
+
+    compile libs.sqlcipher
+
+    /*
+    compile libs.fasterxml_annotations
+    compile libs.fasterxml_databind
+    compile libs.fasterxml_core
+    */
+
+    debugCompile libs.leak_canary
+    releaseCompile libs.leak_canary_disabled
+    testCompile libs.leak_canary_disabled
+    androidTestCompile libs.leak_canary_disabled
+
+    compile libs.rxrelay
+
+    testCompile libs.junit
+    testCompile libs.robolectric
+    testCompile libs.robolectric_multidex
+    testCompile libs.mockito
+    compile 'joda-time:joda-time:2.9.9'
+    compile 'com.cisco.wx2:diagnostic-events-gson:1.0.86'
+
+    compile 'com.segment.analytics.android:analytics:4.3.0-RC1'
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })

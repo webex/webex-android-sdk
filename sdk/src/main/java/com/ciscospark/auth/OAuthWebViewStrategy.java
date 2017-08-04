@@ -226,7 +226,8 @@ public class OAuthWebViewStrategy implements AuthorizationStrategy {
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             Log.d(TAG, "" + errorCode + " " + description + " " + failingUrl);
-            mAuthListener.onFailed(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
+            if (mAuthListener != null)
+                mAuthListener.onFailed(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
