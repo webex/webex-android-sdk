@@ -727,7 +727,7 @@ public class Phone {
      */
     //request camera and microphone permission
     public void onEventMainThread(RequestCallingPermissions event) {
-        Log.i(TAG, "RequestCallingPermissions -> is received ");
+        Log.i(TAG, "RequestCallingPermissions -> is received");
 
         List<String> permissions = new ArrayList<String>();
 
@@ -759,41 +759,6 @@ public class Phone {
         this.mDialoutCall = null;
 
         this.mdialObserver = null;
-
-
-        //remove dialOut call
-
-        //this.mActiveCall.getObserver().onPermissionRequired(permissions);
-
-        //during the first dial, the permission event will happen.
-        //it means the first dial end for permission reason
-
-        //need to remove this ActiveCall and set it to DISCONNECTED
-        /*
-        for (int j = 0; j < this.calllist.size(); j++) {
-            Call call = this.calllist.get(j);
-
-            //same call object
-            if (this.mActiveCall == call) {
-
-                Log.i(TAG, "find the mActiveCall from list");
-
-                this.mActiveCall.status = Call.CallStatus.DISCONNECTED;
-
-
-                //notify UI why this call is dead,
-                this.mActiveCall.getObserver().onDisconnected(this.mActiveCall, CallObserver
-                        .DisconnectedReason.endForAndroidPermission,null);
-
-                this.calllist.remove(j);
-                this.mActiveCall = null;
-
-                break;
-            }
-
-        }
-        */
-
 
         Log.i(TAG, "RequestCallingPermissions -> end");
 

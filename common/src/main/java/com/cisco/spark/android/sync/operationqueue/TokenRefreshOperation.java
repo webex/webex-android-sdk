@@ -89,6 +89,7 @@ public class TokenRefreshOperation extends AbstractOAuth2Operation {
 
             if(sdk.equals("SDKEnabled")){
                 Log.i("TokenRefreshOperation", "doWork:-> SDKEnabled ");
+                ln.i("TokenRefreshOperation->SDKEnabled" );
                 return SyncState.SUCCEEDED;
 
             }else{
