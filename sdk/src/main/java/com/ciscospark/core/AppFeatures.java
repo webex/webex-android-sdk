@@ -54,12 +54,12 @@ public class AppFeatures implements CoreFeatures {
      **************/
 
     @Override
-    public boolean isWhiteboardEnabled()  {
+    public boolean isWhiteboardEnabled() {
         return true;
     }
 
     @Override
-    public boolean isNativeWhiteboardEnabled()   {
+    public boolean isNativeWhiteboardEnabled() {
         return true;
     }
 
@@ -69,8 +69,7 @@ public class AppFeatures implements CoreFeatures {
 
     @Override
     public boolean isSendWhiteboardEnabled() {
-        return deviceRegistration.getFeatures().isAnyToggleEnabled(ANDROID_SEND_WHITEBOARD_EARLYADOPTERS,
-                ANDROID_SEND_WHITEBOARD);
+        return deviceRegistration.getFeatures().isAnyToggleEnabled(ANDROID_SEND_WHITEBOARD_EARLYADOPTERS, ANDROID_SEND_WHITEBOARD);
     }
 
     @Override

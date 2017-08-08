@@ -45,25 +45,19 @@ public class Call {
     private static final String TAG = "Call";
 
     public enum FacingMode {
-        USER,
-        ENVIROMENT
+        USER, ENVIROMENT
     }
 
     public enum CallStatus {
-        INITIATED,
-        RINGING,
-        CONNECTED,
-        DISCONNECTED
+        INITIATED, RINGING, CONNECTED, DISCONNECTED
     }
 
     public enum CallType {
-        VIDEO,
-        AUDIO
+        VIDEO, AUDIO
     }
 
     public enum Direction {
-        INCOMING,
-        OUTGOING
+        INCOMING, OUTGOING
     }
 
     protected Phone mPhone;

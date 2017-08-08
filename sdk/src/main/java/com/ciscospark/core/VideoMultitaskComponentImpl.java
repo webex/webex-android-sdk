@@ -49,8 +49,6 @@ class VideoMultitaskComponentImpl implements VideoMultitaskComponent {
     }
 
 
-
-
     @Override
     public void endCall(LocusKey locusKey) {
 
