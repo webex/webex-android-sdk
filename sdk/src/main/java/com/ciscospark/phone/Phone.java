@@ -1330,6 +1330,34 @@ public class Phone {
 
         Log.i(TAG, "CallControlParticipantAudioMuteEvent is received ");
 
+        if(event.isMuted()){
+            if(this.mActiveCall != null){
+                this.mActiveCall.setisremoteSendingAudio(event.isMuted());
+
+            }else{
+                Log.i(TAG, "onEventMainThread: mActiveCall is Null");
+            }
+        }
+
+    }
+
+    /**
+     * @param event the event
+     * @deprecated
+     */
+    public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
+
+        Log.i(TAG, "CallControlParticipantVideoMutedEvent is received ");
+
+        if(event.isMuted()){
+            if(this.mActiveCall != null){
+                this.mActiveCall.setisremoteSendingVideo(event.isMuted());
+
+            }else{
+                Log.i(TAG, "onEventMainThread: mActiveCall is Null");
+            }
+        }
+
     }
 
     /**
@@ -1343,15 +1371,7 @@ public class Phone {
     }
 
 
-    /**
-     * @param event the event
-     * @deprecated
-     */
-    public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
 
-        Log.i(TAG, "CallControlParticipantVideoMutedEvent is received ");
-
-    }
 
     /**
      * @param event the event

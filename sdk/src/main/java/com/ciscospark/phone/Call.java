@@ -60,12 +60,21 @@ public class Call {
         INCOMING, OUTGOING
     }
 
+
+
     protected Phone mPhone;
     protected CallStatus status;
     protected CallType calltype;
     protected Direction direction;
     private CallObserver mObserver;
     public LocusKey locusKey;
+
+
+    private boolean  isremoteSendingVideo;
+    private boolean  isremoteSendingAudio;
+
+    private boolean  isreceivingAudio;
+    private boolean  isreceivingVideo;
 
     @Inject
     CallControlService callControlServcie;
@@ -85,6 +94,20 @@ public class Call {
         this.status = CallStatus.INITIATED;
         SparkApplication.getInstance().inject(this);
         callMemberships = new ArrayList<>();
+
+
+        this.isreceivingAudio = true;
+        this.isreceivingVideo = true;
+        this.isremoteSendingAudio = true;
+        this.isremoteSendingVideo = true;
+    }
+
+    protected void setisremoteSendingAudio(boolean setting){
+        this.isremoteSendingAudio = setting;
+    }
+
+    protected void setisremoteSendingVideo(boolean setting){
+        this.isremoteSendingVideo = setting;
     }
 
     @SuppressWarnings("unused")
@@ -162,27 +185,105 @@ public class Call {
     }
 
     public boolean isSendingDTMFEnabled() {
+
         return false;
     }
 
+
+
+    //isRemoteSending Locus
     public boolean isRemoteSendingVideo() {
-        return false;
+
+        //handle CallControlParticipantAudioMuteEvent
+
+        return this.isremoteSendingVideo;
     }
+
 
     public boolean isRemoteSendingAudio() {
+
+        return this.isremoteSendingAudio;
+    }
+
+    //Sending Locus+WME
+    public boolean isSendingVideo() {
+
+        //isVideoMuted()
         return false;
     }
 
-    public boolean isSendingVideo() {
-        return false;
+    public void setSendingVideo(boolean setting){
+        //this.callControlService.muteVideo(mCall.getLocusKey(), MediaRequestSource.USER);
+        //callControlService.setPreviewWindow(mCall.getLocusKey(), null);
+
+        //this.callControlService.unMuteVideo(mCall.getLocusKey(), MediaRequestSource.USER);
+        //callControlService.setPreviewWindow(mCall.getLocusKey(), this.getLocalVideoView());
+
+
+        //handle CallControlLocalVideoMutedEvent
+
+
+
+
     }
 
     public boolean isSendingAudio() {
+        //isAudioMuted
         return false;
     }
 
-    public FacingMode getFacingMode() {
+    public void setSendingAudio(boolean setting){
+
+        //this.callControlService.muteAudio(mCall.getLocusKey());
+        //unmuteAudio
+
+        //handle CallControlLocalAudioMutedEvent
+
+    }
+
+    //receivingAV wme
+
+    public boolean isReceivingVideo() {
+        //self managed
+        return false;
+    }
+
+    public void setReceivingVideo(boolean setting){
+
+        //callControlService.removeRemoteVideoWindows(mCall.getLocusKey());
+        //callControlService.setRemoteWindow(mCall.getLocusKey(), this.getRemoteVideoView());
+
+    }
+
+    public boolean isReceivingAudio() {
+
+        //self managed
+
+        return false;
+    }
+
+    public void setReceivingAudio(boolean setting){
+        //self managed
+        //this.callControlService.muteRemoteAudio(mCall.getLocusKey(), true);
+
+    }
+
+    public Boolean isFrontCameraSelected() {
+        //self managed
         return null;
+    }
+
+    public void setFacingMode(FacingMode mode){
+        //this.callControlService.switchCamera(mCall.getLocusKey());
+    }
+
+    public boolean isLoudSpeakerSelected(){
+        //self managed
+        return false;
+    }
+
+    public void setLoudSpeaker(boolean setting){
+        //need to implemente
     }
 
 }

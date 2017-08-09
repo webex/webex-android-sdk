@@ -67,10 +67,10 @@ public interface CallObserver {
      * this function will be called while a call is disconnected
      *
      * @param call   the call to which this event belonged.
-     * @param reason what change.
+     * @param event what change.
      * @return none
      */
-    void onMediaChanged(Call call, MediaChangeReason reason);
+    void onMediaChanged(Call call, MediaChangedEvent event);
 
 
     enum DisconnectedReason {
@@ -99,5 +99,29 @@ public interface CallObserver {
 
     enum MediaChangeReason {
         DTMF
+    }
+
+    enum MediaChangedEvent {
+
+        remoteSendingVideo,
+
+        remoteSendingAudio,
+
+        sendingVideo,
+
+        sendingAudio,
+
+        receivingVideo,
+
+        receivingAudio,
+
+        cameraSwitched,
+
+        spearkerSwitched,
+
+        localVideoViewSize,
+
+        remoteVideoViewSize
+
     }
 }
