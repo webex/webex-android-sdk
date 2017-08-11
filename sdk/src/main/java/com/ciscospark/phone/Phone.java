@@ -82,6 +82,8 @@ import com.cisco.spark.android.locus.events.IncomingCallEvent;
 import com.cisco.spark.android.locus.events.ParticipantJoinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
 import com.cisco.spark.android.locus.model.LocusKey;
+import com.cisco.spark.android.locus.model.LocusParticipant;
+import com.cisco.spark.android.locus.model.LocusParticipantInfo;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.sync.ActorRecord;
 import com.ciscospark.Spark;
@@ -158,12 +160,12 @@ public class Phone {
     /**
      * The M remote surface view.
      */
-    WseSurfaceView mRemoteSurfaceView;
+    protected WseSurfaceView mRemoteSurfaceView;
 
     /**
      * The M local surface view.
      */
-    WseSurfaceView mLocalSurfaceView;
+    protected WseSurfaceView mLocalSurfaceView;
 
     private CallContext callContext;
 
@@ -179,6 +181,8 @@ public class Phone {
     private Handler mTimeHandler;
     private Runnable mTimeRunnable;
 
+
+    private String mCallee;
 
     //keep activitied call reference
 
@@ -491,6 +495,8 @@ public class Phone {
             return;
         }
 
+        this.mCallee = dialString;
+
 
         if (option.mCalltype == CallOption.CallType.VIDEO) {
 
@@ -554,6 +560,8 @@ public class Phone {
 
             callContext = new CallContext.Builder(dialString).setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly).build();
             callControlService.joinCall(callContext);
+
+
             Log.i(TAG, "dial: ->AudioCall sendout");
             return;
         }
@@ -1189,6 +1197,7 @@ public class Phone {
     public void onEventMainThread(CallControlLocalAudioMutedEvent event) {
 
         Log.i(TAG, "CallControlLocalAudioMutedEvent is received ");
+        //not used, local mute is handled in CallControlParticipantAudioMuteEvent
 
     }
 
@@ -1199,6 +1208,7 @@ public class Phone {
     public void onEventMainThread(CallControlLocalVideoMutedEvent event) {
 
         Log.i(TAG, "CallControlLocalVideoMutedEvent is received ");
+        //not used, local mute is handled in CallControlParticipantAudioMuteEvent
 
     }
 
@@ -1322,6 +1332,26 @@ public class Phone {
 
     }
 
+    //temperory soulution before people api done.
+    private boolean isMyself(LocusParticipant participant){
+        Log.i(TAG, "isMyself: ->start");
+
+        LocusParticipantInfo person = participant.getPerson();
+        Log.i(TAG, "Person's email is " + person.getEmail());
+        Log.i(TAG, "Callee's email is " + this.mCallee);
+
+        if(person.getEmail().equals(this.mCallee)){
+            Log.i(TAG, "it is not me");
+            return false;
+
+        }else{
+            Log.i(TAG, "it is me");
+            return true;
+
+        }
+
+    }
+
     /**
      * @param event the event
      * @deprecated
@@ -1330,13 +1360,63 @@ public class Phone {
 
         Log.i(TAG, "CallControlParticipantAudioMuteEvent is received ");
 
+        LocusParticipant participant = event.getParticipant();
+
+        boolean isMe = isMyself(participant);
+
+
         if(event.isMuted()){
+            Log.i(TAG, "Muted");
             if(this.mActiveCall != null){
-                this.mActiveCall.setisremoteSendingAudio(event.isMuted());
+
+                if(this.mActiveCall.getObserver() !=null){
+                    if(!isMe) {
+                        Log.i(TAG, "remoteSendingAudioMuted: ");
+                        //Muted's ture is setisremoteSendingAudio's false !
+                        //updated flag
+                        this.mActiveCall.setisremoteSendingAudio(!event.isMuted());
+
+                        //notify user
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.remoteSendingAudioMuted);
+                    }else{
+                        Log.i(TAG, "sendingAudioMuted: ");
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.sendingAudioMuted);
+
+                    }
+
+                }else{
+                    Log.i(TAG, "onEventMainThread: mActiveCall.getObserver() is Null");
+                }
 
             }else{
                 Log.i(TAG, "onEventMainThread: mActiveCall is Null");
             }
+        }else{
+            Log.i(TAG, "UnMuted");
+            if(this.mActiveCall != null){
+
+
+
+                if(this.mActiveCall.getObserver() !=null){
+
+                    if(!isMe) {
+                        Log.i(TAG, "remoteSendingAudioUnMuted: ");
+                        ////Muted's ture is setisremoteSendingAudio's false !
+                        this.mActiveCall.setisremoteSendingAudio(!event.isMuted());
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.remoteSendingAudioUnMuted);
+                    }else{
+                        Log.i(TAG, "sendingAudioUnMuted: ");
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.sendingAudioUnMuted);
+                    }
+
+                }else{
+                    Log.i(TAG, "onEventMainThread: mActiveCall.getObserver() is Null");
+                }
+
+            }else{
+                Log.i(TAG, "onEventMainThread: mActiveCall is Null");
+            }
+
         }
 
     }
@@ -1349,13 +1429,65 @@ public class Phone {
 
         Log.i(TAG, "CallControlParticipantVideoMutedEvent is received ");
 
+        LocusParticipant participant = event.getParticipant();
+
+        boolean isMe = isMyself(participant);
+
         if(event.isMuted()){
+            Log.i(TAG, "Muted");
             if(this.mActiveCall != null){
-                this.mActiveCall.setisremoteSendingVideo(event.isMuted());
+
+
+
+                if(this.mActiveCall.getObserver() !=null){
+                    if(!isMe) {
+                        Log.i(TAG, "remoteSendingVideoMuted: ");
+                        //Muted's ture is setisremoteSendingVideo's false !
+
+                        this.mActiveCall.setisremoteSendingVideo(!event.isMuted());
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.remoteSendingVideoMuted);
+                    }else
+                    {
+                        Log.i(TAG, "sendingVideoMuted: ");
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.sendingVideoMuted);
+
+                    }
+
+                }else{
+                    Log.i(TAG, "onEventMainThread: mActiveCall.getObserver() is Null");
+                }
 
             }else{
                 Log.i(TAG, "onEventMainThread: mActiveCall is Null");
             }
+        }else{
+            Log.i(TAG, "UnMuted");
+            if(this.mActiveCall != null){
+
+
+
+                if(this.mActiveCall.getObserver() !=null){
+                    if(!isMe) {
+                        Log.i(TAG, "remoteSendingVideoUnMuted: ");
+
+                        //Muted's ture is setisremoteSendingVideo's false !
+                        this.mActiveCall.setisremoteSendingVideo(!event.isMuted());
+
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.remoteSendingVideoUnMuted);
+                    }else {
+                        Log.i(TAG, "sendingVideoUnMuted: ");
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.sendingVideoUnMuted);
+
+                    }
+
+                }else{
+                    Log.i(TAG, "onEventMainThread: mActiveCall.getObserver() is Null");
+                }
+
+            }else{
+                Log.i(TAG, "onEventMainThread: mActiveCall is Null");
+            }
+
         }
 
     }

@@ -103,17 +103,29 @@ public interface CallObserver {
 
     enum MediaChangedEvent {
 
-        remoteSendingVideo,
+        remoteSendingVideoUnMuted,
 
-        remoteSendingAudio,
+        remoteSendingVideoMuted,
 
-        sendingVideo,
+        remoteSendingAudioUnMuted,
 
-        sendingAudio,
+        remoteSendingAudioMuted,
 
-        receivingVideo,
+        sendingVideoUnMuted,
 
-        receivingAudio,
+        sendingVideoMuted,
+
+        sendingAudioUnMuted,
+
+        sendingAudioMuted,
+
+        receivingVideoUnMuted,
+
+        receivingVideoMuted,
+
+        receivingAudioUnMuted,
+
+        receivingAudioMuted,
 
         cameraSwitched,
 
