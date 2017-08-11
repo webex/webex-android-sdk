@@ -337,6 +337,35 @@ public class Call {
         //callControlService.removeRemoteVideoWindows(mCall.getLocusKey());
         //callControlService.setRemoteWindow(mCall.getLocusKey(), this.getRemoteVideoView());
 
+        if (setting) {
+            //true-> receiving;
+            //setReceivingAudio's true is muteRemoteAudio's false
+            mPhone.callControlService.muteRemoteVideo(this.locusKey,!setting);
+
+            if (this.getObserver() != null) {
+                Log.i(TAG, "receiving ");
+                this.isreceivingVideo = true;
+                this.getObserver().onMediaChanged(this, CallObserver.MediaChangedEvent.receivingVideoUnMuted);
+            } else {
+                Log.i(TAG, "Observer is null ");
+            }
+
+        } else {
+
+            //false-> not receiving
+            //setReceivingAudio's true is muteRemoteAudio's false
+            mPhone.callControlService.muteRemoteVideo(this.locusKey,!setting);
+
+            if (this.getObserver() != null) {
+                Log.i(TAG, "Not receiving ");
+                this.isreceivingVideo = false;
+                this.getObserver().onMediaChanged(this, CallObserver.MediaChangedEvent.receivingVideoMuted);
+            } else {
+                Log.i(TAG, "Observer is null ");
+            }
+
+        }
+
     }
 
     public boolean isReceivingAudio() {
