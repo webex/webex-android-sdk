@@ -26,7 +26,7 @@ import com.ciscospark.auth.Authenticator;
 import com.ciscospark.auth.AuthorizeListener;
 import com.ciscospark.membership.MembershipClient;
 import com.ciscospark.message.MessageClient;
-import com.ciscospark.people.PeopleClient;
+import com.ciscospark.people.PersonClient;
 import com.ciscospark.phone.Phone;
 import com.ciscospark.room.RoomClient;
 import com.ciscospark.team.TeamClient;
@@ -72,8 +72,8 @@ public class Spark {
         return new MessageClient();
     }
 
-    public PeopleClient people() {
-        return new PeopleClient();
+    public PersonClient people() {
+        return new PersonClient();
     }
 
     public MembershipClient memberships() {

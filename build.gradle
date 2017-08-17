@@ -40,6 +40,9 @@ allprojects {
         maven {
             url 'http://engci-maven.cisco.com/artifactory/androidwb-group/'
         }
+        maven {
+            url 'http://localhost:18081/nexus/content/repositories/thirdparty/'
+        }
     }
 }
 
