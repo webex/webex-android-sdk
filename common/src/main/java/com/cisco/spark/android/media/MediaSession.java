@@ -84,6 +84,12 @@ public interface MediaSession {
     boolean isRemoteAudioMuted();
     MediaRequestSource getVideoMuteSource();
 
+    //sdk
+
+    void muteRemoteVideo();
+    void unmuteRemoteVideo();
+
+
     // Move these to Call and use the onFirstPacketRx/onFirstPacketTx in MediaSessionCallback?
     boolean isReceivedFirstAudioPacket();
     boolean isReceivedFirstVideoPacket();

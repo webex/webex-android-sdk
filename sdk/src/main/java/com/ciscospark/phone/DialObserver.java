@@ -11,11 +11,8 @@ import java.util.List;
 public interface DialObserver {
 
     public enum ErrorCode {
-        GENERAL_ERROR,
-        ERROR_PARAMETER,
-        ERROR_STATUS,  //for example, if in a ActivitedCall period, dial can not be called.
-        ERROR_PERMISSION,
-        ERROR_JOINTERROR
+        GENERAL_ERROR, ERROR_PARAMETER, ERROR_STATUS,  //for example, if in a ActivitedCall period, dial can not be called.
+        ERROR_PERMISSION, ERROR_JOINTERROR
     }
 
 
@@ -27,11 +24,13 @@ public interface DialObserver {
     public final static String ErrorParameter = "Wrong parameter";
 
     public void onSuccess(Call call);
+
     public void onFailed(SparkError error);
 
     /**
      * this function will be called while user need to grant permission
-     * @param permissions  permission list
+     *
+     * @param permissions permission list
      * @return none
      */
     void onPermissionRequired(List<String> permissions);

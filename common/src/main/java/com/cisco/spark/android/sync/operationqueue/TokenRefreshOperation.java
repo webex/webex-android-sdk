@@ -87,28 +87,27 @@ public class TokenRefreshOperation extends AbstractOAuth2Operation {
 
             String sdk = BuildConfig.PUBLICSDK;
 
-            if(sdk.equals("SDKEnabled")){
+            if (sdk.equals("SDKEnabled")) {
                 Log.i("TokenRefreshOperation", "doWork:-> SDKEnabled ");
-                ln.i("TokenRefreshOperation->SDKEnabled" );
-                return SyncState.SUCCEEDED;
-
-            }else{
-
-                OAuth2Client oAuthClient = apiClientProvider.getOAuthClient();
-                Response<OAuth2AccessToken> response = oAuth2.refreshTokens(oAuthClient, user.getOAuth2Tokens().getRefreshToken());
-                OAuth2AccessToken newToken = getTokenFromResponse(response);
-                if (newToken == null) {
-                    if (response.code() == HttpURLConnection.HTTP_BAD_REQUEST)
-                        triggerLogout(response);
-                    return SyncState.READY;
+                ln.i("TokenRefreshOperation->SDKEnabled");
+                if (user.getOAuth2Tokens().getRefreshToken() == null) {
+                    // JWT token should refresh itself
+                    return SyncState.SUCCEEDED;
                 }
-
-                user.setTokens(newToken);
-
-                reduceScopeIfNeeded(user.getOAuth2Tokens());
-
             }
 
+            OAuth2Client oAuthClient = apiClientProvider.getOAuthClient();
+            Response<OAuth2AccessToken> response = oAuth2.refreshTokens(oAuthClient, user.getOAuth2Tokens().getRefreshToken());
+            OAuth2AccessToken newToken = getTokenFromResponse(response);
+            if (newToken == null) {
+                if (response.code() == HttpURLConnection.HTTP_BAD_REQUEST)
+                    triggerLogout(response);
+                return SyncState.READY;
+            }
+
+            user.setTokens(newToken);
+
+            reduceScopeIfNeeded(user.getOAuth2Tokens());
 
 
             return SyncState.SUCCEEDED;

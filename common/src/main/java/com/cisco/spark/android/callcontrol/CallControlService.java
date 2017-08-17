@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 
 import com.cisco.spark.android.BuildConfig;
@@ -244,6 +245,7 @@ public class CallControlService implements MediaSessionCallbacks, RoapSessionCal
 
     private Timer lobbyKeepAliveTimer;
     private final Object lobbyTimerLock = new Object();
+
 
     public CallControlService(LocusService locusService, final MediaEngine mediaEngine, CallMetricsReporter callMetricsReporter,
                               EventBus bus, Context context,
@@ -1287,6 +1289,38 @@ public class CallControlService implements MediaSessionCallbacks, RoapSessionCal
                 locusService.callFlowTrace("App", "WME", "unMuteRemoteAudio()", locusKey);
             }
         }
+    }
+
+    //sdk
+    public void muteRemoteVideo(LocusKey locusKey, boolean muted){
+        Log.i("CallControlService", "muteRemoteVideo: ->start");
+        Ln.i("muteRemoteVideo: ->start");
+
+        //sdk modification
+
+        String sdk = BuildConfig.PUBLICSDK;
+
+        if(sdk.equals("SDKEnabled")){
+            Ln.i("SDKEnabled");
+
+            MediaSession mediaSession = getMediaSession(locusKey);
+            if (mediaSession != null) {
+                if (muted) {
+                    Log.i("CallControlService", "not receiving");
+                    mediaSession.muteRemoteVideo();
+
+                } else {
+                    Log.i("CallControlService", "receiving");
+                    mediaSession.unmuteRemoteVideo();
+
+                }
+            }
+            return;
+        }else{
+            Log.i("CallControlService", "not in SDK enabled");
+            return;
+        }
+
     }
 
     /**

@@ -82,6 +82,8 @@ import com.cisco.spark.android.locus.events.IncomingCallEvent;
 import com.cisco.spark.android.locus.events.ParticipantJoinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
 import com.cisco.spark.android.locus.model.LocusKey;
+import com.cisco.spark.android.locus.model.LocusParticipant;
+import com.cisco.spark.android.locus.model.LocusParticipantInfo;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.sync.ActorRecord;
 import com.ciscospark.Spark;
@@ -158,12 +160,12 @@ public class Phone {
     /**
      * The M remote surface view.
      */
-    WseSurfaceView mRemoteSurfaceView;
+    protected WseSurfaceView mRemoteSurfaceView;
 
     /**
      * The M local surface view.
      */
-    WseSurfaceView mLocalSurfaceView;
+    protected WseSurfaceView mLocalSurfaceView;
 
     private CallContext callContext;
 
@@ -179,6 +181,8 @@ public class Phone {
     private Handler mTimeHandler;
     private Runnable mTimeRunnable;
 
+
+    private String mCallee;
 
     //keep activitied call reference
 
@@ -287,12 +291,11 @@ public class Phone {
             SparkError error = new SparkError(null, ErrorNotAuthorized);
 
             //listener.onFailed(error);
-            if(listener != null){
+            if (listener != null) {
                 listener.onFailed(error);
-            }else{
-                Log.i(TAG,"listener is null");
+            } else {
+                Log.i(TAG, "listener is null");
             }
-
 
 
             return;
@@ -347,13 +350,13 @@ public class Phone {
                 if (!Phone.this.isRegisterInWDM) {
                     if (Phone.this.mRegisterListener != null) {
 
-                        SparkError error = new SparkError(null,ErrorTimeout);
+                        SparkError error = new SparkError(null, ErrorTimeout);
 
                         //Phone.this.mRegisterListener.onFailed(error);
-                        if(Phone.this.mRegisterListener != null){
+                        if (Phone.this.mRegisterListener != null) {
                             Phone.this.mRegisterListener.onFailed(error);
-                        }else{
-                            Log.i(TAG,"Phone.this.mRegisterListener is null");
+                        } else {
+                            Log.i(TAG, "Phone.this.mRegisterListener is null");
                         }
 
                     }
@@ -378,10 +381,10 @@ public class Phone {
         this.logout();
 
         //listener.onSuccess();
-        if(listener != null){
+        if (listener != null) {
             listener.onSuccess();
-        }else{
-            Log.i(TAG,"listener is null");
+        } else {
+            Log.i(TAG, "listener is null");
         }
 
 
@@ -402,7 +405,7 @@ public class Phone {
 
             //call is setup
             Log.i(TAG, "DialoutCall");
-            this.callControlService.cancelCall(null,CallControlService.CancelReason.LOCAL_CANCELLED);
+            this.callControlService.cancelCall(null, CallControlService.CancelReason.LOCAL_CANCELLED);
             //this.callControlService.cancelCall(true);
             return;
 
@@ -414,7 +417,7 @@ public class Phone {
             Log.i(TAG, "cancelCall");
 
             //this.callControlService.cancelCall(true);
-            this.callControlService.cancelCall(null,CallControlService.CancelReason.LOCAL_CANCELLED);
+            this.callControlService.cancelCall(null, CallControlService.CancelReason.LOCAL_CANCELLED);
             return;
         }
         if (this.mActiveCall.status == Call.CallStatus.CONNECTED) {
@@ -453,10 +456,10 @@ public class Phone {
             SparkError error = new SparkError(null, DialObserver.ErrorStatus);
 
             //observer.onFailed(error);
-            if(observer != null){
+            if (observer != null) {
                 observer.onFailed(error);
-            }else{
-                Log.i(TAG,"observer is null");
+            } else {
+                Log.i(TAG, "observer is null");
             }
             return;
         }
@@ -468,10 +471,10 @@ public class Phone {
             SparkError error = new SparkError(null, DialObserver.ErrorStatus);
 
             //observer.onFailed(error);
-            if(observer != null){
+            if (observer != null) {
                 observer.onFailed(error);
-            }else{
-                Log.i(TAG,"observer is null");
+            } else {
+                Log.i(TAG, "observer is null");
             }
 
             return;
@@ -483,14 +486,16 @@ public class Phone {
             SparkError error = new SparkError(null, DialObserver.ErrorParameter);
 
             //observer.onFailed(error);
-            if(observer != null){
+            if (observer != null) {
                 observer.onFailed(error);
-            }else{
-                Log.i(TAG,"observer is null");
+            } else {
+                Log.i(TAG, "observer is null");
             }
             //observer.onFailed(DialObserver.ErrorCode.ERROR_PARAMETER);
             return;
         }
+
+        this.mCallee = dialString;
 
 
         if (option.mCalltype == CallOption.CallType.VIDEO) {
@@ -555,6 +560,8 @@ public class Phone {
 
             callContext = new CallContext.Builder(dialString).setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly).build();
             callControlService.joinCall(callContext);
+
+
             Log.i(TAG, "dial: ->AudioCall sendout");
             return;
         }
@@ -605,8 +612,7 @@ public class Phone {
     //*. set the removed call to disconnected
     //*. set phone.Activecall as null
     //*. inform UI call end reason
-    protected void removeCallAndMarkIt(Call call, CallObserver.DisconnectedReason reason,
-                                       SparkError errorInfo) {
+    protected void removeCallAndMarkIt(Call call, CallObserver.DisconnectedReason reason, SparkError errorInfo) {
         Log.i(TAG, "removeCallfromArray: ->start");
 
 
@@ -624,8 +630,8 @@ public class Phone {
                 //notify UI why this call is dead,
                 if (this.mActiveCall.getObserver() != null) {
 
-                    this.mActiveCall.getObserver().onDisconnected(this.mActiveCall, reason,errorInfo);
-                }else{
+                    this.mActiveCall.getObserver().onDisconnected(this.mActiveCall, reason, errorInfo);
+                } else {
                     Log.i(TAG, "removeCallAndMarkIt: getOvserver is null");
 
                 }
@@ -679,21 +685,20 @@ public class Phone {
         }
 
         //check if it is 451 cases, get success but it is not authenticated indeed
-        if(event.getDeviceRegistration().getId() == null){
+        if (event.getDeviceRegistration().getId() == null) {
 
             //ID is null, it is likely failed
 
             Log.i(TAG, "DeviceRegistrationChangedEvent.id is null, it maybe a 451 ");
 
-            SparkError error = new SparkError(null,"Error451");
-
+            SparkError error = new SparkError(null, "Error451");
 
 
             //this.mRegisterListener.onFailed(error);
-            if(this.mRegisterListener!= null){
+            if (this.mRegisterListener != null) {
                 this.mRegisterListener.onFailed(error);
-            }else{
-                Log.i(TAG,"mRegisterListener is null");
+            } else {
+                Log.i(TAG, "mRegisterListener is null");
             }
 
 
@@ -704,10 +709,10 @@ public class Phone {
 
 
         //this.mRegisterListener.onSuccess();
-        if(this.mRegisterListener != null){
+        if (this.mRegisterListener != null) {
             this.mRegisterListener.onSuccess();
-        }else{
-            Log.i(TAG,"mRegisterListener is null");
+        } else {
+            Log.i(TAG, "mRegisterListener is null");
         }
 
 
@@ -748,10 +753,10 @@ public class Phone {
         SparkError error = new SparkError(null, ErrorPermission);
 
         //this.mdialObserver.onFailed(error);
-        if(this.mdialObserver != null){
+        if (this.mdialObserver != null) {
             this.mdialObserver.onFailed(error);
-        }else{
-            Log.i(TAG,"mdialObserver is null");
+        } else {
+            Log.i(TAG, "mdialObserver is null");
         }
 
         this.mdialObserver.onPermissionRequired(permissions);
@@ -798,10 +803,10 @@ public class Phone {
         this.mActiveCall = this.mDialoutCall;
 
         //this.mdialObserver.onSuccess(this.mActiveCall);
-        if(this.mdialObserver != null){
+        if (this.mdialObserver != null) {
             this.mdialObserver.onSuccess(this.mActiveCall);
-        }else{
-            Log.i(TAG,"this.mdialObserver is null");
+        } else {
+            Log.i(TAG, "this.mdialObserver is null");
         }
 
 
@@ -828,8 +833,7 @@ public class Phone {
         if (event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString())) {
             Log.i(TAG, "ActiveCall is end by remoted");
 
-            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason
-                    .remoteHangUP, null);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.remoteHangUP, null);
 
         }
 
@@ -853,8 +857,7 @@ public class Phone {
         if (event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString())) {
             Log.i(TAG, "ActiveCall is ended");
 
-            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason
-                    .selfHangUP, null);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.selfHangUP, null);
 
 
         }
@@ -880,8 +883,7 @@ public class Phone {
         if (!(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected())) {
 
             Log.i(TAG, "Call is Rejected ");
-            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason
-                    .remoteReject, null);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.remoteReject, null);
         }
     }
 
@@ -903,8 +905,7 @@ public class Phone {
         if (event.getLocusKey().toString().equals(this.mActiveCall.locusKey.toString())) {
             Log.i(TAG, "ActiveCall is ended");
 
-            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.callEnd,
-                    null);
+            this.removeCallAndMarkIt(this.mActiveCall, CallObserver.DisconnectedReason.callEnd, null);
         }
 
     }
@@ -933,13 +934,13 @@ public class Phone {
 
             Log.i(TAG, "notify dial observer failed ");
 
-            SparkError error = new SparkError(null,ErrorCallJoin);
+            SparkError error = new SparkError(null, ErrorCallJoin);
             //this.mdialObserver.onFailed(error);
 
-            if(this.mdialObserver != null){
+            if (this.mdialObserver != null) {
                 this.mdialObserver.onFailed(error);
-            }else{
-                Log.i(TAG,"mdialObserver is null");
+            } else {
+                Log.i(TAG, "mdialObserver is null");
             }
 
 
@@ -991,10 +992,10 @@ public class Phone {
 
 
         //notify ui
-        if(this.mActiveCall.getObserver() != null){
+        if (this.mActiveCall.getObserver() != null) {
             this.mActiveCall.getObserver().onRinging(this.mActiveCall);
-        }else{
-            Log.i(TAG,"getObserver is null");
+        } else {
+            Log.i(TAG, "getObserver is null");
         }
 
 
@@ -1030,10 +1031,10 @@ public class Phone {
 
         //notify ui
         //this.mActiveCall.getObserver().onConnected(this.mActiveCall);
-        if(this.mActiveCall.getObserver() != null){
+        if (this.mActiveCall.getObserver() != null) {
             this.mActiveCall.getObserver().onConnected(this.mActiveCall);
-        }else{
-            Log.i(TAG,"getObserver is null");
+        } else {
+            Log.i(TAG, "getObserver is null");
         }
 
     }
@@ -1058,10 +1059,10 @@ public class Phone {
 
             if (incomingCallObserver != null) {
                 incomingCallObserver.onIncomingCall(call);
-            }else{
+            } else {
                 Log.i(TAG, "onEventMainThread: incomingCallObserver is null");
-                }
             }
+        }
 
     }
 
@@ -1189,7 +1190,6 @@ public class Phone {
     }
 
 
-
     /**
      * @param event the event
      * @deprecated
@@ -1197,6 +1197,7 @@ public class Phone {
     public void onEventMainThread(CallControlLocalAudioMutedEvent event) {
 
         Log.i(TAG, "CallControlLocalAudioMutedEvent is received ");
+        //not used, local mute is handled in CallControlParticipantAudioMuteEvent
 
     }
 
@@ -1207,6 +1208,7 @@ public class Phone {
     public void onEventMainThread(CallControlLocalVideoMutedEvent event) {
 
         Log.i(TAG, "CallControlLocalVideoMutedEvent is received ");
+        //not used, local mute is handled in CallControlParticipantAudioMuteEvent
 
     }
 
@@ -1330,6 +1332,26 @@ public class Phone {
 
     }
 
+    //temperory soulution before people api done.
+    private boolean isMyself(LocusParticipant participant){
+        Log.i(TAG, "isMyself: ->start");
+
+        LocusParticipantInfo person = participant.getPerson();
+        Log.i(TAG, "Person's email is " + person.getEmail());
+        Log.i(TAG, "Callee's email is " + this.mCallee);
+
+        if(person.getEmail().equals(this.mCallee)){
+            Log.i(TAG, "it is not me");
+            return false;
+
+        }else{
+            Log.i(TAG, "it is me");
+            return true;
+
+        }
+
+    }
+
     /**
      * @param event the event
      * @deprecated
@@ -1337,6 +1359,136 @@ public class Phone {
     public void onEventMainThread(CallControlParticipantAudioMuteEvent event) {
 
         Log.i(TAG, "CallControlParticipantAudioMuteEvent is received ");
+
+        LocusParticipant participant = event.getParticipant();
+
+        boolean isMe = isMyself(participant);
+
+
+        if(event.isMuted()){
+            Log.i(TAG, "Muted");
+            if(this.mActiveCall != null){
+
+                if(this.mActiveCall.getObserver() !=null){
+                    if(!isMe) {
+                        Log.i(TAG, "remoteSendingAudioMuted: ");
+                        //Muted's ture is setisremoteSendingAudio's false !
+                        //updated flag
+                        this.mActiveCall.setisremoteSendingAudio(!event.isMuted());
+
+                        //notify user
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.remoteSendingAudioMuted);
+                    }else{
+                        Log.i(TAG, "sendingAudioMuted: ");
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.sendingAudioMuted);
+
+                    }
+
+                }else{
+                    Log.i(TAG, "onEventMainThread: mActiveCall.getObserver() is Null");
+                }
+
+            }else{
+                Log.i(TAG, "onEventMainThread: mActiveCall is Null");
+            }
+        }else{
+            Log.i(TAG, "UnMuted");
+            if(this.mActiveCall != null){
+
+
+
+                if(this.mActiveCall.getObserver() !=null){
+
+                    if(!isMe) {
+                        Log.i(TAG, "remoteSendingAudioUnMuted: ");
+                        ////Muted's ture is setisremoteSendingAudio's false !
+                        this.mActiveCall.setisremoteSendingAudio(!event.isMuted());
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.remoteSendingAudioUnMuted);
+                    }else{
+                        Log.i(TAG, "sendingAudioUnMuted: ");
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.sendingAudioUnMuted);
+                    }
+
+                }else{
+                    Log.i(TAG, "onEventMainThread: mActiveCall.getObserver() is Null");
+                }
+
+            }else{
+                Log.i(TAG, "onEventMainThread: mActiveCall is Null");
+            }
+
+        }
+
+    }
+
+    /**
+     * @param event the event
+     * @deprecated
+     */
+    public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
+
+        Log.i(TAG, "CallControlParticipantVideoMutedEvent is received ");
+
+        LocusParticipant participant = event.getParticipant();
+
+        boolean isMe = isMyself(participant);
+
+        if(event.isMuted()){
+            Log.i(TAG, "Muted");
+            if(this.mActiveCall != null){
+
+
+
+                if(this.mActiveCall.getObserver() !=null){
+                    if(!isMe) {
+                        Log.i(TAG, "remoteSendingVideoMuted: ");
+                        //Muted's ture is setisremoteSendingVideo's false !
+
+                        this.mActiveCall.setisremoteSendingVideo(!event.isMuted());
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.remoteSendingVideoMuted);
+                    }else
+                    {
+                        Log.i(TAG, "sendingVideoMuted: ");
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.sendingVideoMuted);
+
+                    }
+
+                }else{
+                    Log.i(TAG, "onEventMainThread: mActiveCall.getObserver() is Null");
+                }
+
+            }else{
+                Log.i(TAG, "onEventMainThread: mActiveCall is Null");
+            }
+        }else{
+            Log.i(TAG, "UnMuted");
+            if(this.mActiveCall != null){
+
+
+
+                if(this.mActiveCall.getObserver() !=null){
+                    if(!isMe) {
+                        Log.i(TAG, "remoteSendingVideoUnMuted: ");
+
+                        //Muted's ture is setisremoteSendingVideo's false !
+                        this.mActiveCall.setisremoteSendingVideo(!event.isMuted());
+
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.remoteSendingVideoUnMuted);
+                    }else {
+                        Log.i(TAG, "sendingVideoUnMuted: ");
+                        this.mActiveCall.getObserver().onMediaChanged(this.mActiveCall, CallObserver.MediaChangedEvent.sendingVideoUnMuted);
+
+                    }
+
+                }else{
+                    Log.i(TAG, "onEventMainThread: mActiveCall.getObserver() is Null");
+                }
+
+            }else{
+                Log.i(TAG, "onEventMainThread: mActiveCall is Null");
+            }
+
+        }
 
     }
 
@@ -1351,15 +1503,7 @@ public class Phone {
     }
 
 
-    /**
-     * @param event the event
-     * @deprecated
-     */
-    public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
 
-        Log.i(TAG, "CallControlParticipantVideoMutedEvent is received ");
-
-    }
 
     /**
      * @param event the event

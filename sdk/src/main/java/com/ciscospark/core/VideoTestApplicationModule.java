@@ -84,16 +84,7 @@ import dagger.Provides;
 import de.greenrobot.event.EventBus;
 import okhttp3.OkHttpClient;
 
-@Module(
-        complete = false,
-        library = true,
-        includes = {},
-        injects = {
-                VideoTestApplicationDelegate.class,
-                Phone.class,
-                Call.class
-        }
-)
+@Module(complete = false, library = true, includes = {}, injects = {VideoTestApplicationDelegate.class, Phone.class, Call.class})
 class VideoTestApplicationModule {
 
     private RefWatcher refWatcher;
@@ -109,19 +100,7 @@ class VideoTestApplicationModule {
 
     @Provides
     @Singleton
-    ApplicationController provideApplicationController(final Context context, final ApiClientProvider clientProvider, final ApiTokenProvider tokenProvider,
-                                                       final AuthenticatedUserProvider userProvider, final EventBus bus, final DeviceRegistration deviceRegistration,
-                                                       final BackgroundCheck backgroundCheck, final Settings settings, final MediaEngine mediaEngine,
-                                                       final ActorRecordProvider actorRecordProvider, final MetricsReporter metricsReporter,
-                                                       final StatusManager statusManager, final LocationManager locationManager, MercuryClient mercuryClient,
-                                                       final SearchManager searchManager, final LocusService locusService, final CallHistoryService callHistoryService,
-                                                       final CpuLogger cpuLogger, final ConversationSyncQueue conversationSyncQueue, NotificationManager notificationManager, AccessManager accessManager,
-                                                       final KeyManager keyManager, UIServiceAvailability uiServiceAvailability, OperationQueue operationQueue, Injector injector,
-                                                       final VideoMultitaskComponent videoMultitaskComponent, final Ln.Context lnContext, final AccountUi accountUi, final LogFilePrint log, final LinusReachabilityService linusReachabilityService,
-                                                       final WhiteboardService whiteboardService,
-                                                       final LyraService lyraService, final
-                                                       UrlProvider urlProvider, final SdkClient sdkClient, final WhiteboardCache whiteboardCache, final VoicemailService voicemailService, final ScheduledMeetingsService scheduledMeetingsService,
-                                                       final WhiteboardListService whiteboardListService) {
+    ApplicationController provideApplicationController(final Context context, final ApiClientProvider clientProvider, final ApiTokenProvider tokenProvider, final AuthenticatedUserProvider userProvider, final EventBus bus, final DeviceRegistration deviceRegistration, final BackgroundCheck backgroundCheck, final Settings settings, final MediaEngine mediaEngine, final ActorRecordProvider actorRecordProvider, final MetricsReporter metricsReporter, final StatusManager statusManager, final LocationManager locationManager, MercuryClient mercuryClient, final SearchManager searchManager, final LocusService locusService, final CallHistoryService callHistoryService, final CpuLogger cpuLogger, final ConversationSyncQueue conversationSyncQueue, NotificationManager notificationManager, AccessManager accessManager, final KeyManager keyManager, UIServiceAvailability uiServiceAvailability, OperationQueue operationQueue, Injector injector, final VideoMultitaskComponent videoMultitaskComponent, final Ln.Context lnContext, final AccountUi accountUi, final LogFilePrint log, final LinusReachabilityService linusReachabilityService, final WhiteboardService whiteboardService, final LyraService lyraService, final UrlProvider urlProvider, final SdkClient sdkClient, final WhiteboardCache whiteboardCache, final VoicemailService voicemailService, final ScheduledMeetingsService scheduledMeetingsService, final WhiteboardListService whiteboardListService) {
         /*
         return new ApplicationController(context, clientProvider, tokenProvider, userProvider,
                 bus, deviceRegistration, backgroundCheck, settings,
@@ -134,13 +113,7 @@ class VideoTestApplicationModule {
 
 
         //2.0.3886 updated
-        return new ApplicationController(context, clientProvider, tokenProvider, userProvider, bus, deviceRegistration, backgroundCheck, settings,
-                mediaEngine, actorRecordProvider, metricsReporter, statusManager, locationManager, mercuryClient,
-                searchManager, locusService, callHistoryService, cpuLogger, conversationSyncQueue, notificationManager,
-                accessManager, keyManager, uiServiceAvailability, operationQueue, injector, videoMultitaskComponent,
-                lnContext, accountUi, log, linusReachabilityService, whiteboardService, lyraService, urlProvider,
-                sdkClient, whiteboardCache, voicemailService, scheduledMeetingsService,
-                whiteboardListService);
+        return new ApplicationController(context, clientProvider, tokenProvider, userProvider, bus, deviceRegistration, backgroundCheck, settings, mediaEngine, actorRecordProvider, metricsReporter, statusManager, locationManager, mercuryClient, searchManager, locusService, callHistoryService, cpuLogger, conversationSyncQueue, notificationManager, accessManager, keyManager, uiServiceAvailability, operationQueue, injector, videoMultitaskComponent, lnContext, accountUi, log, linusReachabilityService, whiteboardService, lyraService, urlProvider, sdkClient, whiteboardCache, voicemailService, scheduledMeetingsService, whiteboardListService);
 
 
     }
@@ -160,16 +133,8 @@ class VideoTestApplicationModule {
 
     @Provides
     @Singleton
-    CallControlService provideCallControlService(LocusService locusService, final MediaEngine mediaEngine, CallMetricsReporter callMetricsReporter,
-                                                 EventBus bus, Context context, TrackingIdGenerator trackingIdGenerator,
-                                                 DeviceRegistration deviceRegistration, LogFilePrint logFilePrint, Gson gson,
-                                                 UploadLogsService uploadLogsService, CallNotification callNotification, LocusDataCache locusDataCache,
-                                                 Settings settings, Provider<Batch> batchProvider, Ln.Context lnContext, com.cisco.spark.android.callcontrol.CallUi callUi,
-                                                 LinusReachabilityService
-                                                         linusReachabilityService, SdkClient sdkClient, CallAnalyzerReporter callAnalyzerReporter, Toaster toaster, CoreFeatures coreFeatures, LocusMeetingInfoProvider locusMeetingInfoProvider) {
-        return new CallControlService(locusService, mediaEngine, callMetricsReporter, bus, context, trackingIdGenerator, deviceRegistration,
-                logFilePrint, gson, uploadLogsService, callNotification, locusDataCache, settings, batchProvider,
-                lnContext, callUi, linusReachabilityService, sdkClient,callAnalyzerReporter, toaster, coreFeatures, locusMeetingInfoProvider);
+    CallControlService provideCallControlService(LocusService locusService, final MediaEngine mediaEngine, CallMetricsReporter callMetricsReporter, EventBus bus, Context context, TrackingIdGenerator trackingIdGenerator, DeviceRegistration deviceRegistration, LogFilePrint logFilePrint, Gson gson, UploadLogsService uploadLogsService, CallNotification callNotification, LocusDataCache locusDataCache, Settings settings, Provider<Batch> batchProvider, Ln.Context lnContext, com.cisco.spark.android.callcontrol.CallUi callUi, LinusReachabilityService linusReachabilityService, SdkClient sdkClient, CallAnalyzerReporter callAnalyzerReporter, Toaster toaster, CoreFeatures coreFeatures, LocusMeetingInfoProvider locusMeetingInfoProvider) {
+        return new CallControlService(locusService, mediaEngine, callMetricsReporter, bus, context, trackingIdGenerator, deviceRegistration, logFilePrint, gson, uploadLogsService, callNotification, locusDataCache, settings, batchProvider, lnContext, callUi, linusReachabilityService, sdkClient, callAnalyzerReporter, toaster, coreFeatures, locusMeetingInfoProvider);
     }
 
 
@@ -224,23 +189,8 @@ class VideoTestApplicationModule {
 
     @Provides
     @Singleton
-    WhiteboardService provideWhiteboardService(ApiClientProvider apiClientProvider, Gson gson, EventBus eventBus,
-                                               ApiTokenProvider apiTokenProvider, KeyManager keyManager,
-                                               OperationQueue operationQueue, DeviceRegistration deviceRegistration,
-                                               LocusDataCache locusDataCache, Settings settings, UserAgentProvider userAgentProvider,
-                                               TrackingIdGenerator trackingIdGenerator, ActivityListener activityListener,
-                                               Ln.Context lnContext, CallControlService callControlService, Context context,
-                                               Injector injector, EncryptedConversationProcessor encryptedConversationProcessor,
-                                               SdkClient sdkClient, ContentManager contentManager, SchedulerProvider schedulerProvider,
-                                               LocusService locusService, AuthenticatedUserProvider authenticatedUserProvider,
-                                               WhiteboardCache whiteboardCache, CoreFeatures coreFeatures, BitmapProvider bitmapProvider,
-                                               FileLoader fileLoader, Clock clock, MetricsReporter metricsReporter,
-                                               ContentResolver contentResolver, MediaEngine mediaEngine, Sanitizer sanitizer) {
-        return new WhiteboardService(whiteboardCache, apiClientProvider, gson, eventBus, apiTokenProvider, keyManager, operationQueue,
-                deviceRegistration, locusDataCache, settings, userAgentProvider, trackingIdGenerator,
-                activityListener, lnContext, callControlService, sanitizer, context, injector,
-                encryptedConversationProcessor, sdkClient, contentManager, locusService, schedulerProvider,
-                bitmapProvider, fileLoader, mediaEngine, authenticatedUserProvider, coreFeatures, clock, metricsReporter, contentResolver);
+    WhiteboardService provideWhiteboardService(ApiClientProvider apiClientProvider, Gson gson, EventBus eventBus, ApiTokenProvider apiTokenProvider, KeyManager keyManager, OperationQueue operationQueue, DeviceRegistration deviceRegistration, LocusDataCache locusDataCache, Settings settings, UserAgentProvider userAgentProvider, TrackingIdGenerator trackingIdGenerator, ActivityListener activityListener, Ln.Context lnContext, CallControlService callControlService, Context context, Injector injector, EncryptedConversationProcessor encryptedConversationProcessor, SdkClient sdkClient, ContentManager contentManager, SchedulerProvider schedulerProvider, LocusService locusService, AuthenticatedUserProvider authenticatedUserProvider, WhiteboardCache whiteboardCache, CoreFeatures coreFeatures, BitmapProvider bitmapProvider, FileLoader fileLoader, Clock clock, MetricsReporter metricsReporter, ContentResolver contentResolver, MediaEngine mediaEngine, Sanitizer sanitizer) {
+        return new WhiteboardService(whiteboardCache, apiClientProvider, gson, eventBus, apiTokenProvider, keyManager, operationQueue, deviceRegistration, locusDataCache, settings, userAgentProvider, trackingIdGenerator, activityListener, lnContext, callControlService, sanitizer, context, injector, encryptedConversationProcessor, sdkClient, contentManager, locusService, schedulerProvider, bitmapProvider, fileLoader, mediaEngine, authenticatedUserProvider, coreFeatures, clock, metricsReporter, contentResolver);
     }
 
     @Provides
@@ -255,7 +205,6 @@ class VideoTestApplicationModule {
     AccountUi provideAccountUi() {
         return new VideoTestAccountUi();
     }
-
 
 
     @Provides
@@ -273,11 +222,8 @@ class VideoTestApplicationModule {
 
     @Provides
     @Singleton
-    WhiteboardListService provideWhiteboardListService(EventBus bus, Lazy<WhiteboardService> whiteboardService, KeyManager keyManager,
-                                                       SchedulerProvider schedulerProvider, ApiClientProvider apiClientProvider,
-                                                       EncryptedConversationProcessor conversationProcessor, Injector injector, Context context, MetricsReporter metricsReporter) {
-        return new WhiteboardListService(bus, whiteboardService, keyManager, schedulerProvider, apiClientProvider,
-                conversationProcessor, injector, context, metricsReporter);
+    WhiteboardListService provideWhiteboardListService(EventBus bus, Lazy<WhiteboardService> whiteboardService, KeyManager keyManager, SchedulerProvider schedulerProvider, ApiClientProvider apiClientProvider, EncryptedConversationProcessor conversationProcessor, Injector injector, Context context, MetricsReporter metricsReporter) {
+        return new WhiteboardListService(bus, whiteboardService, keyManager, schedulerProvider, apiClientProvider, conversationProcessor, injector, context, metricsReporter);
     }
 
     @Provides

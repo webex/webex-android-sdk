@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 
@@ -2055,6 +2056,31 @@ public class MediaSessionImpl implements MediaSession, MediaConnection.MediaConn
             trackAudioRemote.Unmute();
         }
         remoteAudioMuted = false;
+    }
+
+    //sdk
+    @Override
+    public void muteRemoteVideo() {
+        Ln.i("muteRemoteVideo");
+
+        for (MediaTrack trackVideoRemote : remoteVideoTracks.values()) {
+            Ln.i("muteRemoteVideo(), mute remote video track");
+            trackVideoRemote.Mute();
+        }
+
+    }
+
+
+    //sdk
+    @Override
+    public void unmuteRemoteVideo() {
+        Ln.i("unmuteRemoteVideo");
+
+        for (MediaTrack trackVideoRemote : remoteVideoTracks.values()) {
+            Ln.i("unmuteRemoteVideo(), Unmute remote video track");
+            trackVideoRemote.Unmute();
+        }
+
     }
 
     @Override

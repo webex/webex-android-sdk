@@ -219,6 +219,18 @@ public class MediaSessionAdapter implements MediaSession {
 
     }
 
+    //sdk
+    @Override
+    public void muteRemoteVideo() {
+
+    }
+
+    //sdk
+    @Override
+    public void unmuteRemoteVideo() {
+
+    }
+
     @Override
     public void setAudioVolume(int volume) {
 

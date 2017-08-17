@@ -27,7 +27,6 @@ public class SparkApplication extends Application {
 
     /**
      * @deprecated
-     *
      */
     public static SparkApplication getInstance() {
         return instance;
@@ -35,16 +34,15 @@ public class SparkApplication extends Application {
 
     /**
      * @deprecated
-     *
      */
     protected void daggerInit() {
         applicationDelegate = new VideoTestApplicationDelegate(this);
         applicationDelegate.create();
         Log.i(TAG, "daggerInit: ->after  applicationDelegate.create");
     }
+
     /**
      * @deprecated
-     *
      */
     public void inject(Object object) {
         applicationDelegate.inject(object);
