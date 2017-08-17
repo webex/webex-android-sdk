@@ -4,7 +4,7 @@ import android.app.Activity;
 
 import com.cisco.spark.android.notification.Gcm;
 
-class VideoTestGcm implements Gcm{
+class VideoTestGcm implements Gcm {
     @Override
     public String register() {
         return null;

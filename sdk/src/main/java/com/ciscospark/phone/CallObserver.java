@@ -23,7 +23,6 @@
 package com.ciscospark.phone;
 
 
-
 import com.ciscospark.common.SparkError;
 
 import java.util.List;
@@ -36,14 +35,16 @@ public interface CallObserver {
 
     /**
      * this function will be called while remoted part is ringing
-     * @param call  the call to which this event belonged.
+     *
+     * @param call the call to which this event belonged.
      * @return none
      */
     void onRinging(Call call);
 
     /**
      * this function will be called while a call is connected
-     * @param call  the call to which this event belonged.
+     *
+     * @param call the call to which this event belonged.
      * @return none
      */
     void onConnected(Call call);
@@ -51,8 +52,9 @@ public interface CallObserver {
 
     /**
      * this function will be called while a call is disconnected
-     * @param call  the call to which this event belonged.
-     * @param reason  reason of disconnection
+     *
+     * @param call       the call to which this event belonged.
+     * @param reason     reason of disconnection
      * @param errorInfo, if the reason is a error type, errorInfo will contain supplement
      *                   information
      *                   if the reason is not a error, errorInfo will be null.
@@ -63,13 +65,12 @@ public interface CallObserver {
 
     /**
      * this function will be called while a call is disconnected
-     * @param call  the call to which this event belonged.
-     * @param reason  what change.
+     *
+     * @param call   the call to which this event belonged.
+     * @param event what change.
      * @return none
      */
-    void onMediaChanged(Call call, MediaChangeReason reason);
-
-
+    void onMediaChanged(Call call, MediaChangedEvent event);
 
 
     enum DisconnectedReason {
@@ -77,24 +78,19 @@ public interface CallObserver {
         /**
          * call end as user need to grant permissions.
          */
-        endForAndroidPermission,
-        /**
+        endForAndroidPermission, /**
          * call end as user hang up
          */
-        selfHangUP,
-        /**
+        selfHangUP, /**
          * call end as remoted part hang up
          */
-        remoteHangUP,
-        /**
+        remoteHangUP, /**
          * call end as remoted part reject
          */
-        remoteReject,
-        /**
+        remoteReject, /**
          * call end as sever end the call
          */
-        callEnd,
-        /**
+        callEnd, /**
          * call end as get error
          */
         Error_serviceFailed_CallJoinError
@@ -103,5 +99,41 @@ public interface CallObserver {
 
     enum MediaChangeReason {
         DTMF
+    }
+
+    enum MediaChangedEvent {
+
+        remoteSendingVideoUnMuted,
+
+        remoteSendingVideoMuted,
+
+        remoteSendingAudioUnMuted,
+
+        remoteSendingAudioMuted,
+
+        sendingVideoUnMuted,
+
+        sendingVideoMuted,
+
+        sendingAudioUnMuted,
+
+        sendingAudioMuted,
+
+        receivingVideoUnMuted,
+
+        receivingVideoMuted,
+
+        receivingAudioUnMuted,
+
+        receivingAudioMuted,
+
+        cameraSwitched,
+
+        spearkerSwitched,
+
+        localVideoViewSize,
+
+        remoteVideoViewSize
+
     }
 }
