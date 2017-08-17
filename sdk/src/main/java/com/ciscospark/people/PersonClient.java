@@ -23,5 +23,36 @@
 package com.ciscospark.people;
 
 
-public class PeopleClient {
+import java.util.ArrayList;
+import java.util.List;
+
+public class PersonClient {
+
+    /**
+     *
+     * @param email
+     * @param displayName
+     * @param max
+     * @return
+     */
+    List<Person> list(String email, String displayName, int max) {
+        return new ArrayList<Person>(10);
+    }
+
+    /**
+     *
+     * @param personId
+     * @return
+     */
+    Person get(String personId) {
+        return new Person();
+    }
+
+    /**
+     *
+     * @return
+     */
+    Person getMe() {
+        return new Person();
+    }
 }
