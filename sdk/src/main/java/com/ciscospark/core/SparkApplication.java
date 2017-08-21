@@ -18,7 +18,7 @@ public class SparkApplication extends Application {
 
         Log.d(TAG, "before daggerInit");
         delegate = new SparkApplicationDelegate(this);
-        delegate.onCreate();
+        delegate.create();
         Log.i(TAG, "onCreate: ->after daggerInit");
     }
 
