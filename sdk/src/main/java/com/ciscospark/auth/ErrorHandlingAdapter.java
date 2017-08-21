@@ -73,7 +73,17 @@ final class ErrorHandlingAdapter {
                         "ErrorHandlingCall must have generic type (e.g., ErrorHandlingCall<ResponseBody>)");
             }
             final Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
-            final Executor callbackExecutor = retrofit.callbackExecutor();
+            final Executor callbackExecutor;
+            Executor retrofitExecutor = retrofit.callbackExecutor();
+            if (retrofitExecutor == null) {
+                callbackExecutor = new Executor() {
+                    @Override public void execute(Runnable command) {
+                        command.run();
+                    }
+                };
+            } else {
+                callbackExecutor = retrofitExecutor;
+            }
             return new CallAdapter<ErrorHandlingCall<?>>() {
                 @Override
                 public Type responseType() {
