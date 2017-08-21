@@ -91,6 +91,7 @@ import com.cisco.spark.android.whiteboard.WhiteboardCache;
 import com.cisco.spark.android.whiteboard.WhiteboardListService;
 import com.cisco.spark.android.whiteboard.WhiteboardService;
 import com.cisco.spark.android.whiteboard.loader.FileLoader;
+import com.ciscospark.phone.Phone;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 import com.squareup.leakcanary.RefWatcher;
@@ -114,9 +115,10 @@ import okhttp3.OkHttpClient;
         },
         injects = {
                 SparkApplicationDelegate.class,
+                Phone.class
         }
 )
-public class SparkApplicationModule {
+class SparkApplicationModule {
     private RefWatcher refWatcher;
 
     public SparkApplicationModule() {
