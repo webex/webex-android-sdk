@@ -23,7 +23,6 @@
 package com.ciscospark;
 
 import com.ciscospark.auth.Authenticator;
-import com.ciscospark.auth.AuthorizeListener;
 import com.ciscospark.membership.MembershipClient;
 import com.ciscospark.message.MessageClient;
 import com.ciscospark.people.PersonClient;
@@ -52,7 +51,11 @@ public class Spark {
         this.authenticator = authenticator;
     }
 
-    public void authorize(AuthorizeListener listener) {
+    public Authenticator getAuthenticator() {
+        return this.authenticator;
+    }
+
+    public void authorize(CompletionHandler<String> listener) {
         authenticator.authorize(listener);
     }
 
@@ -65,7 +68,11 @@ public class Spark {
     }
 
     public Phone phone() {
-        return new Phone(authenticator.getToken());
+        if (this.isAuthorized())
+            return new Phone(this);
+        else {
+            return null;
+        }
     }
 
     public MessageClient messages() {
@@ -73,7 +80,7 @@ public class Spark {
     }
 
     public PersonClient people() {
-        return new PersonClient();
+        return new PersonClient(this);
     }
 
     public MembershipClient memberships() {

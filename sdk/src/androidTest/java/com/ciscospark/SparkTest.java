@@ -24,7 +24,6 @@ package com.ciscospark;
 
 import android.util.Log;
 
-import com.ciscospark.auth.AuthorizeListener;
 import com.ciscospark.auth.JWTAuthenticator;
 
 import org.junit.Test;
