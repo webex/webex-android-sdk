@@ -23,8 +23,8 @@
 package com.ciscospark.auth;
 
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
+import com.ciscospark.CompletionHandler;
 import com.ciscospark.SparkError;
 
 import retrofit2.Call;
@@ -35,6 +35,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
+
+import static com.ciscospark.Utils.checkNotNull;
+import static com.ciscospark.auth.Authenticator.AuthError.UNEXPECTED_ERROR;
 
 
 /**
@@ -55,7 +58,8 @@ public class OAuthAuthenticator implements Authenticator {
     private OAuth2Tokens mToken = null;
     private AuthService mAuthService;
 
-    static final String OAUTH_BASE_URL = "https://api.ciscospark.com/v1/";
+    final String OAUTH_BASE_URL = "https://api.ciscospark.com/v1/";
+
     /**
      * OAuth 2 authorize strategy.
      *
@@ -86,24 +90,33 @@ public class OAuthAuthenticator implements Authenticator {
     }
 
     /**
-     * @param listener
+     * @param handler
      */
     @Override
-    public void authorize(AuthorizeListener listener) {
+    public void authorize(CompletionHandler<String> handler) {
+        checkNotNull(handler, "CompletionHandler is null");
+
+        /* null values are ignored */
         mAuthService.getToken(mClientId, mClientSecret, mRedirectUri, AUTHORIZATION_CODE, mAuthCode)
                 .enqueue(new Callback<OAuth2Tokens>() {
                     @Override
                     public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
-                        mToken = response.body();
-                        if (mToken != null)
-                            listener.onSuccess();
-                        else
-                            listener.onFailed(new SparkError());
+                        if (response.isSuccessful()) {
+                            mToken = response.body();
+                            if (mToken != null) {
+                                handler.onComplete(mToken.getAccessToken());
+                            } else {
+                                mToken = null;
+                                handler.onError(new SparkError(UNEXPECTED_ERROR, "get token error"));
+                            }
+                        } else {
+                            handler.onError(new SparkError(UNEXPECTED_ERROR, "get token error"));
+                        }
                     }
 
                     @Override
                     public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
-                        listener.onFailed(new SparkError());
+                        handler.onError(new SparkError(UNEXPECTED_ERROR, t.toString()));
                     }
                 });
     }
@@ -114,8 +127,38 @@ public class OAuthAuthenticator implements Authenticator {
     }
 
     @Override
-    public OAuth2AccessToken getToken() {
-        return mToken;
+    public void getToken(CompletionHandler<String> handler) {
+        checkNotNull(handler, "CompletionHandler is null");
+
+        if (!isAuthorized()) {
+            handler.onError(new SparkError(UNEXPECTED_ERROR, "Spark is not authorized"));
+            return;
+        }
+
+        if (isAuthorized() && mToken.shouldRefreshNow()) {
+            mAuthService.refreshToken(mClientId, mClientSecret, mToken.getRefreshToken(), AUTHORIZATION_CODE)
+                    .enqueue(new Callback<OAuth2Tokens>() {
+                        @Override
+                        public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
+                            if (response.isSuccessful()) {
+                                mToken = response.body();
+                                if (mToken != null) {
+                                    handler.onComplete(mToken.getAccessToken());
+                                } else {
+                                    mToken = null;
+                                    handler.onError(new SparkError(UNEXPECTED_ERROR, "get token error"));
+                                }
+                            } else {
+                                handler.onError(new SparkError(UNEXPECTED_ERROR, "get token error"));
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
+                            handler.onError(new SparkError(UNEXPECTED_ERROR, t.toString()));
+                        }
+                    });
+        }
     }
 
     @Override
@@ -179,5 +222,12 @@ public class OAuthAuthenticator implements Authenticator {
                                     @Field("redirect_uri") String redirect_uri,
                                     @Field("grant_type") String grant_type,
                                     @Field("code") String code);
+
+        @FormUrlEncoded
+        @POST("access_token")
+        Call<OAuth2Tokens> refreshToken(@Field("client_id") String client_id,
+                                        @Field("client_secret") String client_secret,
+                                        @Field("refresh_token") String refresh_token,
+                                        @Field("grant_type") String grant_type);
     }
 }

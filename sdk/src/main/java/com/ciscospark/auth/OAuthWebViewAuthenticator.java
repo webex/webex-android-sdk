@@ -37,13 +37,14 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+import com.ciscospark.CompletionHandler;
 import com.ciscospark.SparkError;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
-import static com.ciscospark.auth.AuthorizeListener.AuthError.SERVER_ERROR;
+import static com.ciscospark.auth.Authenticator.AuthError.SERVER_ERROR;
+
 
 /**
  * OAuth2 authorization strategy using android WebView.
@@ -55,9 +56,9 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     private String mBaseUrl = OAUTH_BASE_URL;
     private WebView mWebView;
     private String mState;
-    private AuthorizeListener mAuthListener;
+    private CompletionHandler<String> mAuthListener;
     private OAuthAuthenticator mOAuthStategyDelegate = null;
-    static final String TAG = "OAuthWebViewAuthenticator";
+    static final String TAG = "WebViewAuthenticator";
     static final String OAUTH_BASE_URL = "https://api.ciscospark.com/v1/";
 
 
@@ -79,10 +80,9 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     }
 
     @Override
-    public void authorize(AuthorizeListener listener) {
+    public void authorize(CompletionHandler<String> listener) {
         this.mAuthListener = listener;
         String url = buildCodeGrantUrl(getEmail());
-        Log.d(TAG, "authorize" + url);
         CookieManager.getInstance().removeAllCookie();
         mWebView.loadUrl(url);
     }
@@ -97,10 +97,11 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     }
 
     @Override
-    public OAuth2AccessToken getToken() {
+    public void getToken(CompletionHandler<String> listener) {
         if (mOAuthStategyDelegate != null)
-            return mOAuthStategyDelegate.getToken();
-        return null;
+            mOAuthStategyDelegate.getToken(listener);
+        else
+            listener.onError(new SparkError());
     }
 
     @Override
@@ -194,17 +195,15 @@ public class OAuthWebViewAuthenticator implements Authenticator {
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            Log.d(TAG, url);
             // redirect uri is returned from server by lowercase.
             if (url.startsWith(getRedirectUri().toLowerCase())) {
                 Uri uri = Uri.parse(url);
                 String code = uri.getQueryParameter("code");
                 if (code == null || code.isEmpty()) {
-                    mAuthListener.onFailed(new SparkError());
+                    mAuthListener.onError(new SparkError());
                     return false;
                 }
                 setAuthCode(code);
-                Log.d(TAG, "access code: " + getAuthCode());
 
                 mWebView.clearCache(true);
                 mWebView.loadUrl("about:blank");
@@ -225,18 +224,16 @@ public class OAuthWebViewAuthenticator implements Authenticator {
 
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            Log.d(TAG, "" + errorCode + " " + description + " " + failingUrl);
             if (mAuthListener != null)
-                mAuthListener.onFailed(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
+                mAuthListener.onError(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
         @Override
         public void onReceivedSslError(WebView view, final SslErrorHandler handler, SslError error) {
-            Log.e(TAG, error.toString());
             handler.cancel();
             if (error != null) {
-                mAuthListener.onFailed(new SparkError(SERVER_ERROR, error.toString()));
+                mAuthListener.onError(new SparkError(SERVER_ERROR, error.toString()));
             } else
                 Log.w(TAG, new Exception("SSLError unknown"));
         }

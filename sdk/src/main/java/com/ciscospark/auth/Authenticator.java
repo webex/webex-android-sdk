@@ -22,7 +22,7 @@
 
 package com.ciscospark.auth;
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+import com.ciscospark.CompletionHandler;
 
 /**
  * Authorization interface used by Spark
@@ -31,12 +31,19 @@ import com.cisco.spark.android.authenticator.OAuth2AccessToken;
  * @version 0.1
  */
 public interface Authenticator {
+    enum AuthError {
+        UNAUTHENTICATED,
+        CLIENT_ERROR,
+        SERVER_ERROR,
+        NETWORK_ERROR,
+        UNEXPECTED_ERROR
+    }
 
-    void authorize(AuthorizeListener listener);
+    void authorize(CompletionHandler<String> listener);
 
     void deauthorize();
 
-    OAuth2AccessToken getToken();
+    void getToken(CompletionHandler<String> listener);
 
     boolean isAuthorized();
 }
