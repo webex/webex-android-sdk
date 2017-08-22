@@ -23,6 +23,7 @@
 package com.ciscospark.auth;
 
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+import com.ciscospark.CompletionHandler;
 import com.ciscospark.SparkError;
 
 import org.junit.Before;
@@ -42,12 +43,12 @@ import static org.junit.Assert.assertTrue;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class OAuthAuthenticatorTest {
     String clientId = "Cc580d5219555f0df8b03d99f3e020381eae4eee0bad1501ad187480db311cce4";
-    String clientSec = "d4e9385b2e5828eef376077995080ea4aa42b5c92f1b6af8f3a59fc6a4e79f6a";
+    String clientSec = "c87879c646f82b6d23a7a4c2f6eea1894234a53e013777e90bced91f22225317";
     String redirect = "AndroidDemoApp://response";
     // Every time get the code from browser manually, or test will fail.
     // Visit flowing link in browser to get the code:
     // "https://api.ciscospark.com/v1/authorize?client_id=Cc580d5219555f0df8b03d99f3e020381eae4eee0bad1501ad187480db311cce4&response_type=code&redirect_uri=AndroidDemoApp%3A%2F%2Fresponse&scope=spark%3Aall%20spark%3Akms"
-    String code = "MmI5ZDkwY2ItYTUyNi00ODM2LTljZTctZGU5ZjdjNWRkZDBlMWMzN2Q1YWItNTM1";
+    String code = "Y2Y0ZjliNTYtN2Q1NS00Y2ZjLTk2ZGQtOGY4YzRhNTA1NzE5NTMxMDVhNzYtNTk5";
     String email = "xionxiao@cisco.com";
     String scope = "spark:all spark:kms";
 
@@ -60,21 +61,18 @@ public class OAuthAuthenticatorTest {
 
     @Test
     public void a_authorize() throws Exception {
-        strategy.authorize(new AuthorizeListener() {
+        strategy.authorize(new CompletionHandler<String>() {
             @Override
-            public void onSuccess() {
+            public void onComplete(String authCode) {
                 assertTrue(strategy.isAuthorized());
-                OAuth2AccessToken token = strategy.getToken();
-                assertNotNull(token);
-                assertNotNull(token.getAccessToken());
-                assertFalse(token.getAccessToken().isEmpty());
-                System.out.println(token.getAccessToken());
-                System.out.println("expires in: " + token.getExpiresIn());
+                assertNotNull(authCode);
+                assertFalse(authCode.isEmpty());
+                System.out.println(authCode);
                 System.out.println("success");
             }
 
             @Override
-            public void onFailed(SparkError error) {
+            public void onError(SparkError error) {
                 assertFalse("Every time get the code from browser manually, or test will fail.", true);
             }
         });
@@ -85,22 +83,20 @@ public class OAuthAuthenticatorTest {
     public void b_deauthorize() throws Exception {
         strategy.deauthorize();
         assertFalse(strategy.isAuthorized());
-        OAuth2AccessToken token = strategy.getToken();
-        assertNull(token);
     }
 
     @Test
     public void c_authorizeFailed() throws Exception {
         strategy.setAuthCode("wrong_code");
-        strategy.authorize(new AuthorizeListener() {
+        strategy.authorize(new CompletionHandler<String>() {
             @Override
-            public void onSuccess() {
+            public void onComplete(String authCode) {
                 // not go here
                 assertFalse(true);
             }
 
             @Override
-            public void onFailed(SparkError error) {
+            public void onError(SparkError error) {
                 assertTrue(true);
             }
         });
@@ -110,15 +106,15 @@ public class OAuthAuthenticatorTest {
     @Test
     public void d_authorizeFailed() throws Exception {
         strategy.setScope("wrong_scope");
-        strategy.authorize(new AuthorizeListener() {
+        strategy.authorize(new CompletionHandler<String>() {
             @Override
-            public void onSuccess() {
+            public void onComplete(String code) {
                 // not go here
                 assertFalse(true);
             }
 
             @Override
-            public void onFailed(SparkError error) {
+            public void onError(SparkError error) {
                 assertTrue(true);
             }
         });

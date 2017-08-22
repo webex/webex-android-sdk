@@ -22,7 +22,7 @@
 
 package com.ciscospark.auth;
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
+import com.ciscospark.CompletionHandler;
 import com.ciscospark.SparkError;
 
 import org.junit.Before;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JWTAuthenticatorTest {
-    private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMiIsIm5hbWUiOiJ1c2VyICMyIiwiaXNzIjoiWTJselkyOXpjR0Z5YXpvdkwzVnpMMDlTUjBGT1NWcEJWRWxQVGk5aU5tSmtNemRtTUMwNU56RXhMVFEzWldVdE9UUTFOUzAxWWpZNE1tUTNNRFV6TURZIn0.5VvjLtuD-jn9hXtLthnGDdhxlIHaoKZbI80y1vK2-bY";
+    private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbmRyb2lkX3Rlc3R1c2VyXzEiLCJuYW1lIjoiQW5kcm9pZFRlc3RVc2VyMSIsImlzcyI6ImNkNWM5YWY3LThlZDMtNGUxNS05NzA1LTAyNWVmMzBiMWI2YSJ9.eJ99AY9iNDhG4HjDJsY36wgqOnNQSes_PIu0DKBHBzs";
     private JWTAuthenticator strategy;
 
     @Before
@@ -51,20 +51,17 @@ public class JWTAuthenticatorTest {
 
     @Test
     public void a_authorize() throws Exception {
-        strategy.authorize(new AuthorizeListener() {
+        strategy.authorize(new CompletionHandler<String>() {
             @Override
-            public void onSuccess() {
+            public void onComplete(String authCode) {
                 assertTrue(strategy.isAuthorized());
-                OAuth2AccessToken token = strategy.getToken();
-                assertNotNull(token);
-                assertNotNull(token.getAccessToken());
-                assertFalse(token.getAccessToken().isEmpty());
-                System.out.println(token.getAccessToken());
-                System.out.println("expires in: " + token.getExpiresIn());
+                assertNotNull(authCode);
+                assertFalse(authCode.isEmpty());
+                System.out.println(authCode);
             }
 
             @Override
-            public void onFailed(SparkError error) {
+            public void onError(SparkError error) {
                 //assertFalse(true);
                 System.out.println("failed");
                 System.out.println(error.toString());
@@ -78,21 +75,30 @@ public class JWTAuthenticatorTest {
     public void b_deauthorize() throws Exception {
         strategy.deauthorize();
         assertFalse(strategy.isAuthorized());
-        OAuth2AccessToken token = strategy.getToken();
-        assertNull(token);
+        strategy.getToken(new CompletionHandler<String>() {
+            @Override
+            public void onComplete(String result) {
+
+            }
+
+            @Override
+            public void onError(SparkError error) {
+
+            }
+        });
     }
 
     @Test
     public void c_authorizeFailed() throws Exception {
         strategy = new JWTAuthenticator("Wrong token");
-        strategy.authorize(new AuthorizeListener() {
+        strategy.authorize(new CompletionHandler<String>() {
             @Override
-            public void onSuccess() {
+            public void onComplete(String authCode) {
                 assertFalse(true);
             }
 
             @Override
-            public void onFailed(SparkError error) {
+            public void onError(SparkError error) {
                 assertFalse(strategy.isAuthorized());
                 System.out.println(error.toString());
             }
