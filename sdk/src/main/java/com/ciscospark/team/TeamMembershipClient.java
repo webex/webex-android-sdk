@@ -23,5 +23,12 @@
 package com.ciscospark.team;
 
 
+import com.ciscospark.Spark;
+
 public class TeamMembershipClient {
+    private Spark mSpark;
+
+    public TeamMembershipClient(Spark spark) {
+        this.mSpark = spark;
+    }
 }

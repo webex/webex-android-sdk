@@ -90,12 +90,6 @@ dependencies {
 
     compile libs.sqlcipher
 
-    /*
-    compile libs.fasterxml_annotations
-    compile libs.fasterxml_databind
-    compile libs.fasterxml_core
-    */
-
     debugCompile libs.leak_canary
     releaseCompile libs.leak_canary_disabled
     testCompile libs.leak_canary_disabled

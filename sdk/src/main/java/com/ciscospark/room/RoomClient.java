@@ -23,5 +23,12 @@
 package com.ciscospark.room;
 
 
+import com.ciscospark.Spark;
+
 public class RoomClient {
+    private Spark mSpark;
+
+    public RoomClient(Spark spark) {
+        this.mSpark = spark;
+    }
 }

@@ -23,5 +23,12 @@
 package com.ciscospark.membership;
 
 
+import com.ciscospark.Spark;
+
 public class MembershipClient {
+    Spark mSpark;
+
+    public MembershipClient(Spark spark) {
+        this.mSpark = spark;
+    }
 }

@@ -68,35 +68,34 @@ public class Spark {
     }
 
     public Phone phone() {
-        if (this.isAuthorized())
-            return new Phone(this);
-        else {
-            return null;
-        }
+        return isAuthorized() ? new Phone(this) : null;
     }
 
     public MessageClient messages() {
-        return new MessageClient();
+        return isAuthorized() ? new MessageClient() : null;
     }
 
     public PersonClient people() {
-        return new PersonClient(this);
+        return isAuthorized() ? new PersonClient(this) : null;
     }
 
     public MembershipClient memberships() {
-        return new MembershipClient();
+        return isAuthorized() ? new MembershipClient(this) : null;
     }
 
     public TeamClient teams() {
-        return new TeamClient();
+        return isAuthorized() ? new TeamClient(this) : null;
     }
 
     public TeamMembershipClient teamMembershipClient() {
-        return new TeamMembershipClient();
+        return isAuthorized() ? new TeamMembershipClient(this) : null;
     }
 
     public RoomClient rooms() {
-        return new RoomClient();
+        return isAuthorized() ? new RoomClient(this) : null;
     }
 
+    public void setLogLevel(String level) {
+        // TODO:
+    }
 }

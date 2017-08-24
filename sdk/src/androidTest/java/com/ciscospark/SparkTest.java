@@ -50,15 +50,15 @@ public class SparkTest {
         Spark spark = new Spark();
         JWTAuthenticator strategy = new JWTAuthenticator(auth_token);
         spark.init(strategy);
-        spark.authorize(new AuthorizeListener() {
+        spark.authorize(new CompletionHandler<String>() {
             @Override
-            public void onSuccess() {
+            public void onComplete(String code) {
                 assertTrue(spark.isAuthorized());
-                Log.i(TAG, "get token: " + strategy.getToken().getAccessToken());
+                Log.i(TAG, "get token: " + code);
             }
 
             @Override
-            public void onFailed(SparkError<AuthError> E) {
+            public void onError(SparkError E) {
                 assertFalse(true);
             }
         });
