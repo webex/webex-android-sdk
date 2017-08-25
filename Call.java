@@ -340,7 +340,7 @@ public class Call {
         if (setting) {
             //true-> receiving;
             //setReceivingAudio's true is muteRemoteAudio's false
-            //mPhone.callControlService.muteRemoteVideo(this.locusKey,!setting);
+            mPhone.callControlService.muteRemoteVideo(this.locusKey,!setting);
 
             if (this.getObserver() != null) {
                 Log.i(TAG, "receiving ");
@@ -354,7 +354,7 @@ public class Call {
 
             //false-> not receiving
             //setReceivingAudio's true is muteRemoteAudio's false
-            //mPhone.callControlService.muteRemoteVideo(this.locusKey,!setting);
+            mPhone.callControlService.muteRemoteVideo(this.locusKey,!setting);
 
             if (this.getObserver() != null) {
                 Log.i(TAG, "Not receiving ");

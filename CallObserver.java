@@ -23,7 +23,7 @@
 package com.ciscospark.phone;
 
 
-import com.ciscospark.SparkError;
+import com.ciscospark.common.SparkError;
 
 import java.util.List;
 

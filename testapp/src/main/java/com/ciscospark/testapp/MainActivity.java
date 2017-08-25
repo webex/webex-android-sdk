@@ -28,13 +28,14 @@ import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.Toast;
 
-import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.ciscospark.CompletionHandler;
 import com.ciscospark.Spark;
 import com.ciscospark.SparkError;
 import com.ciscospark.auth.Authenticator;
 import com.ciscospark.auth.JWTAuthenticator;
+import com.ciscospark.phone.CallOption;
 import com.ciscospark.phone.Phone;
 import com.ciscospark.phone.RegisterListener;
 import com.github.benoitdion.ln.Ln;
@@ -84,17 +85,20 @@ public class MainActivity extends Activity implements CompletionHandler<String> 
         Log.d(TAG, "success: " + auth_token);
         String html = "<html><body><b>Access token:</b> " + auth_token + "</body></html>";
         webView.loadData(html, "text/html", null);
-        btn.setVisibility(View.VISIBLE);
         mPhone = mSpark.phone();
         mPhone.register(new RegisterListener() {
             @Override
             public void onSuccess() {
                 Ln.d("register success");
+                btn.setVisibility(View.VISIBLE);
+                Toast.makeText(MainActivity.this, "register success", Toast.LENGTH_LONG).show();
             }
 
             @Override
-            public void onFailed() {
-                Ln.d("register failed");
+            public void onFailed(SparkError error) {
+                Ln.d("register failed", error.toString());
+                btn.setVisibility(View.VISIBLE);
+                Toast.makeText(MainActivity.this, "register failed", Toast.LENGTH_LONG).show();
             }
         });
     }

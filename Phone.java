@@ -28,7 +28,6 @@ import android.util.Log;
 
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
-import com.cisco.spark.android.authenticator.OAuth2;
 import com.cisco.spark.android.authenticator.OAuth2AccessToken;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.callcontrol.CallContext;
@@ -87,9 +86,9 @@ import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.cisco.spark.android.locus.model.LocusParticipantInfo;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.sync.ActorRecord;
-import com.ciscospark.CompletionHandler;
 import com.ciscospark.Spark;
-import com.ciscospark.SparkError;
+import com.ciscospark.auth.AuthorizeListener;
+import com.ciscospark.common.SparkError;
 import com.ciscospark.core.SparkApplication;
 import com.webex.wseclient.WseSurfaceView;
 
@@ -272,7 +271,7 @@ public class Phone {
 
     private boolean isAuthorized() {
         Log.i(TAG, "isAuthorized: ->");
-        return this.mspark.getAuthenticator().isAuthorized();
+        return this.mspark.getStrategy().isAuthorized();
     }
 
 
@@ -305,13 +304,12 @@ public class Phone {
 
         OAuth2Tokens tokens = new OAuth2Tokens();
 
-        this.mspark.getAuthenticator().getToken(new CompletionHandler<String>() {
+        this.mspark.getStrategy().accessToken(new AuthorizeListener() {
             @Override
-            public void onComplete(String accessToken) {
+            public void onSuccess(OAuth2AccessToken accessToken) {
 
-                OAuth2AccessToken token = new OAuth2AccessToken(7200, OAuth2.UBER_SCOPES);
-                token.setAccessToken(accessToken);
-                tokens.update(token);
+
+                tokens.update(accessToken);
                 String email1 = "";
                 String name1 = "";
 
@@ -334,8 +332,8 @@ public class Phone {
             }
 
             @Override
-            public void onError(SparkError error) {
-                listener.onFailed(error);
+            public void onFailed(SparkError<AuthError> error) {
+                listener.onFailed(new SparkError());
             }
         });
     }

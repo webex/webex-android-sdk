@@ -22,13 +22,16 @@
 
 package com.ciscospark.phone;
 
-import com.ciscospark.SparkError;
 
-/**
- * Created on 12/06/2017.
- */
+import com.ciscospark.common.SparkError;
 
-public interface DeregisterListener {
+public interface RegisterListener {
+
+    public final static String ErrorNotAuthorized = "Not Authorized";
+
+    public final static String ErrorTimeout = "Time out";
+    public final static String Error451 = "Unavailable For Legal Reasons";
+
     void onSuccess();
 
     void onFailed(SparkError error);

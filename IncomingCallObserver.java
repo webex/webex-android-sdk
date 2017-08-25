@@ -22,14 +22,7 @@
 
 package com.ciscospark.phone;
 
-import com.ciscospark.SparkError;
 
-/**
- * Created on 12/06/2017.
- */
-
-public interface DeregisterListener {
-    void onSuccess();
-
-    void onFailed(SparkError error);
+public interface IncomingCallObserver {
+    void onIncomingCall(Call call);
 }

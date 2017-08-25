@@ -95,7 +95,6 @@ import com.ciscospark.phone.Phone;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 import com.squareup.leakcanary.RefWatcher;
-
 import java.util.List;
 
 import javax.inject.Provider;
@@ -114,8 +113,7 @@ import okhttp3.OkHttpClient;
                 //ActivityProcessorModule.class
         },
         injects = {
-                SparkApplicationDelegate.class,
-                Phone.class
+                SparkApplicationDelegate.class, Phone.class, com.ciscospark.phone.Call.class
         }
 )
 class SparkApplicationModule {
