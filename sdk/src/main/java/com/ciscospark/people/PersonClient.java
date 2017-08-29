@@ -25,6 +25,7 @@ package com.ciscospark.people;
 import com.ciscospark.CompletionHandler;
 import com.ciscospark.Spark;
 import com.ciscospark.SparkError;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
@@ -44,7 +45,7 @@ import static com.ciscospark.people.PersonClient.ErrorCode.UNAUTHORIZED;
 import static com.ciscospark.people.PersonClient.ErrorCode.UNEXPECTED_ERROR;
 
 public class PersonClient {
-    final String BASE_URL = "https://api.ciscospark.com/v1/people/";
+    final String BASE_URL = "https://api.ciscospark.com/v1/";
     private PersonService mPersonService;
     private Spark mSpark;
 
@@ -62,6 +63,15 @@ public class PersonClient {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         mPersonService = retrofit.create(PersonService.class);
+    }
+
+    private class PersonList {
+        @SerializedName("items")
+        private List<Person> personList;
+
+        List<Person> getPersonList() {
+            return personList;
+        }
     }
 
     /**
@@ -83,20 +93,20 @@ public class PersonClient {
             public void onComplete(String result) {
                 String authorizationHeader = "Bearer " + result;
                 mPersonService.list(authorizationHeader, email, displayName, null, null, max)
-                        .enqueue(new Callback<List<Person>>() {
+                        .enqueue(new Callback<PersonList>() {
                             @Override
-                            public void onResponse(Call<List<Person>> call,
-                                                   Response<List<Person>> response) {
+                            public void onResponse(Call<PersonList> call,
+                                                   Response<PersonList> response) {
                                 if (response.isSuccessful()) {
-                                    handler.onComplete(response.body());
+                                    handler.onComplete(response.body().getPersonList());
                                 } else {
-                                    handler.onError(new SparkError<>(UNEXPECTED_ERROR, "error"));
+                                    handler.onError(new SparkError<>(UNEXPECTED_ERROR, "list person error:" + response.code()));
                                 }
                             }
 
                             @Override
-                            public void onFailure(Call<List<Person>> call, Throwable t) {
-                                handler.onError(new SparkError<>(UNEXPECTED_ERROR, "error"));
+                            public void onFailure(Call<PersonList> call, Throwable t) {
+                                handler.onError(new SparkError<>(UNEXPECTED_ERROR, "list person error:" + t.toString()));
                             }
                         });
             }
@@ -130,7 +140,7 @@ public class PersonClient {
                         if (response.isSuccessful()) {
                             handler.onComplete(response.body());
                         } else {
-                            handler.onError(new SparkError<>(UNEXPECTED_ERROR, "get person error"));
+                            handler.onError(new SparkError<>(UNEXPECTED_ERROR, "get person error:" + response.code()));
                         }
                     }
 
@@ -159,7 +169,6 @@ public class PersonClient {
             handler.onError(new SparkError<>(UNAUTHORIZED, "Spark is not authorized!"));
             return;
         }
-
 
         mSpark.getAuthenticator().getToken(new CompletionHandler<String>() {
             @Override
@@ -190,22 +199,22 @@ public class PersonClient {
     }
 
     private interface PersonService {
-        @Headers("Content-type:application/json; charset=utf-8")
         @GET("people/{personId}")
+        @Headers("Content-Type:application/json; charset=utf-8")
         Call<Person> get(@Header("Authorization") String authorizationHeader,
                          @Path("personId") String personId);
 
-        @Headers("Content-type:application/json; charset=utf-8")
         @GET("people")
-        Call<List<Person>> list(@Header("Authorization") String authorizationHeader,
-                                @Query("email") String email,
-                                @Query("displayName") String displayName,
-                                @Query("id") String id,
-                                @Query("orgId") String orgId,
-                                @Query("max") int max);
+        @Headers("Content-Type:application/json; charset=utf-8")
+        Call<PersonList> list(@Header("Authorization") String authorizationHeader,
+                              @Query("email") String email,
+                              @Query("displayName") String displayName,
+                              @Query("id") String id,
+                              @Query("orgId") String orgId,
+                              @Query("max") int max);
 
-        @Headers("Content-type:application/json; charset=utf-8")
-        @GET("me")
+        @GET("people/me")
+        @Headers("Content-Type:application/json; charset=utf-8")
         Call<Person> getMe(@Header("Authorization") String authorizationHeader);
     }
 }

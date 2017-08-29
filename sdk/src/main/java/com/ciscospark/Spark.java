@@ -31,12 +31,21 @@ import com.ciscospark.room.RoomClient;
 import com.ciscospark.team.TeamClient;
 import com.ciscospark.team.TeamMembershipClient;
 
+import static com.ciscospark.Utils.checkNotNull;
+
 /**
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
 public class Spark {
     private Authenticator authenticator;
+
+    public Spark(Authenticator authenticator) {
+        setAuthenticator(authenticator);
+    }
+
+    public Spark() {
+    }
 
     /**
      * Get current sdk version
@@ -47,8 +56,14 @@ public class Spark {
         return "0.1";
     }
 
-    public void init(Authenticator authenticator) {
-        this.authenticator = authenticator;
+    public void setAuthenticator(Authenticator authenticator) {
+        checkNotNull(authenticator, "Authenticator is null");
+        if (this.authenticator == null) {
+            this.authenticator = authenticator;
+        } else {
+            deauthorize();
+            this.authenticator = authenticator;
+        }
     }
 
     public Authenticator getAuthenticator() {

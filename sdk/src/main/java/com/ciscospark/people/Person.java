@@ -24,8 +24,13 @@ package com.ciscospark.people;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Person implements Parcelable {
 
@@ -164,5 +169,11 @@ public class Person implements Parcelable {
 
     public String getType() {
         return type;
+    }
+
+
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
     }
 }

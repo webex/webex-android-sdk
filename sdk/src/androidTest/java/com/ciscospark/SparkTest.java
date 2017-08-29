@@ -49,7 +49,7 @@ public class SparkTest {
     public void authorize() throws Exception {
         Spark spark = new Spark();
         JWTAuthenticator strategy = new JWTAuthenticator(auth_token);
-        spark.init(strategy);
+        spark.setAuthenticator(strategy);
         spark.authorize(new CompletionHandler<String>() {
             @Override
             public void onComplete(String code) {

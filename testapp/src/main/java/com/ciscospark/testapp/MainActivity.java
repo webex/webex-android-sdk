@@ -35,7 +35,6 @@ import com.ciscospark.Spark;
 import com.ciscospark.SparkError;
 import com.ciscospark.auth.Authenticator;
 import com.ciscospark.auth.JWTAuthenticator;
-import com.ciscospark.phone.CallOption;
 import com.ciscospark.phone.Phone;
 import com.ciscospark.phone.RegisterListener;
 import com.github.benoitdion.ln.Ln;
@@ -66,7 +65,7 @@ public class MainActivity extends Activity implements CompletionHandler<String> 
         //authenticator = new OAuthWebViewAuthenticator(clientId, clientSec, redirect, scope, email, webView);
         authenticator = new JWTAuthenticator(auth_token);
         mSpark = new Spark();
-        mSpark.init(authenticator);
+        mSpark.setAuthenticator(authenticator);
 
         //webView.loadUrl("https://developer.ciscospark.com/");
         btn = (Button) findViewById(R.id.button);

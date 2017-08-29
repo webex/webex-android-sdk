@@ -42,19 +42,19 @@ import static org.junit.Assert.assertTrue;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JWTAuthenticatorTest {
     private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbmRyb2lkX3Rlc3R1c2VyXzEiLCJuYW1lIjoiQW5kcm9pZFRlc3RVc2VyMSIsImlzcyI6ImNkNWM5YWY3LThlZDMtNGUxNS05NzA1LTAyNWVmMzBiMWI2YSJ9.eJ99AY9iNDhG4HjDJsY36wgqOnNQSes_PIu0DKBHBzs";
-    private JWTAuthenticator strategy;
+    private JWTAuthenticator authenticator;
 
     @Before
     public void init() throws Exception {
-        strategy = new JWTAuthenticator(auth_token);
+        authenticator = new JWTAuthenticator(auth_token);
     }
 
     @Test
     public void a_authorize() throws Exception {
-        strategy.authorize(new CompletionHandler<String>() {
+        authenticator.authorize(new CompletionHandler<String>() {
             @Override
             public void onComplete(String authCode) {
-                assertTrue(strategy.isAuthorized());
+                assertTrue(authenticator.isAuthorized());
                 assertNotNull(authCode);
                 assertFalse(authCode.isEmpty());
                 System.out.println(authCode);
@@ -73,9 +73,9 @@ public class JWTAuthenticatorTest {
 
     @Test
     public void b_deauthorize() throws Exception {
-        strategy.deauthorize();
-        assertFalse(strategy.isAuthorized());
-        strategy.getToken(new CompletionHandler<String>() {
+        authenticator.deauthorize();
+        assertFalse(authenticator.isAuthorized());
+        authenticator.getToken(new CompletionHandler<String>() {
             @Override
             public void onComplete(String result) {
 
@@ -90,8 +90,8 @@ public class JWTAuthenticatorTest {
 
     @Test
     public void c_authorizeFailed() throws Exception {
-        strategy = new JWTAuthenticator("Wrong token");
-        strategy.authorize(new CompletionHandler<String>() {
+        authenticator = new JWTAuthenticator("Wrong token");
+        authenticator.authorize(new CompletionHandler<String>() {
             @Override
             public void onComplete(String authCode) {
                 assertFalse(true);
@@ -99,7 +99,7 @@ public class JWTAuthenticatorTest {
 
             @Override
             public void onError(SparkError error) {
-                assertFalse(strategy.isAuthorized());
+                assertFalse(authenticator.isAuthorized());
                 System.out.println(error.toString());
             }
         });
