@@ -95,6 +95,7 @@ import com.ciscospark.phone.Phone;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 import com.squareup.leakcanary.RefWatcher;
+
 import java.util.List;
 
 import javax.inject.Provider;
@@ -493,7 +494,7 @@ class SparkApplicationModule {
 
             @Override
             public RoomCallController getCallController() {
-                return null;
+                return new RoomCallController();
             }
 
             @Override
