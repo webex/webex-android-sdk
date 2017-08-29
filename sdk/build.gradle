@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
-
 apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'maven-publish'
 
 android {
     compileSdkVersion 25
@@ -45,6 +45,35 @@ android {
             reset()
             include 'armeabi-v7a'
             universalApk false
+        }
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'com.ciscospark'
+            artifactId 'sdk'
+            version '0.0.1-SNAPSHOT'
+            artifact "$buildDir/outputs/aar/sdk-debug.aar" //aar artifact you want to publish
+
+            //generate pom nodes for dependencies
+            pom.withXml {
+                def dependenciesNode = asNode().appendNode('dependencies')
+                configurations.compile.allDependencies.each { dependency ->
+                    def dependencyNode = dependenciesNode.appendNode('dependency')
+                    dependencyNode.appendNode('groupId', dependency.group)
+                    dependencyNode.appendNode('artifactId', dependency.name)
+                    dependencyNode.appendNode('version', dependency.version)
+                }
+            }
+        }
+    }
+
+    //publish to filesystem repo
+    repositories{
+        maven {
+            url "$buildDir/repo"
         }
     }
 }
