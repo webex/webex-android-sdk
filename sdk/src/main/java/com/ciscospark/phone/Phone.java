@@ -198,9 +198,7 @@ public class Phone {
 
     private IncomingCallObserver incomingCallObserver;
 
-    /**
-     * @deprecated
-     */
+
     public Phone(Spark spark) {
         Log.i(TAG, "Phone: ->start");
         SparkApplication.getInstance().inject(this);

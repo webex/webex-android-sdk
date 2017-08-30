@@ -22,6 +22,7 @@
 
 package com.ciscospark;
 
+import com.cisco.spark.android.media.MediaEngine;
 import com.ciscospark.auth.Authenticator;
 import com.ciscospark.membership.MembershipClient;
 import com.ciscospark.message.MessageClient;
@@ -30,6 +31,13 @@ import com.ciscospark.phone.Phone;
 import com.ciscospark.room.RoomClient;
 import com.ciscospark.team.TeamClient;
 import com.ciscospark.team.TeamMembershipClient;
+import com.github.benoitdion.ln.DebugLn;
+import com.github.benoitdion.ln.InfoLn;
+import com.github.benoitdion.ln.Ln;
+import com.github.benoitdion.ln.ReleaseLn;
+import com.webex.wme.MediaSessionAPI;
+
+import javax.inject.Inject;
 
 import static com.ciscospark.Utils.checkNotNull;
 
@@ -39,6 +47,15 @@ import static com.ciscospark.Utils.checkNotNull;
  */
 public class Spark {
     private Authenticator authenticator;
+
+    @Inject
+    MediaEngine mediaEngine;
+
+    public enum LogLevel {
+        RELEASE,
+        DEBUG,
+        INFO,
+    }
 
     public Spark(Authenticator authenticator) {
         setAuthenticator(authenticator);
@@ -110,7 +127,20 @@ public class Spark {
         return isAuthorized() ? new RoomClient(this) : null;
     }
 
-    public void setLogLevel(String level) {
-        // TODO:
+    public void setLogLevel(LogLevel logLevel) {
+        switch (logLevel) {
+            case DEBUG:
+                Ln.initialize(new DebugLn());
+                mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG);
+                break;
+            case RELEASE:
+                Ln.initialize(new ReleaseLn());
+                mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG);
+                break;
+            case INFO:
+                Ln.initialize(new InfoLn());
+                mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO);
+                break;
+        }
     }
 }
