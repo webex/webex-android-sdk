@@ -91,6 +91,7 @@ import com.cisco.spark.android.whiteboard.WhiteboardCache;
 import com.cisco.spark.android.whiteboard.WhiteboardListService;
 import com.cisco.spark.android.whiteboard.WhiteboardService;
 import com.cisco.spark.android.whiteboard.loader.FileLoader;
+import com.ciscospark.Spark;
 import com.ciscospark.phone.Phone;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
@@ -114,7 +115,7 @@ import okhttp3.OkHttpClient;
                 //ActivityProcessorModule.class
         },
         injects = {
-                SparkApplicationDelegate.class, Phone.class, com.ciscospark.phone.Call.class
+                SparkApplicationDelegate.class, Spark.class, Phone.class, Call.class
         }
 )
 class SparkApplicationModule {

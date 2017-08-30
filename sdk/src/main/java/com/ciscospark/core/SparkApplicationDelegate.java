@@ -5,7 +5,6 @@ import com.cisco.spark.android.core.Application;
 import com.cisco.spark.android.core.ApplicationDelegate;
 import com.cisco.spark.android.core.RootModule;
 import com.github.benoitdion.ln.DebugLn;
-import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.NaturalLog;
 import com.squareup.leakcanary.RefWatcher;
 
@@ -16,7 +15,6 @@ import de.greenrobot.event.EventBus;
 
 class SparkApplicationDelegate extends ApplicationDelegate {
     private final SparkApplicationModule applicationModule;
-    private ObjectGraph objectGraph;
 
     @Inject
     EventBus bus;
