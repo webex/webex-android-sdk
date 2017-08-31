@@ -24,6 +24,7 @@ package com.ciscospark;
 
 import com.cisco.spark.android.media.MediaEngine;
 import com.ciscospark.auth.Authenticator;
+import com.ciscospark.core.SparkApplication;
 import com.ciscospark.membership.MembershipClient;
 import com.ciscospark.message.MessageClient;
 import com.ciscospark.people.PersonClient;
@@ -51,6 +52,9 @@ public class Spark {
     @Inject
     MediaEngine mediaEngine;
 
+    /**
+     *  Log level of spark
+     */
     public enum LogLevel {
         RELEASE,
         DEBUG,
@@ -58,10 +62,12 @@ public class Spark {
     }
 
     public Spark(Authenticator authenticator) {
+        this();
         setAuthenticator(authenticator);
     }
 
     public Spark() {
+        SparkApplication.getInstance().inject(this);
     }
 
     /**
@@ -127,20 +133,31 @@ public class Spark {
         return isAuthorized() ? new RoomClient(this) : null;
     }
 
+
+    /**
+     * @brief set log level of spark common-lib and wme
+     * @param logLevel @enum LogLevel
+     */
     public void setLogLevel(LogLevel logLevel) {
+
+        MediaSessionAPI.TraceLevelMask mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO;
+
         switch (logLevel) {
             case DEBUG:
                 Ln.initialize(new DebugLn());
-                mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG);
+                mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG;
                 break;
             case RELEASE:
                 Ln.initialize(new ReleaseLn());
-                mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG);
+                mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_ERROR;
                 break;
             case INFO:
                 Ln.initialize(new InfoLn());
-                mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO);
+                mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO;
                 break;
+        }
+        if (mediaEngine.isInitialized()) {
+            mediaEngine.setLoggingLevel(mask);
         }
     }
 }
