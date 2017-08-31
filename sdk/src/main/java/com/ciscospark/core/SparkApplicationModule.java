@@ -115,7 +115,7 @@ import okhttp3.OkHttpClient;
                 //ActivityProcessorModule.class
         },
         injects = {
-                SparkApplicationDelegate.class, Spark.class, Phone.class, Call.class
+                SparkApplicationDelegate.class, Spark.class, Phone.class, com.ciscospark.phone.Call.class
         }
 )
 class SparkApplicationModule {
