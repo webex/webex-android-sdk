@@ -30,8 +30,6 @@ android {
     dexOptions {
         preDexLibraries = false
         javaMaxHeapSize "4g"
-
-        dexInProcess false
     }
 
     compileOptions {
@@ -53,18 +51,20 @@ publishing {
     publications {
         maven(MavenPublication) {
             groupId 'com.ciscospark'
-            artifactId 'sdk'
-            version '0.0.1-SNAPSHOT'
+            artifactId 'android-sdk'
+            version '0.0.1'
             artifact "$buildDir/outputs/aar/sdk-debug.aar" //aar artifact you want to publish
 
             //generate pom nodes for dependencies
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
                 configurations.compile.allDependencies.each { dependency ->
-                    def dependencyNode = dependenciesNode.appendNode('dependency')
-                    dependencyNode.appendNode('groupId', dependency.group)
-                    dependencyNode.appendNode('artifactId', dependency.name)
-                    dependencyNode.appendNode('version', dependency.version)
+		    if (dependency.group != null && dependency.name != null && dependency.version != null) {
+                    	def dependencyNode = dependenciesNode.appendNode('dependency')
+                    	dependencyNode.appendNode('groupId', dependency.group)
+                    	dependencyNode.appendNode('artifactId', dependency.name)
+                    	dependencyNode.appendNode('version', dependency.version)
+		    }
                 }
             }
         }
@@ -79,16 +79,16 @@ publishing {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+    //compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.squareup.okhttp3:mockwebserver:3.7.0'
 
-    compile libs.supportv13
+    //compile libs.supportv13
     compile libs.supportannotation
-    compile libs.appcompatv7
-    compile libs.recyclerviewv7
-    compile libs.cardviewv7
-    compile libs.supportdesign
-    compile libs.gridlayout
+    //compile libs.appcompatv7
+    //compile libs.recyclerviewv7
+    //compile libs.cardviewv7
+    //compile libs.supportdesign
+    //compile libs.gridlayout
 
     compile libs.gson
 
@@ -104,36 +104,36 @@ dependencies {
 
     compile libs.eventbus
 
-    compile libs.spongycastle_prov
-    compile libs.spongycastle_core
-    compile libs.kms
+    //compile libs.spongycastle_prov
+    //compile libs.spongycastle_core
+    //compile libs.kms
 
     compile libs.ln
 
     compile libs.wmeaar
 
-    compile libs.rxjava
-    compile libs.rxandroid
+    //compile libs.rxjava
+    //compile libs.rxandroid
 
-    compile libs.will
+    //compile libs.will
 
-    compile libs.sqlcipher
+    //compile libs.sqlcipher
 
-    debugCompile libs.leak_canary
+    compile libs.leak_canary
     releaseCompile libs.leak_canary_disabled
     testCompile libs.leak_canary_disabled
     androidTestCompile libs.leak_canary_disabled
 
-    compile libs.rxrelay
+    //compile libs.rxrelay
 
     testCompile libs.junit
     testCompile libs.robolectric
     testCompile libs.robolectric_multidex
     testCompile libs.mockito
-    compile 'joda-time:joda-time:2.9.9'
-    compile 'com.cisco.wx2:diagnostic-events-gson:1.0.86'
+    //compile libs.joda
+    //compile 'com.cisco.wx2:diagnostic-events-gson:1.0.86'
 
-    compile 'com.segment.analytics.android:analytics:4.3.0-RC1'
+    //compile 'com.segment.analytics.android:analytics:4.3.0-RC1'
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
