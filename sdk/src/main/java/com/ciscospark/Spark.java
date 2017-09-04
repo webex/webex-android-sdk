@@ -53,7 +53,7 @@ public class Spark {
     MediaEngine mediaEngine;
 
     /**
-     *  Log level of spark
+     * Log level of spark
      */
     public enum LogLevel {
         RELEASE,
@@ -67,7 +67,10 @@ public class Spark {
     }
 
     public Spark() {
-        SparkApplication.getInstance().inject(this);
+        if (SparkApplication.getInstance() != null) {
+            // should throw exception
+            SparkApplication.getInstance().inject(this);
+        }
     }
 
     /**
@@ -135,8 +138,8 @@ public class Spark {
 
 
     /**
-     * @brief set log level of spark common-lib and wme
      * @param logLevel @enum LogLevel
+     * @brief set log level of spark common-lib and wme
      */
     public void setLogLevel(LogLevel logLevel) {
 

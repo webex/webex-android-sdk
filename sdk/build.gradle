@@ -6,7 +6,7 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "0.1"
@@ -15,7 +15,6 @@ android {
 
         multiDexEnabled true
     }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -26,17 +25,14 @@ android {
         }
 
     }
-
     dexOptions {
         preDexLibraries = false
         javaMaxHeapSize "4g"
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
     splits {
         abi {
             enable true
@@ -79,9 +75,9 @@ publishing {
 }
 
 dependencies {
+
     //compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.squareup.okhttp3:mockwebserver:3.7.0'
-
     //compile libs.supportv13
     compile libs.supportannotation
     //compile libs.appcompatv7
@@ -91,7 +87,6 @@ dependencies {
     //compile libs.gridlayout
 
     compile libs.gson
-
     compile libs.dagger
     provided libs.daggercompiler
 
@@ -120,10 +115,10 @@ dependencies {
     //compile libs.sqlcipher
 
     compile libs.leak_canary
-    testCompile libs.leak_canary
+    //testCompile libs.leak_canary
     releaseCompile libs.leak_canary_disabled
-    testCompile libs.leak_canary_disabled
-    androidTestCompile libs.leak_canary_disabled
+    //testCompile libs.leak_canary_disabled
+    //androidTestCompile libs.leak_canary_disabled
 
     //compile libs.rxrelay
 

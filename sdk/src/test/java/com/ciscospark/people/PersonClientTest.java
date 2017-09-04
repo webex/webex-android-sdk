@@ -22,6 +22,7 @@
 
 package com.ciscospark.people;
 
+
 import com.ciscospark.CompletionHandler;
 import com.ciscospark.Spark;
 import com.ciscospark.SparkError;
@@ -79,68 +80,57 @@ public class PersonClientTest {
 
     @Test
     public void list() throws Exception {
-        if (mSpark.isAuthorized()) {
-            mClient.list("xionxiao@cisco.com", null, 3, new CompletionHandler<List<Person>>() {
-                @Override
-                public void onComplete(List<Person> result) {
-                    System.out.println(result.toString());
-                    assertTrue(true);
-                }
+        mClient.list("xionxiao@cisco.com", null, 10, new CompletionHandler<List<Person>>() {
+            @Override
+            public void onComplete(List<Person> result) {
+                System.out.println(result.size());
+                System.out.println(result.toString());
+                assertTrue(true);
+            }
 
-                @Override
-                public void onError(SparkError error) {
-                    System.out.println(error.toString());
-                    assertFalse(true);
-                }
-            });
-        } else {
-            assertFalse(true);
-        }
+            @Override
+            public void onError(SparkError error) {
+                System.out.println(error.toString());
+                assertFalse(true);
+            }
+        });
         Thread.sleep(10 * 1000);
     }
 
     @Test
     public void get() throws Exception {
-        if (mSpark.isAuthorized()) {
-            mClient.get(testPersonId, new CompletionHandler<Person>() {
-                @Override
-                public void onComplete(Person result) {
-                    System.out.println(result.toString());
-                    assertTrue(true);
-                }
+        mClient.get(testPersonId, new CompletionHandler<Person>() {
+            @Override
+            public void onComplete(Person result) {
+                System.out.println(result.toString());
+                assertTrue(true);
+            }
 
-                @Override
-                public void onError(SparkError error) {
-                    System.out.println(error.toString());
-                    assertFalse(true);
+            @Override
+            public void onError(SparkError error) {
+                System.out.println(error.toString());
+                assertFalse(true);
 
-                }
-            });
-        } else {
-            assertFalse(true);
-        }
+            }
+        });
         Thread.sleep(10 * 1000);
     }
 
     @Test
     public void getMe() throws Exception {
-        if (mSpark.isAuthorized()) {
-            mClient.getMe(new CompletionHandler<Person>() {
-                @Override
-                public void onComplete(Person result) {
-                    System.out.println(result.toString());
-                    assertNotNull(result);
-                }
+        mClient.getMe(new CompletionHandler<Person>() {
+            @Override
+            public void onComplete(Person result) {
+                System.out.println(result.toString());
+                assertNotNull(result);
+            }
 
-                @Override
-                public void onError(SparkError error) {
-                    System.out.println(error.toString());
-                    assertFalse(true);
-                }
-            });
-        } else {
-            assertFalse(true);
-        }
+            @Override
+            public void onError(SparkError error) {
+                System.out.println(error.toString());
+                assertFalse(true);
+            }
+        });
         Thread.sleep(10 * 1000);
     }
 }
