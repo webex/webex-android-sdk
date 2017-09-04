@@ -141,7 +141,7 @@ public class JWTAuthenticator implements Authenticator {
             if (mToken.getAccessToken() != null && !mToken.getAccessToken().isEmpty()) {
                 handler.onComplete(mToken.getAccessToken());
             } else {
-                handler.onError(new SparkError(UNEXPECTED_ERROR, "Access token is empty"));
+                handler.onError(new SparkError(UNEXPECTED_ERROR, "Access token is null or empty"));
             }
         }
     }

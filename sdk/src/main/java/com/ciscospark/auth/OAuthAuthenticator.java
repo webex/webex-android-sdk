@@ -23,6 +23,8 @@
 package com.ciscospark.auth;
 
 
+import android.text.TextUtils;
+
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.ciscospark.CompletionHandler;
 import com.ciscospark.SparkError;
@@ -158,6 +160,12 @@ public class OAuthAuthenticator implements Authenticator {
                             handler.onError(new SparkError(UNEXPECTED_ERROR, t.toString()));
                         }
                     });
+        } else {
+            if (mToken.getAccessToken() != null && !mToken.getAccessToken().isEmpty()) {
+                handler.onComplete(mToken.getAccessToken());
+            } else {
+                handler.onError(new SparkError(UNEXPECTED_ERROR, "Access token is null or empty"));
+            }
         }
     }
 

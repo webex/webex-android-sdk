@@ -200,7 +200,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
                 Uri uri = Uri.parse(url);
                 String code = uri.getQueryParameter("code");
                 if (code == null || code.isEmpty()) {
-                    mAuthListener.onError(new SparkError());
+                    mAuthListener.onError(new SparkError(SERVER_ERROR, "invalid auth code"));
                     return false;
                 }
                 setAuthCode(code);
@@ -224,8 +224,11 @@ public class OAuthWebViewAuthenticator implements Authenticator {
 
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            if (mAuthListener != null)
-                mAuthListener.onError(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
+
+            if (!failingUrl.toLowerCase().startsWith(getRedirectUri().toLowerCase())) {
+                if (mAuthListener != null)
+                    mAuthListener.onError(new SparkError(SERVER_ERROR, Integer.toString(errorCode)));
+            }
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
