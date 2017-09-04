@@ -27,13 +27,14 @@ import com.ciscospark.Spark;
 import com.ciscospark.SparkError;
 import com.ciscospark.auth.JWTAuthenticator;
 
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created on 27/08/2017.
@@ -66,7 +67,7 @@ public class PersonClientTest {
         });
 
         int time_wait = 0;
-        while(!authCompleted && ++time_wait < 10) {
+        while (!authCompleted && ++time_wait < 10) {
             System.out.println(time_wait + "s");
             Thread.sleep(1000);
         }

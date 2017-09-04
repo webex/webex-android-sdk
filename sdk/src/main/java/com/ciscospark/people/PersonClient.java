@@ -80,7 +80,7 @@ public class PersonClient {
      * @param max
      * @param handler
      */
-    void list(String email, String displayName, int max, CompletionHandler<List<Person>> handler) {
+    public void list(String email, String displayName, int max, CompletionHandler<List<Person>> handler) {
         checkNotNull(handler, "handler is null");
 
         if (!mSpark.isAuthorized()) {
@@ -121,7 +121,7 @@ public class PersonClient {
     /**
      * @param personId
      */
-    void get(String personId, CompletionHandler<Person> handler) {
+    public void get(String personId, CompletionHandler<Person> handler) {
         checkNotNull(handler, "handler is null");
         checkNotNull(personId, "person id is null");
 
@@ -162,7 +162,7 @@ public class PersonClient {
     /**
      *
      */
-    void getMe(CompletionHandler<Person> handler) {
+    public void getMe(CompletionHandler<Person> handler) {
         checkNotNull(handler, "handler is null");
 
         if (!mSpark.isAuthorized()) {

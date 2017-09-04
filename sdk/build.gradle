@@ -120,6 +120,7 @@ dependencies {
     //compile libs.sqlcipher
 
     compile libs.leak_canary
+    testCompile libs.leak_canary
     releaseCompile libs.leak_canary_disabled
     testCompile libs.leak_canary_disabled
     androidTestCompile libs.leak_canary_disabled
