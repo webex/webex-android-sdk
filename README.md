@@ -1,5 +1,6 @@
 # spark-android-sdk
-Spark android SDK.
+
+Spark SDK for android.
 
 ## Usage
 
@@ -100,6 +101,7 @@ Assign it in AndroidManifest.xml
         android:theme="@style/AppTheme">
 </application>
 ```
+
 
 
 ## Build
