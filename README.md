@@ -1,6 +1,6 @@
 # spark-android-sdk
 
-Spark SDK for android.
+> Cisco Spark SDK for android.
 
 ## Usage
 
