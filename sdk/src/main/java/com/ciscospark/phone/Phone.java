@@ -707,23 +707,18 @@ public class Phone {
             return;
         }
 
-
-        //this.mRegisterListener.onSuccess();
-        if (this.mRegisterListener != null) {
-            this.mRegisterListener.onSuccess();
-        } else {
-            Log.i(TAG, "mRegisterListener is null");
-        }
-
-
         //successfully registered
         this.isRegisterInWDM = true;
 
         //cancel register timer
         this.mTimeHandler.removeCallbacks(this.mTimeRunnable);
 
+        if (this.mRegisterListener != null) {
+            this.mRegisterListener.onSuccess();
+        } else {
+            Log.i(TAG, "mRegisterListener is null");
+        }
         Log.i(TAG, "onEventMainThread: Registered:" + event.getDeviceRegistration().getId());
-
     }
 
     /**
