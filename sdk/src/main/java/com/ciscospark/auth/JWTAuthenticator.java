@@ -87,6 +87,7 @@ public class JWTAuthenticator implements Authenticator {
                     handler.onError(new SparkError(CLIENT_ERROR, response.errorBody().toString()));
                 else {
                     if (mToken.getAccessToken() != null && !mToken.getAccessToken().isEmpty()) {
+                        mToken.shoudlRefetchTokenNow();
                         handler.onComplete(mToken.getAccessToken());
                     } else {
                         handler.onError(new SparkError(UNEXPECTED_ERROR, "Access token is empty"));
@@ -181,6 +182,7 @@ public class JWTAuthenticator implements Authenticator {
 
         /* refresh by Authenticator */
         boolean shoudlRefetchTokenNow() {
+            super.expiresIn = this.expiresIn;
             return super.shouldRefreshNow();
         }
     }
