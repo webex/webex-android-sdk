@@ -6,20 +6,20 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
         versionName "0.1"
         //testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        testInstrumentationRunner "com.ciscospark.SparkTestRunner"
+        testInstrumentationRunner "com.ciscospark.androidsdk.SparkTestRunner"
 
         multiDexEnabled true
     }
 
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//            minifyEnabled false
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
         debug {
@@ -39,6 +39,17 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    testOptions {
+        unitTests.all {
+            // All the usual Gradle options.
+            testLogging {
+                events "passed", "skipped", "failed", "standardOut", "standardError"
+                outputs.upToDateWhen {false}
+                showStandardStreams = true
+            }
+        }
+    }
+
     splits {
         abi {
             enable true
@@ -53,24 +64,27 @@ publishing {
     publications {
         maven(MavenPublication) {
             groupId 'com.ciscospark'
-            artifactId 'sdk'
+            artifactId 'androidsdk'
             version '0.0.1-SNAPSHOT'
             artifact "$buildDir/outputs/aar/sdk-debug.aar" //aar artifact you want to publish
 
-            //generate pom nodes for dependencies
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
                 configurations.compile.allDependencies.each { dependency ->
-                    def dependencyNode = dependenciesNode.appendNode('dependency')
-                    dependencyNode.appendNode('groupId', dependency.group)
-                    dependencyNode.appendNode('artifactId', dependency.name)
-                    dependencyNode.appendNode('version', dependency.version)
+                    if (dependency.group?.trim()) {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', dependency.group)
+                        dependencyNode.appendNode('artifactId', dependency.name)
+                        dependencyNode.appendNode('version', dependency.version)
+                        if (!dependency.transitive || dependency.name == 'common-lib') {
+                            dependencyNode.appendNode('type', 'aar')
+                        }
+                    }
                 }
             }
         }
     }
 
-    //publish to filesystem repo
     repositories{
         maven {
             url "$buildDir/repo"
@@ -79,64 +93,13 @@ publishing {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.squareup.okhttp3:mockwebserver:3.7.0'
-
-    compile libs.supportv13
-    compile libs.supportannotation
-    compile libs.appcompatv7
-    compile libs.recyclerviewv7
-    compile libs.cardviewv7
-    compile libs.supportdesign
-    compile libs.gridlayout
-
-    compile libs.gson
-
-    compile libs.dagger
-    provided libs.daggercompiler
-
-    compile libs.retrofit
-    compile libs.retrofit_gsonconverter
-    compile libs.retrofit_rxjava
-
-    compile libs.okhttp
-    compile libs.okhttp_logging
-
-    compile libs.eventbus
-
-    compile libs.spongycastle_prov
-    compile libs.spongycastle_core
-    compile libs.kms
-
-    compile libs.ln
-
-    compile libs.wmeaar
-
-    compile libs.rxjava
-    compile libs.rxandroid
-
-    compile libs.will
-
-    compile libs.sqlcipher
-
-    debugCompile libs.leak_canary
-    releaseCompile libs.leak_canary_disabled
-    testCompile libs.leak_canary_disabled
-    androidTestCompile libs.leak_canary_disabled
-
-    compile libs.rxrelay
-
-    testCompile libs.junit
-    testCompile libs.robolectric
-    testCompile libs.robolectric_multidex
-    testCompile libs.mockito
-    compile 'joda-time:joda-time:2.9.9'
-    compile 'com.cisco.wx2:diagnostic-events-gson:1.0.86'
-
-    compile 'com.segment.analytics.android:analytics:4.3.0-RC1'
+    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5'
+    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
+    compile('com.cisco.spark.android:common-lib:2.0.3886-SNAPSHOT@aar', {
+        transitive = true
+    })
+    testCompile 'junit:junit:4.12'
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    testCompile 'junit:junit:4.12'
-    compile 'com.cisco.spark.android:common-lib:2.0.3886@aar'
 }

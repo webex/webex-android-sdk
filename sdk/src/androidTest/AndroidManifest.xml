@@ -23,7 +23,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.ciscospark.sdk">
+    package="com.ciscospark.androidsdk">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-sdk tools:overrideLibrary="android.support.test.uiautomator.v18"/>
@@ -33,7 +33,7 @@
 
         <provider
             android:name="com.cisco.spark.android.sync.ConversationContentProvider"
-            android:authorities="com.ciscospark.sdk.sync.conversation"
+            android:authorities="com.ciscospark.androidsdk.sync.conversation"
             android:exported="false"
             />
 
