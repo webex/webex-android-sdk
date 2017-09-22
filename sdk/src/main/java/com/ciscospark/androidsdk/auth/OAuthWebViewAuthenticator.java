@@ -23,12 +23,17 @@
 package com.ciscospark.androidsdk.auth;
 
 
+import javax.inject.Inject;
+
 import android.annotation.SuppressLint;
 import android.net.Uri;
+import android.util.Log;
 import android.webkit.WebView;
 
+import com.cisco.spark.android.core.Injector;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
+import com.ciscospark.androidsdk.core.SparkInjectable;
 import com.ciscospark.androidsdk.utils.Checker;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 
@@ -38,16 +43,19 @@ import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class OAuthWebViewAuthenticator implements Authenticator {
+public class OAuthWebViewAuthenticator implements Authenticator, SparkInjectable {
 
-    static final String TAG = "WebViewAuthenticator";
-
+    private static final String TAG = OAuthWebViewAuthenticator.class.getSimpleName();
+    
     private CompletionHandler<Void> _callback;
 
     private OAuthAuthenticator _authenticator;
 
     private OAuthLauncher _launcher;
-
+    
+    @Inject
+    Injector _injector;
+        
     /**
      * @param clientId
      * @param clientSecret
@@ -73,6 +81,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     @SuppressLint("SetJavaScriptEnabled")
     public void authorize(WebView view, CompletionHandler<Void> handler) {
         _launcher.launchOAuthView(view, buildCodeGrantUrl(), _authenticator.getRedirectUri(), result -> {
+            Log.d(TAG, "authorize: " + result);
             String code = result.getData();
             if (!Checker.isEmpty(code)) {
                 _authenticator.authorize(code, handler);
@@ -97,5 +106,11 @@ public class OAuthWebViewAuthenticator implements Authenticator {
                 .appendQueryParameter("scope", _authenticator.getScope())
                 .appendQueryParameter("state", "androidsdkstate");
         return builder.toString();
+    }
+
+    @Override
+    public void injected() {
+        Log.d(TAG, "Inject authenticator after self injected");
+        _injector.inject(_authenticator);
     }
 }

@@ -19,21 +19,24 @@ allprojects {
     repositories {
         mavenLocal()
         jcenter()
-        maven {
-            url 'http://engci-maven.cisco.com/artifactory/webex-cca-thirdparty'
-        }
-        maven {
-            url 'http://engci-maven.cisco.com/artifactory/webex-cca-release'
-        }
-        maven {
-            url 'http://engci-maven.cisco.com/artifactory/webex-cca-group'
-        }
-        maven {
-            url 'http://engci-maven.cisco.com/artifactory/androidwb-group/'
-        }
 //        maven {
-//            url 'http://10.140.253.42:10081/nexus/content/repositories/thirdparty/'
+//            url 'https://ciscospark.bintray.com/SDK/'
 //        }
+//        maven {
+//            url 'http://engci-maven.cisco.com/artifactory/webex-cca-thirdparty'
+//        }
+//        maven {
+//            url 'http://engci-maven.cisco.com/artifactory/webex-cca-release'
+//        }
+//        maven {
+//            url 'http://engci-maven.cisco.com/artifactory/webex-cca-group'
+//        }
+//        maven {
+//            url 'http://engci-maven.cisco.com/artifactory/androidwb-group/'
+//        }
+        maven {
+            url 'http://10.140.253.42:10081/nexus/content/repositories/thirdparty/'
+        }
     }
 }
 

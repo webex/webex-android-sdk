@@ -22,11 +22,15 @@
 
 package com.ciscospark.androidsdk.phone.internal;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
-
 import com.cisco.spark.android.callcontrol.events.CallControlMediaDecodeSizeChangedEvent;
 import com.cisco.spark.android.events.OperationCompletedEvent;
 import com.cisco.spark.android.locus.model.Locus;
@@ -37,29 +41,25 @@ import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
 import com.cisco.spark.android.locus.model.MediaDirection;
 import com.cisco.spark.android.media.MediaRequestSource;
 import com.cisco.spark.android.media.MediaSession;
-import com.cisco.spark.android.model.Participant;
 import com.cisco.spark.android.sync.operationqueue.SendDtmfOperation;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
+import com.cisco.spark.android.util.Strings;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.phone.Call;
 import com.ciscospark.androidsdk.phone.CallMembership;
 import com.ciscospark.androidsdk.phone.CallObserver;
 import com.ciscospark.androidsdk.phone.CallOption;
+import com.ciscospark.androidsdk.phone.Phone;
 import com.ciscospark.androidsdk.utils.Objects;
 import com.ciscospark.androidsdk.utils.annotation.StringPart;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by zhiyuliu on 04/09/2017.
  */
 public class CallImpl implements Call {
 
-    private static final String TAG = "Call";
+    private static final String TAG = CallImpl.class.getSimpleName();
 
     private @NonNull PhoneImpl _phone;
 
@@ -253,7 +253,7 @@ public class CallImpl implements Call {
         // TODO
     }
 
-    public PhoneImpl.FacingMode getFacingMode() {
+    public Phone.FacingMode getFacingMode() {
         com.cisco.spark.android.callcontrol.model.Call call = _phone.getCallService().getCall(getKey());
         if (call == null) {
             return _phone.getDefaultFacingMode();
@@ -265,10 +265,12 @@ public class CallImpl implements Call {
         return PhoneImpl.toFacingMode(session.getSelectedCamera());
     }
 
-    public void setFacingMode(PhoneImpl.FacingMode facingMode) {
+    public void setFacingMode(Phone.FacingMode facingMode) {
         com.cisco.spark.android.callcontrol.model.Call call = _phone.getCallService().getCall(getKey());
         if (call != null) {
+            Log.d(TAG, Strings.toString(call));
             MediaSession session = call.getMediaSession();
+            Log.d(TAG, Strings.toString(session));
             if (session != null) {
                 if (session.setSelectedCameraAndChangeDevice(PhoneImpl.fromFacingMode(facingMode))) {
                     CallObserver observer = getObserver();

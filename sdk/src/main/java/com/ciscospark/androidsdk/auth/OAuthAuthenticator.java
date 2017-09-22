@@ -23,8 +23,10 @@
 package com.ciscospark.androidsdk.auth;
 
 
-import android.support.annotation.Nullable;
+import javax.inject.Inject;
 
+import android.support.annotation.Nullable;
+import android.util.Log;
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.core.AuthenticatedUser;
@@ -33,9 +35,6 @@ import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.utils.Checker;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-
-import javax.inject.Inject;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -53,8 +52,8 @@ import static com.ciscospark.androidsdk.utils.Utils.checkNotNull;
  */
 public class OAuthAuthenticator implements Authenticator {
 
-    private static final String AUTHORIZATION_CODE = "authorization_code";
-
+    private static final String TAG = OAuthAuthenticator.class.getSimpleName();
+    
     private String _clientId;
     private String _clientSecret;
     private String _scope;
@@ -97,14 +96,17 @@ public class OAuthAuthenticator implements Authenticator {
 
     public void authorize(String code, CompletionHandler<Void> handler) {
         checkNotNull(handler, "CompletionHandler is null");
-        _authService.getToken(_clientId, _clientSecret, _redirectUri, AUTHORIZATION_CODE, code).enqueue(new Callback<OAuth2Tokens>() {
+        Log.d(TAG, "authorize: " + code);
+        _authService.getToken(_clientId, _clientSecret, _redirectUri, "authorization_code", code).enqueue(new Callback<OAuth2Tokens>() {
             @Override
             public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
                 _token = response.body();
+                Log.d(TAG, "authorize: " + _token + ", " + _provider);
                 if (_token == null || _token.getAccessToken() == null || _token.getAccessToken().isEmpty()) {
                     handler.onComplete(Result.error(response));
                 }
                 else {
+                    _token.setExpiresIn(_token.getExpiresIn() + System.currentTimeMillis() / 1000);
                     if (_provider != null) {
                         AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
                         _provider.setAuthenticatedUser(authenticatedUser);
@@ -124,15 +126,16 @@ public class OAuthAuthenticator implements Authenticator {
     public void getToken(CompletionHandler<String> handler) {
         checkNotNull(handler, "CompletionHandler is null");
         OAuth2Tokens token = getToken();
+        Log.d(TAG, "getToken: " + token + ", " + _provider);
         if (token == null) {
             handler.onComplete(Result.error("Not authorized"));
             return;
         }
-        if (Checker.isEmpty(token.getAccessToken()) && token.getExpiresIn() > (System.currentTimeMillis() / 1000) + (15 * 60)) {
+        if (!Checker.isEmpty(token.getAccessToken()) && token.getExpiresIn() > (System.currentTimeMillis() / 1000) + (15 * 60)) {
             handler.onComplete(Result.success(token.getAccessToken()));
             return;
         }
-        _authService.refreshToken(_clientId, _clientSecret, token.getRefreshToken(), AUTHORIZATION_CODE).enqueue(new Callback<OAuth2Tokens>() {
+        _authService.refreshToken(_clientId, _clientSecret, token.getRefreshToken(), "refresh_token").enqueue(new Callback<OAuth2Tokens>() {
             @Override
             public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
                 _token = response.body();
@@ -140,11 +143,12 @@ public class OAuthAuthenticator implements Authenticator {
                     handler.onComplete(Result.error(response));
                 }
                 else {
+                    _token.setExpiresIn(_token.getExpiresIn() + System.currentTimeMillis() / 1000);
                     if (_provider != null) {
                         AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
                         _provider.setAuthenticatedUser(authenticatedUser);
                     }
-                    handler.onComplete(Result.success(null));
+                    handler.onComplete(Result.success(_token.getAccessToken()));
                 }
             }
 
@@ -158,11 +162,16 @@ public class OAuthAuthenticator implements Authenticator {
     private @Nullable OAuth2Tokens getToken() {
         if (_token == null && _provider != null) {
             AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
+            Log.d(TAG, "getToken.User: " + user + ", " + _provider);
             if (user != null) {
                 _token = user.getOAuth2Tokens();
             }
         }
         if (_token == null || _token.getExpiresIn() <= (System.currentTimeMillis() / 1000) + (15 * 60)) {
+            Log.d(TAG, "getToken.Expirein: " + _token + ", " + _provider);
+            if (_token != null) {
+                Log.d(TAG, "getToken.Expirein: " + _token.getExpiresIn() + ", " + (System.currentTimeMillis() / 1000) + (15 * 60) + ", " + _provider);
+            }
             return null;
         }
         return _token;

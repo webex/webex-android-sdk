@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
+import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
@@ -21,6 +22,8 @@ import com.ciscospark.androidsdk.utils.Checker;
  */
 
 public class OAuthLauncher {
+    
+    private static final String TAG = OAuthLauncher.class.getSimpleName();
 
     void launchOAuthView(WebView view, String authorizationUrl, String redirectUri, CompletionHandler<String> handler) {
         BrowserWebViewClient client = new BrowserWebViewClient(authorizationUrl, redirectUri, handler);
@@ -55,6 +58,7 @@ public class OAuthLauncher {
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            Log.d(TAG, "shouldOverrideUrlLoading " + url);
             // redirect uri is returned from server by lowercase.
             if (url.startsWith(_redirectUri.toLowerCase())) {
                 Uri uri = Uri.parse(url);
@@ -65,8 +69,8 @@ public class OAuthLauncher {
                 }
                 view.clearCache(true);
                 view.loadUrl("about:blank");
-                _handler.onComplete(Result.success(code));
-                return false;
+	            handleResult(Result.success(code));
+	            return false;
             }
             return super.shouldOverrideUrlLoading(view, url);
         }
@@ -79,16 +83,25 @@ public class OAuthLauncher {
 
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            _handler.onComplete(Result.error(errorCode + " " + description));
+            Log.e(TAG, "onReceivedError " + errorCode + ", " + description);
+	        handleResult(Result.error(errorCode + " " + description));
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
         @Override
         public void onReceivedSslError(WebView view, final SslErrorHandler handler, SslError error) {
+            Log.e(TAG, "onReceivedSslError " + error);
             handler.cancel();
-            if (error != null) {
-                _handler.onComplete(Result.error(error.toString()));
-            }
+	        if (error != null) {
+		        handleResult(Result.error(error.toString()));
+	        }
+        }
+        
+        private void handleResult(Result<String> result) {
+	        if (_handler != null) {
+		        _handler.onComplete(result);
+		        _handler = null;
+	        }
         }
     }
 

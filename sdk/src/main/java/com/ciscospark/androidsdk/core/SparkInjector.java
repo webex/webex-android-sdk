@@ -41,12 +41,19 @@ public class SparkInjector extends ApplicationDelegate {
 
     @Override
     protected void afterInject() {
-
+        
     }
 
     @Override
     protected NaturalLog buildLn() {
         return new DebugLn();
+    }
+    
+    public void inject(Object o) {
+        super.inject(o);
+        if (o instanceof SparkInjectable) {
+            ((SparkInjectable) o).injected();
+        }
     }
 
 }

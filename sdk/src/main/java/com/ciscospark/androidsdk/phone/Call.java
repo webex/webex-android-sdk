@@ -1,13 +1,10 @@
 package com.ciscospark.androidsdk.phone;
 
+import java.util.List;
+
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
-
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.phone.internal.CallMembershipImpl;
-import com.ciscospark.androidsdk.phone.internal.PhoneImpl;
-
-import java.util.List;
 
 /**
  * Created by zhiyuliu on 04/09/2017.
@@ -23,9 +20,9 @@ public interface Call {
         INITIATED, RINGING, CONNECTED, DISCONNECTED
     }
 
-    PhoneImpl.FacingMode getFacingMode();
+    Phone.FacingMode getFacingMode();
 
-    void setFacingMode(PhoneImpl.FacingMode facingMode);
+    void setFacingMode(Phone.FacingMode facingMode);
 
     Direction getDirection();
 

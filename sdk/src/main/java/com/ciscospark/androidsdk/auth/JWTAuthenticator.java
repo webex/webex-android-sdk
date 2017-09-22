@@ -22,10 +22,13 @@
 
 package com.ciscospark.androidsdk.auth;
 
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
+import javax.inject.Inject;
+
 import android.support.annotation.Nullable;
 import android.util.Base64;
-import android.util.Log;
-
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.core.AuthenticatedUser;
@@ -34,18 +37,8 @@ import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.utils.Converter;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-import com.ciscospark.androidsdk.utils.reflect.Fields;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-
-
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.inject.Inject;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -214,18 +207,10 @@ public class JWTAuthenticator implements Authenticator {
 
         OAuth2Tokens toOAuthToken(String jwt) {
             OAuth2Tokens tokens = new OAuth2Tokens();
-            try {
-                tokens.setAccessToken(this.accessToken);
-                Field expiresIn = Fields.findField(OAuth2Tokens.class, "expiresIn", true);
-                expiresIn.setLong(tokens, this.expiresIn);
-                Field refreshToken = Fields.findField(OAuth2Tokens.class, "refreshToken", true);
-                refreshToken.set(tokens, jwt);
-                return tokens;
-            }
-            catch (Throwable t) {
-                Log.e("", "" ,t);
-                return null;
-            }
+            tokens.setAccessToken(this.getAccessToken());
+            tokens.setExpiresIn(this.getExpiresIn() + (System.currentTimeMillis() / 1000));
+            tokens.setRefreshToken(this.getAccessToken());
+            return tokens;
         }
     }
 }

@@ -1,6 +1,10 @@
 package com.ciscospark.androidsdk.core;
 
 
+import java.util.List;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -8,7 +12,6 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
-
 import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.app.NotificationManager;
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
@@ -94,17 +97,12 @@ import com.cisco.spark.android.whiteboard.loader.FileLoader;
 import com.ciscospark.androidsdk.Spark;
 import com.ciscospark.androidsdk.auth.JWTAuthenticator;
 import com.ciscospark.androidsdk.auth.OAuthAuthenticator;
+import com.ciscospark.androidsdk.auth.OAuthWebViewAuthenticator;
 import com.ciscospark.androidsdk.phone.internal.PhoneImpl;
 import com.ciscospark.androidsdk.utils.http.DefaultHeadersInterceptor;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 import com.squareup.leakcanary.RefWatcher;
-
-import java.util.List;
-
-import javax.inject.Provider;
-import javax.inject.Singleton;
-
 import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
@@ -123,7 +121,8 @@ import okhttp3.OkHttpClient;
                 PhoneImpl.class,
                 Call.class,
                 JWTAuthenticator.class,
-                OAuthAuthenticator.class
+                OAuthAuthenticator.class,
+                OAuthWebViewAuthenticator.class
         }
 )
 class SparkModule {

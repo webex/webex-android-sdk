@@ -5,26 +5,23 @@ apply plugin: 'maven-publish'
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
+	
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
         versionName "0.1"
-        //testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         testInstrumentationRunner "com.ciscospark.androidsdk.SparkTestRunner"
-
         multiDexEnabled true
     }
 
     buildTypes {
-        release {
-//            minifyEnabled false
-//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        release { 
+			minifyEnabled true
+//          proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-
         debug {
         }
-
     }
 
     dexOptions {
@@ -93,8 +90,7 @@ publishing {
 }
 
 dependencies {
-    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5'
-    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
+    provided 'com.squareup.dagger:dagger-compiler:1.2.2'
     compile('com.cisco.spark.android:common-lib:2.0.3886-SNAPSHOT@aar', {
         transitive = true
     })

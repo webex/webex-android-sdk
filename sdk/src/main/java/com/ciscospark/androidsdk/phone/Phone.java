@@ -1,11 +1,9 @@
 package com.ciscospark.androidsdk.phone;
 
+import android.app.AlertDialog;
 import android.support.annotation.NonNull;
 import android.view.View;
-
-import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.phone.internal.CallImpl;
 
 /**
  * Created by zhiyuliu on 04/09/2017.
@@ -38,4 +36,7 @@ public interface Phone {
 
     void stopPreview();
 
+    void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Boolean> callback);
+
+    void disableVideoCodecActivation();
 }

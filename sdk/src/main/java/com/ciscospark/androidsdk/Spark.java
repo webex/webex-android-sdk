@@ -22,14 +22,16 @@
 
 package com.ciscospark.androidsdk;
 
-import android.app.Application;
+import javax.inject.Inject;
 
+import android.app.Application;
 import com.cisco.spark.android.media.MediaEngine;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.core.SparkInjector;
 import com.ciscospark.androidsdk.membership.MembershipClient;
 import com.ciscospark.androidsdk.message.MessageClient;
 import com.ciscospark.androidsdk.people.PersonClient;
+import com.ciscospark.androidsdk.phone.Phone;
 import com.ciscospark.androidsdk.phone.internal.PhoneImpl;
 import com.ciscospark.androidsdk.room.RoomClient;
 import com.ciscospark.androidsdk.team.TeamClient;
@@ -42,8 +44,6 @@ import com.github.benoitdion.ln.InfoLn;
 import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.ReleaseLn;
 import com.webex.wme.MediaSessionAPI;
-
-import javax.inject.Inject;
 
 /**
  * @author Allen Xiao<xionxiao@cisco.com>
@@ -66,7 +66,7 @@ public class Spark {
 
     private Authenticator _authenticator;
 
-    private PhoneImpl _phone;
+    private Phone _phone;
 
     @Inject
     MediaEngine _mediaEngine;
@@ -78,7 +78,7 @@ public class Spark {
         _injector.create();
         _injector.inject(this);
         _injector.inject(_authenticator);
-        _phone = new PhoneImpl(_authenticator, _injector);
+        _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _injector);
     }
 
     /**
@@ -94,7 +94,7 @@ public class Spark {
         return _authenticator;
     }
 
-    public PhoneImpl phone() {
+    public Phone phone() {
         return _phone;
     }
 

@@ -22,12 +22,20 @@
 
 package com.ciscospark.androidsdk.phone.internal;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import javax.inject.Inject;
+
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.Context;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
-
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
@@ -60,6 +68,7 @@ import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
+import com.ciscospark.androidsdk.Spark;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.core.SparkInjector;
 import com.ciscospark.androidsdk.phone.Call;
@@ -68,14 +77,6 @@ import com.ciscospark.androidsdk.phone.CallOption;
 import com.ciscospark.androidsdk.phone.Phone;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import de.greenrobot.event.EventBus;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.inject.Inject;
 
 
 /**
@@ -105,8 +106,6 @@ public class PhoneImpl implements Phone {
 
     private IncomingCallListener _incomingCallListener;
 
-    private SparkInjector _injector;
-
     private Authenticator _authenticator;
 
     private DeviceRegistration _device;
@@ -126,13 +125,15 @@ public class PhoneImpl implements Phone {
     private CallOption _option;
 
     private MediaSession _preview;
+    
+    private H264LicensePrompter _prompter;
 
-    public PhoneImpl(Authenticator authenticator, SparkInjector injector) {
-        _injector = injector;
+    public PhoneImpl(Context context, Authenticator authenticator, SparkInjector injector) {
+        injector.inject(this);
         _authenticator = authenticator;
-        _injector.inject(this);
         _bus.register(this);
         _registerTimer = new Handler();
+        _prompter = new H264LicensePrompter(context.getSharedPreferences(Spark.class.getPackage().getName(), Context.MODE_PRIVATE));
     }
 
     public IncomingCallListener getIncomingCallListener() {
@@ -155,6 +156,16 @@ public class PhoneImpl implements Phone {
 
     public void setDefaultFacingMode(FacingMode mode) {
         _callControlService.setDefaultCamera(fromFacingMode(mode));
+    }
+    
+    public void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Boolean> callback) {
+        _prompter.check(builder, result -> {
+            callback.onComplete(Result.success(result));
+        });
+    }
+    
+    public void disableVideoCodecActivation() {
+        _prompter.setVideoLicenseActivationDisabled(true);
     }
 
     public void register(@NonNull CompletionHandler<Void> callback) {
@@ -191,13 +202,14 @@ public class PhoneImpl implements Phone {
     public void startPreview(View view) {
         stopPreview();
         _preview = _mediaEngine.createMediaSession(UUID.randomUUID().toString());
+        _preview.setSelectedCamera(_callControlService.getDefaultCamera());
         _preview.setPreviewWindow(view);
         _preview.startSelfView();
     }
 
     public void stopPreview() {
         if (_preview != null) {
-            _preview.endSession();;
+            _preview.endSession();
             _preview = null;
         }
     }
