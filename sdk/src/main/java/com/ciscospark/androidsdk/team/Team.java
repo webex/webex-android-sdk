@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2017 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +20,14 @@
  * THE SOFTWARE.
  */
 
+
 package com.ciscospark.androidsdk.team;
 
 
+import java.util.Date;
+
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-
-import java.util.Date;
 
 public class Team {
 

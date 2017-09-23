@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2017 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,31 +22,23 @@
 
 package com.ciscospark.androidsdk.membership;
 
+import java.util.List;
+import java.util.Map;
+
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.people.Person;
 import com.ciscospark.androidsdk.utils.http.ListBody;
 import com.ciscospark.androidsdk.utils.http.ListCallback;
 import com.ciscospark.androidsdk.utils.http.ObjectCallback;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-import com.ciscospark.androidsdk.utils.collection.Maps;
-import com.google.gson.annotations.SerializedName;
-
-import java.util.List;
-import java.util.Map;
-
+import me.helloworld.utils.collection.Maps;
 import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
-import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;

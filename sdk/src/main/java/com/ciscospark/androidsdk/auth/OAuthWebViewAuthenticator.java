@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2017 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,13 +29,12 @@ import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.util.Log;
 import android.webkit.WebView;
-
 import com.cisco.spark.android.core.Injector;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.core.SparkInjectable;
-import com.ciscospark.androidsdk.utils.Checker;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
+import me.helloworld.utils.Checker;
 
 /**
  * OAuth2 authorization strategy using android WebView.

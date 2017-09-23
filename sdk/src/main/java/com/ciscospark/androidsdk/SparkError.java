@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2017 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,8 @@
 
 package com.ciscospark.androidsdk;
 
-
-import com.ciscospark.androidsdk.utils.Objects;
-import com.ciscospark.androidsdk.utils.annotation.StringPart;
+import me.helloworld.utils.Objects;
+import me.helloworld.utils.annotation.StringPart;
 
 /**
  * Common Error class for Spark

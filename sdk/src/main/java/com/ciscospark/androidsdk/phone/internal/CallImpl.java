@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2017 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,8 +51,8 @@ import com.ciscospark.androidsdk.phone.CallMembership;
 import com.ciscospark.androidsdk.phone.CallObserver;
 import com.ciscospark.androidsdk.phone.CallOption;
 import com.ciscospark.androidsdk.phone.Phone;
-import com.ciscospark.androidsdk.utils.Objects;
-import com.ciscospark.androidsdk.utils.annotation.StringPart;
+import me.helloworld.utils.Objects;
+import me.helloworld.utils.annotation.StringPart;
 
 /**
  * Created by zhiyuliu on 04/09/2017.

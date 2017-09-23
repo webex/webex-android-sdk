@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2017 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,6 @@
  */
 
 package com.ciscospark.androidsdk;
-
-import retrofit2.Call;
-import retrofit2.Response;
 
 /**
  * Created on 21/08/2017.

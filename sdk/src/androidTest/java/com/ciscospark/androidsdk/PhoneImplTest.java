@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2017 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,12 @@
 
 package com.ciscospark.androidsdk;
 
+import java.lang.reflect.Field;
+
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.ciscospark.androidsdk.auth.JWTAuthenticator;
-import com.ciscospark.androidsdk.utils.reflect.Fields;
-
+import me.helloworld.utils.reflect.Fields;
 import org.junit.Test;
-
-import java.lang.reflect.Field;
 
 /**
  * Created on 10/06/2017.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2017 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,21 +22,15 @@
 
 package com.ciscospark.androidsdk;
 
-import android.support.annotation.Nullable;
-import android.util.Base64;
-
-import com.ciscospark.androidsdk.auth.JWTAuthenticator;
-import com.google.gson.Gson;
-
-import org.junit.Test;
-
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import android.support.annotation.Nullable;
+import android.util.Base64;
+import com.ciscospark.androidsdk.auth.JWTAuthenticator;
+import com.google.gson.Gson;
+import org.junit.Test;
 
 /**
  * Created on 12/06/2017.

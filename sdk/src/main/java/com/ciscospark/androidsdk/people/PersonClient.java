@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2017 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,14 @@
 
 package com.ciscospark.androidsdk.people;
 
+import java.util.List;
+
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.utils.http.ListBody;
 import com.ciscospark.androidsdk.utils.http.ListCallback;
 import com.ciscospark.androidsdk.utils.http.ObjectCallback;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-
-import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;

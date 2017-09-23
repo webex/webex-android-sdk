@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2017 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,10 +36,10 @@ import com.cisco.spark.android.sync.ActorRecord;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.core.SparkInjectable;
-import com.ciscospark.androidsdk.utils.Converter;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import me.helloworld.utils.Converter;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
