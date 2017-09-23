@@ -33,6 +33,7 @@ import com.cisco.spark.android.core.AuthenticatedUser;
 import com.cisco.spark.android.sync.ActorRecord;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
+import com.ciscospark.androidsdk.core.SparkInjectable;
 import com.ciscospark.androidsdk.utils.Checker;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import retrofit2.Call;
@@ -50,7 +51,7 @@ import static com.ciscospark.androidsdk.utils.Utils.checkNotNull;
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
-public class OAuthAuthenticator implements Authenticator {
+public class OAuthAuthenticator implements Authenticator, SparkInjectable {
 
     private static final String TAG = OAuthAuthenticator.class.getSimpleName();
     
@@ -79,6 +80,14 @@ public class OAuthAuthenticator implements Authenticator {
         _redirectUri = redirectUri;
         _scope = scope;
         _authService = new ServiceBuilder().build(AuthService.class);
+    }
+
+    @Override
+    public void injected() {
+        if (_provider != null && _token != null) {
+            AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
+            _provider.setAuthenticatedUser(authenticatedUser);
+        }
     }
 
     @Override
@@ -192,7 +201,7 @@ public class OAuthAuthenticator implements Authenticator {
     protected String getRedirectUri() {
         return _redirectUri;
     }
-
+    
     interface AuthService {
         @FormUrlEncoded
         @POST("access_token")

@@ -35,6 +35,7 @@ import com.cisco.spark.android.core.AuthenticatedUser;
 import com.cisco.spark.android.sync.ActorRecord;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
+import com.ciscospark.androidsdk.core.SparkInjectable;
 import com.ciscospark.androidsdk.utils.Converter;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.google.gson.Gson;
@@ -53,7 +54,7 @@ import static com.ciscospark.androidsdk.utils.Utils.checkNotNull;
  *
  * @author Allen Xiao<xionxiao@cisco.com>
  */
-public class JWTAuthenticator implements Authenticator {
+public class JWTAuthenticator implements Authenticator, SparkInjectable {
 
     private OAuth2Tokens _token = null;
 
@@ -67,7 +68,15 @@ public class JWTAuthenticator implements Authenticator {
     public JWTAuthenticator() {
         _authService = new ServiceBuilder().build(AuthService.class);
     }
-
+    
+    @Override
+    public void injected() {
+        if (_provider != null && _token != null) {
+            AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
+            _provider.setAuthenticatedUser(authenticatedUser);
+        }
+    }
+    
     @Override
     public boolean isAuthorized() {
         return getUnexpiredJwt() != null;
