@@ -26,6 +26,7 @@ import javax.inject.Inject;
 
 import android.app.Application;
 import com.cisco.spark.android.media.MediaEngine;
+import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.core.SparkInjector;
 import com.ciscospark.androidsdk.membership.MembershipClient;
@@ -36,6 +37,7 @@ import com.ciscospark.androidsdk.phone.internal.PhoneImpl;
 import com.ciscospark.androidsdk.room.RoomClient;
 import com.ciscospark.androidsdk.team.TeamClient;
 import com.ciscospark.androidsdk.team.TeamMembershipClient;
+import com.ciscospark.androidsdk.utils.http.DefaultHeadersInterceptor;
 import com.ciscospark.androidsdk.utils.log.NoLn;
 import com.ciscospark.androidsdk.utils.log.WarningLn;
 import com.ciscospark.androidsdk.webhook.WebhookClient;
@@ -72,6 +74,8 @@ public class Spark {
     MediaEngine _mediaEngine;
 
     public Spark(Application application, Authenticator authenticator) {
+	    UserAgentProvider.APP_NAME = DefaultHeadersInterceptor.APP_NAME;
+	    UserAgentProvider.APP_VERSION = DefaultHeadersInterceptor.APP_VERSION;
         com.cisco.spark.android.core.Application.setApplication(application);
         _authenticator = authenticator;
         _injector = new SparkInjector(application);
