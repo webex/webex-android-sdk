@@ -26,73 +26,259 @@ import java.util.List;
 
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import com.ciscospark.androidsdk.CompletionHandler;
 
 /**
- * Created by zhiyuliu on 04/09/2017.
+ * A Call represents a media call on Cisco Spark.
+ * 
+ * The application can create an outgoing call by calling {@link Phone}.dial function:
+ * 
+ * The application can receive an incoming call on {@link com.ciscospark.androidsdk.phone.Phone.IncomingCallListener}:
+ *
+ * @since 0.1
+ * @see Phone
  */
-
 public interface Call {
 
-    public enum Direction {
-        INCOMING, OUTGOING
+	/**
+	 * The enumeration of directions of a call
+	 * 
+	 * @since 0.1
+	 */
+	enum Direction {
+		/**
+		 * The local party is a recipient of the call.
+		 * 
+		 * @since 0.1
+		 */
+		INCOMING,
+		/**
+		 * The local party is an initiator of the call.
+		 * 
+		 * @since 0.1
+		 */
+		OUTGOING
     }
 
-    public enum CallStatus {
-        INITIATED, RINGING, CONNECTED, DISCONNECTED
+	/**
+	 * The status of a Call. 
+	 * 
+	 * @since 0.1
+	 */
+	enum CallStatus {
+		/**
+		 * For the outgoing call, the call has dialed.
+		 * For the incoming call, the call has received.
+		 * 
+		 * @since 0.1
+		 */
+		INITIATED,
+		/**
+		 * For the outgoing call, the call is ringing the remote party.
+		 * For the incoming call, the call is ringing the local party.
+		 *
+		 * @since 0.1
+		 */
+		RINGING,
+		/**
+		 * The call is answered.
+		 *
+		 * @since 0.1
+		 */
+		CONNECTED,
+		/**
+		 * The call is terminated.
+		 *
+		 * @since 0.1
+		 */
+		DISCONNECTED
     }
 
-    Phone.FacingMode getFacingMode();
+	/**
+	 * @return The camera facing mode selected for this call.
+	 * @since 0.1
+	 */
+	Phone.FacingMode getFacingMode();
 
-    void setFacingMode(Phone.FacingMode facingMode);
+	/**
+	 * @param facingMode The camera facing mode.
+	 * @since 0.1   
+	 */
+	void setFacingMode(Phone.FacingMode facingMode);
 
-    Direction getDirection();
+	/**
+	 * @return The direction of this call.
+	 * @since 0.1
+	 */
+	Direction getDirection();
 
-    CallStatus getStatus();
+	/**
+	 * @return The status of this call.
+	 * @since 0.1
+	 */
+	CallStatus getStatus();
 
-    void setObserver(CallObserver observer);
+	/**
+	 * @param observer Observer for the events of this call
+	 * @since 0.1   
+	 */
+	void setObserver(CallObserver observer);
 
-    CallObserver getObserver();
+	/**
+	 * @return Observer for the events of this call
+	 * @since 0.1
+	 */
+	CallObserver getObserver();
 
-    List<CallMembership> getMemberships();
+	/**
+	 * @return Call Memberships represent participants in this call.
+	 * @since 0.1
+	 */
+	List<CallMembership> getMemberships();
 
-    CallMembership getFrom();
+	/**
+	 * @return The initiator of this call.
+	 * @since 0.1
+	 */
+	CallMembership getFrom();
 
-    CallMembership getTo();
+	/**
+	 * @return The intended recipient of this call.
+	 * @since 0.1
+	 */
+	CallMembership getTo();
 
-    Rect getLocalVideoViewSize();
+	/**
+	 * @return The local video render view dimensions (points) of this call.
+	 * @since 0.1
+	 */
+	Rect getLocalVideoViewSize();
 
-    Rect getRemoteVideoViewSize();
+	/**
+	 * @return The remote video render view dimensions (points) of this call.
+	 * @since 0.1
+	 */
+	Rect getRemoteVideoViewSize();
 
-    boolean isRemoteSendingVideo();
+	/**
+	 * @return True if the remote party of this call is sending video. Otherwise, false.
+	 * @since 0.1
+	 */
+	boolean isRemoteSendingVideo();
 
-    boolean isRemoteSendingAudio();
+	/**
+	 * @return True if the remote party of this call is sending audio. Otherwise, false.
+	 * @since 0.1
+	 */
+	boolean isRemoteSendingAudio();
 
-    boolean isSendingVideo();
+	/**
+	 * @return True if this call is sending video. Otherwise, false.
+	 * @since 0.1
+	 */
+	boolean isSendingVideo();
 
-    void setSendingVideo(boolean sending);
+	/**
+	 * @param sending True if this call is sending video. Otherwise, false.
+	 * @since 0.1   
+	 */
+	void setSendingVideo(boolean sending);
 
-    boolean isSendingAudio();
+	/**
+	 * @return True if this call is sending audio. Otherwise, false.
+	 * @since 0.1
+	 */
+	boolean isSendingAudio();
 
-    void setSendingAudio(boolean sending);
+	/**
+	 * @param sending True if this call is sending audio. Otherwise, false.
+	 * @since 0.1   
+	 */
+	void setSendingAudio(boolean sending);
 
-    boolean isReceivingVideo();
+	/**
+	 * @return True if the local party of this call is receiving video. Otherwise, false.
+	 * @since 0.1
+	 */
+	boolean isReceivingVideo();
 
-    void setReceivingVideo(boolean receiving);
+	/**
+	 * @param receiving True if the local party of this *call* is receiving video. Otherwise, false.
+	 * @since 0.1   
+	 */
+	void setReceivingVideo(boolean receiving);
 
-    boolean isReceivingAudio();
+	/**
+	 * @return True if the local party of this *call* is receiving audio. Otherwise, false.
+	 * @since 0.1
+	 */
+	boolean isReceivingAudio();
 
-    void setReceivingAudio(boolean receiving);
+	/**
+	 * @param receiving True if the local party of this *call* is receiving audio. Otherwise, false.
+	 * @since 0.1   
+	 */
+	void setReceivingAudio(boolean receiving);
 
-    void acknowledge(@NonNull CompletionHandler<Void> callback);
+	/**
+	 * Acknowledge (without answering) an incoming call. Will cause the initiator's Call instance to emit the ringing event.
+	 * 
+	 * @param callback A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
+	 * @since 0.1
+	 * @see CallStatus
+	 */
+	void acknowledge(@NonNull CompletionHandler<Void> callback);
 
-    void answer(@NonNull CallOption option, @NonNull CompletionHandler<Void> callback);
+	/**
+	 * Answers this call. This can only be invoked when this call is incoming and in ringing status.
+	 * 
+	 * @param option Intended media options - audio only or audio and video - for the call.
+	 * @param callback A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
+	 * @since 0.1
+	 * @see CallStatus
+	 */
+	void answer(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback);
 
-    void reject(@NonNull CompletionHandler<Void> callback);
+	/**
+	 * Rejects this call. This can only be invoked when this call is incoming and in ringing status.
+	 * 
+	 * @param callback A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
+	 * @since 0.1
+	 * @see CallStatus
+	 */
+	void reject(@NonNull CompletionHandler<Void> callback);
 
-    void hangup(@NonNull CompletionHandler<Void> callback);
+	/**
+	 * Disconnects this call. This can only be invoked when this call is in answered status.
+	 * 
+	 * @param callback A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
+	 * @since 0.1
+	 * @see CallStatus
+	 */
+	void hangup(@NonNull CompletionHandler<Void> callback);
 
-    boolean isSendingDTMFEnabled();
+	/**
+	 * @return True if the DTMF keypad is enabled for this *call*. Otherwise, false.
+	 * @since 0.1
+	 */
+	boolean isSendingDTMFEnabled();
 
-    void sendDTMF(String dtmf, @NonNull CompletionHandler<Void> callback);
+	/**
+	 * Sends DTMF events to the remote party. Valid DTMF events are 0-9, *, #, a-d, and A-D.
+	 * 
+	 * @param dtmf any combination of valid DTMF events matching regex mattern "^[0-9#\*abcdABCD]+$"
+	 * @param callback A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
+	 * @since 0.1
+	 */
+	void sendDTMF(String dtmf, @NonNull CompletionHandler<Void> callback);
+
+	/**
+	 * Sends feedback for this call to Cisco Spark team.
+	 * 
+	 * @param rating The rating of the quality of this call between 1 and 5 where 5 means excellent quality.
+	 * @param comment The comments for this call.
+	 * @since 0.1
+	 */
+	void sendFeedback(int rating, @Nullable String comment);
 }

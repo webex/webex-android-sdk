@@ -27,6 +27,11 @@ import java.util.Date;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Membership contents.
+ * 
+ * @since 0.1
+ */
 public class Membership {
 
     @SerializedName("id")
@@ -56,42 +61,71 @@ public class Membership {
     @SerializedName("created")
     private Date _created;
 
+    /**
+     * @return The id of this membership.
+     * @since 0.1
+     */
     public String getId() {
         return _id;
     }
 
+    /**
+     * @return The id of the person.
+     * @since 0.1 
+     */
     public String getPersonId() {
         return _personId;
     }
 
+    /**
+     * @return The email address of the person.
+     * @since 0.1
+     */
     public String getPersonEmail() {
         return _personEmail;
     }
 
+    /**
+     * @return The display name of the person.
+     * @since 0.1
+     */
     public String getPersonDisplayName() {
         return _personDisplayName;
     }
-
-    public String getPersonOrgId() {
-        return _personOrgId;
-    }
-
+    
+    /**
+     * @return The id of the room.
+     * @since 0.1
+     */
     public String getRoomId() {
         return _roomId;
     }
 
+    /**
+     * @return Is moderator of a room.
+     * @since 0.1
+     */
     public boolean isModerator() {
         return _isModerator;
     }
 
+    /**
+     * @return Is monitor of a room.
+     * @since 0.1
+     */
     public boolean isMonitor() {
         return _isMonitor;
     }
 
+    /**
+     * @return The timestamp that the membership being created.
+     * @since 0.1
+     */
     public Date getCreated() {
         return _created;
     }
 
+    @Override
     public String toString() {
         Gson gson = new Gson();
         return gson.toJson(this);

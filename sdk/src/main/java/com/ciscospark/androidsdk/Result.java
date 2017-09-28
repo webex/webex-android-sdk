@@ -22,78 +22,34 @@
 
 package com.ciscospark.androidsdk;
 
-import java.io.IOException;
-
-import me.helloworld.utils.Objects;
-import me.helloworld.utils.annotation.StringPart;
-import retrofit2.Response;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 /**
- * Created by zhiyuliu on 01/09/2017.
+ * Service request results.
+ * 
+ * @since 0.1
  */
+public interface Result<T> {
 
-public class Result<T> {
+	/**
+	 * Returns true if the result is a success, false otherwise
+	 * 
+	 * @since 0.1
+	 */
+	boolean isSuccessful();
 
-    public static <T> Result<T> success(T data) {
-        return new Result<T>(data, null);
-    }
+	/**
+	 * Returns the associated error value if the result is a failure, null otherwise.
+	 *
+	 * @since 0.1
+	 */
+	@Nullable SparkError getError();
 
-    public static <T> Result<T> error(String message) {
-        return new Result<T>(null, new SparkError<SparkError.ErrorCode>(SparkError.ErrorCode.UNEXPECTED_ERROR, message));
-    }
-
-    public static <T> Result<T> error(Throwable t) {
-        return new Result<T>(null, makeError(t));
-    }
-
-    public static <T> Result<T> error(SparkError error) {
-        return new Result<T>(null, error);
-    }
-
-    public static <T> Result<T> error(Response response) {
-        return new Result<T>(null, makeError(response));
-    }
-
-    @StringPart
-    private T _data;
-
-    @StringPart
-    private SparkError _error;
-
-    public Result(T data, SparkError error) {
-        _data = data;
-        _error = error;
-    }
-
-    public boolean isSuccessful() {
-        return _error == null;
-    }
-
-    public SparkError getError() {
-        return _error;
-    }
-
-    public T getData() {
-        return _data;
-    }
-
-    public String toString() {
-        return Objects.toStringByAnnotation(this);
-    }
-
-    private static SparkError<SparkError.ErrorCode> makeError(Throwable t) {
-        return new SparkError<SparkError.ErrorCode>(SparkError.ErrorCode.UNEXPECTED_ERROR, t.toString());
-    }
-
-    private static SparkError<SparkError.ErrorCode> makeError(Response res) {
-        StringBuilder message = new StringBuilder().append(res.code()).append("/").append(res.message());
-        try {
-            String body = res.errorBody().string();
-            message.append("/").append(body);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return new SparkError<>(SparkError.ErrorCode.SERVICE_ERROR, message.toString());
-    }
-
+	/**
+	 * Returns the associated data if the result is a success, `null` otherwise.
+	 *
+	 * @since 0.1
+	 */
+	@NonNull T getData();
 }

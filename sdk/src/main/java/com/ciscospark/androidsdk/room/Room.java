@@ -27,12 +27,34 @@ import java.util.Date;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * A data type represents a Room at Cisco Spark cloud. 
+ * 
+ * Room has been renamed to Space in Cisco Spark.
+ * 
+ * @since 0.1
+ */
 public class Room {
 
+    /**
+     * The enumeration of the types of a room.
+     * 
+     * @since 0.1
+     */
     public enum RoomType {
+        /**
+         * Group room among multiple people
+         * 
+         * @since 0.1
+         */
         @SerializedName("group")
         group,
 
+        /**
+         * 1-to-1 room between two people
+         * 
+         * @since 0.1
+         */
         @SerializedName("direct")
         direct
     }
@@ -58,35 +80,64 @@ public class Room {
     @SerializedName("created")
     private Date _created;
 
+    @Override
     public String toString() {
         Gson gson = new Gson();
         return gson.toJson(this);
     }
 
+    /**
+     * @return The identifier of this room.
+     * @since 0.1
+     */
     public String getId() {
         return _id;
     }
 
+    /**
+     * @return The title of this room.
+     * @since 0.1
+     */
     public String getTitle() {
         return _title;
     }
 
+    /**
+     * @return The type of this room.
+     * @since 0.1
+     */
     public RoomType getType() {
         return _type;
     }
 
+    /**
+     * @return The team Id that this room associated with.
+     * @since 0.1
+     */
     public String getTeamId() {
         return _teamId;
     }
 
+    /**
+     * @return Indicate if this room is locked.
+     * @since 0.1
+     */
     public boolean isLocked() {
         return _isLocked;
     }
 
+    /**
+     * @return Last activity of this room.
+     * @since 0.1
+     */
     public Date getLastActivity() {
         return _lastActivity;
     }
 
+    /**
+     * @return The timestamp that this room being created.
+     * @since 0.1
+     */
     public Date getCreated() {
         return _created;
     }

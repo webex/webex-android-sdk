@@ -24,70 +24,43 @@ package com.ciscospark.androidsdk.people;
 
 import java.util.List;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.utils.http.ListBody;
-import com.ciscospark.androidsdk.utils.http.ListCallback;
-import com.ciscospark.androidsdk.utils.http.ObjectCallback;
-import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
+/**
+ * An client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-people.html">People REST API</a>
+ *
+ * @since 0.1
+ */
+public interface PersonClient {
 
-public class PersonClient {
+	/**
+	 * Lists people in the authenticated user's organization.
+	 * 
+	 * @param email If not nil, only list people with this email address.
+	 * @param displayName If not nil, only list people whose name starts with this string.
+	 * @param max The maximum number of people in the response.
+	 * @param handler A closure to be executed once the request has finished.
+	 * @since 0.1   
+	 */
+	void list(@NonNull String email, @Nullable String displayName, int max, @NonNull CompletionHandler<List<Person>> handler);
 
-    private Authenticator _authenticator;
+	/**
+	 * Retrieves the details for a person by person id.
+	 * 
+	 * @param personId The identifier of the person.
+	 * @param handler A closure to be executed once the request has finished.
+	 * @since 0.1   
+	 */
+	void get(@NonNull String personId, @NonNull CompletionHandler<Person> handler);
 
-    private PersonService _service;
-
-    public PersonClient(Authenticator authenticator) {
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(PersonService.class);
-    }
-
-    /**
-     * @param email
-     * @param displayName
-     * @param max
-     * @param handler
-     */
-    public void list(String email, String displayName, int max, CompletionHandler<List<Person>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, email, displayName, null, null, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-        });
-    }
-
-    /**
-     * @param personId
-     */
-    public void get(String personId, CompletionHandler<Person> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, personId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void getMe(CompletionHandler<Person> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.getMe(s).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    private interface PersonService {
-        @GET("people")
-        Call<ListBody<Person>> list(@Header("Authorization") String authorizationHeader,
-                                    @Query("email") String email,
-                                    @Query("displayName") String displayName,
-                                    @Query("id") String id,
-                                    @Query("orgId") String orgId,
-                                    @Query("max") Integer max);
-
-        @GET("people/{personId}")
-        Call<Person> get(@Header("Authorization") String authorizationHeader, @Path("personId") String personId);
-
-        @GET("people/me")
-        Call<Person> getMe(@Header("Authorization") String authorizationHeader);
-    }
+	/**
+	 * Retrieves the details for the authenticated user.
+	 * 
+	 * @param handler A closure to be executed once the request has finished.
+	 * @since 0.1   
+	 */
+	void getMe(@NonNull CompletionHandler<Person> handler);
+    
 }

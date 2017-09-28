@@ -20,17 +20,11 @@
  * THE SOFTWARE.
  */
 
-package com.ciscospark.androidsdk.core;
+package com.ciscospark.androidsdk.internal;
 
 /**
- * Created with IntelliJ IDEA.
- * User: zhiyuliu
- * Date: 17/09/2017
- * Time: 6:11 PM
+ * Created by zhiyuliu on 02/09/2017.
  */
 
-public interface SparkInjectable {
-	
-	void injected();
-	
+public class MetricsClient {
 }

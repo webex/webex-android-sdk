@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.inject.Inject;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Base64;
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
@@ -34,8 +35,8 @@ import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.core.AuthenticatedUser;
 import com.cisco.spark.android.sync.ActorRecord;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.Result;
-import com.ciscospark.androidsdk.core.SparkInjectable;
+import com.ciscospark.androidsdk.internal.ResultImpl;
+import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
@@ -49,12 +50,11 @@ import retrofit2.http.POST;
 import static com.ciscospark.androidsdk.utils.Utils.checkNotNull;
 
 /**
- * JWT authorize strategy.
- * Reference http://www.jwt.io
- *
- * @author Allen Xiao<xionxiao@cisco.com>
+ * A <a href="https://jwt.io/introduction">JSON Web Token</a> (JWT) based authentication strategy is to be used to authenticate a user on Cisco Spark.
+ * 
+ * @since 0.1
  */
-public class JWTAuthenticator implements Authenticator, SparkInjectable {
+public class JWTAuthenticator implements Authenticator {
 
     private OAuth2Tokens _token = null;
 
@@ -65,28 +65,37 @@ public class JWTAuthenticator implements Authenticator, SparkInjectable {
     @Inject
     ApiTokenProvider _provider;
 
-    public JWTAuthenticator() {
+	/**
+	 * Creates a new JWT authentication strategy
+	 * 
+	 * @since 0.1
+	 */
+	public JWTAuthenticator() {
         _authService = new ServiceBuilder().build(AuthService.class);
     }
-    
-    @Override
-    public void injected() {
-        if (_provider != null && _token != null) {
-            AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
-            _provider.setAuthenticatedUser(authenticatedUser);
-        }
-    }
-    
-    @Override
+	
+	/**
+	 * @see Authenticator
+	 */
+	@Override
     public boolean isAuthorized() {
         return getUnexpiredJwt() != null;
     }
 
-    public void authorize(String jwt) {
+	/**
+	 * Sets the JWT access token on the authorization strategy, overriting any existing access token.
+	 * 
+	 * @param jwt the new JSON Web Token to use
+	 * @since 0.1   
+	 */
+	public void authorize(@NonNull String jwt) {
         deauthorize();
         _jwt = jwt;
     }
 
+	/**
+	 * @see Authenticator
+	 */
     @Override
     public void deauthorize() {
         _jwt = null;
@@ -96,17 +105,20 @@ public class JWTAuthenticator implements Authenticator, SparkInjectable {
         }
     }
 
+	/**
+	 * @see Authenticator
+	 */
     @Override
-    public void getToken(CompletionHandler<String> handler) {
+    public void getToken(@NonNull CompletionHandler<String> handler) {
         checkNotNull(handler, "CompletionHandler should not be null");
         String jwt = getUnexpiredJwt();
         if (jwt == null) {
-            handler.onComplete(Result.error("jwt is null"));
+            handler.onComplete(ResultImpl.error("jwt is null"));
             return;
         }
         String token = getUnexpiredAccessToken();
         if (token != null) {
-            handler.onComplete(Result.success(token));
+            handler.onComplete(ResultImpl.success(token));
             return;
         }
         _authService.getToken(jwt).enqueue(new Callback<JwtToken>() {
@@ -114,7 +126,7 @@ public class JWTAuthenticator implements Authenticator, SparkInjectable {
             public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
                 JwtToken token = response.body();
                 if (token == null || token.getAccessToken() == null || token.getAccessToken().isEmpty()) {
-                    handler.onComplete(Result.error(response));
+                    handler.onComplete(ResultImpl.error(response));
                 }
                 else {
                     _token = token.toOAuthToken(jwt);
@@ -122,13 +134,13 @@ public class JWTAuthenticator implements Authenticator, SparkInjectable {
                         AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
                         _provider.setAuthenticatedUser(authenticatedUser);
                     }
-                    handler.onComplete(Result.success(_token.getAccessToken()));
+                    handler.onComplete(ResultImpl.success(_token.getAccessToken()));
                 }
             }
 
             @Override
             public void onFailure(Call<JwtToken> call, Throwable t) {
-                handler.onComplete(Result.error(t));
+                handler.onComplete(ResultImpl.error(t));
             }
         });
     }
@@ -192,6 +204,14 @@ public class JWTAuthenticator implements Authenticator, SparkInjectable {
             return null;
         }
     }
+
+	@SparkInjector.AfterInjected
+	private void afterInjected() {
+		if (_provider != null && _token != null) {
+			AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
+			_provider.setAuthenticatedUser(authenticatedUser);
+		}
+	}
 
     interface AuthService {
         @POST("jwt/login")

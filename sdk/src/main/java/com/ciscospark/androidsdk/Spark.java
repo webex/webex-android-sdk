@@ -35,50 +35,53 @@ import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.sync.ConversationContentProvider;
 import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.core.SparkInjector;
+import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.membership.MembershipClient;
+import com.ciscospark.androidsdk.membership.internal.MembershipClientImpl;
 import com.ciscospark.androidsdk.message.MessageClient;
+import com.ciscospark.androidsdk.message.internal.MessageClientImpl;
 import com.ciscospark.androidsdk.people.PersonClient;
+import com.ciscospark.androidsdk.people.internal.PersonClientImpl;
 import com.ciscospark.androidsdk.phone.Phone;
 import com.ciscospark.androidsdk.phone.internal.PhoneImpl;
 import com.ciscospark.androidsdk.room.RoomClient;
+import com.ciscospark.androidsdk.room.internal.RoomClientImpl;
 import com.ciscospark.androidsdk.team.TeamClient;
 import com.ciscospark.androidsdk.team.TeamMembershipClient;
+import com.ciscospark.androidsdk.team.internal.TeamClientImpl;
+import com.ciscospark.androidsdk.team.internal.TeamMembershipClientImpl;
 import com.ciscospark.androidsdk.utils.http.DefaultHeadersInterceptor;
 import com.ciscospark.androidsdk.utils.log.NoLn;
 import com.ciscospark.androidsdk.utils.log.WarningLn;
 import com.ciscospark.androidsdk.webhook.WebhookClient;
+import com.ciscospark.androidsdk.webhook.internal.WebhookClientImpl;
 import com.github.benoitdion.ln.DebugLn;
 import com.github.benoitdion.ln.InfoLn;
 import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.ReleaseLn;
 import com.webex.wme.MediaSessionAPI;
-import me.helloworld.utils.Exceptions;
 
 /**
- * @author Allen Xiao<xionxiao@cisco.com>
- * @version 0.1
+ * Spark object is the entry point to use this Cisco Spark Android SDK.
+ *
+ * @since 0.1
  */
 public class Spark {
 
-	private static final String TAG = Spark.class.getSimpleName();
-	
 	static {
 		UserAgentProvider.APP_NAME = DefaultHeadersInterceptor.APP_NAME;
 		UserAgentProvider.APP_VERSION = DefaultHeadersInterceptor.APP_VERSION;
 	}
+
+	private static final String TAG = Spark.class.getSimpleName();
 	
-	public enum ApplicationMode {
-		BACKGROUND, FOREGROUND
-	}
-	
-    public enum LogLevel {
-        NO,
-        ERROR,
-        WARNING,
-        INFO,
-        DEBUG,
-        VERBOSE
+	/**
+	 * The enumeration of log message level
+	 * 
+	 * @since 0.1
+	 */
+	public enum LogLevel {
+        NO, ERROR, WARNING, INFO, DEBUG, VERBOSE
     }
 
     private LogLevel _logLevel = LogLevel.DEBUG;
@@ -95,7 +98,14 @@ public class Spark {
     @Inject
     BackgroundCheck _backgroundCheck;
 
-    public Spark(Application application, Authenticator authenticator) {
+	/**
+	 * Constructs a new Spark object with an {@link Authenticator} and Application
+	 * 
+	 * @param application The android application
+	 * @param authenticator The authentication strategy for this SDK 	
+	 * @since 0.1
+	 */
+	public Spark(Application application, Authenticator authenticator) {
 	    SquaredContentProvider.CONTENT_AUTHORITY = getAuthority(application.getApplicationContext());
 	    ConversationContentProvider.resetUriMatcher();
 	    com.cisco.spark.android.core.Application.setApplication(application);
@@ -111,58 +121,133 @@ public class Spark {
      * Get current sdk version
      *
      * @return major.minor.build-alpha/beta
+     * @since 0.1
      */
     public String version() {
-	    return "0.0.1";
+	    return "0.1.beta";
     }
-
-	public boolean setApplicationMode(ApplicationMode mode) {
-		if (mode == ApplicationMode.BACKGROUND) {
-			return _backgroundCheck.tryBackground();
+	
+	/**
+	 * Invoke this method when application switch between background and foreground.
+	 * 
+	 * @param background application run in background or not.
+	 * @since 0.1
+	 */
+	public void runInBackground(boolean background) {
+		if (background) {
+			_backgroundCheck.tryBackground();
 		}
-		else if (mode == ApplicationMode.FOREGROUND) {
-			return _backgroundCheck.tryForeground();
+		else {
+			_backgroundCheck.tryForeground();
 		}
-		return false;
 	}
 	
-    public Authenticator getAuthenticator() {
+	/**
+	 * @return The {@link Authenticator} object from the application when constructing this Spark object. It can be used to check and modify authentication state.
+	 * @since 0.1
+	 */
+	public Authenticator getAuthenticator() {
         return _authenticator;
     }
 
-    public Phone phone() {
+	/**
+	 * {@link Phone} can be used to make audio and video calls on Cisco Spark.
+	 * 
+	 * @return The {@link Phone} represents a calling device in Cisco Spark Android SDK.
+	 * @since 0.1
+	 */
+	public Phone phone() {
         return _phone;
     }
 
-    public MessageClient messages() {
-        return new MessageClient(this._authenticator);
+	/**
+	 * Messages are how we communicate in a room.
+	 * 
+	 * @return The {@link MessageClient} is uesd to manage the messages on behalf of the authenticated user.
+	 * @since 0.1
+	 * @see RoomClient
+	 * @see MembershipClient
+	 */
+	public MessageClient messages() {
+        return new MessageClientImpl(this._authenticator);
     }
 
-    public PersonClient people() {
-        return new PersonClient(this._authenticator);
+	/**
+	 * People are registered users of Cisco Spark.
+	 * 
+	 * @return The {@link PersonClient} is used to find a person on behalf of the authenticated user.
+	 * @since 0.1
+	 * @see MembershipClient
+	 * @see MessageClient
+	 */
+	public PersonClient people() {
+        return new PersonClientImpl(this._authenticator);
     }
 
-    public MembershipClient memberships() {
-        return new MembershipClient(this._authenticator);
+	/**
+	 * Memberships represent a person's relationships to rooms.
+	 * 
+	 * @return The {@link MembershipClient} is used to manage the authenticated user's relationship to rooms.
+	 * @since 0.1
+	 * @see RoomClient
+	 * @see MessageClient
+	 */
+	public MembershipClient memberships() {
+        return new MembershipClientImpl(this._authenticator);
     }
 
-    public TeamClient teams() {
-        return new TeamClient(this._authenticator);
+	/**
+	 * Teams are groups of people with a set of rooms that are visible to all members of that team.
+	 * 
+	 * @return The {@link TeamClient} is used to create and manage the teams on behalf of the authenticated user.
+	 * @since 0.1
+	 * @see TeamMembershipClient
+	 * @see MembershipClient
+	 */
+	public TeamClient teams() {
+        return new TeamClientImpl(this._authenticator);
     }
 
-    public TeamMembershipClient teamMembershipClient() {
-        return new TeamMembershipClient(this._authenticator);
+	/**
+	 * Team Memberships represent a person's relationships to teams.
+	 * 
+	 * @return The {@link TeamMembershipClient} is used to create and manage the team membership on behalf of the authenticated user.
+	 * @since 0.1
+	 * @see TeamClient
+	 * @see RoomClient
+	 */
+	public TeamMembershipClient teamMembershipClient() {
+        return new TeamMembershipClientImpl(this._authenticator);
     }
 
-    public WebhookClient webhooks() {
-        return new WebhookClient(this._authenticator);
+	/**
+	 * Webhooks allow the application to be notified via HTTP (or HTTPS?) when a specific event occurs in Cisco Spark, e.g. a new message is posted into a specific room.
+	 * 
+	 * @return The {@link WebhookClient} is used to create and manage the webhooks for specific events.
+	 * @since 0.1
+	 */
+	public WebhookClient webhooks() {
+        return new WebhookClientImpl(this._authenticator);
     }
 
-    public RoomClient rooms() {
-        return new RoomClient(this._authenticator);
+	/**
+	 * Rooms are virtual meeting places in Cisco Spark where people post messages and collaborate to get work done.
+	 * 
+	 * @return The {@link RoomClient} is used to manage the rooms on behalf of the authenticated user.
+	 * @since 0.1
+	 * @see MembershipClient
+	 * @see MessageClient
+	 */
+	public RoomClient rooms() {
+        return new RoomClientImpl(this._authenticator);
     }
 
-    public void setLogLevel(LogLevel logLevel) {
+	/**
+	 * Set the log level of the logging.
+	 * 
+	 * @param logLevel log message level
+	 */
+	public void setLogLevel(LogLevel logLevel) {
         _logLevel = logLevel;
         switch (logLevel) {
             case NO:
@@ -199,7 +284,7 @@ public class Spark {
 			return providerInfo.authority;
 		}
 		catch (Throwable t) {
-			Log.d(TAG, Exceptions.printStackTrace(t));
+			Log.d(TAG, "Content provider not found.");
 			return "com.ciscospark.androidsdk.CPOSC";
 		}
 	}

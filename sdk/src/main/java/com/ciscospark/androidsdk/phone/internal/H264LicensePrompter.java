@@ -56,6 +56,10 @@ public class H264LicensePrompter {
 		return "To enable video calls, activate a free video license (H.264 AVC) from Cisco. By selecting 'Activate', you accept the Cisco End User License Agreement and Notices.";
 	}
 	
+	String getLicenseURL() {
+		return "http://www.openh264.org/BINARY_LICENSE.txt";
+	}
+	
 	void check(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Boolean> handler) {
 		if (isVideoLicenseActivated() || isVideoLicenseActivationDisabled()) {
 			handler.onComplete(true);
@@ -86,7 +90,7 @@ public class H264LicensePrompter {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					Log.i(TAG, "Video license opened for viewing");
-					Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.openh264.org/BINARY_LICENSE.txt"));
+					Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getLicenseURL()));
 					context.startActivity(browserIntent);
 					dialog.cancel();
 					handler.onComplete(false);

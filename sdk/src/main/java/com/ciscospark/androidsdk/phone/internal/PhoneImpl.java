@@ -73,10 +73,11 @@ import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.Spark;
 import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.core.SparkInjector;
+import com.ciscospark.androidsdk.internal.ResultImpl;
+import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.phone.Call;
 import com.ciscospark.androidsdk.phone.CallObserver;
-import com.ciscospark.androidsdk.phone.CallOption;
+import com.ciscospark.androidsdk.phone.MediaOption;
 import com.ciscospark.androidsdk.phone.Phone;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import de.greenrobot.event.EventBus;
@@ -128,7 +129,7 @@ public class PhoneImpl implements Phone {
 
     private CompletionHandler<Void> _incomingCallback;
 
-    private CallOption _option;
+    private MediaOption _option;
 
     private MediaSession _preview;
     
@@ -166,8 +167,16 @@ public class PhoneImpl implements Phone {
     
     public void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Boolean> callback) {
         _prompter.check(builder, result -> {
-            callback.onComplete(Result.success(result));
+            callback.onComplete(ResultImpl.success(result));
         });
+    }
+    
+    public String getVideoCodecLicense() {
+	    return _prompter.getLicense();
+    }
+    
+    public String getVideoCodecLicenseURL() {
+	    return _prompter.getLicenseURL();
     }
     
     public void disableVideoCodecActivation() {
@@ -178,7 +187,7 @@ public class PhoneImpl implements Phone {
         Log.i(TAG, "register: ->start");
         if (_registerCallback != null) {
             Log.w(TAG, "Registering");
-            callback.onComplete(Result.error("Registering"));
+            callback.onComplete(ResultImpl.error("Registering"));
             return;
         }
         _registerCallback = callback;
@@ -187,7 +196,7 @@ public class PhoneImpl implements Phone {
             _registerTimeoutTask = () -> {
                 Log.i(TAG, "run: -> register timeout");
                 if (_device == null && _registerCallback != null) {
-                    _registerCallback.onComplete(Result.error("Register timeout"));
+                    _registerCallback.onComplete(ResultImpl.error("Register timeout"));
                 }
             };
             _registerTimer.postDelayed(_registerTimeoutTask, 60 * 1000);
@@ -202,7 +211,7 @@ public class PhoneImpl implements Phone {
         _device = null;
         _registerCallback = null;
         _registerTimer.removeCallbacks(_registerTimeoutTask);
-        callback.onComplete(Result.success(null));
+        callback.onComplete(ResultImpl.success(null));
     }
 
     public void startPreview(View view) {
@@ -220,21 +229,21 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    public void dial(@NonNull String dialString, @NonNull CallOption option, @NonNull CompletionHandler<Call> callback) {
+    public void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
         Log.i(TAG, "dial: ->start");
         if (_device == null) {
             Log.e(TAG, "Failure: unregistered device");
-            callback.onComplete(Result.error("Failure: unregistered device"));
+            callback.onComplete(ResultImpl.error("Failure: unregistered device"));
             return;
         }
         if (_dialCallback != null) {
             Log.w(TAG, "Calling");
-            callback.onComplete(Result.error("Calling"));
+            callback.onComplete(ResultImpl.error("Calling"));
             return;
         }
         if (_calls.size() > 0) {
             Log.e(TAG, "Failure: There are other active calls");
-            callback.onComplete(Result.error("Failure: There are other active calls"));
+            callback.onComplete(ResultImpl.error("Failure: There are other active calls"));
             return;
         }
         stopPreview();
@@ -249,29 +258,29 @@ public class PhoneImpl implements Phone {
         Log.i(TAG, "dial: ->CallImpl sendout");
     }
 
-    void answer(@NonNull CallImpl call, @NonNull CallOption option, @NonNull CompletionHandler<Void> callback) {
+    void answer(@NonNull CallImpl call, @NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
         Log.d(TAG, "answer: ->start");
         for (CallImpl exist : _calls.values()) {
             if (!exist.getKey().equals(call.getKey()) && exist.getStatus() == Call.CallStatus.CONNECTED) {
                 Log.e(TAG, "There are other active calls");
-                callback.onComplete(Result.error("There are other active calls"));
+                callback.onComplete(ResultImpl.error("There are other active calls"));
                 return;
             }
         }
         if (call.getDirection() == Call.Direction.OUTGOING) {
             Log.e(TAG, "Unsupport function for outgoing call");
-            callback.onComplete(Result.error("Unsupport function for outgoing call"));
+            callback.onComplete(ResultImpl.error("Unsupport function for outgoing call"));
             return;
         }
         if (call.getDirection() == Call.Direction.INCOMING) {
             if (call.getStatus() == Call.CallStatus.CONNECTED) {
                 Log.e(TAG, "Already connected");
-                callback.onComplete(Result.error("Already connected"));
+                callback.onComplete(ResultImpl.error("Already connected"));
                 return;
             }
             else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
                 Log.e(TAG, "Already disconnected");
-                callback.onComplete(Result.error("Already disconnected"));
+                callback.onComplete(ResultImpl.error("Already disconnected"));
                 return;
             }
         }
@@ -290,18 +299,18 @@ public class PhoneImpl implements Phone {
         Log.d(TAG, "reject: ->start ");
         if (call.getDirection() == Call.Direction.OUTGOING) {
             Log.e(TAG, "Unsupport function for outgoing call");
-            callback.onComplete(Result.error("Unsupport function for outgoing call"));
+            callback.onComplete(ResultImpl.error("Unsupport function for outgoing call"));
             return;
         }
         if (call.getDirection() == Call.Direction.INCOMING) {
             if (call.getStatus() == Call.CallStatus.CONNECTED) {
                 Log.e(TAG, "Already connected");
-                callback.onComplete(Result.error("Already connected"));
+                callback.onComplete(ResultImpl.error("Already connected"));
                 return;
             }
             else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
                 Log.e(TAG, "Already disconnected");
-                callback.onComplete(Result.error("Already disconnected"));
+                callback.onComplete(ResultImpl.error("Already disconnected"));
                 return;
             }
         }
@@ -313,7 +322,7 @@ public class PhoneImpl implements Phone {
         Log.d(TAG, "hangup -> call " + call.getKey());
         if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
             Log.e(TAG, "Already disconnected");
-            callback.onComplete(Result.error("Already disconnected"));
+            callback.onComplete(ResultImpl.error("Already disconnected"));
             return;
         }
         _incomingCallback = callback;
@@ -357,7 +366,7 @@ public class PhoneImpl implements Phone {
             Log.i(TAG, "Register callback is null ");
             return;
         }
-        _registerCallback.onComplete(Result.success(null));
+        _registerCallback.onComplete(ResultImpl.success(null));
         _registerCallback = null;
         _registerTimer.removeCallbacks(_registerTimeoutTask);
         Log.i(TAG, "onEventMainThread: Registered:" + event.getDeviceRegistration().getId());
@@ -375,13 +384,13 @@ public class PhoneImpl implements Phone {
                 _bus.register(call);
                 _calls.put(key, call);
                 if (_dialCallback != null) {
-                    _dialCallback.onComplete(Result.success(call));
+                    _dialCallback.onComplete(ResultImpl.success(call));
                 }
             }
             else {
                 Log.e(TAG, "Internal callImpl isn't exist " + event.getLocusKey());
                 if (_dialCallback != null) {
-                    _dialCallback.onComplete(Result.error("Internal callImpl isn't exist"));
+                    _dialCallback.onComplete(ResultImpl.error("Internal callImpl isn't exist"));
                 }
                 _option = null;
             }
@@ -416,7 +425,7 @@ public class PhoneImpl implements Phone {
             }
             call.setStatus(Call.CallStatus.CONNECTED);
             if (_incomingCallback != null) {
-                _incomingCallback.onComplete(Result.success(null));
+                _incomingCallback.onComplete(ResultImpl.success(null));
                 _incomingCallback = null;
             }
             CallObserver observer = call.getObserver();
@@ -428,12 +437,12 @@ public class PhoneImpl implements Phone {
 
     public void onEventMainThread(RetrofitErrorEvent event) {
         Log.i(TAG, "RetrofitErrorEvent is received ");
-        clearCallback(Result.error("Error"));
+        clearCallback(ResultImpl.error("Error"));
     }
 
     public void onEventMainThread(CallControlCallJoinErrorEvent event) {
         Log.i(TAG, "CallControlCallJoinErrorEvent is received ");
-        clearCallback(Result.error("Join Error"));
+        clearCallback(ResultImpl.error("Join Error"));
     }
 
     // Local hangup
@@ -443,7 +452,7 @@ public class PhoneImpl implements Phone {
         if (call != null) {
             Log.i(TAG, "Find callImpl " + event.getLocusKey());
             if (_incomingCallback != null) {
-                _incomingCallback.onComplete(Result.success(null));
+                _incomingCallback.onComplete(ResultImpl.success(null));
                 _incomingCallback = null;
             }
             _removeCall(new CallObserver.LocalLeft(call));
@@ -456,7 +465,7 @@ public class PhoneImpl implements Phone {
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             if (_incomingCallback != null) {
-                _incomingCallback.onComplete(Result.success(null));
+                _incomingCallback.onComplete(ResultImpl.success(null));
                 _incomingCallback = null;
             }
             Log.i(TAG, "Find callImpl " + event.getLocusKey());
@@ -475,7 +484,7 @@ public class PhoneImpl implements Phone {
             }
             else {
                 if (_incomingCallback != null) {
-                    _incomingCallback.onComplete(Result.success(null));
+                    _incomingCallback.onComplete(ResultImpl.success(null));
                     _incomingCallback = null;
                 }
                 _removeCall(new CallObserver.LocalCancel(call));
@@ -597,7 +606,7 @@ public class PhoneImpl implements Phone {
         List<String> permissions = new ArrayList<>();
         permissions.add(Manifest.permission.RECORD_AUDIO);
         permissions.add(Manifest.permission.CAMERA);
-        clearCallback(Result.error("Permissions Error"));
+        clearCallback(ResultImpl.error("Permissions Error"));
     }
 
     private void clearCallback(Result result) {

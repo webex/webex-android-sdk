@@ -23,87 +23,68 @@
 package com.ciscospark.androidsdk.membership;
 
 import java.util.List;
-import java.util.Map;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.utils.http.ListBody;
-import com.ciscospark.androidsdk.utils.http.ListCallback;
-import com.ciscospark.androidsdk.utils.http.ObjectCallback;
-import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-import me.helloworld.utils.collection.Maps;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
-public class MembershipClient {
+/**
+ * An client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-memberships.html">Room Memberships REST API</a>
+ * 
+ * @since 0.1
+ */
+public interface MembershipClient {
 
-    private Authenticator _authenticator;
+	/**
+	 * Lists all room memberships where the authenticated user belongs.
+	 * 
+	 * @param roomId The identifier of the room where the membership belongs.
+	 * @param personId The identifier of the person who has the memberships.
+	 * @param personEmail The email address of the person who has the memberships.
+	 * @param max The maximum number of items in the response.
+	 * @param handler A closure to be executed once the request has finished.
+	 * @since 0.1   
+	 */
+	void list(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler);
 
-    private MembershipService _service;
+	/**
+	 * Adds a person to a room by person id; optionally making the person a moderator.
+	 * 
+	 * @param roomId The identifier of the room where the person is to be added.
+	 * @param personId The identifier of the person to be added.
+	 * @param personEmail The email address of the person to be added.
+	 * @param isModerator If true, make the person a moderator of the room. The default is false.
+	 * @param handler A closure to be executed once the request has finished.
+	 * @since 0.1   
+	 */
+	void create(@NonNull String roomId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler);
 
-    public MembershipClient(Authenticator authenticator) {
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(MembershipService.class);
-    }
+	/**
+	 * Retrieves the details for a membership by membership id.
+	 * 
+	 * @param membershipId The identifier of the membership.
+	 * @param handler A closure to be executed once the request has finished.
+	 * @since 0.1   
+	 */
+	void get(@NonNull String membershipId, @NonNull CompletionHandler<Membership> handler);
 
-    public void list(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, roomId, personId, personEmail, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-        });
-    }
+	/**
+	 * Updates the properties of a membership by membership id.
+	 * 
+	 * @param membershipId The identifier of the membership.
+	 * @param isModerator If true, make the person a moderator of the room in this membership. The default is false.
+	 * @param handler A closure to be executed once the request has finished.
+	 * @since 0.1   
+	 */
+	void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<Membership> handler);
 
-    public void create(@NonNull String roomId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.create(s, Maps.makeMap("roomId", roomId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void get(@NonNull String membershipId, @NonNull CompletionHandler<Membership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, membershipId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.update(s, membershipId, Maps.makeMap("isModerator", isModerator)).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, membershipId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    private interface MembershipService {
-        @GET("memberships")
-        Call<ListBody<Membership>> list(@Header("Authorization") String authorization,
-                                        @Query("roomId") String roomId,
-                                        @Query("personId") String personId,
-                                        @Query("personEmail") String personEmail,
-                                        @Query("max") Integer max);
-
-        @POST("memberships")
-        Call<Membership> create(@Header("Authorization") String authorization, @Body Map parameters);
-
-        @GET("memberships/{membershipId}")
-        Call<Membership> get(@Header("Authorization") String authorization, @Path("membershipId") String membershipId);
-
-        @PUT("memberships/{membershipId}")
-        Call<Membership> update(@Header("Authorization") String authorization, @Path("membershipId") String membershipId, @Body Map parameters);
-
-        @DELETE("memberships/{membershipId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("membershipId") String membershipId);
-    }
+	/**
+	 * Deletes a membership by membership id. It removes the person from the room where the membership belongs.
+	 * 
+	 * @param membershipId The identifier of the membership.
+	 * @param handler A closure to be executed once the request has finished.
+	 * @since 0.1   
+	 */
+	void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler);
 
 }

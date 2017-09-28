@@ -22,84 +22,67 @@
 
 package com.ciscospark.androidsdk.team;
 
-
 import java.util.List;
-import java.util.Map;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.utils.http.ListBody;
-import com.ciscospark.androidsdk.utils.http.ListCallback;
-import com.ciscospark.androidsdk.utils.http.ObjectCallback;
-import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-import me.helloworld.utils.collection.Maps;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
-public class TeamMembershipClient {
+/**
+ * An client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-team-memberships.html">TeamMemberships REST API</a>
+ * 
+ * @since 0.1
+ */
+public interface TeamMembershipClient {
 
-    private Authenticator _authenticator;
+    /**
+     * Lists all team memberships where the authenticated user belongs.
+     * 
+     * @param teamId Limit results to a specific team, by ID.
+     * @param max The maximum number of team memberships in the response.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void list(@Nullable String teamId, int max, @NonNull CompletionHandler<List<TeamMembership>> handler);
 
-    private TeamMembershipService _service;
+    /**
+     * Adds a person to a team by person id; optionally making the person a moderator of the team.
+     * 
+     * @param teamId The identifier of the team.
+     * @param personId The identifier of the person.
+     * @param personEmail The email of the person.
+     * @param isModerator If true, make the person a moderator of the team. The default is false.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void create(@NonNull String teamId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<TeamMembership> handler);
 
-    public TeamMembershipClient(Authenticator authenticator) {
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(TeamMembershipService.class);
-    }
+    /**
+     * Retrieves the details for a membership by id.
+     * 
+     * @param membershipId The identifier of the membership.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void get(@NonNull String membershipId, @NonNull CompletionHandler<TeamMembership> handler);
 
-    public void list(@Nullable String teamId, int max, @NonNull CompletionHandler<List<TeamMembership>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, teamId, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-        });
-    }
+    /**
+     * Updates the details for a membership by id.
+     * 
+     * @param membershipId The identifier of the membership.
+     * @param isModerator If true, make the person a moderator of the team. The default is false.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<TeamMembership> handler);
 
-    public void create(@NonNull String teamId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<TeamMembership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.create(s, Maps.makeMap("teamId", teamId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void get(@NonNull String membershipId, @NonNull CompletionHandler<TeamMembership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, membershipId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<TeamMembership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.update(s, membershipId, Maps.makeMap("isModerator", isModerator)).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, membershipId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    private interface TeamMembershipService {
-        @GET("team/memberships")
-        Call<ListBody<TeamMembership>> list(@Header("Authorization") String authorization, @Query("teamId") String roomId, @Query("max") Integer max);
-
-        @POST("team/memberships")
-        Call<TeamMembership> create(@Header("Authorization") String authorization, @Body Map parameters);
-
-        @GET("team/memberships/{membershipId}")
-        Call<TeamMembership> get(@Header("Authorization") String authorization, @Path("membershipId") String membershipId);
-
-        @PUT("team/memberships/{membershipId}")
-        Call<TeamMembership> update(@Header("Authorization") String authorization, @Path("membershipId") String membershipId, @Body Map parameters);
-
-        @DELETE("team/memberships/{membershipId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("membershipId") String membershipId);
-    }
+    /**
+     * Deletes a membership by id.
+     * 
+     * @param membershipId The identifier of the membership.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler);
+    
 }

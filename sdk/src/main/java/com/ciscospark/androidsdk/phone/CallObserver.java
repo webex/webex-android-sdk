@@ -27,25 +27,65 @@ import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 
 /**
- * Created on 12/06/2017.
+ * Observer for {@link Call} event
+ * 
+ * @since 0.1
  */
-
 public interface CallObserver {
 
-    void onRinging(Call call);
+	/**
+	 * Callback when remote participant(s) is ringing.
+	 * 
+	 * @param call Call
+	 * @since 0.1   
+	 */
+	void onRinging(Call call);
 
-    void onConnected(Call call);
+	/**
+	 * Callback when remote participant(s) answered and the call is connected.
+	 * 
+	 * @param call Call
+	 * @since 0.1   
+	 */
+	void onConnected(Call call);
 
-    void onDisconnected(CallDisconnectedEvent event);
+	/**
+	 * Callback when the call is disconnected (hangup, cancelled, get declined or other self device pickup the call).
+	 * 
+	 * @param event event
+	 * @since 0.1   
+	 */
+	void onDisconnected(CallDisconnectedEvent event);
 
-    void onMediaChanged(MediaChangedEvent event);
+	/**
+	 * Callback when the media types of the call have changed.
+	 * 
+	 * @param event event
+	 * @since 0.1   
+	 */
+	void onMediaChanged(MediaChangedEvent event);
 
-    interface CallEvent {
 
-        Call getCall();
+	/**
+	 * Base class for the event of a call
+	 * 
+	 * @since 0.1
+	 */
+	interface CallEvent {
+
+		/**
+		 * @return Call
+		 * @since 0.1
+		 */
+		Call getCall();
     }
 
-    abstract class AbstractCallEvent implements CallEvent {
+	/**
+	 * Base class for the event of a call
+	 * 
+	 * @since 0.1
+	 */
+	abstract class AbstractCallEvent implements CallEvent {
 
         @StringPart
         protected Call _call;
@@ -54,7 +94,10 @@ public interface CallObserver {
             _call = call;
         }
 
-        public Call getCall() {
+		/**
+		 * @see CallEvent
+		 */
+		public Call getCall() {
             return _call;
         }
 
@@ -65,67 +108,117 @@ public interface CallObserver {
 
     }
 
-    interface CallDisconnectedEvent extends CallEvent {
+	/**
+	 * Disconnected event for call
+	 * 
+	 * @since 0.1
+	 */
+	interface CallDisconnectedEvent extends CallEvent {
 
     }
 
-    class LocalLeft extends AbstractCallEvent implements CallDisconnectedEvent {
+	/**
+	 * The local party has left the call.
+	 * 
+	 * @since 0.1
+	 */
+	class LocalLeft extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public LocalLeft(Call call) {
             super(call);
         }
     }
 
-    class LocalDecline extends AbstractCallEvent implements CallDisconnectedEvent {
+	/**
+	 * The local party has declined the call. This is only applicable when the direction of the call is incoming.
+	 * 
+	 * @since 0.1
+	 */
+	class LocalDecline extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public LocalDecline(Call call) {
             super(call);
         }
     }
 
-    class LocalCancel extends AbstractCallEvent implements CallDisconnectedEvent {
+	/**
+	 * The local party has cancelled the call. This is only applicable when the direction of the call is outgoing.
+	 * 
+	 * @since 0.1
+	 */
+	class LocalCancel extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public LocalCancel(Call call) {
             super(call);
         }
     }
 
-    class RemoteLeft extends AbstractCallEvent implements CallDisconnectedEvent {
+	/**
+	 * The remote party has left the call. 
+	 * 
+	 * @since 0.1
+	 */
+	class RemoteLeft extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public RemoteLeft(Call call) {
             super(call);
         }
     }
 
-    class RemoteDecline extends AbstractCallEvent implements CallDisconnectedEvent {
+	/**
+	 * The remote party has declined the call. This is only applicable when the direction of the call is outgoing.
+	 * 
+	 * @since 0.1
+	 */
+	class RemoteDecline extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public RemoteDecline(Call call) {
             super(call);
         }
     }
 
-    class RemoteCancel extends AbstractCallEvent implements CallDisconnectedEvent {
+	/**
+	 * The remote party has cancelled the call. This is only applicable when the direction of the call is incoming.
+	 * 
+	 * @since 0.1
+	 */
+	class RemoteCancel extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public RemoteCancel(Call call) {
             super(call);
         }
     }
 
-    class OtherConnected extends AbstractCallEvent implements CallDisconnectedEvent {
+	/**
+	 * One of the other phones of the authenticated user has answered the call. This is only applicable when the direction of the call is incoming.
+	 * 
+	 * @since 0.1
+	 */
+	class OtherConnected extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public OtherConnected(Call call) {
             super(call);
         }
     }
 
-    class OtherDeclined extends AbstractCallEvent implements CallDisconnectedEvent {
+	/**
+	 * One of the other phones of the authenticated user has declined the call. This is only applicable when the direction of the call is incoming.
+	 * 
+	 * @since 0.1
+	 */
+	class OtherDeclined extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public OtherDeclined(Call call) {
             super(call);
         }
     }
 
-    class CallErrorEvent extends AbstractCallEvent implements CallDisconnectedEvent {
+	/**
+	 * Error casue the call to be disconnected.
+	 * 
+	 * @since 0.1
+	 */
+	class CallErrorEvent extends AbstractCallEvent implements CallDisconnectedEvent {
 
         @StringPart
         private SparkError _error;
@@ -135,7 +228,11 @@ public interface CallObserver {
             _error = error;
         }
 
-        public SparkError getError() {
+		/**
+		 * @return Error
+		 * @since 0.1
+		 */
+		public SparkError getError() {
             return _error;
         }
 
@@ -145,11 +242,21 @@ public interface CallObserver {
         }
     }
 
-    interface MediaChangedEvent extends CallEvent {
+	/**
+	 * Media change event
+	 * 
+	 * @since 0.1
+	 */
+	interface MediaChangedEvent extends CallEvent {
 
     }
 
-    class RemoteSendingVideoEvent extends AbstractCallEvent implements MediaChangedEvent {
+	/**
+	 * This might be triggered when the remote party muted or unmuted the video.
+	 * 
+	 * @since 0.1
+	 */
+	class RemoteSendingVideoEvent extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _sending;
@@ -159,7 +266,11 @@ public interface CallObserver {
             _sending = sending;
         }
 
-        public boolean isSending() {
+		/**
+		 * @return True if the remote party now is sending video. Otherwise false.
+		 * @since 0.1
+		 */
+		public boolean isSending() {
             return _sending;
         }
 
@@ -169,7 +280,12 @@ public interface CallObserver {
         }
     }
 
-    class RemoteSendingAudioEvent extends AbstractCallEvent implements MediaChangedEvent {
+	/**
+	 * This might be triggered when the remote party muted or unmuted the audio.
+	 * 
+	 * @since 0.1
+	 */
+	class RemoteSendingAudioEvent extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _sending;
@@ -179,7 +295,11 @@ public interface CallObserver {
             _sending = sending;
         }
 
-        public boolean isSending() {
+		/**
+		 * @return True if the remote party now is sending audio. Otherwise false.
+		 * @since 0.1
+		 */
+		public boolean isSending() {
             return _sending;
         }
 
@@ -189,7 +309,12 @@ public interface CallObserver {
         }
     }
 
-    class SendingVideo extends AbstractCallEvent implements MediaChangedEvent {
+	/**
+	 * This might be triggered when the local party muted or unmuted the video.
+	 * 
+	 * @since 0.1
+	 */
+	class SendingVideo extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _sending;
@@ -199,7 +324,11 @@ public interface CallObserver {
             _sending = sending;
         }
 
-        public boolean isSending() {
+		/**
+		 * @return True if the local party now is sending video. Otherwise false.
+		 * @since 0.1
+		 */
+		public boolean isSending() {
             return _sending;
         }
 
@@ -209,7 +338,12 @@ public interface CallObserver {
         }
     }
 
-    class SendingAudio extends AbstractCallEvent implements MediaChangedEvent {
+	/**
+	 * This might be triggered when the local party muted or unmuted the audio.
+	 * 
+	 * @since 0.1
+	 */
+	class SendingAudio extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _sending;
@@ -219,7 +353,11 @@ public interface CallObserver {
             _sending = sending;
         }
 
-        public boolean isSending() {
+		/**
+		 * @return True if the local party now is sending aduio. Otherwise false.
+		 * @since 0.1
+		 */
+		public boolean isSending() {
             return _sending;
         }
 
@@ -229,7 +367,12 @@ public interface CallObserver {
         }
     }
 
-    class ReceivingVideo extends AbstractCallEvent implements MediaChangedEvent {
+	/**
+	 * This might be triggered when the local party muted or unmuted the video.
+	 * 
+	 * @since 0.1
+	 */
+	class ReceivingVideo extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _receiving;
@@ -239,7 +382,11 @@ public interface CallObserver {
             _receiving = receiving;
         }
 
-        public boolean isSending() {
+		/**
+		 * @return True if the local party now is receiving video. Otherwise false.
+		 * @since 0.1
+		 */
+		public boolean isSending() {
             return _receiving;
         }
 
@@ -249,7 +396,12 @@ public interface CallObserver {
         }
     }
 
-    class ReceivingAudio extends AbstractCallEvent implements MediaChangedEvent {
+	/**
+	 * This might be triggered when the local party muted or unmuted the audio.
+	 * 
+	 * @since 0.1
+	 */
+	class ReceivingAudio extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _receiving;
@@ -259,7 +411,11 @@ public interface CallObserver {
             _receiving = receiving;
         }
 
-        public boolean isSending() {
+		/**
+		 * @return True if the local party now is receiving audio. Otherwise false.
+		 * @since 0.1
+		 */
+		public boolean isSending() {
             return _receiving;
         }
 
@@ -269,26 +425,35 @@ public interface CallObserver {
         }
     }
 
-    class CameraSwitched extends AbstractCallEvent implements MediaChangedEvent {
+	/**
+	 * Camera FacingMode on local device has switched.
+	 * 
+	 * @since 0.1
+	 */
+	class CameraSwitched extends AbstractCallEvent implements MediaChangedEvent {
         public CameraSwitched(Call call) {
             super(call);
         }
     }
 
-    class SpearkerSwitched extends AbstractCallEvent implements MediaChangedEvent {
-        public SpearkerSwitched(Call call) {
+	/**
+	 * Local video rendering view size has changed.
+	 * 
+	 * @since 0.1
+	 */
+	class LocalVideoViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
+        public LocalVideoViewSizeChanged(Call call) {
             super(call);
         }
     }
 
-    class LocalVideoViewSize extends AbstractCallEvent implements MediaChangedEvent {
-        public LocalVideoViewSize(Call call) {
-            super(call);
-        }
-    }
-
-    class RemoteVideoViewSize extends AbstractCallEvent implements MediaChangedEvent {
-        public RemoteVideoViewSize(Call call) {
+	/**
+	 * Remote video rendering view size has changed.
+	 * 
+	 * @since 0.1
+	 */
+	class RemoteVideoViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
+        public RemoteVideoViewSizeChanged(Call call) {
             super(call);
         }
     }

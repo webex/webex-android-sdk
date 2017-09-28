@@ -28,6 +28,11 @@ import java.util.Date;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * A data type represents a relationship between Team and Person at Cisco Spark cloud.
+ * 
+ * @since 0.1
+ */
 public class TeamMembership {
 
     @SerializedName("id")
@@ -54,40 +59,65 @@ public class TeamMembership {
     @SerializedName("created")
     private Date _created;
 
+    @Override
     public String toString() {
         Gson gson = new Gson();
         return gson.toJson(this);
     }
 
-    public String getId() {
+	/**
+	 * @return The identifier of this team membership.
+	 * @since 0.1
+	 */
+	public String getId() {
         return _id;
     }
 
-    public String getPersonId() {
+	/**
+	 * @return The identifier of the person.
+	 * @since 0.1
+	 */
+	public String getPersonId() {
         return _personId;
     }
 
-    public String getPersonEmail() {
+	/**
+	 * @return The email address of the person.
+	 * @since 0.1
+	 */
+	public String getPersonEmail() {
         return _personEmail;
     }
 
-    public String getPersonDisplayName() {
+	/**
+	 * @return The display name of the person.
+	 * @since 0.1
+	 */
+	public String getPersonDisplayName() {
         return _personDisplayName;
     }
-
-    public String getPersonOrgId() {
-        return _personOrgId;
-    }
-
-    public String getTeamId() {
+	
+	/**
+	 * @return The identifier of the team.
+	 * @since 0.1
+	 */
+	public String getTeamId() {
         return _teamId;
     }
 
-    public boolean isModerator() {
+	/**
+	 * @return True if the person in this membership is a moderator of the team.
+	 * @since 0.1
+	 */
+	public boolean isModerator() {
         return _isModerator;
     }
 
-    public Date getCreated() {
+	/**
+	 * @return The timestamp that the team membership being created.
+	 * @since 0.1
+	 */
+	public Date getCreated() {
         return _created;
     }
 }

@@ -26,9 +26,10 @@ import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 
 /**
- * Common Error class for Spark
+ * 
+ * 
+ * @param <E>
  */
-
 public class SparkError<E extends Enum> {
 
     public enum ErrorCode {

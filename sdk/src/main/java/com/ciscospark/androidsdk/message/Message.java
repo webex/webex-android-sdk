@@ -29,6 +29,11 @@ import com.ciscospark.androidsdk.room.Room;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * The struct of a Message on Cisco Spark.
+ * 
+ * @since 0.1
+ */
 public class Message {
 
     @SerializedName("id")
@@ -67,54 +72,103 @@ public class Message {
     @SerializedName("created")
     private Date _created;
 
-    public String getId() {
+	/**
+	 * @return The identifier of this message.
+	 * @since 0.1
+	 */
+	public String getId() {
         return _id;
     }
 
-    public String getPersonId() {
+	/**
+	 * @return The identifier of the person who sent this message.
+	 * @since 0.1
+	 */
+	public String getPersonId() {
         return _personId;
     }
 
-    public String getPersonEmail() {
+	/**
+	 * @return The email address of the person who sent this message.
+	 * @since 0.1
+	 */
+	public String getPersonEmail() {
         return _personEmail;
     }
 
-    public String getRoomId() {
+	/**
+	 * @return The identifier of the room where this message was posted.
+	 * @since 0.1
+	 */
+	public String getRoomId() {
         return _roomId;
     }
 
-    public Room.RoomType getRoomType() {
+	/**
+	 * @return The type of the room where this message was posted.
+	 * @since 0.1
+	 */
+	public Room.RoomType getRoomType() {
         return _roomType;
     }
 
-    public String getText() {
+	/**
+	 * @return The content of the message in plain text.
+	 * @since 0.1
+	 */
+	public String getText() {
         return _text;
     }
 
-    public String getMarkdown() {
+	/**
+	 * @return  The content of the message in markdown.
+	 * @since 0.1
+	 */
+	public String getMarkdown() {
         return _markdown;
     }
 
-    public String getToPersonId() {
+	/**
+	 * @return The identifier of the recipient when sending a private 1:1 message.
+	 * @since 0.1
+	 */
+	public String getToPersonId() {
         return _toPersonId;
     }
 
-    public String getToPersonEmail() {
+	/**
+	 * @return The email address of the recipient when sending a private 1:1 message.
+	 * @since 0.1
+	 */
+	public String getToPersonEmail() {
         return _toPersonEmail;
     }
 
-    public String[] getMentionedPeople() {
+	/**
+	 * @return The metioned peoples in the message.
+	 * @since 0.1
+	 */
+	public String[] getMentionedPeople() {
         return _mentionedPeople;
     }
 
-    public String[] getFiles() {
+	/**
+	 * @return A array of public URLs of the attachments in the message.
+	 * @since 0.1
+	 */
+	public String[] getFiles() {
         return _files;
     }
 
-    public Date getCreated() {
+	/**
+	 * @return The timestamp that the message being created.
+	 * @since 0.1
+	 */
+	public Date getCreated() {
         return _created;
     }
 
+    @Override
     public String toString() {
         Gson gson = new Gson();
         return gson.toJson(this);

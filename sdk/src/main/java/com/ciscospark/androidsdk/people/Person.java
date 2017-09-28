@@ -27,6 +27,11 @@ import java.util.Date;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Person contents.
+ * 
+ * @since 0.1
+ */
 public class Person {
 
     @SerializedName("id")
@@ -65,54 +70,47 @@ public class Person {
     @SerializedName("type")
     private String _type;          // bot/person
 
-    public String getId() {
+	/**
+	 * @return The id of this person.
+	 * @since 0.1
+	 */
+	public String getId() {
         return _id;
     }
 
-    public String[] getEmails() {
+	/**
+	 * @return The emails of this person.
+	 * @since 0.1
+	 */
+	public String[] getEmails() {
         return _emails;
     }
 
-    public String getDisplayName() {
+	/**
+	 * @return The display name of this person.
+	 * @since 0.1
+	 */
+	public String getDisplayName() {
         return _displayName;
     }
-
-    public String getNickName() {
-        return _nickName;
-    }
-
-    public String getFirstName() {
-        return _firstName;
-    }
-
-    public String getLastName() {
-        return _lastName;
-    }
-
-    public String getAvatar() {
+	
+	/**
+	 * @return The avatar name of this person.
+	 * @since 0.1
+	 */
+	public String getAvatar() {
         return _avatar;
     }
-
-    public String getOrgId() {
-        return _orgId;
-    }
-
-    public Date getCreated() {
+	
+	/**
+	 * @return The timestamp that this person being created.
+	 * @since 0.1
+	 */
+	public Date getCreated() {
         return _created;
     }
-
-    public String getLastActivity() {
-        return _lastActivity;
-    }
-
-    public String getStatus() {
-        return _status;
-    }
-
-    public String getType() {
-        return _type;
-    }
-
+	
+    @Override
     public String toString() {
         Gson gson = new Gson();
         return gson.toJson(this);

@@ -25,24 +25,25 @@ package com.ciscospark.androidsdk.auth;
 
 import javax.inject.Inject;
 
-import android.annotation.SuppressLint;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.webkit.WebView;
 import com.cisco.spark.android.core.Injector;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.Result;
-import com.ciscospark.androidsdk.core.SparkInjectable;
+import com.ciscospark.androidsdk.auth.internal.OAuthLauncher;
+import com.ciscospark.androidsdk.internal.ResultImpl;
+import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import me.helloworld.utils.Checker;
 
 /**
- * OAuth2 authorization strategy using android WebView.
+ * A <a href="https://oauth.net/2/">OAuth</a> based authentication strategy is to be used to authenticate a user on Cisco Spark.
  *
- * @author Allen Xiao<xionxiao@cisco.com>
- * @version 0.1
+ * @since 0.1
+ * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
  */
-public class OAuthWebViewAuthenticator implements Authenticator, SparkInjectable {
+public class OAuthWebViewAuthenticator implements Authenticator {
 
     private static final String TAG = OAuthWebViewAuthenticator.class.getSimpleName();
     
@@ -54,31 +55,47 @@ public class OAuthWebViewAuthenticator implements Authenticator, SparkInjectable
     
     @Inject
     Injector _injector;
-        
+
     /**
-     * @param clientId
-     * @param clientSecret
-     * @param scope
-     * @param redirectUri
+     * Creates a new OAuth authentication strategy
+     *
+     * @param clientId the OAuth client id
+     * @param clientSecret the OAuth client secret
+     * @param scope space-separated string representing which permissions the application needs
+     * @param redirectUri the redirect URI that will be called when completing the authentication. This must match the redirect URI registered to your clientId.
+     * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
+     * @since 0.1
      */
-    public OAuthWebViewAuthenticator(String clientId, String clientSecret, String scope, String redirectUri) {
+    public OAuthWebViewAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri) {
         super();
         _authenticator = new OAuthAuthenticator(clientId, clientSecret, redirectUri, scope);
         _launcher = new OAuthLauncher();
     }
 
+    /**
+     * @see Authenticator
+     */
     @Override
     public boolean isAuthorized() {
         return _authenticator.isAuthorized();
     }
 
+    /**
+     * @see Authenticator
+     */
     @Override
     public void deauthorize() {
         _authenticator.deauthorize();
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
-    public void authorize(WebView view, CompletionHandler<Void> handler) {
+    /**
+     * Brings up a web-based authorization view and directs the user through the OAuth process.
+     * 
+     * @param view the view for OAuth
+     * @param handler the completion handler will be called when authentication is complete, the error to indicate if the authentication process was successful.
+     * @since 0.1
+     */
+    public void authorize(@NonNull WebView view, @NonNull CompletionHandler<Void> handler) {
         _launcher.launchOAuthView(view, buildCodeGrantUrl(), _authenticator.getRedirectUri(), result -> {
             Log.d(TAG, "authorize: " + result);
             String code = result.getData();
@@ -86,11 +103,14 @@ public class OAuthWebViewAuthenticator implements Authenticator, SparkInjectable
                 _authenticator.authorize(code, handler);
             }
             else {
-                handler.onComplete(Result.error(result.getError()));
+                handler.onComplete(ResultImpl.error(result.getError()));
             }
         });
     }
 
+    /**
+     * @see Authenticator
+     */
     @Override
     public void getToken(CompletionHandler<String> handler) {
         _authenticator.getToken(handler);
@@ -107,8 +127,8 @@ public class OAuthWebViewAuthenticator implements Authenticator, SparkInjectable
         return builder.toString();
     }
 
-    @Override
-    public void injected() {
+    @SparkInjector.AfterInjected
+    private void afterInjected() {
         Log.d(TAG, "Inject authenticator after self injected");
         _injector.inject(_authenticator);
     }

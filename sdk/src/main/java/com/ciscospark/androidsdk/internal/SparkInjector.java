@@ -20,17 +20,29 @@
  * THE SOFTWARE.
  */
 
-package com.ciscospark.androidsdk.core;
+package com.ciscospark.androidsdk.internal;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.util.List;
 
 import android.app.Application;
-
 import com.cisco.spark.android.core.ApplicationDelegate;
 import com.cisco.spark.android.core.RootModule;
 import com.github.benoitdion.ln.DebugLn;
 import com.github.benoitdion.ln.NaturalLog;
 import com.squareup.leakcanary.RefWatcher;
+import me.helloworld.utils.reflect.Methods;
 
 public class SparkInjector extends ApplicationDelegate {
+
+	@Target({ElementType.METHOD})
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface AfterInjected {
+	}
 
     private final SparkModule _module;
 
@@ -41,7 +53,6 @@ public class SparkInjector extends ApplicationDelegate {
 
     @Override
     public void create(boolean startAuthenticatedUserTask) {
-        /* Override this function to prevent common lib auto login */
         super.create(false);
     }
 
@@ -73,9 +84,14 @@ public class SparkInjector extends ApplicationDelegate {
     
     public void inject(Object o) {
         super.inject(o);
-        if (o instanceof SparkInjectable) {
-            ((SparkInjectable) o).injected();
-        }
+        List<Method> methods = Methods.getMethodsMarkedWithAnnotation(o.getClass(), AfterInjected.class);
+	    for (Method method : methods) {
+		    try {
+			    method.invoke(o);
+		    }
+		    catch (Throwable t) {
+			    System.out.println(t);
+		    }
+	    }
     }
-
 }

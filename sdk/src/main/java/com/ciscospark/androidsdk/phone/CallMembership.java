@@ -23,33 +23,101 @@
 package com.ciscospark.androidsdk.phone;
 
 /**
- * Created by zhiyuliu on 04/09/2017.
+ * A data type represents a relationship between *Call* and *Person* at Cisco Spark cloud.
+ * 
+ * @since 0.1
  */
-
 public interface CallMembership {
 
-    enum State {
-        UNKNOWN,
-        IDLE,
-        NOTIFIED,
-        JOINED,
-        LEFT,
-        DECLINED
+	/**
+	 * The enumeration of the status of the person in the membership.
+	 * 
+	 * @since 0.1
+	 */
+	enum State {
+		/**
+		 * The person status is unknown.
+		 *
+		 * @since 0.1
+		 */
+		UNKNOWN,
+		/**
+		 * The person is idle w/o any call.
+		 *
+		 * @since 0.1
+		 */
+		IDLE,
+		/**
+		 * The person has been notified about the call.
+		 *
+		 * @since 0.1* 
+		 */
+		NOTIFIED,
+		/**
+		 * The person has joined the call.
+		 *
+		 * @since 0.1
+		 */
+		JOINED,
+		/**
+		 * The person has left the call.
+		 *
+		 * @since 0.1
+		 */
+		LEFT,
+		/**
+		 * The person has declined the call.
+		 *
+		 * @since 0.1
+		 */
+		DECLINED
     }
 
-    boolean isInitiator();
+	/**
+	 * @return True if the person is the initiator of the call.
+	 * @since 0.1
+	 */
+	boolean isInitiator();
 
-    String getPersonId();
+	/**
+	 * @return The identifier of the person.
+	 * @since 0.1
+	 */
+	String getPersonId();
 
-    State getState();
+	/**
+	 * @return The status of the person in this CallMembership.
+	 * @since 0.1
+	 */
+	State getState();
 
-    String getEmail();
+	/**
+	 * @return The email address of the person in this CallMembership.
+	 * @since 0.1
+	 */
+	String getEmail();
 
-    String getSipUrl();
+	/**
+	 * @return The SIP address of the person in this CallMembership.
+	 * @since 0.1
+	 */
+	String getSipUrl();
 
-    String getPhoneNumber();
+	/**
+	 * @return The phone number of the person in this CallMembership.
+	 * @since 0.1
+	 */
+	String getPhoneNumber();
 
-    boolean isSendingVideo();
+	/**
+	 * @return  True if the CallMembership is sending video. Otherwise, false.
+	 * @since 0.1
+	 */
+	boolean isSendingVideo();
 
-    boolean isSendingAudio();
+	/**
+	 * @return True if the CallMembership is sending audio. Otherwise, false.
+	 * @since 0.1
+	 */
+	boolean isSendingAudio();
 }

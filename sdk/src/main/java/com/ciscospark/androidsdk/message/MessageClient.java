@@ -23,77 +23,63 @@
 package com.ciscospark.androidsdk.message;
 
 import java.util.List;
-import java.util.Map;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.utils.http.ListBody;
-import com.ciscospark.androidsdk.utils.http.ListCallback;
-import com.ciscospark.androidsdk.utils.http.ObjectCallback;
-import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-import me.helloworld.utils.collection.Maps;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
-public class MessageClient {
+/**
+ * An client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-messages.html">Messages REST API</a>
+ *
+ * @since 0.1
+ */
+public interface MessageClient {
 
-    private Authenticator _authenticator;
+    /**
+     * Lists all messages in a room by room Id. If present, it includes the associated media content attachment for each message. 
+     * 
+     * The list sorts the messages in descending order by creation date.
+     * 
+     * @param roomId The identifier of the room.
+     * @param before If not nil, only list messages sent only before this date and time, in ISO8601 format.
+     * @param beforeMessage If not nil, only list messages sent only before this message by id.
+     * @param mentionedPeople If not nil, only list messages metion people.
+     * @param max The maximum number of messages in the response.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1     
+     */
+    void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @NonNull String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler);
 
-    private MessageService _service;
+    /**
+     * Posts a plain text message, and optionally, a media content attachment, to a room by room Id.
+     * 
+     * @param roomId The identifier of the room where the message is to be posted.
+     * @param personId The identifier of the recipient of this private 1:1 message.
+     * @param personEmail The email address of the recipient when sending a private 1:1 message.
+     * @param text The plain text message to be posted to the room.
+     * @param markdown The markdown text message to be posted to the room.
+     * @param files A public URL that Cisco Spark can use to fetch attachments. Currently supports only a single URL. Cisco Spark downloads the content from the URL one time shortly after the message is created and automatically converts it to a format that all Cisco Spark clients can render.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1     
+     */
+    void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @NonNull String[] files, @NonNull CompletionHandler<Message> handler);
 
-    public MessageClient(Authenticator authenticator) {
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(MessageService.class);
-    }
+    /**
+     * Retrieves the details for a message by message Id.
+     * 
+     * @param messageId The identifier of the message.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1     
+     */
+    void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler);
 
-    public void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @NonNull String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, roomId, before, beforeMessage, mentionedPeople, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-        });
-    }
-
-    public void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @NonNull String[] files, @NonNull CompletionHandler<Message> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.post(s, Maps.makeMap("roomId", roomId, "toPersonId", personId, "toPersonEmail", personEmail, "text", text, "markdown", markdown, "files", files)).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, messageId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, messageId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    private interface MessageService {
-        @GET("messages")
-        Call<ListBody<Message>> list(@Header("Authorization") String authorization,
-                                     @Query("roomId") String roomId,
-                                     @Query("before") String before,
-                                     @Query("beforeMessage") String beforeMessage,
-                                     @Query("mentionedPeople") String mentionedPeople,
-                                     @Query("max") Integer max);
-
-        @POST("messages")
-        Call<Message> post(@Header("Authorization") String authorization, @Body Map parameters);
-
-        @GET("messages/{messageId}")
-        Call<Message> get(@Header("Authorization") String authorization, @Path("messageId") String messageId);
-
-        @DELETE("messages/{messageId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("messageId") String messageId);
-    }
+    /**
+     * Deletes a message by message id.
+     * 
+     * @param messageId The identifier of the message.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1     
+     */
+    void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler);
+    
 }

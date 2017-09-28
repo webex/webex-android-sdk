@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package com.ciscospark.androidsdk.auth;
+package com.ciscospark.androidsdk.auth.internal;
 
 import android.annotation.TargetApi;
 import android.net.Uri;
@@ -36,6 +36,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
+import com.ciscospark.androidsdk.internal.ResultImpl;
 import me.helloworld.utils.Checker;
 
 /**
@@ -43,10 +44,10 @@ import me.helloworld.utils.Checker;
  */
 
 public class OAuthLauncher {
-    
+
     private static final String TAG = OAuthLauncher.class.getSimpleName();
 
-    void launchOAuthView(WebView view, String authorizationUrl, String redirectUri, CompletionHandler<String> handler) {
+    public void launchOAuthView(WebView view, String authorizationUrl, String redirectUri, CompletionHandler<String> handler) {
         BrowserWebViewClient client = new BrowserWebViewClient(authorizationUrl, redirectUri, handler);
         view.clearCache(true);
         view.setWebViewClient(client);
@@ -85,12 +86,12 @@ public class OAuthLauncher {
                 Uri uri = Uri.parse(url);
                 String code = uri.getQueryParameter("code");
                 if (Checker.isEmpty(code)) {
-                    _handler.onComplete(Result.error("Auth code isn't exist"));
+                    _handler.onComplete(ResultImpl.error("Auth code isn't exist"));
                     return false;
                 }
                 view.clearCache(true);
                 view.loadUrl("about:blank");
-	            handleResult(Result.success(code));
+	            handleResult(ResultImpl.success(code));
 	            return false;
             }
             return super.shouldOverrideUrlLoading(view, url);
@@ -105,7 +106,7 @@ public class OAuthLauncher {
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             Log.e(TAG, "onReceivedError " + errorCode + ", " + description);
-	        handleResult(Result.error(errorCode + " " + description));
+	        handleResult(ResultImpl.error(errorCode + " " + description));
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
@@ -114,7 +115,7 @@ public class OAuthLauncher {
             Log.e(TAG, "onReceivedSslError " + error);
             handler.cancel();
 	        if (error != null) {
-		        handleResult(Result.error(error.toString()));
+		        handleResult(ResultImpl.error(error.toString()));
 	        }
         }
         

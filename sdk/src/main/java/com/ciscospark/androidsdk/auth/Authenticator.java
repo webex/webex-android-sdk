@@ -25,17 +25,37 @@ package com.ciscospark.androidsdk.auth;
 import com.ciscospark.androidsdk.CompletionHandler;
 
 /**
- * Authorization interface used by Spark
+ * A protocol for generic authentication strategies in Cisco Spark. Each authentication strategy is responsible for providing an accessToken used throughout this SDK.
  *
- * @author Allen Xiao<xionxiao@cisco.com>
- * @version 0.1
+ * @since 0.1
  */
 public interface Authenticator {
 
+    /**
+     * Returns True if the user is logically authorized. 
+     * 
+     * This may not mean the user has a valid access token yet, but the authentication strategy should be able to obtain one without further user interaction.
+     * 
+     * @return True if the user is logically authorized
+     * @since 0.1
+     */
     boolean isAuthorized();
 
+    /**
+     * Deauthorizes the current user and clears any persistent state with regards to the current user.  If the {@link com.ciscospark.androidsdk.phone.Phone} is registered, it should be deregistered before calling this method.
+     *
+     * @since 0.1
+     */
     void deauthorize();
 
-    void getToken(CompletionHandler<String> listener);
+    /**
+     * Returns an access token of this authenticator. 
+     * 
+     * This may involve long-running operations such as service calls, but may also return immediately. The application should not make assumptions about how quickly this completes.
+     * 
+     * @param handler a callback to be executed when completed, with the access token if successfuly retrieved, otherwise nil.
+     * @since 0.1
+     */
+    void getToken(CompletionHandler<String> handler);
 
 }

@@ -45,18 +45,15 @@ import com.cisco.spark.android.sync.operationqueue.SendDtmfOperation;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.cisco.spark.android.util.Strings;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.Result;
+import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.ciscospark.androidsdk.phone.Call;
 import com.ciscospark.androidsdk.phone.CallMembership;
 import com.ciscospark.androidsdk.phone.CallObserver;
-import com.ciscospark.androidsdk.phone.CallOption;
+import com.ciscospark.androidsdk.phone.MediaOption;
 import com.ciscospark.androidsdk.phone.Phone;
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 
-/**
- * Created by zhiyuliu on 04/09/2017.
- */
 public class CallImpl implements Call {
 
     private static final String TAG = CallImpl.class.getSimpleName();
@@ -227,7 +224,7 @@ public class CallImpl implements Call {
         callback.onComplete(null);
     }
 
-    public void answer(@NonNull CallOption option, @NonNull CompletionHandler<Void> callback) {
+    public void answer(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
         _phone.answer(this, option, callback);
     }
 
@@ -248,11 +245,11 @@ public class CallImpl implements Call {
         SendDtmfOperation operation = _phone.getOperationQueue().sendDtmf(dtmf);
         _dtmfOperations.put(operation, callback);
     }
-
-    public void sendFeedback(int rating, @Nullable String comments, boolean includeLogs) {
+    
+    public void sendFeedback(int rating, @Nullable String comment) {
         // TODO
     }
-
+    
     public Phone.FacingMode getFacingMode() {
         com.cisco.spark.android.callcontrol.model.Call call = _phone.getCallService().getCall(getKey());
         if (call == null) {
@@ -285,11 +282,19 @@ public class CallImpl implements Call {
     public void onEventMainThread(CallControlMediaDecodeSizeChangedEvent event) {
         Log.d(TAG, "CallControlMediaDecodeSizeChangedEvent is received ");
         _remoteVideoViewSize = event.getSize();
+        CallObserver observer = getObserver();
+        if (observer != null) {
+            observer.onMediaChanged(new CallObserver.RemoteVideoViewSizeChanged(this));
+        }
     }
 
     public void onEventMainThread(MediaSession.MediaRenderSizeChangedEvent event) {
         Log.d(TAG, "MediaRenderSizeChangedEvent is received ");
         _localVideoViewSize = event.size;
+        CallObserver observer = getObserver();
+        if (observer != null) {
+            observer.onMediaChanged(new CallObserver.LocalVideoViewSizeChanged(this));
+        }
     }
 
     public void onEventMainThread(OperationCompletedEvent event) {
@@ -299,10 +304,10 @@ public class CallImpl implements Call {
             CompletionHandler<Void> callback = _dtmfOperations.get(operation);
             if (callback != null) {
                 if (operation.isSucceeded()) {
-                    callback.onComplete(Result.success(null));
+                    callback.onComplete(ResultImpl.success(null));
                 }
                 else {
-                    callback.onComplete(Result.error(operation.getErrorMessage()));
+                    callback.onComplete(ResultImpl.error(operation.getErrorMessage()));
                 }
             }
         }

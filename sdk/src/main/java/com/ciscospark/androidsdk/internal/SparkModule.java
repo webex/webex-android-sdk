@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package com.ciscospark.androidsdk.core;
+package com.ciscospark.androidsdk.internal;
 
 import java.util.List;
 import javax.inject.Provider;
@@ -564,8 +564,7 @@ class SparkModule {
             }
         };
     }
-
-
+    
     @Provides
     @Singleton
     public MediaEngine provideMediaEngine(LogFilePrint log, EventBus bus, Settings settings, Context context, DeviceRegistration deviceRegistration, Gson gson, Ln.Context lnContext) {

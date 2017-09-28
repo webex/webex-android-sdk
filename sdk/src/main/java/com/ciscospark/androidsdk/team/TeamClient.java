@@ -24,82 +24,62 @@ package com.ciscospark.androidsdk.team;
 
 
 import java.util.List;
-import java.util.Map;
 
 import android.support.annotation.NonNull;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.utils.http.ListBody;
-import com.ciscospark.androidsdk.utils.http.ListCallback;
-import com.ciscospark.androidsdk.utils.http.ObjectCallback;
-import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-import me.helloworld.utils.collection.Maps;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
-public class TeamClient {
+/**
+ * An client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-teams.html">Teams REST API</a>
+ * 
+ * @since 0.1
+ */
+public interface TeamClient {
 
-    private Authenticator _authenticator;
+    /**
+     * Lists teams to which the authenticated user belongs.
+     * 
+     * @param max The maximum number of teams in the response.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void list(int max, @NonNull CompletionHandler<List<Team>> handler);
 
-    private TeamService _service;
+    /**
+     * Creates a team. The authenticated user is automatically added as a member of the team. 
+     * 
+     * See the Team Memberships API to learn how to add more people to the team.
+     * 
+     * @param name A user-friendly name for the team.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     * @see TeamMembershipClient
+     */
+    void create(@NonNull String name, @NonNull CompletionHandler<Team> handler);
 
-    public TeamClient(Authenticator authenticator) {
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(TeamService.class);
-    }
+    /**
+     * Retrieves the details for a team by id.
+     * 
+     * @param teamId The identifier of the team.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void get(@NonNull String teamId, @NonNull CompletionHandler<Team> handler);
 
-    public void list(int max, @NonNull CompletionHandler<List<Team>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-        });
-    }
+    /**
+     * Updates the details for a team by id.
+     * 
+     * @param teamId The identifier of the team.
+     * @param name A user-friendly name for the team.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void update(@NonNull String teamId, String name, @NonNull CompletionHandler<Team> handler);
 
-    public void create(@NonNull String name, @NonNull CompletionHandler<Team> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.create(s, Maps.makeMap("name", name)).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void get(@NonNull String teamId, @NonNull CompletionHandler<Team> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, teamId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void update(@NonNull String teamId, String name, @NonNull CompletionHandler<Team> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.update(s, teamId, Maps.makeMap("name", name)).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void delete(@NonNull String teamId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, teamId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    private interface TeamService {
-        @GET("teams")
-        Call<ListBody<Team>> list(@Header("Authorization") String authorization, @Query("max") Integer max);
-
-        @POST("teams")
-        Call<Team> create(@Header("Authorization") String authorization, @Body Map parameters);
-
-        @GET("teams/{teamId}")
-        Call<Team> get(@Header("Authorization") String authorization, @Path("teamId") String teamId);
-
-        @PUT("teams/{teamId}")
-        Call<Team> update(@Header("Authorization") String authorization, @Path("teamId") String teamId, @Body Map parameters);
-
-        @DELETE("teams/{teamId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("teamId") String teamId);
-    }
-
+    /**
+     * @param teamId The identifier of the team.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void delete(@NonNull String teamId, @NonNull CompletionHandler<Void> handler);
+    
 }

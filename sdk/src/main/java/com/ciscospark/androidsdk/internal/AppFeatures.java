@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package com.ciscospark.androidsdk.core;
+package com.ciscospark.androidsdk.internal;
 
 import com.cisco.spark.android.features.CoreFeatures;
 import com.cisco.spark.android.wdm.DeviceRegistration;

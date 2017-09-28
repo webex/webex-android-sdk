@@ -23,9 +23,17 @@
 package com.ciscospark.androidsdk;
 
 /**
- * Created on 21/08/2017.
+ * A callback handler to be executed when a operation is completed.
+ *
+ * @since 0.1
  */
-
 public interface CompletionHandler<T> {
+    
+    /**
+     * A callback to be executed when a operation is completed.
+     * 
+     * @param result result of the operation.
+     * @since 0.1
+     */
     void onComplete(Result<T> result);
 }

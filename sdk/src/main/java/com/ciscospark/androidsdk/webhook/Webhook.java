@@ -28,9 +28,11 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Created by zhiyuliu on 02/09/2017.
+ * A data type presents a Webhook at Cisco Spark for Developer.
+ *
+ * @since 0.1
+ * @see <a href="https://developer.ciscospark.com/webhooks-explained.html">Webhook Explained</a>
  */
-
 public class Webhook {
 
     @SerializedName("id")
@@ -57,39 +59,72 @@ public class Webhook {
     @SerializedName("created")
     private Date _created;
 
+    @Override
     public String toString() {
         Gson gson = new Gson();
         return gson.toJson(this);
     }
 
+    /**
+     * @return The identifier of this webhook.
+     * @since 0.1
+     */
     public String getId() {
         return _id;
     }
-
+    
+    /**
+     * @return A user-friendly name for this webhook.
+     * @since 0.1
+     */
     public String getName() {
         return _name;
     }
 
+    /**
+     * @return The URL that receives POST requests for each event.
+     * @since 0.1
+     */
     public String getTargetUrl() {
         return _targetUrl;
     }
 
+    /**
+     * @return The resource type for the webhook.
+     * @since 0.1
+     */
     public String getResource() {
         return _resource;
     }
 
+    /**
+     * @return The event type for the webhook.
+     * @since 0.1
+     */
     public String getEvent() {
         return _event;
     }
 
+    /**
+     * @return The filter that defines the webhook scope.
+     * @since 0.1
+     */
     public String getFilter() {
         return _filter;
     }
 
+    /**
+     * @return The secret for the webhook.
+     * @since 0.1
+     */
     public String getSecret() {
         return _secret;
     }
 
+    /**
+     * @return The timestamp that the webhook being created.
+     * @since 0.1
+     */
     public Date getCreated() {
         return _created;
     }

@@ -24,90 +24,76 @@ package com.ciscospark.androidsdk.room;
 
 
 import java.util.List;
-import java.util.Map;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.utils.http.ListBody;
-import com.ciscospark.androidsdk.utils.http.ListCallback;
-import com.ciscospark.androidsdk.utils.http.ObjectCallback;
-import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-import me.helloworld.utils.collection.Maps;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
-public class RoomClient {
+/**
+ * An client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-rooms.html">Rooms REST API</a>
+ * 
+ * @since 0.1
+ */
+public interface RoomClient {
 
-    public enum SortBy {
-        id, lastactivity, created
+    /**
+     * Sort results by room ID (id), most recent activity (lastactivity), or most recently created (created).
+     * 
+     * @since 0.1
+     */
+    enum SortBy {
+        ID, LASTACTIVITY, CREATED
     }
 
-    private Authenticator _authenticator;
+    /**
+     * Lists all rooms where the authenticated user belongs.
+     * 
+     * @param teamId If not nil, only list the rooms that are associated with the team by team id.
+     * @param max The maximum number of rooms in the response.
+     * @param type If not nil, only list the rooms of this type. Otherwise all rooms are listed.
+     * @param sortBy Sort results by room ID (id), most recent activity (lastactivity), or most recently created (created).
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void list(@Nullable String teamId, int max, @Nullable Room.RoomType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Room>> handler);
 
-    private RoomService _service;
+    /**
+     *  Creates a room. The authenticated user is automatically added as a member of the room. See the Memberships API to learn how to add more people to the room.
+     *  
+     * @param title A user-friendly name for the room.
+     * @param teamId If not nil, this room will be associated with the team by team id. Otherwise, this room is not associated with any team.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     * @see com.ciscospark.androidsdk.membership.MembershipClient
+     */
+    void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Room> handler);
 
-    public RoomClient(Authenticator authenticator) {
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(RoomService.class);
-    }
+    /**
+     * Retrieves the details for a room by id.
+     * 
+     * @param roomId The identifier of the room.
+     * @param handler The queue on which the completion handler is dispatched.
+     * @since 0.1
+     */
+    void get(@NonNull String roomId, @NonNull CompletionHandler<Room> handler);
 
-    public void list(@Nullable String teamId, int max, @Nullable Room.RoomType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Room>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, teamId, type != null ? type.name() : null, sortBy != null ? sortBy.name() : null, max <= 0 ? null : max).enqueue(new ListCallback<Room>(handler));
-        });
-    }
+    /**
+     * Updates the details for a room by id.
+     * 
+     * @param roomId The identifier of the room.
+     * @param title A user-friendly name for the room.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void update(@NonNull String roomId, @NonNull String title, @NonNull CompletionHandler<Room> handler);
 
-    public void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Room> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.create(s, Maps.makeMap("title", title, "teamId", teamId)).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void get(@NonNull String roomId, @NonNull CompletionHandler<Room> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, roomId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void update(@NonNull String roomId, @NonNull String title, @NonNull CompletionHandler<Room> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.update(s, roomId, Maps.makeMap("title", title)).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    public void delete(@NonNull String roomId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, roomId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    private interface RoomService {
-        @GET("rooms")
-        Call<ListBody<Room>> list(@Header("Authorization") String authorization,
-                                  @Query("teamId") String teamId,
-                                  @Query("type") String type,
-                                  @Query("sortBy") String sortBy,
-                                  @Query("max") Integer max);
-
-        @POST("rooms")
-        Call<Room> create(@Header("Authorization") String authorization, @Body Map parameters);
-
-        @GET("rooms/{roomId}")
-        Call<Room> get(@Header("Authorization") String authorization, @Path("roomId") String roomId);
-
-        @PUT("rooms/{roomId}")
-        Call<Room> update(@Header("Authorization") String authorization, @Path("roomId") String roomId, @Body Map parameters);
-
-        @DELETE("rooms/{roomId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("roomId") String membershipId);
-    }
+    /**
+     * Deletes a room by id.
+     * 
+     * @param roomId The identifier of the room.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void delete(@NonNull String roomId, @NonNull CompletionHandler<Void> handler);
+    
 }

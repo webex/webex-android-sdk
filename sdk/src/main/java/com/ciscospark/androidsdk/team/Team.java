@@ -29,6 +29,11 @@ import java.util.Date;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * A data type represents a Team at Cisco Spark cloud.
+ * 
+ * @since 0.1
+ */
 public class Team {
 
     @SerializedName("id")
@@ -40,19 +45,32 @@ public class Team {
     @SerializedName("created")
     private Date _created;
 
+    @Override
     public String toString() {
         Gson gson = new Gson();
         return gson.toJson(this);
     }
 
+    /**
+     * @return The identifier of this team.
+     * @since 0.1
+     */
     public String getId() {
         return _id;
     }
 
+    /**
+     * @return The name of this team
+     * @since 0.1
+     */
     public String getName() {
         return _name;
     }
 
+    /**
+     * @return The timestamp that this team being created.
+     * @since 0.1
+     */
     public Date getCreated() {
         return _created;
     }
