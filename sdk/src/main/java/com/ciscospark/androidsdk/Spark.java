@@ -28,6 +28,7 @@ import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.ProviderInfo;
+import android.util.Log;
 import com.cisco.spark.android.core.BackgroundCheck;
 import com.cisco.spark.android.core.SquaredContentProvider;
 import com.cisco.spark.android.media.MediaEngine;
@@ -52,12 +53,15 @@ import com.github.benoitdion.ln.InfoLn;
 import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.ReleaseLn;
 import com.webex.wme.MediaSessionAPI;
+import me.helloworld.utils.Exceptions;
 
 /**
  * @author Allen Xiao<xionxiao@cisco.com>
  * @version 0.1
  */
 public class Spark {
+
+	private static final String TAG = Spark.class.getSimpleName();
 	
 	static {
 		UserAgentProvider.APP_NAME = DefaultHeadersInterceptor.APP_NAME;
@@ -195,8 +199,8 @@ public class Spark {
 			return providerInfo.authority;
 		}
 		catch (Throwable t) {
-			t.printStackTrace();
-			return "com.ciscospark.androidsdk.sync.conversation";
+			Log.d(TAG, Exceptions.printStackTrace(t));
+			return "com.ciscospark.androidsdk.CPOSC";
 		}
 	}
 }
