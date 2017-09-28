@@ -29,9 +29,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.ProviderInfo;
 import com.cisco.spark.android.core.BackgroundCheck;
+import com.cisco.spark.android.core.SquaredContentProvider;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.sync.ConversationContentProvider;
-import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.core.SparkInjector;
@@ -92,7 +92,7 @@ public class Spark {
     BackgroundCheck _backgroundCheck;
 
     public Spark(Application application, Authenticator authenticator) {
-	    ConversationContract.CONTENT_AUTHORITY = getAuthority(application.getApplicationContext());
+	    SquaredContentProvider.CONTENT_AUTHORITY = getAuthority(application.getApplicationContext());
 	    ConversationContentProvider.resetUriMatcher();
 	    com.cisco.spark.android.core.Application.setApplication(application);
         _authenticator = authenticator;
