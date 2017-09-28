@@ -25,7 +25,13 @@ package com.ciscospark.androidsdk;
 import javax.inject.Inject;
 
 import android.app.Application;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.pm.ProviderInfo;
+import com.cisco.spark.android.core.BackgroundCheck;
 import com.cisco.spark.android.media.MediaEngine;
+import com.cisco.spark.android.sync.ConversationContentProvider;
+import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.core.SparkInjector;
@@ -52,7 +58,16 @@ import com.webex.wme.MediaSessionAPI;
  * @version 0.1
  */
 public class Spark {
-
+	
+	static {
+		UserAgentProvider.APP_NAME = DefaultHeadersInterceptor.APP_NAME;
+		UserAgentProvider.APP_VERSION = DefaultHeadersInterceptor.APP_VERSION;
+	}
+	
+	public enum ApplicationMode {
+		BACKGROUND, FOREGROUND
+	}
+	
     public enum LogLevel {
         NO,
         ERROR,
@@ -72,11 +87,14 @@ public class Spark {
 
     @Inject
     MediaEngine _mediaEngine;
+    
+    @Inject
+    BackgroundCheck _backgroundCheck;
 
     public Spark(Application application, Authenticator authenticator) {
-	    UserAgentProvider.APP_NAME = DefaultHeadersInterceptor.APP_NAME;
-	    UserAgentProvider.APP_VERSION = DefaultHeadersInterceptor.APP_VERSION;
-        com.cisco.spark.android.core.Application.setApplication(application);
+	    ConversationContract.CONTENT_AUTHORITY = getAuthority(application.getApplicationContext());
+	    ConversationContentProvider.resetUriMatcher();
+	    com.cisco.spark.android.core.Application.setApplication(application);
         _authenticator = authenticator;
         _injector = new SparkInjector(application);
         _injector.create();
@@ -91,9 +109,19 @@ public class Spark {
      * @return major.minor.build-alpha/beta
      */
     public String version() {
-        return "0.1";
+	    return "0.0.1";
     }
 
+	public boolean setApplicationMode(ApplicationMode mode) {
+		if (mode == ApplicationMode.BACKGROUND) {
+			return _backgroundCheck.tryBackground();
+		}
+		else if (mode == ApplicationMode.FOREGROUND) {
+			return _backgroundCheck.tryForeground();
+		}
+		return false;
+	}
+	
     public Authenticator getAuthenticator() {
         return _authenticator;
     }
@@ -159,4 +187,16 @@ public class Spark {
                 break;
         }
     }
+
+	private static String getAuthority(final Context appContext) {
+		try {
+			final ComponentName componentName = new ComponentName(appContext, ConversationContentProvider.class.getName());
+			final ProviderInfo providerInfo = appContext.getPackageManager().getProviderInfo(componentName, 0);
+			return providerInfo.authority;
+		}
+		catch (Throwable t) {
+			t.printStackTrace();
+			return "com.ciscospark.androidsdk.sync.conversation";
+		}
+	}
 }

@@ -51,6 +51,7 @@ import com.cisco.spark.android.callcontrol.events.CallControlParticipantJoinedEv
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantLeftEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantVideoMutedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlSelfParticipantLeftEvent;
+import com.cisco.spark.android.callcontrol.events.DismissCallNotificationEvent;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.events.CallNotificationEvent;
@@ -60,10 +61,12 @@ import com.cisco.spark.android.events.RequestCallingPermissions;
 import com.cisco.spark.android.locus.events.LocusDeclinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
 import com.cisco.spark.android.locus.events.RetrofitErrorEvent;
+import com.cisco.spark.android.locus.model.LocusData;
 import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaSession;
+import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.ciscospark.androidsdk.CompletionHandler;
@@ -103,6 +106,9 @@ public class PhoneImpl implements Phone {
 
     @Inject
     EventBus _bus;
+
+    @Inject
+    CallAnalyzerReporter _callAnalyzerReporter;
 
     private IncomingCallListener _incomingCallListener;
 
@@ -346,11 +352,11 @@ public class PhoneImpl implements Phone {
 
     public void onEventMainThread(DeviceRegistrationChangedEvent event) {
         Log.i(TAG, "DeviceRegistrationChangedEvent -> is received ");
-        if (_registerCallback == null) {
-            Log.i(TAG, "this.mRegisterListener is null ");
+	    _device = event.getDeviceRegistration();
+	    if (_registerCallback == null) {
+            Log.i(TAG, "Register callback is null ");
             return;
         }
-        _device = event.getDeviceRegistration();
         _registerCallback.onComplete(Result.success(null));
         _registerCallback = null;
         _registerTimer.removeCallbacks(_registerTimeoutTask);
@@ -446,7 +452,7 @@ public class PhoneImpl implements Phone {
 
     // Local declined
     public void onEventMainThread(LocusDeclinedEvent event) {
-        Log.i(TAG, "CallControlCallDeclinedEvent is received " + event.getLocusKey());
+        Log.i(TAG, "LocusDeclinedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             if (_incomingCallback != null) {
@@ -499,7 +505,7 @@ public class PhoneImpl implements Phone {
 
     // Incoming Call
     public void onEventMainThread(CallNotificationEvent event) {
-        Log.i(TAG, "CallNotificationEvent " + event.getType());
+        Log.i(TAG, "CallNotificationEvent is received " + event.getType());
         if (event.getType() == CallNotificationType.INCOMING) {
             Log.i(TAG, "InComing Call");
             CallImpl call = new CallImpl(this, CallImpl.Direction.INCOMING, event.getLocusKey());
@@ -510,6 +516,15 @@ public class PhoneImpl implements Phone {
                 listener.onIncomingCall(call);
             }
         }
+    }
+
+    public void onEventMainThread(DismissCallNotificationEvent event) {
+        Log.i(TAG, "DismissCallNotificationEvent is received " + event.getLocusKey());
+        final LocusData call = _callControlService.getLocusData(event.getLocusKey());
+        if (call != null) {
+            call.setIsToasting(false);
+        }
+	    _callAnalyzerReporter.reportCallAlertRemoved(event.getLocusKey());
     }
 
     public void onEventMainThread(CallControlLocalAudioMutedEvent event) {
