@@ -65,17 +65,26 @@ if (JavaVersion.current().isJava8Compatible()) {
     }
 }
 
+//generateReleaseJavadoc
 android.libraryVariants.all { variant ->
     task("generate${variant.name}Javadoc", type: Javadoc) {
         description "Generates Javadoc for $variant.name."
         source = variant.javaCompile.source
         ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
         classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+	    options.encoding('UTF-8')
+	    options.setUse(true)
+	    options.author(true)
+	    options.version(true)
+	    options.windowTitle('Spark Android SDK 0.1')
+	    options.docTitle('Spark Android SDK 0.1')
         options.links("http://docs.oracle.com/javase/7/docs/api/");
         options.links("http://d.android.com/reference/");
-	    options.footer('Copyright &#169; 2008&#8211;2015  V&#225;Cisco System Inc.  All Rights Reserved.')
+	    options.footer('Copyright &#169; 2016&#8211;2017 Cisco System Inc.  All Rights Reserved.')
         exclude '**/BuildConfig.java'
         exclude '**/R.java'
+	    exclude '**/internal/*.java'
+	    exclude '**/utils/**'
     }
 }
 
