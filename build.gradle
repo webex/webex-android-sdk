@@ -3,6 +3,7 @@ apply plugin: 'com.github.ben-manes.versions'
 buildscript {
     repositories {
         jcenter()
+	    mavenCentral()
         maven {
             url 'https://maven.fabric.io/public'
         }
@@ -12,12 +13,15 @@ buildscript {
         classpath 'io.fabric.tools:gradle:1.21.6'
         classpath 'com.android.tools.build:gradle:2.3.3'
         classpath 'me.tatarka:gradle-retrolambda:3.5.0'
+	    classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+	    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
     }
 }
 
 allprojects {
     repositories {
         mavenLocal()
+	    mavenCentral()
         jcenter()
         maven {
             url 'http://10.140.253.42:10081/nexus/content/repositories/thirdparty/'

@@ -23,8 +23,7 @@
 package com.ciscospark.androidsdk.utils.http;
 
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.Result;
-
+import com.ciscospark.androidsdk.internal.ResultImpl;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -44,14 +43,14 @@ public class ObjectCallback<T> implements Callback<T> {
     @Override
     public void onResponse(Call<T> call, Response<T> response) {
         if (response.isSuccessful()) {
-            _handler.onComplete(Result.success(response.body()));
+            _handler.onComplete(ResultImpl.success(response.body()));
         } else {
-            _handler.onComplete(Result.error(response));
+            _handler.onComplete(ResultImpl.error(response));
         }
     }
 
     @Override
     public void onFailure(Call<T> call, Throwable t) {
-        _handler.onComplete(Result.error(t));
+        _handler.onComplete(ResultImpl.error(t));
     }
 }

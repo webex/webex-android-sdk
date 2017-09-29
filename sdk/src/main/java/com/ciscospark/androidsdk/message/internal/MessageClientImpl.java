@@ -63,13 +63,13 @@ public class MessageClientImpl implements MessageClient {
 		_service = new ServiceBuilder().build(MessageService.class);
 	}
 
-	public void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @NonNull String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
+	public void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
 		ServiceBuilder.async(_authenticator, handler, s -> {
 			_service.list(s, roomId, before, beforeMessage, mentionedPeople, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
 		});
 	}
 
-	public void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @NonNull String[] files, @NonNull CompletionHandler<Message> handler) {
+	public void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler) {
 		ServiceBuilder.async(_authenticator, handler, s -> {
 			_service.post(s, Maps.makeMap("roomId", roomId, "toPersonId", personId, "toPersonEmail", personEmail, "text", text, "markdown", markdown, "files", files)).enqueue(new ObjectCallback<>(handler));
 		});

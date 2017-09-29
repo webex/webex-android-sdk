@@ -48,7 +48,7 @@ public interface MessageClient {
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1     
      */
-    void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @NonNull String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler);
+    void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler);
 
     /**
      * Posts a plain text message, and optionally, a media content attachment, to a room by room Id.
@@ -62,7 +62,7 @@ public interface MessageClient {
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1     
      */
-    void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @NonNull String[] files, @NonNull CompletionHandler<Message> handler);
+    void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler);
 
     /**
      * Retrieves the details for a message by message Id.

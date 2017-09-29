@@ -25,7 +25,7 @@ package com.ciscospark.androidsdk.utils.http;
 import java.util.List;
 
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.Result;
+import com.ciscospark.androidsdk.internal.ResultImpl;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -45,15 +45,15 @@ public class ListCallback<T> implements Callback<ListBody<T>> {
     @Override
     public void onResponse(Call<ListBody<T>> call, Response<ListBody<T>> response) {
         if (response.isSuccessful()) {
-            _handler.onComplete(Result.success(response.body().getItems()));
+            _handler.onComplete(ResultImpl.success(response.body().getItems()));
         } else {
-            _handler.onComplete(Result.error(response));
+            _handler.onComplete(ResultImpl.error(response));
         }
     }
 
     @Override
     public void onFailure(Call<ListBody<T>> call, Throwable t) {
-        _handler.onComplete(Result.error(t));
+        _handler.onComplete(ResultImpl.error(t));
     }
 
 }

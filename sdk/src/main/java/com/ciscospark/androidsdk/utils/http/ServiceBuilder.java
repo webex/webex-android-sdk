@@ -28,6 +28,7 @@ import java.util.List;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.auth.Authenticator;
+import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.google.gson.Gson;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -99,7 +100,7 @@ public class ServiceBuilder {
                 }
                 else {
                     if (handler != null) {
-                        handler.onComplete(Result.error(result.getError()));
+                        handler.onComplete(ResultImpl.error(result.getError()));
                     }
                 }
             }
