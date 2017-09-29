@@ -117,51 +117,12 @@ android {
 	}
 }
 
-install {
-	repositories.mavenInstaller {
-		// This generates POM.xml with proper parameters
-		pom {
-			project {
-				packaging 'aar'
-				groupId publishedGroupId
-				artifactId artifact
-
-				// Add your description here
-				name libraryName
-				description libraryDescription
-				url siteUrl
-
-				// Set your license
-				licenses {
-					license {
-						name licenseName
-						url licenseUrl
-					}
-				}
-				developers {
-					developer {
-						id developerId
-						name developerName
-						email developerEmail
-					}
-				}
-				scm {
-					connection gitUrl
-					developerConnection gitUrl
-					url siteUrl
-
-				}
-			}
-		}
-	}
-}
-
 publishing {
     publications {
         maven(MavenPublication) {
             groupId 'com.ciscospark'
             artifactId 'androidsdk'
-            version '0.0.1'
+            version '0.0.1-SNAPSHOT'
             artifact "$buildDir/outputs/aar/sdk-debug.aar" //aar artifact you want to publish
 
             pom.withXml {
@@ -205,7 +166,7 @@ bintray {
 		//publicDownloadNumbers = true
 		//attributes= ['a': ['ay1', 'ay2'], 'b': ['bee'], c: 'cee'] //Optional package-level attributes
 		version {
-			name = '0.0.1'
+			name = '0.0.1-SNAPSHOT'
 			desc = 'Spark Android SDK 0.0.1 Snapshot'
 			//vcsTag = '1.3.0'
 			//attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']

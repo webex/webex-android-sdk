@@ -247,7 +247,15 @@ public class CallImpl implements Call {
     }
     
     public void sendFeedback(int rating, @Nullable String comment) {
-        // TODO
+        Map<String, String> info = new HashMap<>();
+	    info.put("user.rating", String.valueOf(rating));
+	    info.put("user.comments", comment);
+	    info.put("locusId", this._key.getLocusId());
+	    Locus locus = _phone.getCallService().getLocus(_key);
+	    if (locus != null && locus.getSelf() != null) {
+		    info.put("participantId", locus.getSelf().getId().toString());
+	    }
+	    _phone.sendFeedback(info);
     }
     
     public Phone.FacingMode getFacingMode() {

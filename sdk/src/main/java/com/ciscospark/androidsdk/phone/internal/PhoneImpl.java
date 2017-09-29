@@ -22,6 +22,7 @@
 
 package com.ciscospark.androidsdk.phone.internal;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,8 +33,10 @@ import javax.inject.Inject;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
@@ -73,14 +76,19 @@ import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.Spark;
 import com.ciscospark.androidsdk.auth.Authenticator;
+import com.ciscospark.androidsdk.internal.MetricsClient;
 import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.ciscospark.androidsdk.internal.SparkInjector;
+import com.ciscospark.androidsdk.people.Person;
+import com.ciscospark.androidsdk.people.internal.PersonClientImpl;
 import com.ciscospark.androidsdk.phone.Call;
 import com.ciscospark.androidsdk.phone.CallObserver;
 import com.ciscospark.androidsdk.phone.MediaOption;
 import com.ciscospark.androidsdk.phone.Phone;
+import com.ciscospark.androidsdk.utils.Utils;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import de.greenrobot.event.EventBus;
+import me.helloworld.utils.Checker;
 
 
 /**
@@ -134,6 +142,8 @@ public class PhoneImpl implements Phone {
     private MediaSession _preview;
     
     private H264LicensePrompter _prompter;
+	
+	private MetricsClient _metrics;
 
     public PhoneImpl(Context context, Authenticator authenticator, SparkInjector injector) {
         injector.inject(this);
@@ -249,15 +259,25 @@ public class PhoneImpl implements Phone {
         stopPreview();
         _option = option;
         _dialCallback = callback;
-
-        CallContext.Builder builder = new CallContext.Builder(dialString);
-        if (!option.hasVideo()) {
-            builder = builder.setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly);
-        }
-        _callControlService.joinCall(builder.build());
-        Log.i(TAG, "dial: ->CallImpl sendout");
+	    
+	    if (dialString.contains("@") && !dialString.contains(".")) {
+		    new PersonClientImpl(_authenticator).list(dialString, null, 1, new CompletionHandler<List<Person>>() {
+			    @Override
+			    public void onComplete(Result<List<Person>> result) {
+				    List<Person> persons = result.getData();
+				    if (!Checker.isEmpty(persons)) {
+					    Person person = persons.get(0);
+					    Log.d(TAG, "Lookuped target: " + person.getId() +", " + dialString);
+					    doDial(parseHydraId(person.getId()), option);
+				    }
+			    }
+		    });
+	    }
+	    else {
+		    doDial(parseHydraId(dialString), option);
+	    }
     }
-
+	
     void answer(@NonNull CallImpl call, @NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
         Log.d(TAG, "answer: ->start");
         for (CallImpl exist : _calls.values()) {
@@ -350,6 +370,17 @@ public class PhoneImpl implements Phone {
             }
         }
     }
+    
+    void sendFeedback(Map<String, String> feedback) {
+	    if (_metrics != null) {
+		    feedback.put("key", "meetup_call_user_rating");
+		    feedback.put("time", Utils.timestampUTC());
+		    feedback.put("type", "GENERIC");
+		    List<Map<String, String>> list = new ArrayList<>();
+		    list.add(feedback);
+		    _metrics.post(list);
+	    }
+    }
 
     CallControlService getCallService() {
         return _callControlService;
@@ -362,6 +393,14 @@ public class PhoneImpl implements Phone {
     public void onEventMainThread(DeviceRegistrationChangedEvent event) {
         Log.i(TAG, "DeviceRegistrationChangedEvent -> is received ");
 	    _device = event.getDeviceRegistration();
+	    Uri uri = _device.getMetricsServiceUrl();
+	    if (uri != null) {
+		    String url = uri.toString();
+		    if (!url.endsWith("/")) {
+			    url = url + "/";
+		    }
+		    _metrics = new MetricsClient(_authenticator, url);
+	    }
 	    if (_registerCallback == null) {
             Log.i(TAG, "Register callback is null ");
             return;
@@ -573,7 +612,7 @@ public class PhoneImpl implements Phone {
                 }
             }
             else {
-                // for local ??
+                // TODO for local ??
             }
         }
     }
@@ -591,14 +630,14 @@ public class PhoneImpl implements Phone {
                 }
             }
             else {
-                // for local ??
+                // TODO for local ??
             }
         }
     }
 
     public void onEventMainThread(CallControlLocusChangedEvent event) {
         Log.i(TAG, "CallControlLocusChangedEvent is received ");
-        // DO THIS FOR PSTN/SIP
+        // TODO DO THIS FOR PSTN/SIP
     }
 
     public void onEventMainThread(RequestCallingPermissions event) {
@@ -620,6 +659,38 @@ public class PhoneImpl implements Phone {
             _incomingCallback = null;
         }
     }
+
+	private void doDial(String target, MediaOption option) {
+		Log.d(TAG, "Dial: " + target);
+		CallContext.Builder builder = new CallContext.Builder(target);
+		if (!option.hasVideo()) {
+			builder = builder.setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly);
+		}
+		_callControlService.joinCall(builder.build());
+		Log.i(TAG, "dial: ->CallImpl sendout");
+	}
+	
+    private String parseHydraId(String id) {
+		try {
+			byte[] bytes = Base64.decode(id, Base64.URL_SAFE);
+			if (Checker.isEmpty(bytes)) {
+				return id;
+			}
+			String decode = new String(bytes, "UTF-8");
+			Uri uri = Uri.parse(decode);
+			if (uri != null && uri.getScheme().equalsIgnoreCase("ciscospark")) {
+				List<String> paths = uri.getPathSegments();
+				if (paths != null && paths.size() >= 2) {
+					return paths.get(paths.size() - 1);
+				}
+			}
+			return id;
+		}
+		catch (UnsupportedEncodingException e) {
+			return id;
+		}
+
+	}
 
     static FacingMode toFacingMode(String s) {
         if (MediaEngine.WME_BACK_CAMERA.equals(s)) {

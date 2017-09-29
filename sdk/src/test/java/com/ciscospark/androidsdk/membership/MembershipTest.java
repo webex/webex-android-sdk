@@ -53,7 +53,6 @@ public class MembershipTest {
         assertEquals(membership.getId(), "Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg");
         assertEquals(membership.getPersonEmail(), "john.andersen@example.com");
         assertEquals(membership.getPersonDisplayName(), "John Andersen");
-        assertEquals(membership.getPersonOrgId(), "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE");
         assertEquals(membership.getRoomId(), "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0");
         assertEquals(membership.isModerator(), true);
         assertEquals(membership.isMonitor(), true);

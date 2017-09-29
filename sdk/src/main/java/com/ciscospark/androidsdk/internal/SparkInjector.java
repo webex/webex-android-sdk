@@ -87,6 +87,7 @@ public class SparkInjector extends ApplicationDelegate {
         List<Method> methods = Methods.getMethodsMarkedWithAnnotation(o.getClass(), AfterInjected.class);
 	    for (Method method : methods) {
 		    try {
+			    method.setAccessible(true);
 			    method.invoke(o);
 		    }
 		    catch (Throwable t) {

@@ -24,6 +24,7 @@ package com.ciscospark.androidsdk.message;
 
 import com.ciscospark.androidsdk.Spark;
 import com.ciscospark.androidsdk.auth.JWTAuthenticator;
+import com.ciscospark.androidsdk.message.internal.MessageClientImpl;
 import com.google.gson.Gson;
 
 import org.junit.BeforeClass;
@@ -47,7 +48,7 @@ public class MessageClientTest {
         System.out.println("setup test case");
         authenticator = new JWTAuthenticator();
         authenticator.authorize(auth_token);
-        mClient = new MessageClient(authenticator);
+        mClient = new MessageClientImpl(authenticator);
     }
 
     @Test

@@ -23,6 +23,8 @@
 package com.ciscospark.androidsdk.utils;
 
 import android.support.annotation.Nullable;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 /**
  * Created on 21/08/2017.
@@ -34,5 +36,9 @@ public class Utils {
             throw new NullPointerException(message);
         }
         return object;
+    }
+    
+    public static String timestampUTC() {
+        return DateTime.now( DateTimeZone.UTC ).toString();
     }
 }

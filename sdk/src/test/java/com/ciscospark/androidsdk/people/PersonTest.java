@@ -22,12 +22,9 @@
 
 package com.ciscospark.androidsdk.people;
 
-import com.google.gson.Gson;
+import com.ciscospark.androidsdk.utils.Utils;
 import com.google.gson.annotations.SerializedName;
-
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  *
@@ -103,33 +100,35 @@ public class PersonTest {
 
     @Test
     public void testConvert() {
-        String jsonString = "{\n" +
-                " \"id\": \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM\",\n" +
-                " \"emails\": [\n" +
-                " \"shepx@163.com\"\n" +
-                " ],\n" +
-                " \"displayName\": \"Eric\",\n" +
-                " \"nickName\": \"Eric\",\n" +
-                " \"avatar\": \"https://c74213ddaf67eb02dabb-04de5163e3f90393a9f7bb6f7f0967f1.ssl.cf1.rackcdn.com/V1~691d27c5e879d9b4126edbc0ed0d1683~_V1ZjGddToOslLXzNQPueg==~1600\",\n" +
-                " \"orgId\": \"Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jb25zdW1lcg\",\n" +
-                " \"created\": \"2017-04-15T23:56:15.177Z\",\n" +
-                " \"status\": \"unknown\",\n" +
-                " \"type\": \"person\"\n" +
-                " }";
-        Gson gson = new Gson();
-        Person person = gson.fromJson(jsonString, Person.class);
-        assertNotNull(person);
-        assertEquals(person.getId(), "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM");
-        assertEquals(person.getEmails()[0], "shepx@163.com");
-        assertEquals(person.getDisplayName(), "Eric");
-        assertEquals(person.getNickName(), "Eric");
-        assertNull(person.getFirstName());
-        assertNull(person.getLastName());
-        assertEquals(person.getAvatar(), "https://c74213ddaf67eb02dabb-04de5163e3f90393a9f7bb6f7f0967f1.ssl.cf1.rackcdn.com/V1~691d27c5e879d9b4126edbc0ed0d1683~_V1ZjGddToOslLXzNQPueg==~1600");
-        assertEquals(person.getOrgId(), "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jb25zdW1lcg");
-        assertEquals(person.getCreated(), "2017-04-15T23:56:15.177Z");
-        assertEquals(person.getStatus(), "unknown");
-        assertEquals(person.getType(), "person");
+        System.out.println(Utils.timestampUTC());
+        
+//        String jsonString = "{\n" +
+//                " \"id\": \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM\",\n" +
+//                " \"emails\": [\n" +
+//                " \"shepx@163.com\"\n" +
+//                " ],\n" +
+//                " \"displayName\": \"Eric\",\n" +
+//                " \"nickName\": \"Eric\",\n" +
+//                " \"avatar\": \"https://c74213ddaf67eb02dabb-04de5163e3f90393a9f7bb6f7f0967f1.ssl.cf1.rackcdn.com/V1~691d27c5e879d9b4126edbc0ed0d1683~_V1ZjGddToOslLXzNQPueg==~1600\",\n" +
+//                " \"orgId\": \"Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jb25zdW1lcg\",\n" +
+//                " \"created\": \"2017-04-15T23:56:15.177Z\",\n" +
+//                " \"status\": \"unknown\",\n" +
+//                " \"type\": \"person\"\n" +
+//                " }";
+//        Gson gson = new Gson();
+//        Person person = gson.fromJson(jsonString, Person.class);
+//        assertNotNull(person);
+//        assertEquals(person.getId(), "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM");
+//        assertEquals(person.getEmails()[0], "shepx@163.com");
+//        assertEquals(person.getDisplayName(), "Eric");
+//        assertEquals(person.getNickName(), "Eric");
+//        assertNull(person.getFirstName());
+//        assertNull(person.getLastName());
+//        assertEquals(person.getAvatar(), "https://c74213ddaf67eb02dabb-04de5163e3f90393a9f7bb6f7f0967f1.ssl.cf1.rackcdn.com/V1~691d27c5e879d9b4126edbc0ed0d1683~_V1ZjGddToOslLXzNQPueg==~1600");
+//        assertEquals(person.getOrgId(), "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jb25zdW1lcg");
+//        assertEquals(person.getCreated(), "2017-04-15T23:56:15.177Z");
+//        assertEquals(person.getStatus(), "unknown");
+//        assertEquals(person.getType(), "person");
     }
 
 
@@ -144,51 +143,51 @@ public class PersonTest {
 
     @Test
     public void testNestedConvert() {
-        String jsonString = "{\n" +
-                " \"items\": [\n" +
-                " {\n" +
-                " \"id\": \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM\",\n" +
-                " \"emails\": [\n" +
-                " \"shepx@163.com\"\n" +
-                " ],\n" +
-                " \"displayName\": \"Eric\",\n" +
-                " \"nickName\": \"Eric\",\n" +
-                " \"avatar\": \"https://c74213ddaf67eb02dabb-04de5163e3f90393a9f7bb6f7f0967f1.ssl.cf1.rackcdn.com/V1~691d27c5e879d9b4126edbc0ed0d1683~_V1ZjGddToOslLXzNQPueg==~1600\",\n" +
-                " \"orgId\": \"Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jb25zdW1lcg\",\n" +
-                " \"created\": \"2017-04-15T23:56:15.177Z\",\n" +
-                " \"status\": \"unknown\",\n" +
-                " \"type\": \"person\"\n" +
-                " }\n" +
-                " ],\n" +
-                " \"notFoundIds\": null\n" +
-                " }";
-
-
-        Gson gson = new Gson();
-        NestedResponse nr = gson.fromJson(jsonString, NestedResponse.class);
-        assertNotNull(nr);
-        assertEquals(nr.getItems().length, 1);
-        Person person = nr.getItems()[0];
-        assertEquals(person.getId(), "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM");
-        assertEquals(person.getEmails()[0], "shepx@163.com");
-        assertEquals(person.getDisplayName(), "Eric");
-        assertEquals(person.getNickName(), "Eric");
-        assertNull(person.getFirstName());
-        assertNull(person.getLastName());
-        assertEquals(person.getAvatar(), "https://c74213ddaf67eb02dabb-04de5163e3f90393a9f7bb6f7f0967f1.ssl.cf1.rackcdn.com/V1~691d27c5e879d9b4126edbc0ed0d1683~_V1ZjGddToOslLXzNQPueg==~1600");
-        assertEquals(person.getOrgId(), "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jb25zdW1lcg");
-        assertEquals(person.getCreated(), "2017-04-15T23:56:15.177Z");
-        assertEquals(person.getStatus(), "unknown");
-        assertEquals(person.getType(), "person");
-
-        jsonString = "{\n" +
-                " \"items\": [],\n" +
-                " \"notFoundIds\": null\n" +
-                " }";
-        nr = gson.fromJson(jsonString, NestedResponse.class);
-        assertNotNull(nr);
-        assertNotNull(nr.getItems());
-        assertEquals(nr.getItems().length, 0);
+//        String jsonString = "{\n" +
+//                " \"items\": [\n" +
+//                " {\n" +
+//                " \"id\": \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM\",\n" +
+//                " \"emails\": [\n" +
+//                " \"shepx@163.com\"\n" +
+//                " ],\n" +
+//                " \"displayName\": \"Eric\",\n" +
+//                " \"nickName\": \"Eric\",\n" +
+//                " \"avatar\": \"https://c74213ddaf67eb02dabb-04de5163e3f90393a9f7bb6f7f0967f1.ssl.cf1.rackcdn.com/V1~691d27c5e879d9b4126edbc0ed0d1683~_V1ZjGddToOslLXzNQPueg==~1600\",\n" +
+//                " \"orgId\": \"Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jb25zdW1lcg\",\n" +
+//                " \"created\": \"2017-04-15T23:56:15.177Z\",\n" +
+//                " \"status\": \"unknown\",\n" +
+//                " \"type\": \"person\"\n" +
+//                " }\n" +
+//                " ],\n" +
+//                " \"notFoundIds\": null\n" +
+//                " }";
+//
+//
+//        Gson gson = new Gson();
+//        NestedResponse nr = gson.fromJson(jsonString, NestedResponse.class);
+//        assertNotNull(nr);
+//        assertEquals(nr.getItems().length, 1);
+//        Person person = nr.getItems()[0];
+//        assertEquals(person.getId(), "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM");
+//        assertEquals(person.getEmails()[0], "shepx@163.com");
+//        assertEquals(person.getDisplayName(), "Eric");
+//        assertEquals(person.getNickName(), "Eric");
+//        assertNull(person.getFirstName());
+//        assertNull(person.getLastName());
+//        assertEquals(person.getAvatar(), "https://c74213ddaf67eb02dabb-04de5163e3f90393a9f7bb6f7f0967f1.ssl.cf1.rackcdn.com/V1~691d27c5e879d9b4126edbc0ed0d1683~_V1ZjGddToOslLXzNQPueg==~1600");
+//        assertEquals(person.getOrgId(), "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jb25zdW1lcg");
+//        assertEquals(person.getCreated(), "2017-04-15T23:56:15.177Z");
+//        assertEquals(person.getStatus(), "unknown");
+//        assertEquals(person.getType(), "person");
+//
+//        jsonString = "{\n" +
+//                " \"items\": [],\n" +
+//                " \"notFoundIds\": null\n" +
+//                " }";
+//        nr = gson.fromJson(jsonString, NestedResponse.class);
+//        assertNotNull(nr);
+//        assertNotNull(nr.getItems());
+//        assertEquals(nr.getItems().length, 0);
 
     }
 }
