@@ -25,6 +25,11 @@ package com.ciscospark.androidsdk;
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 
+/**
+ * The enumeration of error types in Cisco Spark Android SDK.
+ * 
+ * @since 0.1
+ */
 public class SparkError<T> {
 
     public enum ErrorCode {
@@ -41,18 +46,39 @@ public class SparkError<T> {
 	
 	protected T _data = null;
 
+    /**
+     * The default constructor
+     */
     public SparkError() {
     }
 
+    /**
+     * The constructor with the error code
+     *
+     * @param errorCode the error code
+     */
     public SparkError(ErrorCode errorCode) {
 	    _code = errorCode;
     }
 
+    /**
+     * The constructor with the error code and error message
+     *
+     * @param errorCode the error code
+     * @param message the error message
+     */
     public SparkError(ErrorCode errorCode, String message) {
 	    _code = errorCode;
 	    _message = message;
     }
 
+    /**
+     * The constructor with the error code and error message
+     *
+     * @param errorCode the error code
+     * @param message the error message
+     * @param data the error data
+     */
 	public SparkError(ErrorCode errorCode, String message, T data) {
 		_code = errorCode;
 		_message = message;

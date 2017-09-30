@@ -114,7 +114,7 @@ public class Spark {
     }
 	
     /**
-     * Get current sdk version
+     * Get current SDK version
      *
      * @return major.minor.build-alpha/beta
      * @since 0.1
@@ -124,7 +124,7 @@ public class Spark {
     }
 	
 	/**
-	 * Invoke this method when application switch between background and foreground.
+	 * Invoke this method when the application switches between background and foreground.
 	 * 
 	 * @param background application run in background or not.
 	 * @since 0.1

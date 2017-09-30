@@ -30,7 +30,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * The struct of a Message on Cisco Spark.
+ * This class represents a Message on Cisco Spark.
  * 
  * @since 0.1
  */
@@ -145,7 +145,7 @@ public class Message {
     }
 
 	/**
-	 * @return The metioned peoples in the message.
+	 * @return The array of mentioned peoples in the message.
 	 * @since 0.1
 	 */
 	public String[] getMentionedPeople() {

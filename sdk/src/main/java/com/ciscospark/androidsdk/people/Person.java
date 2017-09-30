@@ -95,7 +95,7 @@ public class Person {
     }
 	
 	/**
-	 * @return The avatar name of this person.
+	 * @return The URL of this person's avatar.
 	 * @since 0.1
 	 */
 	public String getAvatar() {
