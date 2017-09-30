@@ -47,7 +47,7 @@ import retrofit2.http.POST;
 import static com.ciscospark.androidsdk.utils.Utils.checkNotNull;
 
 /**
- * A <a href="https://oauth.net/2/">OAuth</a> based authentication strategy is to be used to authenticate a user on Cisco Spark.
+ * An <a href="https://oauth.net/2/">OAuth</a> based authentication strategy for authenticating a user on Cisco Spark.
  * 
  * @since 0.1
  * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>

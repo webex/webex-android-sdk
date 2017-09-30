@@ -30,7 +30,7 @@ import android.support.annotation.Nullable;
 import com.ciscospark.androidsdk.CompletionHandler;
 
 /**
- * An client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-rooms.html">Rooms REST API</a>
+ * A client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-rooms.html">Rooms REST API</a>
  * 
  * @since 0.1
  */

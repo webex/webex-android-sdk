@@ -25,7 +25,9 @@ package com.ciscospark.androidsdk.utils;
 import android.support.annotation.Nullable;
 
 /**
- * Created on 21/08/2017.
+ * An utility class.
+ *
+ * @since: 0.1
  */
 
 public class Utils {

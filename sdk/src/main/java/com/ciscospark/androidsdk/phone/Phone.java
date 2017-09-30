@@ -135,7 +135,7 @@ public interface Phone {
     /**
      * Render a preview of the local party before the call is answered.
      * 
-     * @param view a UI view for rendering video.
+     * @param view an UI view for rendering video.
      * @since 0.1
      */
     void startPreview(View view);

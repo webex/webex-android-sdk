@@ -62,14 +62,28 @@ public class MediaOption {
         _remoteView = remoteView;
     }
 	
+    /**
+     * Whether video is enabled.
+     *
+     * @return False if neither local or remote video is enabled. Otherwise, true.
+     * @since 0.1
+     */
     public boolean hasVideo() {
         return _localView != null || _remoteView != null;
     }
 	
+    /**
+     * @return The remote video view
+     * @since 0.1
+     */
     public View getRemoteView() {
         return _remoteView;
     }
 	
+    /**
+     * @return The local video view
+     * @since 0.1
+     */
     public View getLocalView() {
         return _localView;
     }

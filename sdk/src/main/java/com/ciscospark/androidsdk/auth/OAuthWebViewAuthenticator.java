@@ -38,7 +38,8 @@ import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import me.helloworld.utils.Checker;
 
 /**
- * A <a href="https://oauth.net/2/">OAuth</a> based authentication with a WebView is to be used to authenticate a user on Cisco Spark.
+ * An <a href="https://oauth.net/2/">OAuth</a> based authentication with a WebView.
+ * This is for authenticating a user on Cisco Spark.
  *
  * @since 0.1
  * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
@@ -91,7 +92,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     /**
      * Brings up a web-based authorization view and directs the user through the OAuth process.
      * 
-     * @param view the user interface for authorization by the end user.
+     * @param view the web view for the authorization by the end user.
      * @param handler the completion handler will be called when authentication is complete, the error to indicate if the authentication process was successful.
      * @since 0.1
      */

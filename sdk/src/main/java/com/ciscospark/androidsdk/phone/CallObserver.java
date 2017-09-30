@@ -27,7 +27,7 @@ import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 
 /**
- * Observer for {@link Call} event
+ * An observer interface for {@link Call} event
  * 
  * @since 0.1
  */
@@ -109,7 +109,7 @@ public interface CallObserver {
     }
 
 	/**
-	 * Disconnected event for call
+	 * This event is fired when the call is disconnected.
 	 * 
 	 * @since 0.1
 	 */
@@ -118,7 +118,7 @@ public interface CallObserver {
     }
 
 	/**
-	 * The local party has left the call.
+	 * This event is fired when local party has left the call.
 	 * 
 	 * @since 0.1
 	 */
@@ -130,7 +130,8 @@ public interface CallObserver {
     }
 
 	/**
-	 * The local party has declined the call. This is only applicable when the direction of the call is incoming.
+	 * This event is fired when the local party has declined the call.
+     * This is only applicable when the direction of the call is incoming.
 	 * 
 	 * @since 0.1
 	 */
@@ -142,7 +143,8 @@ public interface CallObserver {
     }
 
 	/**
-	 * The local party has cancelled the call. This is only applicable when the direction of the call is outgoing.
+	 * TThis event is fired when the local party has cancelled the call.
+     * This is only applicable when the direction of the call is outgoing.
 	 * 
 	 * @since 0.1
 	 */
@@ -154,7 +156,7 @@ public interface CallObserver {
     }
 
 	/**
-	 * The remote party has left the call. 
+	 * This event is fired when the remote party has left the call.
 	 * 
 	 * @since 0.1
 	 */
@@ -166,7 +168,8 @@ public interface CallObserver {
     }
 
 	/**
-	 * The remote party has declined the call. This is only applicable when the direction of the call is outgoing.
+	 * This event is fired when the remote party has declined the call.
+     * This is only applicable when the direction of the call is outgoing.
 	 * 
 	 * @since 0.1
 	 */
@@ -178,7 +181,8 @@ public interface CallObserver {
     }
 
 	/**
-	 * The remote party has cancelled the call. This is only applicable when the direction of the call is incoming.
+	 * This event is fired when the remote party has cancelled the call.
+     * This is only applicable when the direction of the call is incoming.
 	 * 
 	 * @since 0.1
 	 */
@@ -190,7 +194,8 @@ public interface CallObserver {
     }
 
 	/**
-	 * One of the other phones of the authenticated user has answered the call. This is only applicable when the direction of the call is incoming.
+	 * This event is fired when one of the other phones of the authenticated user has answered the call.
+     * This is only applicable when the direction of the call is incoming.
 	 * 
 	 * @since 0.1
 	 */
@@ -214,7 +219,7 @@ public interface CallObserver {
     }
 
 	/**
-	 * Error casue the call to be disconnected.
+	 * This event is fired when the call to be disconnected due to an error.
 	 * 
 	 * @since 0.1
 	 */
