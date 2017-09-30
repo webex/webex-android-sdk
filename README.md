@@ -4,7 +4,7 @@
 
 The Cisco Spark Android SDK makes it easy to integrate secure and convenient Cisco Spark messaging and calling features in your Android apps.
 
-This SDK requires **Android API Level 21** or later.
+This SDK is built in **Android SDK Tools 25** and requires **Android API Level 21** or later.
 
 ## Table of Contents
 
@@ -21,7 +21,7 @@ Assuming you already have an Android project, e.g. _MySparkApp_, for your androi
     ```
     allprojects {
         repositories {
-            jcenter()
+            mavenCentral()
         }
     }
     ```
@@ -29,7 +29,17 @@ Assuming you already have an Android project, e.g. _MySparkApp_, for your androi
 2. Add spark-android-sdk library in your App build.gradle dependency
 
     ```
-    dependencies { compile 'com.ciscospark:androidsdk:0.0.1' }
+    dependencies { compile 'com.ciscospark:androidsdk:0.1.0' }
+    ```
+
+3. Enable multiDex in your App
+
+    ```
+    android {
+        defaultConfig {
+            multiDexEnabled true
+        }
+    }
     ```
 
 ## Usage
