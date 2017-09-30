@@ -111,6 +111,7 @@ public class Spark {
         _injector.inject(this);
         _injector.inject(_authenticator);
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _injector);
+		setLogLevel(null);
     }
 	
     /**
@@ -246,36 +247,37 @@ public class Spark {
 	public void setLogLevel(LogLevel logLevel) {
 		NaturalLog logger = new com.ciscospark.androidsdk.utils.log.DebugLn();
 		MediaSessionAPI.TraceLevelMask mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
-        switch (logLevel) {
-            case NO:
-	            logger = new NoLn();
-                mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_NOTRACE;
-                break;
-            case ERROR:
-	            logger = new ReleaseLn();
-	            mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_ERROR;
-                break;
-            case WARNING:
-	            logger = new WarningLn();
-	            mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
-                break;
-            case INFO:
-	            logger = new InfoLn();
-	            mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
-                break;
-            case DEBUG:
-	            logger = new com.ciscospark.androidsdk.utils.log.DebugLn();
-	            mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG;
-                break;
-            case VERBOSE:
-	            logger = new DebugLn();
-	            mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DETAIL;
-                break;
-	        case ALL:
-		        logger = new DebugLn();
-		        mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DETAIL;
-        }
-        
+		if (logLevel != null) {
+			switch (logLevel) {
+				case NO:
+					logger = new NoLn();
+					mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_NOTRACE;
+					break;
+				case ERROR:
+					logger = new ReleaseLn();
+					mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_ERROR;
+					break;
+				case WARNING:
+					logger = new WarningLn();
+					mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
+					break;
+				case INFO:
+					logger = new InfoLn();
+					mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
+					break;
+				case DEBUG:
+					logger = new com.ciscospark.androidsdk.utils.log.DebugLn();
+					mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG;
+					break;
+				case VERBOSE:
+					logger = new DebugLn();
+					mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DETAIL;
+					break;
+				case ALL:
+					logger = new DebugLn();
+					mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DETAIL;
+			}
+		}
 		Ln.initialize(logger);
 		if (_mediaEngine != null) {
 			_mediaEngine.setLoggingLevel(mask);

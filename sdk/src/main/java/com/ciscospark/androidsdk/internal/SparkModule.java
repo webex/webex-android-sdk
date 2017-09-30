@@ -30,6 +30,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import com.cisco.spark.android.BuildConfig;
@@ -53,6 +54,7 @@ import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.core.AvatarProvider;
 import com.cisco.spark.android.core.BackgroundCheck;
+import com.cisco.spark.android.core.Component;
 import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.core.PermissionsHelper;
 import com.cisco.spark.android.core.Settings;
@@ -89,11 +91,11 @@ import com.cisco.spark.android.room.RoomService;
 import com.cisco.spark.android.room.audiopairing.UltrasoundMetrics;
 import com.cisco.spark.android.room.model.RoomState;
 import com.cisco.spark.android.sdk.SdkClient;
-import com.cisco.spark.android.sdk.SparkAndroid;
 import com.cisco.spark.android.sproximity.SProximityPairingCallback;
 import com.cisco.spark.android.sync.ActorRecordProvider;
 import com.cisco.spark.android.sync.Batch;
 import com.cisco.spark.android.sync.SearchManager;
+import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
 import com.cisco.spark.android.sync.queue.ConversationSyncQueue;
 import com.cisco.spark.android.ui.call.VideoMultitaskComponent;
@@ -102,6 +104,7 @@ import com.cisco.spark.android.util.LinusReachabilityService;
 import com.cisco.spark.android.util.LocationManager;
 import com.cisco.spark.android.util.Toaster;
 import com.cisco.spark.android.voicemail.VoicemailService;
+import com.cisco.spark.android.wdm.DeviceInfo;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.ciscospark.androidsdk.Spark;
 import com.ciscospark.androidsdk.auth.JWTAuthenticator;
@@ -613,7 +616,63 @@ class SparkModule {
     @Provides
     @Singleton
     SdkClient provideSdkClient() {
-        return new SparkAndroid();
+        return new SdkClient() {
+	        @Override
+	        public String getDeviceType() {
+		        return DeviceInfo.ANDROID_DEVICE_TYPE;
+	        }
+
+	        @Override
+	        public boolean toastsEnabled() {
+		        return false;
+	        }
+
+	        @Override
+	        public boolean supportsHybridKms() {
+		        return false;
+	        }
+
+	        @Override
+	        public boolean supportsVoicemailScopes() {
+		        return false;
+	        }
+
+	        @Override
+	        public boolean operationEnabled(Operation operation) {
+		        return true;
+	        }
+
+	        @Override
+	        public boolean componentEnabled(Component component) {
+		        return true;
+	        }
+
+	        @Override
+	        public boolean conversationCachingEnabled() {
+		        return false;
+	        }
+
+	        @Override
+	        public boolean supportsPrivateBoards() {
+		        return false;
+	        }
+
+	        @Override
+	        public boolean shouldClearRemoteBoardStore() {
+		        return false;
+	        }
+
+	        @Override
+	        public boolean isMobileDevice() {
+		        return true;
+	        }
+
+	        @NonNull
+	        @Override
+	        public String generateClientInfo() {
+		        return "";
+	        }
+        };
     }
 
 }

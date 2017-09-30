@@ -4,13 +4,13 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.github.dcendents.android-maven'
 
 ext {
-	moduleName = 'Spark Android SDK'
+	moduleName = 'Cisco Spark Android SDK'
 
 	moduleGroupId = 'com.ciscospark'
 	moduleArtifactId = 'androidsdk'
 	moduleVersion = '0.1.0'
 
-	moduleDescription = 'Spark SDK for Android'
+	moduleDescription = 'Cisco Spark SDK for Android'
 	
 	moduleSiteUrl = 'https://developer.ciscospark.com/getting-started.html'
 	moduleProjectUrl = 'https://github.com/ciscospark/spark-android-sdk'
@@ -203,7 +203,7 @@ publishing {
 dependencies {
 	compile fileTree(dir: 'libs', include: ['*.jar'])
     provided 'com.squareup.dagger:dagger-compiler:1.2.2'
-    compile('com.cisco.spark.android:common-lib:2.0.3886-SNAPSHOT@aar', {
+    compile('com.cisco.spark.android:common-lib:0.1.0@aar', {
         transitive = true
     })
     testCompile 'com.squareup.okhttp3:okhttp:3.9.0'
