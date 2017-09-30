@@ -102,7 +102,7 @@ public class Membership {
     }
 
     /**
-     * @return Is moderator of a room.
+     * @return True if this member is a moderator of the room in this membership. Otherwise false.
      * @since 0.1
      */
     public boolean isModerator() {
@@ -110,7 +110,7 @@ public class Membership {
     }
 
     /**
-     * @return Is monitor of a room.
+     * @return True if this member is a monitor of the room in this membership. Otherwise false.
      * @since 0.1
      */
     public boolean isMonitor() {

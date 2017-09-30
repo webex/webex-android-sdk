@@ -57,7 +57,7 @@ public interface Phone {
     }
 
     /**
-     * Listener for incoming call
+     * The interface for a listener for incoming call
      * 
      * @since 0.1
      */
@@ -78,7 +78,7 @@ public interface Phone {
     IncomingCallListener getIncomingCallListener();
 
     /**
-     * Set the listener to listen the incoming call
+     * Set the listener to listen to the incoming call to this Phone.
      *
      * @since 0.1
      */
