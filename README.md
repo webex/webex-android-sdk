@@ -2,9 +2,9 @@
 
 [![license](https://img.shields.io/github/license/ciscospark/spark-android-sdk.svg)](https://github.com/ciscospark/spark-android-sdk/blob/master/LICENSE)
 
-The Cisco Spark Android SDK makes it easy to integrate secure and convenient Cisco Spark messaging and calling features in your android apps.
+The Cisco Spark Android SDK makes it easy to integrate secure and convenient Cisco Spark messaging and calling features in your Android apps.
 
-This SDK requires **API level 21** or later.
+This SDK requires **Android API Level 21** or later.
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@ This SDK requires **API level 21** or later.
 
 ## Install
 
-Assuming you already have an android project, e.g. _MySparkApp_, for your android app, here are the steps to integrate the Spark Android SDK into your project using [Gradle](https://gradle.org):
+Assuming you already have an Android project, e.g. _MySparkApp_, for your android app, here are the steps to integrate the Spark Android SDK into your project using [Gradle](https://gradle.org):
 
 1. Add the following repository to your Top-level build.gradle file
 
