@@ -44,7 +44,7 @@ public class SparkTest {
         JWTAuthenticator authenticator = new JWTAuthenticator();
         authenticator.authorize(auth_token);
         Spark spark = new Spark(SparkTestRunner.application, authenticator);
-        System.out.println(spark.version());
+        System.out.println(spark.getVersion());
         System.out.println(spark._mediaEngine);
         authenticator.getToken(System.out::println);
         Thread.sleep(1000000 * 1000);

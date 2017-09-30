@@ -22,7 +22,6 @@
 
 package com.ciscospark.androidsdk;
 
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 /**
@@ -51,5 +50,5 @@ public interface Result<T> {
 	 *
 	 * @since 0.1
 	 */
-	@NonNull T getData();
+	@Nullable T getData();
 }

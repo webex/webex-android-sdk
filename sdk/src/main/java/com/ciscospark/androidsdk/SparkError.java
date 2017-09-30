@@ -28,22 +28,23 @@ import me.helloworld.utils.annotation.StringPart;
 /**
  * The enumeration of error types in Cisco Spark Android SDK.
  * 
- * @param <E>
+ * @since 0.1
  */
-public class SparkError<E extends Enum> {
+public class SparkError<T> {
 
     public enum ErrorCode {
-        /* add error code here */
-        UNKNOWN,
-        UNEXPECTED_ERROR,
-        SERVICE_ERROR
+	    UNEXPECTED_ERROR,
+        SERVICE_ERROR,
+	    PERMISSION_ERROR
     }
 
     @StringPart
-    protected E mErrorCode = null;
+    protected ErrorCode _code = null;
 
     @StringPart
-    protected String mErrorMessage = "";
+    protected String _message = "";
+	
+	protected T _data = null;
 
     /**
      * The default constructor
@@ -56,8 +57,8 @@ public class SparkError<E extends Enum> {
      *
      * @param errorCode the error code
      */
-    public SparkError(E errorCode) {
-        mErrorCode = errorCode;
+    public SparkError(ErrorCode errorCode) {
+	    _code = errorCode;
     }
 
     /**
@@ -66,17 +67,34 @@ public class SparkError<E extends Enum> {
      * @param errorCode the error code
      * @param message the error message
      */
-    public SparkError(E errorCode, String message) {
-        mErrorCode = errorCode;
-        mErrorMessage = message;
+    public SparkError(ErrorCode errorCode, String message) {
+	    _code = errorCode;
+	    _message = message;
     }
 
-    E getErrorCode() {
-        return mErrorCode;
+    /**
+     * The constructor with the error code and error message
+     *
+     * @param errorCode the error code
+     * @param message the error message
+     * @param data the error data
+     */
+	public SparkError(ErrorCode errorCode, String message, T data) {
+		_code = errorCode;
+		_message = message;
+		_data = data;
+	}
+	
+	ErrorCode getErrorCode() {
+        return _code;
     }
 
     String getErrorMessage() {
-        return mErrorMessage;
+        return _message;
+    }
+    
+    T getData() {
+	    return _data;
     }
 
     @Override

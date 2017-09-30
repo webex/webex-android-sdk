@@ -27,7 +27,6 @@ import javax.inject.Inject;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.core.AuthenticatedUser;
@@ -36,6 +35,7 @@ import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
+import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -53,9 +53,7 @@ import static com.ciscospark.androidsdk.utils.Utils.checkNotNull;
  * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
  */
 public class OAuthAuthenticator implements Authenticator {
-
-    private static final String TAG = OAuthAuthenticator.class.getSimpleName();
-    
+	
     private String _clientId;
     private String _clientSecret;
     private String _scope;
@@ -111,14 +109,14 @@ public class OAuthAuthenticator implements Authenticator {
 	 * @param handler the completion handler will be called when authentication is complete, the error to indicate if the authentication process was successful.
 	 * @since 0.1   
 	 */
-	public void authorize(@NonNull  String code, @NonNull CompletionHandler<Void> handler) {
+	public void authorize(@NonNull String code, @NonNull CompletionHandler<Void> handler) {
         checkNotNull(handler, "CompletionHandler is null");
-        Log.d(TAG, "authorize: " + code);
+        Ln.d("Authorize: " + code);
         _authService.getToken(_clientId, _clientSecret, _redirectUri, "authorization_code", code).enqueue(new Callback<OAuth2Tokens>() {
             @Override
             public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
                 _token = response.body();
-                Log.d(TAG, "authorize: " + _token + ", " + _provider);
+                Ln.d("Authorize: " + _token + ", " + _provider);
                 if (_token == null || _token.getAccessToken() == null || _token.getAccessToken().isEmpty()) {
                     handler.onComplete(ResultImpl.error(response));
                 }
@@ -146,7 +144,7 @@ public class OAuthAuthenticator implements Authenticator {
     public void getToken(@NonNull CompletionHandler<String> handler) {
         checkNotNull(handler, "CompletionHandler is null");
         OAuth2Tokens token = getToken();
-        Log.d(TAG, "getToken: " + token + ", " + _provider);
+        Ln.d("GetToken: " + token + ", " + _provider);
         if (token == null) {
             handler.onComplete(ResultImpl.error("Not authorized"));
             return;
@@ -182,15 +180,15 @@ public class OAuthAuthenticator implements Authenticator {
     private @Nullable OAuth2Tokens getToken() {
         if (_token == null && _provider != null) {
             AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
-            Log.d(TAG, "getToken.User: " + user + ", " + _provider);
+            Ln.d("Get user: " + user + ", " + _provider);
             if (user != null) {
                 _token = user.getOAuth2Tokens();
             }
         }
         if (_token == null || _token.getExpiresIn() <= (System.currentTimeMillis() / 1000) + (15 * 60)) {
-            Log.d(TAG, "getToken.Expirein: " + _token + ", " + _provider);
+	        Ln.d("Check token: " + _token + ", " + _provider);
             if (_token != null) {
-                Log.d(TAG, "getToken.Expirein: " + _token.getExpiresIn() + ", " + (System.currentTimeMillis() / 1000) + (15 * 60) + ", " + _provider);
+	            Ln.d("Check token: " + _token.getExpiresIn() + ", " + (System.currentTimeMillis() / 1000) + (15 * 60) + ", " + _provider);
             }
             return null;
         }

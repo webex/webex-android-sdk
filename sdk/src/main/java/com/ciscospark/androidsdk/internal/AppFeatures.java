@@ -58,7 +58,7 @@ public class AppFeatures implements CoreFeatures {
 
     @Override
     public boolean isWhiteboardEnabled()  {
-        return true;
+        return false;
     }
 
     @Override

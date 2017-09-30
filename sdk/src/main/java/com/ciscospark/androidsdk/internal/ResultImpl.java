@@ -37,7 +37,7 @@ public class ResultImpl<T> implements Result<T> {
 	}
 
 	public static <T> Result<T> error(String message) {
-		return new ResultImpl<T>(null, new SparkError<SparkError.ErrorCode>(SparkError.ErrorCode.UNEXPECTED_ERROR, message));
+		return new ResultImpl<T>(null, new SparkError(SparkError.ErrorCode.UNEXPECTED_ERROR, message));
 	}
 
 	public static <T> Result<T> error(Throwable t) {
@@ -79,11 +79,11 @@ public class ResultImpl<T> implements Result<T> {
 		return Objects.toStringByAnnotation(this);
 	}
 
-	private static SparkError<SparkError.ErrorCode> makeError(Throwable t) {
-		return new SparkError<SparkError.ErrorCode>(SparkError.ErrorCode.UNEXPECTED_ERROR, t.toString());
+	private static SparkError makeError(Throwable t) {
+		return new SparkError(SparkError.ErrorCode.UNEXPECTED_ERROR, t.toString());
 	}
 
-	private static SparkError<SparkError.ErrorCode> makeError(Response res) {
+	private static SparkError makeError(Response res) {
 		StringBuilder message = new StringBuilder().append(res.code()).append("/").append(res.message());
 		try {
 			String body = res.errorBody().string();
@@ -91,6 +91,6 @@ public class ResultImpl<T> implements Result<T> {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return new SparkError<>(SparkError.ErrorCode.SERVICE_ERROR, message.toString());
+		return new SparkError(SparkError.ErrorCode.SERVICE_ERROR, message.toString());
 	}
 }

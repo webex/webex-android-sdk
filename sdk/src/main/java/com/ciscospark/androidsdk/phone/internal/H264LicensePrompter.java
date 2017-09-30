@@ -29,7 +29,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.util.Log;
+import com.github.benoitdion.ln.Ln;
 
 /**
  * Created with IntelliJ IDEA.
@@ -39,8 +39,6 @@ import android.util.Log;
  */
 
 public class H264LicensePrompter {
-
-	private static final String TAG = H264LicensePrompter.class.getSimpleName();
 	
 	public interface CompletionHandler<T> {
 		void onComplete(T result);
@@ -71,7 +69,7 @@ public class H264LicensePrompter {
 			builder.setPositiveButton("Activate", new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					Log.i(TAG, "Video license has been activated");
+					Ln.i("Video license has been activated");
 					setVideoLicenseActivated(true);
 					handler.onComplete(true);
 				}
@@ -80,7 +78,7 @@ public class H264LicensePrompter {
 			builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					Log.i(TAG, "Video license has not been activated");
+					Ln.i("Video license has not been activated");
 					dialog.cancel();
 					handler.onComplete(false);
 				}
@@ -89,7 +87,7 @@ public class H264LicensePrompter {
 			builder.setNeutralButton("View License", new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					Log.i(TAG, "Video license opened for viewing");
+					Ln.i("Video license opened for viewing");
 					Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getLicenseURL()));
 					context.startActivity(browserIntent);
 					dialog.cancel();

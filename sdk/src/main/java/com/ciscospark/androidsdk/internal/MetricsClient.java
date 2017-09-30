@@ -22,9 +22,59 @@
 
 package com.ciscospark.androidsdk.internal;
 
-/**
- * Created by zhiyuliu on 02/09/2017.
- */
+import java.util.List;
+import java.util.Map;
+
+import com.ciscospark.androidsdk.CompletionHandler;
+import com.ciscospark.androidsdk.Result;
+import com.ciscospark.androidsdk.auth.Authenticator;
+import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
+import com.github.benoitdion.ln.Ln;
+import me.helloworld.utils.collection.Maps;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.http.Body;
+import retrofit2.http.Header;
+import retrofit2.http.POST;
 
 public class MetricsClient {
+
+	private Authenticator _authenticator;
+	
+	private MetricsService _service;
+	
+	public MetricsClient(Authenticator authenticator, String URL) {
+		_authenticator = authenticator;
+		_service = new ServiceBuilder().baseURL(URL).build(MetricsService.class);
+	}
+	
+	public void post(List<Map<String, String>> metrics) {
+		_authenticator.getToken(new CompletionHandler<String>() {
+			@Override
+			public void onComplete(Result<String> result) {
+				String token = result.getData();
+				if (token != null) {
+					_service.post("Bearer " + token, Maps.makeMap("metrics", metrics)).enqueue(new Callback<Void>() {
+						@Override
+						public void onResponse(Call<Void> call, Response<Void> response) {
+							Ln.d("%s", response);
+						}
+
+						@Override
+						public void onFailure(Call<Void> call, Throwable t) {
+							Ln.e(t);
+						}
+					});
+				}
+			}
+		});
+	}
+	
+	interface MetricsService {
+		
+		@POST("metrics")
+		Call<Void> post(@Header("Authorization") String authorization, @Body Map parameters);
+	}
+	
 }
