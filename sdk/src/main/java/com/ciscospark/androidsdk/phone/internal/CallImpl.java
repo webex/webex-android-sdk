@@ -30,7 +30,6 @@ import java.util.Map;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import com.cisco.spark.android.callcontrol.events.CallControlMediaDecodeSizeChangedEvent;
 import com.cisco.spark.android.events.OperationCompletedEvent;
 import com.cisco.spark.android.locus.model.Locus;
@@ -43,7 +42,6 @@ import com.cisco.spark.android.media.MediaRequestSource;
 import com.cisco.spark.android.media.MediaSession;
 import com.cisco.spark.android.sync.operationqueue.SendDtmfOperation;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
-import com.cisco.spark.android.util.Strings;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.ciscospark.androidsdk.phone.Call;
@@ -51,13 +49,12 @@ import com.ciscospark.androidsdk.phone.CallMembership;
 import com.ciscospark.androidsdk.phone.CallObserver;
 import com.ciscospark.androidsdk.phone.MediaOption;
 import com.ciscospark.androidsdk.phone.Phone;
+import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 
 public class CallImpl implements Call {
-
-    private static final String TAG = CallImpl.class.getSimpleName();
-
+	
     private @NonNull PhoneImpl _phone;
 
     @StringPart
@@ -114,9 +111,7 @@ public class CallImpl implements Call {
         List<LocusParticipant> participants = getParticipants();
         List<CallMembership> memberships = new ArrayList<>(participants.size());
         for (LocusParticipant p : participants) {
-            CallMembership member = new CallMembershipImpl(p);
-            Log.d(TAG, "add member: " + member.toString());
-            memberships.add(member);
+            memberships.add(new CallMembershipImpl(p));
         }
         return memberships;
     }
@@ -273,9 +268,7 @@ public class CallImpl implements Call {
     public void setFacingMode(Phone.FacingMode facingMode) {
         com.cisco.spark.android.callcontrol.model.Call call = _phone.getCallService().getCall(getKey());
         if (call != null) {
-            Log.d(TAG, Strings.toString(call));
             MediaSession session = call.getMediaSession();
-            Log.d(TAG, Strings.toString(session));
             if (session != null) {
                 if (session.setSelectedCameraAndChangeDevice(PhoneImpl.fromFacingMode(facingMode))) {
                     CallObserver observer = getObserver();
@@ -288,7 +281,7 @@ public class CallImpl implements Call {
     }
 
     public void onEventMainThread(CallControlMediaDecodeSizeChangedEvent event) {
-        Log.d(TAG, "CallControlMediaDecodeSizeChangedEvent is received ");
+        Ln.d("CallControlMediaDecodeSizeChangedEvent is received");
         _remoteVideoViewSize = event.getSize();
         CallObserver observer = getObserver();
         if (observer != null) {
@@ -297,7 +290,7 @@ public class CallImpl implements Call {
     }
 
     public void onEventMainThread(MediaSession.MediaRenderSizeChangedEvent event) {
-        Log.d(TAG, "MediaRenderSizeChangedEvent is received ");
+	    Ln.d("MediaRenderSizeChangedEvent is received");
         _localVideoViewSize = event.size;
         CallObserver observer = getObserver();
         if (observer != null) {
@@ -306,7 +299,7 @@ public class CallImpl implements Call {
     }
 
     public void onEventMainThread(OperationCompletedEvent event) {
-        Log.d(TAG, "OperationCompletedEvent is received ");
+        Ln.d("OperationCompletedEvent is received");
         Operation operation = event.getOperation();
         if (operation != null) {
             CompletionHandler<Void> callback = _dtmfOperations.get(operation);

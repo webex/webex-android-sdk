@@ -2,33 +2,29 @@ apply plugin: 'com.android.library'
 apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: "com.jfrog.bintray"
-
-version = '0.0.1'
-group = 'com.ciscospark'
 
 ext {
-	bintrayRepo = 'maven'
-	bintrayName = 'spark-android-sdk'
+	moduleName = 'Spark Android SDK'
 
-	publishedGroupId = 'com.ciscospark'
-	libraryName = 'Spark Android SDK'
-	artifact = 'androidsdk'
+	moduleGroupId = 'com.ciscospark'
+	moduleArtifactId = 'androidsdk'
+	moduleVersion = '0.1.0'
 
-	libraryDescription = 'Spark Android SDK'
-
-	siteUrl = 'https://developer.ciscospark.com/getting-started.html'
-	gitUrl = 'https://github.com/ciscospark/spark-android-sdk.git'
-
-	libraryVersion = '0.1'
-
-	developerId = 'zhiyuliu'
-	developerName = 'Zhiyu Liu'
-	developerEmail = 'zhiyuliu@cisco.com'
-
-	licenseName = 'MIT License'
-	licenseUrl = 'https://raw.githubusercontent.com/ciscospark/spark-android-sdk/master/LICENSE'
-	allLicenses = ["MIT"]
+	moduleDescription = 'Spark SDK for Android'
+	
+	moduleSiteUrl = 'https://developer.ciscospark.com/getting-started.html'
+	moduleProjectUrl = 'https://github.com/ciscospark/spark-android-sdk'
+	moduleGitUrl = 'https://github.com/ciscospark/spark-android-sdk/tree/master'
+	moduleConnectionUrl = 'scm:git:git://github.com/ciscospark/spark-android-sdk.git'
+	moduleDeveloperConnectionUrl = 'scm:git:ssh://github.com:ciscospark/spark-android-sdk.git'
+	
+	moduleLicenseName = 'MIT License'
+	moduleLicenseURL = 'https://raw.githubusercontent.com/ciscospark/spark-android-sdk/master/LICENSE'
+	moduleDeveloperId = 'devsupport'
+	moduleDeveloperName = 'Cisco Spark for Developer'
+	moduleDeveloperEmail = 'devsupport@ciscospark.com'
+	moduleDeveloperOrganization = 'Cisco System Inc'
+	moduleDeveloperOrganizationURL = 'https://www.ciscospark.com/'
 }
 
 android {
@@ -36,18 +32,16 @@ android {
     buildToolsVersion "25.0.2"
 	
     defaultConfig {
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 25
-        versionCode 1
-        versionName "0.1"
         testInstrumentationRunner "com.ciscospark.androidsdk.SparkTestRunner"
         multiDexEnabled true
+	    versionName moduleVersion
     }
 
     buildTypes {
         release { 
 			minifyEnabled true
-//          proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug {
         }
@@ -56,7 +50,6 @@ android {
     dexOptions {
         preDexLibraries = false
         javaMaxHeapSize "4g"
-
         dexInProcess false
     }
 
@@ -67,7 +60,6 @@ android {
 
     testOptions {
         unitTests.all {
-            // All the usual Gradle options.
             testLogging {
                 events "passed", "skipped", "failed", "standardOut", "standardError"
                 outputs.upToDateWhen {false}
@@ -104,8 +96,8 @@ android {
 			options.setUse(true)
 			options.author(true)
 			options.version(true)
-			options.windowTitle('Spark Android SDK 0.1')
-			options.docTitle('Spark Android SDK 0.1')
+			options.windowTitle(moduleName + ' ' + moduleVersion)
+			options.docTitle(moduleName + ' ' + moduleVersion)
 			options.links("http://docs.oracle.com/javase/7/docs/api/");
 			options.links("http://d.android.com/reference/");
 			options.footer('Copyright &#169; 2016&#8211;2017 Cisco System Inc.  All Rights Reserved.')
@@ -120,9 +112,9 @@ android {
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId 'com.ciscospark'
-            artifactId 'androidsdk'
-            version '0.0.1-SNAPSHOT'
+            groupId moduleGroupId
+            artifactId moduleArtifactId
+            version moduleVersion
             artifact "$buildDir/outputs/aar/sdk-debug.aar" //aar artifact you want to publish
 
             pom.withXml {
@@ -138,45 +130,75 @@ publishing {
                         }
                     }
                 }
+	            asNode().children().last() + {
+		            resolveStrategy = Closure.DELEGATE_FIRST
+		            name moduleName
+		            description moduleDescription
+		            url moduleSiteUrl
+		            scm {
+			            url moduleGitUrl
+			            connection moduleConnectionUrl
+			            developerConnection moduleDeveloperConnectionUrl
+		            }
+		            licenses {
+			            license {
+				            name moduleLicenseName
+				            url moduleLicenseURL
+			            }
+		            }
+		            developers {
+			            developer {
+				            id moduleDeveloperId
+				            name moduleDeveloperName
+				            email moduleDeveloperEmail
+				            organization moduleDeveloperOrganization
+				            organizationUrl moduleDeveloperOrganizationURL
+			            }
+		            }
+	            }
             }
         }
     }
 
     repositories{
         maven {
-            url "$buildDir/repo"
+	        url "file:/${buildDir}/artifacts"
         }
     }
 }
 
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
+//Properties properties = new Properties()
+//properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
-bintray {
-	user = properties.getProperty("bintray.user")
-	key = properties.getProperty("bintray.apikey")
-	publications = ['maven']
-	pkg {
-		repo = 'SparkSDK'
-		name = 'spark-android-sdk'
-		userOrg = user
-		licenses = ['MIT']
-		vcsUrl = 'https://github.com/ciscospark/spark-android-sdk.git'
-		//labels = ['gear', 'gore', 'gorilla']
-		//publicDownloadNumbers = true
-		//attributes= ['a': ['ay1', 'ay2'], 'b': ['bee'], c: 'cee'] //Optional package-level attributes
-		version {
-			name = '0.0.1-SNAPSHOT'
-			desc = 'Spark Android SDK 0.0.1 Snapshot'
-			//vcsTag = '1.3.0'
-			//attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
-			gpg { 
-				sign = true
-				passphrase = properties.getProperty("bintray.gpg.password")
-			}
-		}
-	}
-}
+//bintray {
+//	user = properties.getProperty("bintray.user")
+//	key = properties.getProperty("bintray.apikey")
+//	publications = ['maven']
+//	pkg {
+//		repo = 'SparkSDK'
+//		name = 'spark-android-sdk'
+//		userOrg = user
+//		licenses = ['MIT']
+//		vcsUrl = 'https://github.com/ciscospark/spark-android-sdk.git'
+//		//labels = ['gear', 'gore', 'gorilla']
+//		//publicDownloadNumbers = true
+//		//attributes= ['a': ['ay1', 'ay2'], 'b': ['bee'], c: 'cee'] //Optional package-level attributes
+//		version {
+//			name = '0.0.1-SNAPSHOT'
+//			desc = 'Spark Android SDK 0.0.1 Snapshot'
+//			//vcsTag = '1.3.0'
+//			//attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
+//			gpg { 
+//				sign = true
+//				passphrase = properties.getProperty("bintray.gpg.password")
+//			}
+//		}
+//	}
+//}
+
+
+
+
 
 dependencies {
 	compile fileTree(dir: 'libs', include: ['*.jar'])

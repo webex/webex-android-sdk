@@ -113,7 +113,7 @@ public class JWTAuthenticator implements Authenticator {
         checkNotNull(handler, "CompletionHandler should not be null");
         String jwt = getUnexpiredJwt();
         if (jwt == null) {
-            handler.onComplete(ResultImpl.error("jwt is null"));
+            handler.onComplete(ResultImpl.error("JWT is null"));
             return;
         }
         String token = getUnexpiredAccessToken();
@@ -198,7 +198,7 @@ public class JWTAuthenticator implements Authenticator {
         try {
             String json = new String(Base64.decode(split[1], Base64.URL_SAFE), "UTF-8");
             Gson gson = new Gson();
-            Map<String,Object> map = new HashMap<String,Object>();
+            Map<String,Object> map = new HashMap<>();
             return gson.fromJson(json, map.getClass());
         } catch (UnsupportedEncodingException e) {
             return null;

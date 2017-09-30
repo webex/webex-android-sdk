@@ -33,6 +33,7 @@ import android.app.Application;
 import com.cisco.spark.android.core.ApplicationDelegate;
 import com.cisco.spark.android.core.RootModule;
 import com.github.benoitdion.ln.DebugLn;
+import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.NaturalLog;
 import com.squareup.leakcanary.RefWatcher;
 import me.helloworld.utils.reflect.Methods;
@@ -91,7 +92,7 @@ public class SparkInjector extends ApplicationDelegate {
 			    method.invoke(o);
 		    }
 		    catch (Throwable t) {
-			    System.out.println(t);
+			    Ln.e(t);
 		    }
 	    }
     }

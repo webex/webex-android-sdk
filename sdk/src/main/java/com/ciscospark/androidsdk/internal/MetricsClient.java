@@ -29,6 +29,7 @@ import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
+import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.collection.Maps;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -57,12 +58,12 @@ public class MetricsClient {
 					_service.post("Bearer " + token, Maps.makeMap("metrics", metrics)).enqueue(new Callback<Void>() {
 						@Override
 						public void onResponse(Call<Void> call, Response<Void> response) {
-							System.out.println(response);
+							Ln.d("%s", response);
 						}
 
 						@Override
 						public void onFailure(Call<Void> call, Throwable t) {
-							t.printStackTrace();
+							Ln.e(t);
 						}
 					});
 				}

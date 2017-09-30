@@ -28,7 +28,6 @@ import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.ProviderInfo;
-import android.util.Log;
 import com.cisco.spark.android.core.BackgroundCheck;
 import com.cisco.spark.android.core.SquaredContentProvider;
 import com.cisco.spark.android.media.MediaEngine;
@@ -58,6 +57,7 @@ import com.ciscospark.androidsdk.webhook.internal.WebhookClientImpl;
 import com.github.benoitdion.ln.DebugLn;
 import com.github.benoitdion.ln.InfoLn;
 import com.github.benoitdion.ln.Ln;
+import com.github.benoitdion.ln.NaturalLog;
 import com.github.benoitdion.ln.ReleaseLn;
 import com.webex.wme.MediaSessionAPI;
 
@@ -72,8 +72,6 @@ public class Spark {
 		UserAgentProvider.APP_NAME = DefaultHeadersInterceptor.APP_NAME;
 		UserAgentProvider.APP_VERSION = DefaultHeadersInterceptor.APP_VERSION;
 	}
-
-	private static final String TAG = Spark.class.getSimpleName();
 	
 	/**
 	 * The enumeration of log message level
@@ -81,16 +79,14 @@ public class Spark {
 	 * @since 0.1
 	 */
 	public enum LogLevel {
-        NO, ERROR, WARNING, INFO, DEBUG, VERBOSE
+        NO, ERROR, WARNING, INFO, DEBUG, VERBOSE, ALL
     }
-
-    private LogLevel _logLevel = LogLevel.DEBUG;
-
+	
     private SparkInjector _injector;
 
     private Authenticator _authenticator;
 
-    private Phone _phone;
+    private PhoneImpl _phone;
 
     @Inject
     MediaEngine _mediaEngine;
@@ -116,15 +112,15 @@ public class Spark {
         _injector.inject(_authenticator);
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _injector);
     }
-
+	
     /**
      * Get current sdk version
      *
      * @return major.minor.build-alpha/beta
      * @since 0.1
      */
-    public String version() {
-	    return "0.1.beta";
+    public String getVersion() {
+	    return BuildConfig.VERSION_NAME;
     }
 	
 	/**
@@ -248,33 +244,42 @@ public class Spark {
 	 * @param logLevel log message level
 	 */
 	public void setLogLevel(LogLevel logLevel) {
-        _logLevel = logLevel;
+		NaturalLog logger = new com.ciscospark.androidsdk.utils.log.DebugLn();
+		MediaSessionAPI.TraceLevelMask mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
         switch (logLevel) {
             case NO:
-                Ln.initialize(new NoLn());
-                _mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_NOTRACE);
+	            logger = new NoLn();
+                mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_NOTRACE;
                 break;
             case ERROR:
-                Ln.initialize(new ReleaseLn());
-                _mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_ERROR);
+	            logger = new ReleaseLn();
+	            mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_ERROR;
                 break;
             case WARNING:
-                Ln.initialize(new WarningLn());
-                _mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING);
+	            logger = new WarningLn();
+	            mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
                 break;
             case INFO:
-                Ln.initialize(new InfoLn());
-                _mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO);
+	            logger = new InfoLn();
+	            mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
                 break;
             case DEBUG:
-                Ln.initialize(new com.ciscospark.androidsdk.utils.log.DebugLn());
-                _mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG);
+	            logger = new com.ciscospark.androidsdk.utils.log.DebugLn();
+	            mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG;
                 break;
             case VERBOSE:
-                Ln.initialize(new DebugLn());
-                _mediaEngine.setLoggingLevel(MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DETAIL);
+	            logger = new DebugLn();
+	            mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DETAIL;
                 break;
+	        case ALL:
+		        logger = new DebugLn();
+		        mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DETAIL;
         }
+        
+		Ln.initialize(logger);
+		if (_mediaEngine != null) {
+			_mediaEngine.setLoggingLevel(mask);
+		}
     }
 
 	private static String getAuthority(final Context appContext) {
@@ -284,7 +289,7 @@ public class Spark {
 			return providerInfo.authority;
 		}
 		catch (Throwable t) {
-			Log.d(TAG, "Content provider not found.");
+			Ln.d("Content provider not found.");
 			return "com.ciscospark.androidsdk.CPOSC";
 		}
 	}

@@ -176,4 +176,5 @@ public interface Phone {
      * @since 0.1
      */
     String getVideoCodecLicenseURL();
+	
 }
