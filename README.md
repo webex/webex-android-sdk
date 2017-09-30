@@ -4,7 +4,7 @@
 
 The Cisco Spark Android SDK makes it easy to integrate secure and convenient Cisco Spark messaging and calling features in your Android apps.
 
-This SDK is built in **Android SDK Tools 25** and requires **Android API Level 21** or later.
+This SDK is built with **Android SDK Tools 25** and requires **Android API Level 21** or later.
 
 ## Table of Contents
 
