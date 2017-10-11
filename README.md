@@ -2,6 +2,8 @@
 
 [![license](https://img.shields.io/github/license/ciscospark/spark-android-sdk.svg)](https://github.com/ciscospark/spark-android-sdk/blob/master/LICENSE)
 
+> The Cisco Spark™ Android SDK
+
 The Cisco Spark Android SDK makes it easy to integrate secure and convenient Cisco Spark messaging and calling features in your Android apps.
 
 This SDK is built with **Android SDK Tools 25** and requires **Android API Level 21** or later.
@@ -10,15 +12,16 @@ This SDK is built with **Android SDK Tools 25** and requires **Android API Level
 
 - [Install](#install)
 - [Usage](#usage)
+- [Contribute](#contribute)
 - [License](#license)
 
 ## Install
 
-Assuming you already have an Android project, e.g. _MySparkApp_, for your android app, here are the steps to integrate the Spark Android SDK into your project using [Gradle](https://gradle.org):
+Assuming you already have an Android project, e.g. _MySparkApp_, for your Android app, here are the steps to integrate the Cisco Spark Android SDK into your project using [Gradle](https://gradle.org):
 
-1. Add the following repository to your Top-level build.gradle file
+1. Add the following repository to your top-level `build.gradle` file:
 
-    ```
+    ```groovy
     allprojects {
         repositories {
             mavenCentral()
@@ -26,15 +29,15 @@ Assuming you already have an Android project, e.g. _MySparkApp_, for your androi
     }
     ```
 
-2. Add spark-android-sdk library in your App build.gradle dependency
+2. Add the `spark-android-sdk` library as a dependency for your app in the `build.gradle` file:
 
-    ```
+    ```groovy
     dependencies { compile 'com.ciscospark:androidsdk:0.1.0' }
     ```
 
-3. Enable multiDex in your App
+3. Enable [multidex](https://developer.android.com/studio/build/multidex.html) support for your app:
 
-    ```
+    ```groovy
     android {
         defaultConfig {
             multiDexEnabled true
@@ -44,15 +47,15 @@ Assuming you already have an Android project, e.g. _MySparkApp_, for your androi
 
 ## Usage
 
-To use the SDK, you will need Cisco Spark integration credentials. If you do not already have a Cisco Spark account, visit [Spark for Developers](https://developer.ciscospark.com/) to create your account and [register your integration](https://developer.ciscospark.com/authentication.html#registering-your-integration). Your app will need to authenticate users via an [OAuth](https://oauth.net/) grant flow for existing Cisco Spark users or a [JSON Web Token](https://jwt.io/) for guest users without a Cisco Spark account.
+To use the SDK, you will need Cisco Spark integration credentials. If you do not already have a Cisco Spark account, visit the [Cisco Spark for Developers portal](https://developer.ciscospark.com/) to create your account and [register an integration](https://developer.ciscospark.com/authentication.html#registering-your-integration). Your app will need to authenticate users via an [OAuth](https://oauth.net/) grant flow for existing Cisco Spark users or a [JSON Web Token](https://jwt.io/) for guest users without a Cisco Spark account.
 
-See the [Android SDK area](https://developer.ciscospark.com/sdk-for-android.html) of the Spark for Developers site for more information about this SDK.
+See the [Android SDK area](https://developer.ciscospark.com/sdk-for-android.html) of the Cisco Spark for Developers site for more information about this SDK.
 
-### Example
+### Examples
 
 Here are some examples of how to use the Android SDK in your app.
 
-1. Create the Spark instance using Spark ID authentication ([OAuth](https://oauth.net/)-based):
+1. Create a new `Spark` instance using Spark ID authentication ([OAuth](https://oauth.net/)-based):
 
     ```java
     String clientId = "YOUR_CLIENT_ID";
@@ -74,7 +77,7 @@ Here are some examples of how to use the Android SDK in your app.
     }
     ```
 
-2. Create the Spark instance with Guest ID authentication ([JWT](https://jwt.io/)-based):
+2. Create a new `Spark` instance using Guest ID authentication ([JWT](https://jwt.io/)-based):
 
     ```java
     JWTAuthenticator authenticator = new JWTAuthenticator();
@@ -100,9 +103,11 @@ Here are some examples of how to use the Android SDK in your app.
     });
     ```
 
-4. Use Spark service:
+4. Create a new Cisco Spark space, add users to the space, and send a message:
 
     ```java
+    // Create a Cisco Spark space:
+
     spark.rooms().create("Hello World", null, new CompletionHandler<Room>() {
         @Override
         public void onComplete(Result<Room> result) {
@@ -115,9 +120,9 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
     
-    // ...
+    // Add a user to a space:
 
-    spark.memberships().create(roomId, null, "people@example.com", true, new CompletionHandler<Membership>() {
+    spark.memberships().create(roomId, null, "person@example.com", true, new CompletionHandler<Membership>() {
         @Override
         public void onComplete(Result<Membership> result) {
             if (result.isSuccessful()) {
@@ -129,7 +134,7 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
 
-    // ...
+    // Send a message to a space:
 
     spark.messages().post(roomId, null, null, "Hello there", null, null, new CompletionHandler<Message>() {
         @Override
@@ -147,7 +152,7 @@ Here are some examples of how to use the Android SDK in your app.
 5. Make an outgoing call:
 
     ```java
-    spark.phone().dial("coworker@acm.com", MediaOption.audioVideo(local, remote), new CompletionHandler<Call>() {
+    spark.phone().dial("person@example.com", MediaOption.audioVideo(local, remote), new CompletionHandler<Call>() {
         @Override
         public void onComplete(Result<Call> result) {
             Call call = result.getData();
@@ -155,7 +160,7 @@ Here are some examples of how to use the Android SDK in your app.
                 call.setObserver(new CallObserver() {
                     @Override
                     public void onRinging(Call call) {
-                        
+
                     }
 
                     @Override
@@ -202,15 +207,12 @@ Here are some examples of how to use the Android SDK in your app.
     });
     ```
 
+## Contribute
+
+Pull requests welcome. To suggest changes to the SDK, please fork this repository and submit a pull request with your changes. Your request will be reviewed by one of the project maintainers.
+
 ## License
 
 &copy; 2016-2017 Cisco Systems, Inc. and/or its affiliates. All Rights Reserved.
 
 See [LICENSE](https://github.com/ciscospark/spark-android-sdk/blob/master/LICENSE) for details.
-
-
-
-
-
-
-
