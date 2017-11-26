@@ -391,6 +391,7 @@ public interface CallObserver {
 		 * @return True if the local party now is receiving video. Otherwise false.
 		 * @since 0.1
 		 */
+		// FIXME TODO
 		public boolean isSending() {
             return _receiving;
         }
@@ -420,6 +421,7 @@ public interface CallObserver {
 		 * @return True if the local party now is receiving audio. Otherwise false.
 		 * @since 0.1
 		 */
+		// FIXME TODO
 		public boolean isSending() {
             return _receiving;
         }

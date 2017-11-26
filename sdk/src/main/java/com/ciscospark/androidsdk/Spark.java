@@ -49,7 +49,7 @@ import com.ciscospark.androidsdk.team.TeamClient;
 import com.ciscospark.androidsdk.team.TeamMembershipClient;
 import com.ciscospark.androidsdk.team.internal.TeamClientImpl;
 import com.ciscospark.androidsdk.team.internal.TeamMembershipClientImpl;
-import com.ciscospark.androidsdk.utils.http.DefaultHeadersInterceptor;
+import com.ciscospark.androidsdk.utils.Utils;
 import com.ciscospark.androidsdk.utils.log.NoLn;
 import com.ciscospark.androidsdk.utils.log.WarningLn;
 import com.ciscospark.androidsdk.webhook.WebhookClient;
@@ -68,9 +68,13 @@ import com.webex.wme.MediaSessionAPI;
  */
 public class Spark {
 
+	public static final String APP_NAME = "spark_android_sdk";
+
+	public static final String APP_VERSION = BuildConfig.VERSION_NAME;
+	
 	static {
-		UserAgentProvider.APP_NAME = DefaultHeadersInterceptor.APP_NAME;
-		UserAgentProvider.APP_VERSION = DefaultHeadersInterceptor.APP_VERSION;
+		UserAgentProvider.APP_NAME = APP_NAME;
+		UserAgentProvider.APP_VERSION = APP_VERSION;
 	}
 	
 	/**
@@ -112,16 +116,17 @@ public class Spark {
         _injector.inject(_authenticator);
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _injector);
 		setLogLevel(null);
+		Ln.i(Utils.versionInfo());
     }
 	
     /**
      * Get current SDK version
      *
-     * @return major.minor.build-alpha/beta
+     * @return major.minor.build-alpha/beta/SNAPSHOT
      * @since 0.1
      */
     public String getVersion() {
-	    return BuildConfig.VERSION_NAME;
+	    return APP_VERSION;
     }
 	
 	/**

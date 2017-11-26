@@ -82,8 +82,13 @@ public class SparkInjector extends ApplicationDelegate {
     protected NaturalLog buildLn() {
         return new DebugLn();
     }
-    
-    public void inject(Object o) {
+
+	@Override
+	protected void initializeExceptionHandlers() {
+		// TODO XXX
+	}
+
+	public void inject(Object o) {
         super.inject(o);
         List<Method> methods = Methods.getMethodsMarkedWithAnnotation(o.getClass(), AfterInjected.class);
 	    for (Method method : methods) {

@@ -52,6 +52,8 @@ import com.ciscospark.androidsdk.phone.Phone;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 public class CallImpl implements Call {
 	
@@ -279,7 +281,8 @@ public class CallImpl implements Call {
             }
         }
     }
-
+    
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlMediaDecodeSizeChangedEvent event) {
         Ln.d("CallControlMediaDecodeSizeChangedEvent is received");
         _remoteVideoViewSize = event.getSize();
@@ -289,6 +292,7 @@ public class CallImpl implements Call {
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(MediaSession.MediaRenderSizeChangedEvent event) {
 	    Ln.d("MediaRenderSizeChangedEvent is received");
         _localVideoViewSize = event.size;
@@ -298,6 +302,7 @@ public class CallImpl implements Call {
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(OperationCompletedEvent event) {
         Ln.d("OperationCompletedEvent is received");
         Operation operation = event.getOperation();

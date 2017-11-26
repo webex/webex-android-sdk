@@ -24,30 +24,17 @@ package com.ciscospark.androidsdk.utils.http;
 
 import java.io.IOException;
 
-import android.os.Build;
-import com.cisco.spark.android.util.Strings;
+import com.ciscospark.androidsdk.utils.Utils;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
 public class DefaultHeadersInterceptor implements Interceptor {
 	
-	public static final String APP_NAME = "spark_android_sdk";
-
-	public static final String APP_VERSION = "0.0.1";
-	
     protected String _userAgent;
     
     public DefaultHeadersInterceptor() {
-        String tempUserAgent = String.format("%s/%s (Android %s; %s %s / %s %s;)",
-	        APP_NAME, APP_VERSION,
-            Build.VERSION.RELEASE,
-            Strings.capitalize(Build.MANUFACTURER),
-            Strings.capitalize(Build.DEVICE),
-            Strings.capitalize(Build.BRAND),
-            Strings.capitalize(Build.MODEL)
-        );
-        _userAgent = Strings.stripInvalidHeaderChars(tempUserAgent);
+        _userAgent = Utils.versionInfo();
     }
     
     @Override

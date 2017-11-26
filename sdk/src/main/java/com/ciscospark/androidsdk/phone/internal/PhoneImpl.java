@@ -56,6 +56,7 @@ import com.cisco.spark.android.callcontrol.events.CallControlSelfParticipantLeft
 import com.cisco.spark.android.callcontrol.events.DismissCallNotificationEvent;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
+import com.cisco.spark.android.core.Settings;
 import com.cisco.spark.android.events.ApplicationControllerStateChangedEvent;
 import com.cisco.spark.android.events.CallNotificationEvent;
 import com.cisco.spark.android.events.CallNotificationType;
@@ -91,9 +92,11 @@ import com.ciscospark.androidsdk.phone.Phone;
 import com.ciscospark.androidsdk.utils.Utils;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.github.benoitdion.ln.Ln;
-import de.greenrobot.event.EventBus;
-import de.greenrobot.event.NoSubscriberEvent;
 import me.helloworld.utils.Checker;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.NoSubscriberEvent;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 public class PhoneImpl implements Phone {
 	
@@ -117,6 +120,9 @@ public class PhoneImpl implements Phone {
 
     @Inject
     CallAnalyzerReporter _callAnalyzerReporter;
+
+	@Inject
+	transient Settings settings;
 
     private IncomingCallListener _incomingCallListener;
 
@@ -315,7 +321,8 @@ public class PhoneImpl implements Phone {
         if (!option.hasVideo()) {
             builder = builder.setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly);
         }
-        _callControlService.joinCall(builder.build());
+        //_callControlService.joinCall(builder.build());
+        _callControlService.joinCall(builder.build(), false);
     }
 
     void reject(@NonNull CallImpl call, @NonNull CompletionHandler<Void> callback) {
@@ -392,9 +399,10 @@ public class PhoneImpl implements Phone {
         return _operationQueue;
     }
 
+	@Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(DeviceRegistrationChangedEvent event) {
 	    Ln.i("DeviceRegistrationChangedEvent is received ");
-	    _device = event.getDeviceRegistration();
+	    _device = settings.getDeviceRegistration();
 	    Uri uri = _device.getMetricsServiceUrl();
 	    if (uri != null) {
 		    String url = uri.toString();
@@ -410,10 +418,11 @@ public class PhoneImpl implements Phone {
         _registerCallback.onComplete(ResultImpl.success(null));
         _registerCallback = null;
         _registerTimer.removeCallbacks(_registerTimeoutTask);
-	    Ln.i("Registered: " + event.getDeviceRegistration().getId());
+	    Ln.i("Registered: " + _device.getId());
     }
 
     // Locus has create call,waiting remote to accept
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLocusCreatedEvent event) {
 	    Ln.i("CallControlLocusCreatedEventis received " + event.getLocusKey());
         LocusKey key = event.getLocusKey();
@@ -440,6 +449,7 @@ public class PhoneImpl implements Phone {
     }
 
     // Remoted send acknowledge and it means it is RINGING
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ParticipantNotifiedEvent event) {
         Ln.i("ParticipantNotifiedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
@@ -454,6 +464,7 @@ public class PhoneImpl implements Phone {
     }
 
     // Remote accept call, call will be setup
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlParticipantJoinedEvent event) {
 	    Ln.i("CallControlParticipantJoinedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
@@ -475,17 +486,20 @@ public class PhoneImpl implements Phone {
         }
     }
 
+	@Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(RetrofitErrorEvent event) {
 	    Ln.e("RetrofitErrorEvent is received ");
         clearCallback(ResultImpl.error("Error"));
     }
 
+	@Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlCallJoinErrorEvent event) {
 	    Ln.e("CallControlCallJoinErrorEvent is received ");
         clearCallback(ResultImpl.error("Join Error"));
     }
 
     // Local hangup
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlSelfParticipantLeftEvent event) {
 	    Ln.i("CallControlSelfParticipantLeftEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
@@ -500,6 +514,7 @@ public class PhoneImpl implements Phone {
     }
 
     // Local declined
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(LocusDeclinedEvent event) {
 	    Ln.i("LocusDeclinedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
@@ -514,6 +529,7 @@ public class PhoneImpl implements Phone {
     }
 
     // Local & Remote cancel
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlCallCancelledEvent event) {
 	    Ln.i("CallControlCallCancelledEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
@@ -533,6 +549,7 @@ public class PhoneImpl implements Phone {
     }
 
     // Remote hangup
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlParticipantLeftEvent event) {
 	    Ln.i("CallControlParticipantLeftEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
@@ -543,6 +560,7 @@ public class PhoneImpl implements Phone {
     }
 
     // Remote declined
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLeaveLocusEvent event) {
 	    Ln.i("CallControlLeaveLocusEvent is received " + event.locusData().getKey());
         CallImpl call = _calls.get(event.locusData().getKey());
@@ -553,6 +571,7 @@ public class PhoneImpl implements Phone {
     }
 
     // Incoming Call
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallNotificationEvent event) {
 	    Ln.i("CallNotificationEvent is received " + event.getType());
         if (event.getType() == CallNotificationType.INCOMING) {
@@ -567,6 +586,7 @@ public class PhoneImpl implements Phone {
         }
     }
 
+	@Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(DismissCallNotificationEvent event) {
 	    Ln.i("DismissCallNotificationEvent is received " + event.getLocusKey());
         final LocusData call = _callControlService.getLocusData(event.getLocusKey());
@@ -576,6 +596,7 @@ public class PhoneImpl implements Phone {
 	    _callAnalyzerReporter.reportCallAlertRemoved(event.getLocusKey());
     }
 
+	@Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLocalAudioMutedEvent event) {
 	    Ln.i("CallControlLocalAudioMutedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
@@ -588,6 +609,7 @@ public class PhoneImpl implements Phone {
         }
     }
 
+	@Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLocalVideoMutedEvent event) {
 	    Ln.i("CallControlLocalVideoMutedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
@@ -600,6 +622,7 @@ public class PhoneImpl implements Phone {
         }
     }
 
+	@Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlParticipantAudioMuteEvent event) {
 	    Ln.i("CallControlParticipantAudioMuteEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
@@ -618,6 +641,7 @@ public class PhoneImpl implements Phone {
         }
     }
 
+	@Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
 	    Ln.i("CallControlParticipantVideoMutedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
@@ -636,11 +660,13 @@ public class PhoneImpl implements Phone {
         }
     }
 
+	@Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLocusChangedEvent event) {
 	    Ln.i("CallControlLocusChangedEvent is received ");
         // TODO DO THIS FOR PSTN/SIP
     }
 
+	@Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(RequestCallingPermissions event) {
 	    Ln.i("RequestCallingPermissions is received");
         List<String> permissions = new ArrayList<>();
@@ -667,7 +693,8 @@ public class PhoneImpl implements Phone {
 		if (!option.hasVideo()) {
 			builder = builder.setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly);
 		}
-		_callControlService.joinCall(builder.build());
+		//_callControlService.joinCall(builder.build());
+		_callControlService.joinCall(builder.build(), false);
 	}
 	
     private String parseHydraId(String id) {
@@ -707,15 +734,21 @@ public class PhoneImpl implements Phone {
     }
     
     // -- Ignore Event
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(NoSubscriberEvent event) {
     
     }
+
+	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void onEventMainThread(ConversationSyncQueue.ConversationSyncStartedEvent event) {
 
 	}
+
+	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void onEventMainThread(StunTraceServerResultEvent event) {
 
 	}
+	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void onEventMainThread(ApplicationControllerStateChangedEvent event) {
 
 	}
