@@ -22,6 +22,8 @@ package com.ciscospark.androidsdk.utils.http;
  * THE SOFTWARE.
  */
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +34,7 @@ import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.google.gson.Gson;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -53,6 +56,14 @@ public class ServiceBuilder {
 
     public ServiceBuilder() {
         _interceptors.add(new DefaultHeadersInterceptor());
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
+            @Override
+            public void log(String message) {
+                Log.i("RetrofitLog","retrofitBack = "+message);
+            }
+        });
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        _interceptors.add(loggingInterceptor);
     }
 
     public ServiceBuilder baseURL(String url) {
