@@ -22,7 +22,6 @@
 
 package com.ciscospark.androidsdk.phone.internal;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +50,7 @@ import com.cisco.spark.android.callcontrol.events.CallControlLocusCreatedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantAudioMuteEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantJoinedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantLeftEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlParticipantVideoMutedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlRemoteVideoMutedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlSelfParticipantLeftEvent;
 import com.cisco.spark.android.callcontrol.events.DismissCallNotificationEvent;
 import com.cisco.spark.android.core.ApiClientProvider;
@@ -647,8 +646,8 @@ public class PhoneImpl implements Phone {
     }
 
 	@Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
-	    Ln.i("CallControlParticipantVideoMutedEvent is received " + event.getLocusKey());
+    public void onEventMainThread(CallControlRemoteVideoMutedEvent event) {
+	    Ln.i("CallControlRemoteVideoMutedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
 	        Ln.d("Find callImpl " + event.getLocusKey());
@@ -718,7 +717,7 @@ public class PhoneImpl implements Phone {
 			}
 			return id;
 		}
-		catch (UnsupportedEncodingException e) {
+		catch (Throwable t) {
 			return id;
 		}
 
