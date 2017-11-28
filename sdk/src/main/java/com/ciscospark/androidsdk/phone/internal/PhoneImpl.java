@@ -431,7 +431,7 @@ public class PhoneImpl implements Phone {
         if (call == null) {
             com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(key);
             if (locus != null) {
-                call = new CallImpl(this, CallImpl.Direction.OUTGOING, key);
+                call = new CallImpl(this, _option, CallImpl.Direction.OUTGOING, key);
                 _bus.register(call);
                 _calls.put(key, call);
                 if (_dialCallback != null) {
@@ -475,14 +475,10 @@ public class PhoneImpl implements Phone {
 	            Ln.d("Already has been connected, return");
 	            return;
             }
-            if (_option != null) {
-                if (_option.hasVideo()) {
-                    _callControlService.setRemoteWindow(event.getLocusKey(), _option.getRemoteView());
-                    _callControlService.setPreviewWindow(event.getLocusKey(), _option.getLocalView());
-                }else{
-                    _callControlService.toggleAudioCall(event.getLocusKey());
-                }
-            }
+	        if (_option != null && _option.hasVideo()) {
+		        _callControlService.setRemoteWindow(event.getLocusKey(), _option.getRemoteView());
+		        _callControlService.setPreviewWindow(event.getLocusKey(), _option.getLocalView());
+	        }
             call.setStatus(Call.CallStatus.CONNECTED);
             if (_incomingCallback != null) {
                 _incomingCallback.onComplete(ResultImpl.success(null));
@@ -585,7 +581,7 @@ public class PhoneImpl implements Phone {
 	    Ln.i("CallNotificationEvent is received " + event.getType());
         if (event.getType() == CallNotificationType.INCOMING) {
 	        Ln.i("InComing Call " + event.getLocusKey());
-            CallImpl call = new CallImpl(this, CallImpl.Direction.INCOMING, event.getLocusKey());
+            CallImpl call = new CallImpl(this, _option, CallImpl.Direction.INCOMING, event.getLocusKey());
             _bus.register(call);
             _calls.put(call.getKey(), call);
             IncomingCallListener listener = getIncomingCallListener();

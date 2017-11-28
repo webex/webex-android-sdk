@@ -64,9 +64,11 @@ public class CallImpl implements Call {
 
     @StringPart
     private @NonNull Direction _direction;
-
+    
     @StringPart
     private @NonNull LocusKey _key;
+    
+    private @NonNull MediaOption _option;
 
     private CallObserver _observer;
 
@@ -75,8 +77,9 @@ public class CallImpl implements Call {
 
     private Map<SendDtmfOperation, CompletionHandler<Void>> _dtmfOperations = new HashMap<>(1);
 
-    CallImpl(@NonNull PhoneImpl phone, @NonNull Direction direction, @NonNull LocusKey key) {
+    CallImpl(@NonNull PhoneImpl phone, @NonNull MediaOption option, @NonNull Direction direction, @NonNull LocusKey key) {
         _phone = phone;
+        _option = option;
         _direction = direction;
         _key = key;
         _status = CallStatus.INITIATED;
@@ -165,11 +168,11 @@ public class CallImpl implements Call {
     }
 
     public boolean isSendingVideo() {
-        return !_phone.getCallService().getCall(this._key).isAudioCall() && !_phone.getCallService().isVideoMuted(getKey());
+        return _option.hasVideo() && !_phone.getCallService().isVideoMuted(getKey());
     }
 
     public void setSendingVideo(boolean sending) {
-        if (_phone.getCallService().getCall(this._key).isAudioCall()){
+        if (!_option.hasVideo()){
             Ln.d("Can not setSendingVideo in a Audio call, return");
             return;
         }
@@ -195,11 +198,11 @@ public class CallImpl implements Call {
     }
 
     public boolean isReceivingVideo() {
-        return !_phone.getCallService().getCall(this._key).isAudioCall() && !_phone.getCallService().isRemoteVideoMuted(getKey());
+        return _option.hasVideo() && !_phone.getCallService().isRemoteVideoMuted(getKey());
     }
 
     public void setReceivingVideo(boolean receiving) {
-        if (_phone.getCallService().getCall(this._key).isAudioCall()){
+        if (!_option.hasVideo()){
             Ln.d("Can not setReceivingVideo in a Audio call, return");
             return;
         }

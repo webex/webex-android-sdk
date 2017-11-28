@@ -680,5 +680,4 @@ class SparkModule {
             }
         };
     }
-
 }

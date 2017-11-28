@@ -70,7 +70,7 @@ public class Spark {
 
 	public static final String APP_NAME = "spark_android_sdk";
 
-	public static final String APP_VERSION = BuildConfig.VERSION_NAME;
+	public static final String APP_VERSION = BuildConfig.VERSION_NAME + "(" + BuildConfig.BUILD_TIME + "_" + BuildConfig.BUILD_REVISION + ")";
 	
 	static {
 		UserAgentProvider.APP_NAME = APP_NAME;
@@ -126,7 +126,7 @@ public class Spark {
      * @since 0.1
      */
     public String getVersion() {
-	    return APP_VERSION;
+	    return BuildConfig.VERSION_NAME;
     }
 	
 	/**
