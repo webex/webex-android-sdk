@@ -22,6 +22,7 @@
 
 package com.ciscospark.androidsdk;
 
+import java.lang.reflect.Method;
 import javax.inject.Inject;
 
 import android.app.Application;
@@ -50,6 +51,7 @@ import com.ciscospark.androidsdk.team.TeamMembershipClient;
 import com.ciscospark.androidsdk.team.internal.TeamClientImpl;
 import com.ciscospark.androidsdk.team.internal.TeamMembershipClientImpl;
 import com.ciscospark.androidsdk.utils.Utils;
+import com.ciscospark.androidsdk.utils.log.MediaLog;
 import com.ciscospark.androidsdk.utils.log.NoLn;
 import com.ciscospark.androidsdk.utils.log.WarningLn;
 import com.ciscospark.androidsdk.webhook.WebhookClient;
@@ -106,6 +108,7 @@ public class Spark {
 	 * @since 0.1
 	 */
 	public Spark(Application application, Authenticator authenticator) {
+		//setLogLevel(null);
 	    SquaredContentProvider.CONTENT_AUTHORITY = getAuthority(application.getApplicationContext());
 	    ConversationContentProvider.resetUriMatcher();
 	    com.cisco.spark.android.core.Application.setApplication(application);
@@ -115,7 +118,6 @@ public class Spark {
         _injector.inject(this);
         _injector.inject(_authenticator);
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _injector);
-		setLogLevel(null);
 		Ln.i(Utils.versionInfo());
     }
 	
@@ -251,7 +253,7 @@ public class Spark {
 	 */
 	public void setLogLevel(LogLevel logLevel) {
 		NaturalLog logger = new com.ciscospark.androidsdk.utils.log.DebugLn();
-		MediaSessionAPI.TraceLevelMask mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
+		MediaSessionAPI.TraceLevelMask mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_NOTRACE;
 		if (logLevel != null) {
 			switch (logLevel) {
 				case NO:
@@ -287,7 +289,17 @@ public class Spark {
 		if (_mediaEngine != null) {
 			_mediaEngine.setLoggingLevel(mask);
 		}
+		Class[] parameterTypes = new Class[3];
+		parameterTypes[0] = Integer.TYPE;
+		parameterTypes[1] = String.class;
+		parameterTypes[2] = String.class;
+		try {
+			Method method1 = MediaLog.class.getMethod("outputLog", parameterTypes);
+			com.webex.wme.Log.setLogMethod(method1);
+		} catch (NoSuchMethodException ignored) {
+		}
     }
+
 
 	private static String getAuthority(final Context appContext) {
 		try {
