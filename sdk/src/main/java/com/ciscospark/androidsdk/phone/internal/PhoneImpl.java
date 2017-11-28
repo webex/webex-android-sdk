@@ -290,7 +290,8 @@ public class PhoneImpl implements Phone {
     void answer(@NonNull CallImpl call, @NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
 	    Ln.i("Answer " + call);
         for (CallImpl exist : _calls.values()) {
-            if (!exist.getKey().equals(call.getKey()) && exist.getStatus() == Call.CallStatus.CONNECTED) {
+            Ln.d("answer exist.getStatus(): " + exist.getStatus());
+            if (!exist.getKey().equals(call.getKey()) && (exist.getStatus() == Call.CallStatus.RINGING || exist.getStatus() == Call.CallStatus.CONNECTED)) {
 	            Ln.e("There are other active calls");
                 callback.onComplete(ResultImpl.error("There are other active calls"));
                 return;
