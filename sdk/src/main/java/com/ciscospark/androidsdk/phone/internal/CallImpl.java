@@ -165,10 +165,14 @@ public class CallImpl implements Call {
     }
 
     public boolean isSendingVideo() {
-        return !_phone.getCallService().isVideoMuted(getKey());
+        return !_phone.getCallService().getCall(this._key).isAudioCall() && !_phone.getCallService().isVideoMuted(getKey());
     }
 
     public void setSendingVideo(boolean sending) {
+        if (_phone.getCallService().getCall(this._key).isAudioCall()){
+            Ln.d("Can not setSendingVideo in a Audio call, return");
+            return;
+        }
         if (sending) {
             _phone.getCallService().unMuteVideo(getKey(), MediaRequestSource.USER);
         }
@@ -191,10 +195,14 @@ public class CallImpl implements Call {
     }
 
     public boolean isReceivingVideo() {
-        return !_phone.getCallService().isRemoteVideoMuted(getKey());
+        return !_phone.getCallService().getCall(this._key).isAudioCall() && !_phone.getCallService().isRemoteVideoMuted(getKey());
     }
 
     public void setReceivingVideo(boolean receiving) {
+        if (_phone.getCallService().getCall(this._key).isAudioCall()){
+            Ln.d("Can not setReceivingVideo in a Audio call, return");
+            return;
+        }
         _phone.getCallService().muteRemoteVideos(getKey(), !receiving);
         CallObserver observer = getObserver();
         if (observer != null) {
