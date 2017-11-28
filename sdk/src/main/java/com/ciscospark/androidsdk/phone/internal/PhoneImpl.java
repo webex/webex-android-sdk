@@ -470,9 +470,17 @@ public class PhoneImpl implements Phone {
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
 	        Ln.d("Find callImpl " + event.getLocusKey());
-            if (_option != null && _option.hasVideo()) {
-                _callControlService.setRemoteWindow(event.getLocusKey(), _option.getRemoteView());
-                _callControlService.setPreviewWindow(event.getLocusKey(), _option.getLocalView());
+	        if (call.getStatus() == Call.CallStatus.CONNECTED){
+	            Ln.d("Already has been connected, return");
+	            return;
+            }
+            if (_option != null) {
+                if (_option.hasVideo()) {
+                    _callControlService.setRemoteWindow(event.getLocusKey(), _option.getRemoteView());
+                    _callControlService.setPreviewWindow(event.getLocusKey(), _option.getLocalView());
+                }else{
+                    _callControlService.toggleAudioCall(event.getLocusKey());
+                }
             }
             call.setStatus(Call.CallStatus.CONNECTED);
             if (_incomingCallback != null) {
