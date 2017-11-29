@@ -96,7 +96,7 @@ publishing {
             groupId moduleGroupId
             artifactId moduleArtifactId
             version moduleVersion
-            artifact "$buildDir/outputs/aar/sdk-release.aar" //aar artifact you want to publish
+            artifact "$buildDir/outputs/aar/sdk-debug.aar" //aar artifact you want to publish
 
 			artifact javadocJar
 			artifact sourcesJar
