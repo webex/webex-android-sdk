@@ -108,7 +108,6 @@ public class Spark {
 	 * @since 0.1
 	 */
 	public Spark(Application application, Authenticator authenticator) {
-		//setLogLevel(null);
 	    SquaredContentProvider.CONTENT_AUTHORITY = getAuthority(application.getApplicationContext());
 	    ConversationContentProvider.resetUriMatcher();
 	    com.cisco.spark.android.core.Application.setApplication(application);
@@ -118,7 +117,9 @@ public class Spark {
         _injector.inject(this);
         _injector.inject(_authenticator);
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _injector);
+		setLogLevel(null);        
 		Ln.i(Utils.versionInfo());
+		Ln.i("CommonLib (" + com.cisco.spark.android.BuildConfig.BUILD_TIME + "-" + com.cisco.spark.android.BuildConfig.GIT_COMMIT_SHA + ")");
     }
 	
     /**
@@ -296,7 +297,7 @@ public class Spark {
 		try {
 			Method method1 = MediaLog.class.getMethod("outputLog", parameterTypes);
 			com.webex.wme.Log.setLogMethod(method1);
-		} catch (NoSuchMethodException ignored) {
+		} catch (Throwable ignored) {
 		}
     }
 

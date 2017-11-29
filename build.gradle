@@ -20,15 +20,15 @@ buildscript {
 
 allprojects {
     repositories {
-        mavenLocal()
+//        mavenLocal()
 //        mavenCentral()
 //        maven {
 //            url 'https://maven.fabric.io/public'
 //        }        
         jcenter()
-//        maven {
-//            url 'https://devhub.cisco.com/artifactory/sparksdk-SNAPSHOT/'
-//        }
+        maven {
+            url 'https://devhub.cisco.com/artifactory/sparksdk-SNAPSHOT/'
+        }
         maven {
             url 'https://devhub.cisco.com/artifactory/sparksdk/'
         }
