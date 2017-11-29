@@ -32,7 +32,7 @@ import org.joda.time.DateTimeZone;
 /**
  * An utility class.
  *
- * @since: 0.1
+ * @since 0.1
  */
 
 public class Utils {

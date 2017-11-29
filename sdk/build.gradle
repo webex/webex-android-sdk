@@ -25,6 +25,8 @@ ext {
 	moduleDeveloperEmail = 'devsupport@ciscospark.com'
 	moduleDeveloperOrganization = 'Cisco System Inc'
 	moduleDeveloperOrganizationURL = 'https://www.ciscospark.com/'
+	mavenUser = project.hasProperty('mavenUser') ? project.getProperty('mavenUser') : ''
+	mavenPass = project.hasProperty('mavenPass') ? project.getProperty('mavenPass') : ''
 }
 
 android {
@@ -88,27 +90,27 @@ android {
 	}
 
 	//generateReleaseJavadoc
-	android.libraryVariants.all { variant ->
-		task("generate${variant.name}Javadoc", type: Javadoc) {
-			description "Generates Javadoc for $variant.name."
-			source = variant.javaCompile.source
-			ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
-			classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
-			options.encoding('UTF-8')
-			options.setUse(true)
-			options.author(true)
-			options.version(true)
-			options.windowTitle(moduleName + ' ' + moduleVersion)
-			options.docTitle(moduleName + ' ' + moduleVersion)
-			options.links("http://docs.oracle.com/javase/7/docs/api/");
-			options.links("http://d.android.com/reference/");
-			options.footer('Copyright &#169; 2016&#8211;2017 Cisco System Inc.  All Rights Reserved.')
-			exclude '**/BuildConfig.java'
-			exclude '**/R.java'
-			exclude '**/internal/*.java'
-			exclude '**/utils/**'
-		}
-	}
+//	android.libraryVariants.all { variant ->
+//		task("generate${variant.name}Javadoc", type: Javadoc) {
+//			description "Generates Javadoc for $variant.name."
+//			source = variant.javaCompile.source
+//			ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+//			classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+//			options.encoding('UTF-8')
+//			options.setUse(true)
+//			options.author(true)
+//			options.version(true)
+//			options.windowTitle(moduleName + ' ' + moduleVersion)
+//			options.docTitle(moduleName + ' ' + moduleVersion)
+//			options.links("http://docs.oracle.com/javase/7/docs/api/");
+//			options.links("http://d.android.com/reference/");
+//			options.footer('Copyright &#169; 2016&#8211;2017 Cisco System Inc.  All Rights Reserved.')
+//			exclude '**/BuildConfig.java'
+//			exclude '**/R.java'
+//			exclude '**/internal/*.java'
+//			exclude '**/utils/**'
+//		}
+//	}
 }
 
 publishing {
@@ -117,7 +119,10 @@ publishing {
             groupId moduleGroupId
             artifactId moduleArtifactId
             version moduleVersion
-            artifact "$buildDir/outputs/aar/sdk-debug.aar" //aar artifact you want to publish
+            artifact "$buildDir/outputs/aar/sdk-release.aar" //aar artifact you want to publish
+
+			artifact javadocJar
+			artifact sourcesJar
 
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
@@ -162,11 +167,25 @@ publishing {
         }
     }
 
-    repositories{
-        maven {
-	        url "file:/${buildDir}/artifacts"
-        }
-    }
+	repositories{
+		maven {
+			name 'DevSnapshot'
+			url "http://engci-maven.cisco.com/artifactory/sparksdk-SNAPSHOT/"
+			credentials {
+				username project.mavenUser
+				password project.mavenPass
+			}
+		}
+
+		maven {
+			name 'ReleaseInternal'
+			url "http://engci-maven.cisco.com/artifactory/SparkSDK-internal/"
+			credentials {
+				username project.mavenUser
+				password project.mavenPass
+			}
+		}
+	}
 }
 
 //Properties properties = new Properties()
@@ -199,9 +218,6 @@ publishing {
 //}
 
 
-
-
-
 dependencies {
 	compile fileTree(dir: 'libs', include: ['*.jar'])
     provided 'com.squareup.dagger:dagger-compiler:1.2.5'
@@ -227,4 +243,38 @@ def revision() {
 		standardOutput = code
 	}
 	return code.toString().replaceAll("\n", "")
+}
+
+task sourcesJar(type: Jar) {
+	classifier = 'sources'
+	from android.sourceSets.main.java.srcDirs
+}
+
+task javadoc(type: Javadoc) {
+	classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+	android.libraryVariants.all { variant ->
+		description "Generates Javadoc for $variant.name."
+		ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+		owner.classpath += files(variant.javaCompiler.classpath.files) + files(ext.androidJar)
+	}
+	source = android.sourceSets.main.java.srcDirs
+	options.encoding('UTF-8')
+	options.setUse(true)
+	options.author(true)
+	options.version(true)
+	options.windowTitle(moduleName + ' ' + moduleVersion)
+	options.docTitle(moduleName + ' ' + moduleVersion)
+	options.links("http://docs.oracle.com/javase/7/docs/api/");
+	options.links("http://d.android.com/reference/");
+	options.footer('Copyright &#169; 2016&#8211;2017 Cisco System Inc.  All Rights Reserved.')
+	exclude '**/BuildConfig.java'
+	exclude '**/R.java'
+	exclude '**/internal/*.java'
+	exclude '**/utils/**'
+	failOnError false
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = 'javadoc'
+	from javadoc.destinationDir
 }
