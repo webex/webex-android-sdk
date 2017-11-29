@@ -56,7 +56,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 public class CallImpl implements Call {
-	
+
     private @NonNull PhoneImpl _phone;
 
     @StringPart
@@ -64,13 +64,19 @@ public class CallImpl implements Call {
 
     @StringPart
     private @NonNull Direction _direction;
-    
+
     @StringPart
     private @NonNull LocusKey _key;
-    
-    private @NonNull MediaOption _option;
+
+    private MediaOption _option;
 
     private CallObserver _observer;
+
+    private CompletionHandler<Void> _answerCallback;
+
+    private CompletionHandler<Void> _rejectCallback;
+
+    private CompletionHandler<Void> _hangupCallback;
 
     private Rect _localVideoViewSize = new Rect(0, 0, 0, 0);
     private Rect _remoteVideoViewSize = new Rect(0, 0, 0, 0);
@@ -92,6 +98,22 @@ public class CallImpl implements Call {
 
     void setStatus(@NonNull CallStatus status) {
         _status = status;
+    }
+
+    MediaOption getOption() {
+        return _option;
+    }
+
+    CompletionHandler<Void> getAnswerCallback() {
+        return _answerCallback;
+    }
+
+    CompletionHandler<Void> getRejectCallback() {
+        return _rejectCallback;
+    }
+
+    CompletionHandler<Void> getHangupCallback() {
+        return _hangupCallback;
     }
 
     @NonNull
@@ -150,7 +172,7 @@ public class CallImpl implements Call {
     public boolean isRemoteSendingVideo() {
         for (LocusParticipant p : getRemoteParticipants()) {
             if (p.getState() == LocusParticipant.State.JOINED
-                    && p.getStatus().getVideoStatus().equals(MediaDirection.SENDONLY) || p.getStatus().getVideoStatus().equals(MediaDirection.SENDRECV)) {
+                && p.getStatus().getVideoStatus().equals(MediaDirection.SENDONLY) || p.getStatus().getVideoStatus().equals(MediaDirection.SENDRECV)) {
                 return true;
             }
         }
@@ -160,7 +182,7 @@ public class CallImpl implements Call {
     public boolean isRemoteSendingAudio() {
         for (LocusParticipant p : getRemoteParticipants()) {
             if (p.getState() == LocusParticipant.State.JOINED
-                    && p.getStatus().getAudioStatus().equals(MediaDirection.SENDONLY) || p.getStatus().getAudioStatus().equals(MediaDirection.SENDRECV)) {
+                && p.getStatus().getAudioStatus().equals(MediaDirection.SENDONLY) || p.getStatus().getAudioStatus().equals(MediaDirection.SENDRECV)) {
                 return true;
             }
         }
@@ -168,11 +190,11 @@ public class CallImpl implements Call {
     }
 
     public boolean isSendingVideo() {
-        return _option.hasVideo() && !_phone.getCallService().isVideoMuted(getKey());
+        return _option != null && _option.hasVideo() && !_phone.getCallService().isVideoMuted(getKey());
     }
 
     public void setSendingVideo(boolean sending) {
-        if (!_option.hasVideo()){
+        if (_option == null || !_option.hasVideo()){
             Ln.d("Can not setSendingVideo in a Audio call, return");
             return;
         }
@@ -198,11 +220,11 @@ public class CallImpl implements Call {
     }
 
     public boolean isReceivingVideo() {
-        return _option.hasVideo() && !_phone.getCallService().isRemoteVideoMuted(getKey());
+        return _option != null && _option.hasVideo() && !_phone.getCallService().isRemoteVideoMuted(getKey());
     }
 
     public void setReceivingVideo(boolean receiving) {
-        if (!_option.hasVideo()){
+        if (_option == null || !_option.hasVideo()){
             Ln.d("Can not setReceivingVideo in a Audio call, return");
             return;
         }
@@ -233,15 +255,19 @@ public class CallImpl implements Call {
     }
 
     public void answer(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
-        _phone.answer(this, option, callback);
+        _option = option;
+        _answerCallback = callback;
+        _phone.answer(this);
     }
 
     public void reject(@NonNull CompletionHandler<Void> callback) {
-        _phone.reject(this, callback);
+        _rejectCallback = callback;
+        _phone.reject(this);
     }
 
     public void hangup(@NonNull CompletionHandler<Void> callback) {
-        _phone.hangup(this, callback);
+        _hangupCallback = callback;
+        _phone.hangup(this);
     }
 
     public boolean isSendingDTMFEnabled() {
@@ -253,19 +279,19 @@ public class CallImpl implements Call {
         SendDtmfOperation operation = _phone.getOperationQueue().sendDtmf(dtmf);
         _dtmfOperations.put(operation, callback);
     }
-    
+
     public void sendFeedback(int rating, @Nullable String comment) {
         Map<String, String> info = new HashMap<>();
-	    info.put("user.rating", String.valueOf(rating));
-	    info.put("user.comments", comment);
-	    info.put("locusId", this._key.getLocusId());
-	    Locus locus = _phone.getCallService().getLocus(_key);
-	    if (locus != null && locus.getSelf() != null) {
-		    info.put("participantId", locus.getSelf().getId().toString());
-	    }
-	    _phone.sendFeedback(info);
+        info.put("user.rating", String.valueOf(rating));
+        info.put("user.comments", comment);
+        info.put("locusId", this._key.getLocusId());
+        Locus locus = _phone.getCallService().getLocus(_key);
+        if (locus != null && locus.getSelf() != null) {
+            info.put("participantId", locus.getSelf().getId().toString());
+        }
+        _phone.sendFeedback(info);
     }
-    
+
     public Phone.FacingMode getFacingMode() {
         com.cisco.spark.android.callcontrol.model.Call call = _phone.getCallService().getCall(getKey());
         if (call == null) {
@@ -292,7 +318,7 @@ public class CallImpl implements Call {
             }
         }
     }
-    
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlMediaDecodeSizeChangedEvent event) {
         Ln.d("CallControlMediaDecodeSizeChangedEvent is received");
@@ -305,7 +331,7 @@ public class CallImpl implements Call {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(MediaSession.MediaRenderSizeChangedEvent event) {
-	    Ln.d("MediaRenderSizeChangedEvent is received");
+        Ln.d("MediaRenderSizeChangedEvent is received");
         _localVideoViewSize = event.size;
         CallObserver observer = getObserver();
         if (observer != null) {
@@ -373,8 +399,4 @@ public class CallImpl implements Call {
         }
         return ret;
     }
-
-
-
-
 }
