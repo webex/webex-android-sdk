@@ -236,7 +236,7 @@ public class CallImpl implements Call {
     }
 
     public boolean isReceivingAudio() {
-        return _phone.getCallService().isRemoteAudioMuted(getKey());
+        return !_phone.getCallService().isRemoteAudioMuted(getKey());
     }
 
     public void setReceivingAudio(boolean receiving) {
