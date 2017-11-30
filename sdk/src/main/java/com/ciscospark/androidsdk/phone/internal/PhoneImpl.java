@@ -139,7 +139,7 @@ public class PhoneImpl implements Phone {
 
 	private CompletionHandler<Call> _dialCallback;
 
-	private MediaOption _option;
+	private MediaOption _dialOption;
 
 	private MediaSession _preview;
 
@@ -260,7 +260,7 @@ public class PhoneImpl implements Phone {
 			return;
 		}
 		stopPreview();
-		_option = option;
+		_dialOption = option;
 		_dialCallback = callback;
 
 		if (dialString.contains("@") && !dialString.contains(".")) {
@@ -439,7 +439,7 @@ public class PhoneImpl implements Phone {
 		if (call == null) {
 			com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(key);
 			if (locus != null) {
-				call = new CallImpl(this, _option, CallImpl.Direction.OUTGOING, key);
+				call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, key);
 				_bus.register(call);
 				_calls.put(key, call);
 				if (_dialCallback != null) {
@@ -451,7 +451,7 @@ public class PhoneImpl implements Phone {
 				if (_dialCallback != null) {
 					_dialCallback.onComplete(ResultImpl.error("Internal callImpl isn't exist"));
 				}
-				_option = null;
+				_dialOption = null;
 			}
 			_dialCallback = null;
 		}
@@ -483,9 +483,9 @@ public class PhoneImpl implements Phone {
 				Ln.d("Already has been connected, return");
 				return;
 			}
-			if (_option != null && _option.hasVideo()) {
-				_callControlService.setRemoteWindow(event.getLocusKey(), _option.getRemoteView());
-				_callControlService.setPreviewWindow(event.getLocusKey(), _option.getLocalView());
+			if (call.getOption() != null && call.getOption().hasVideo()) {
+				_callControlService.setRemoteWindow(event.getLocusKey(), call.getOption().getRemoteView());
+				_callControlService.setPreviewWindow(event.getLocusKey(), call.getOption().getLocalView());
 			}
 			call.setStatus(Call.CallStatus.CONNECTED);
 			if (call.getAnswerCallback() != null) {
@@ -587,7 +587,7 @@ public class PhoneImpl implements Phone {
 		Ln.i("CallNotificationEvent is received " + event.getType());
 		if (event.getType() == CallNotificationType.INCOMING) {
 			Ln.i("InComing Call " + event.getLocusKey());
-			CallImpl call = new CallImpl(this, _option, CallImpl.Direction.INCOMING, event.getLocusKey());
+			CallImpl call = new CallImpl(this, null, CallImpl.Direction.INCOMING, event.getLocusKey());
 			_bus.register(call);
 			_calls.put(call.getKey(), call);
 			IncomingCallListener listener = getIncomingCallListener();
@@ -687,7 +687,7 @@ public class PhoneImpl implements Phone {
 	}
 
 	private void clearCallback(Result result) {
-		_option = null;
+		_dialOption = null;
 		if (_dialCallback != null) {
 			_dialCallback.onComplete(result);
 			_dialCallback = null;

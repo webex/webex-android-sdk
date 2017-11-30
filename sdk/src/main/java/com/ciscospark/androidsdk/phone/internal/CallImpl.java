@@ -83,7 +83,7 @@ public class CallImpl implements Call {
 
     private Map<SendDtmfOperation, CompletionHandler<Void>> _dtmfOperations = new HashMap<>(1);
 
-    CallImpl(@NonNull PhoneImpl phone, @NonNull MediaOption option, @NonNull Direction direction, @NonNull LocusKey key) {
+    CallImpl(@NonNull PhoneImpl phone, @Nullable MediaOption option, @NonNull Direction direction, @NonNull LocusKey key) {
         _phone = phone;
         _option = option;
         _direction = direction;
