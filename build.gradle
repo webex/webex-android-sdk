@@ -1,0 +1,42 @@
+apply plugin: 'com.github.ben-manes.versions'
+
+buildscript {
+    repositories {
+        jcenter()
+	    mavenCentral()
+        maven {
+            url 'https://maven.fabric.io/public'
+        }
+    }
+    dependencies {
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.12.0'
+        classpath 'io.fabric.tools:gradle:1.21.6'
+        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'me.tatarka:gradle-retrolambda:3.5.0'
+	    classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+	    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        maven {
+            url 'https://devhub.cisco.com/artifactory/sparksdk/'
+        }
+    }
+}
+
+subprojects {
+    afterEvaluate { project ->
+        if (!(project.plugins.hasPlugin('com.android.application') || project.plugins.hasPlugin('com.android.library'))) {
+            return
+        }
+        android {
+            lintOptions {
+                lintConfig file('lint.xml')
+                abortOnError true
+            }
+        }
+    }
+}
