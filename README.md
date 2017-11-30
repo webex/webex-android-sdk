@@ -1,107 +1,233 @@
-# spark-android-sdk
+# Cisco Spark Android SDK
 
-> Cisco Spark SDK for android.
+[![license](https://img.shields.io/github/license/ciscospark/spark-android-sdk.svg)](https://github.com/ciscospark/spark-android-sdk/blob/master/LICENSE)
+
+> The Cisco Spark™ Android SDK
+
+The Cisco Spark Android SDK makes it easy to integrate secure and convenient Cisco Spark messaging and calling features in your Android apps.
+
+This SDK is built with **Android SDK Tools 25** and requires **Android API Level 21** or later.
+
+## Table of Contents
+
+- [Install](#install)
+- [Usage](#usage)
+- [Contribute](#contribute)
+- [License](#license)
+
+## Install
+
+Assuming you already have an Android project, e.g. _MySparkApp_, for your Android app, here are the steps to integrate the Cisco Spark Android SDK into your project using [Gradle](https://gradle.org):
+
+1. Add the following repository to your top-level `build.gradle` file:
+
+    ```groovy
+    allprojects {
+        repositories {
+            jcenter()
+            maven {
+                url 'https://devhub.cisco.com/artifactory/sparksdk/'
+            }
+        }
+    }
+    ```
+
+2. Add the `spark-android-sdk` library as a dependency for your app in the `build.gradle` file:
+
+    ```groovy
+    dependencies { 
+        compile('com.ciscospark:androidsdk:0.2.0@aar', {
+            transitive = true
+        })
+    }
+    ```
+
+3. Enable [multidex](https://developer.android.com/studio/build/multidex.html) support for your app:
+
+    ```groovy
+    android {
+        defaultConfig {
+            multiDexEnabled true
+        }
+    }
+    ```
+    
+4. Exclude rxjava.properties in your packagingOptions :
+
+    ```groovy
+    packagingOptions {
+        exclude 'META-INF/rxjava.properties'
+    }
+    ```
 
 ## Usage
 
-### 1. Add the following repository to your Top-level build.gradle file
+To use the SDK, you will need Cisco Spark integration credentials. If you do not already have a Cisco Spark account, visit the [Cisco Spark for Developers portal](https://developer.ciscospark.com/) to create your account and [register an integration](https://developer.ciscospark.com/authentication.html#registering-your-integration). Your app will need to authenticate users via an [OAuth](https://oauth.net/) grant flow for existing Cisco Spark users or a [JSON Web Token](https://jwt.io/) for guest users without a Cisco Spark account.
 
-```
-allprojects {
-    repositories {
-        jcenter()
-        maven {
-            url 'http://engci-maven.cisco.com/artifactory/webex-cca-thirdparty'
-        }
-        maven {
-            url 'http://engci-maven.cisco.com/artifactory/webex-cca-release'
-        }
-        maven {
-            url 'http://engci-maven.cisco.com/artifactory/webex-cca-group'
-        }
-        maven {
-            url 'http://engci-maven.cisco.com/artifactory/androidwb-group/'
-        }
-        maven {
-            url 'http://10.140.253.42:10081/nexus/content/repositories/thirdparty/'
-        }
+See the [Android SDK area](https://developer.ciscospark.com/sdk-for-android.html) of the Cisco Spark for Developers site for more information about this SDK.
+
+### Examples
+
+Here are some examples of how to use the Android SDK in your app.
+
+1. Create a new `Spark` instance using Spark ID authentication ([OAuth](https://oauth.net/)-based):
+
+    ```java
+    String clientId = "YOUR_CLIENT_ID";
+    String clientSecret = "YOUR_CLIENT_SECRET";
+    String scope = "spark:all";
+    String redirectUri = "Sparkdemoapp://response";
+
+    OAuthWebViewAuthenticator authenticator = new OAuthWebViewAuthenticator(clientId, clientSecret, scope, redirectUri);
+    Spark spark = new Spark(activity.getApplication(), authenticator)
+    if (!authenticator.isAuthorized()) {
+        authenticator.authorize(webView, new CompletionHandler<Void>() {
+            @Override
+            public void onComplete(Result<Void> result) {
+                if (!result.isSuccessful()) {
+                    System.out.println("User not authorized");
+                }
+            }
+        });
     }
-}
-```
+    ```
 
-### 2. Add spark-android-sdk library in your App build.gradle dependency
+2. Create a new `Spark` instance using Guest ID authentication ([JWT](https://jwt.io/)-based):
 
-```
-dependencies { compile 'com.ciscospark:android-sdk:0.0.1' }
-```
-
-### 3. Enable multiDex in your App
-
-```
-android {
-    defaultConfig {
-        multiDexEnabled true
+    ```java
+    JWTAuthenticator authenticator = new JWTAuthenticator();
+    Spark spark = new Spark(activity.getApplication(), authenticator);
+    if (!authenticator.isAuthorized()) {
+        authenticator.authorize(myJwt);
     }
-}
-```
+    ```
 
-### 4. Make sure your minSdkVersion is up to 21, Android 5.0
+3. Register the device to send and receive calls:
 
-```
-android {
-    defaultConfig {
-        minSdkVersion 21
-    }
-}
-```
+    ```java
+    spark.phone().register(new CompletionHandler<Void>() {
+        @Override
+        public void onComplete(Result<Void> result) {
+            if (result.isSuccessful()) {
+                // Device registered
+            }
+            else {
+                // Device not registered, and calls will not be sent or received
+            }
+        }
+    });
+    ```
 
-### 5. User SparkApplication
+4. Create a new Cisco Spark space, add users to the space, and send a message:
 
-There're two ways of using SparkApplication
+    ```java
+    // Create a Cisco Spark space:
 
-1. Direct assign in AndroidManifest.xml
+    spark.rooms().create("Hello World", null, new CompletionHandler<Room>() {
+        @Override
+        public void onComplete(Result<Room> result) {
+            if (result.isSuccessful()) {
+                Room room = result.getData();
+            }
+            else {
+                SparkError error = result.getError();
+            }
+        }
+    });
+    
+    // Add a user to a space:
 
-```
-<application
-        android:name="com.ciscospark.core.SparkApplication"
-        android:theme="@style/AppTheme">
-        <activity android:name=".MyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+    spark.memberships().create(roomId, null, "person@example.com", true, new CompletionHandler<Membership>() {
+        @Override
+        public void onComplete(Result<Membership> result) {
+            if (result.isSuccessful()) {
+                Membership membership = result.getData();
+            }
+            else {
+                SparkError error = result.getError();
+            }
+        }
+    });
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-</application>
-```
+    // Send a message to a space:
 
-2. Inherit SparkApplication
+    spark.messages().post(roomId, null, null, "Hello there", null, null, new CompletionHandler<Message>() {
+        @Override
+        public void onComplete(Result<Message> result) {
+            if (result.isSuccessful()) {
+                Message message = result.getData();
+            }
+            else {
+                SparkError error = result.getError();
+            }
+        }
+    });
+    ```
 
-Create a java class extends SparkApplication
+5. Make an outgoing call:
 
-```
-import com.ciscospark.core.SparkApplication;
+    ```java
+    spark.phone().dial("person@example.com", MediaOption.audioVideo(local, remote), new CompletionHandler<Call>() {
+        @Override
+        public void onComplete(Result<Call> result) {
+            Call call = result.getData();
+            if (call != null) {
+                call.setObserver(new CallObserver() {
+                    @Override
+                    public void onRinging(Call call) {
 
-public class MyApplication extends SparkApplication {
+                    }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        // your code here
-    }
+                    @Override
+                    public void onConnected(Call call) {
 
-}
-```
+                    }
 
-Assign it in AndroidManifest.xml
+                    @Override
+                    public void onDisconnected(CallDisconnectedEvent callDisconnectedEvent) {
 
-```
-<application
-        android:name=".MyApplication"
-        android:theme="@style/AppTheme">
-</application>
-```
+                    }
 
+                    @Override
+                    public void onMediaChanged(MediaChangedEvent mediaChangedEvent) {
 
+                    }
+                });
+            }
+            else {
+                SparkError error = result.getError();
+            }
+        }
+    });
+    ```
 
-## Build
+6. Receive a call:
+
+    ```java
+    spark.phone().setIncomingCallListener(new Phone.IncomingCallListener() {
+        @Override
+        public void onIncomingCall(Call call) {
+            call.answer(MediaOption.audioVideo(local, remote), new CompletionHandler<Void>() {
+                @Override
+                public void onComplete(Result<Void> result) {
+                    if (result.isSuccessful()) {
+                        // success
+                    }
+                    else {
+                        SparkError error = result.getError();
+                    }
+                }
+            });
+        }
+    });
+    ```
+
+## Contribute
+
+Pull requests welcome. To suggest changes to the SDK, please fork this repository and submit a pull request with your changes. Your request will be reviewed by one of the project maintainers.
+
+## License
+
+&copy; 2016-2017 Cisco Systems, Inc. and/or its affiliates. All Rights Reserved.
+
+See [LICENSE](https://github.com/ciscospark/spark-android-sdk/blob/master/LICENSE) for details.
