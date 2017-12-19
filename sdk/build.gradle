@@ -2,6 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'jacoco'
 
 ext {
 	moduleName = 'Cisco Spark Android SDK'
@@ -11,13 +12,13 @@ ext {
 	moduleVersion = '0.2.0'
 
 	moduleDescription = 'Cisco Spark SDK for Android'
-	
+
 	moduleSiteUrl = 'https://developer.ciscospark.com/getting-started.html'
 	moduleProjectUrl = 'https://github.com/ciscospark/spark-android-sdk'
 	moduleGitUrl = 'https://github.com/ciscospark/spark-android-sdk/tree/master'
 	moduleConnectionUrl = 'scm:git:git://github.com/ciscospark/spark-android-sdk.git'
 	moduleDeveloperConnectionUrl = 'scm:git:ssh://github.com:ciscospark/spark-android-sdk.git'
-	
+
 	moduleLicenseName = 'MIT License'
 	moduleLicenseURL = 'https://raw.githubusercontent.com/ciscospark/spark-android-sdk/master/LICENSE'
 	moduleDeveloperId = 'devsupport'
@@ -29,10 +30,38 @@ ext {
 	mavenPass = project.hasProperty('mavenPass') ? project.getProperty('mavenPass') : ''
 }
 
+jacoco {
+	toolVersion = "0.7.5+"
+}
+
+task jacocoTestReport(type:JacocoReport, dependsOn: "testDebugUnitTest") {
+	group = "Reporting"
+	description = "Generate Jacoco coverage reports"
+
+	classDirectories = fileTree(
+			dir: '../sdk/build/intermediates/classes/debug',
+			excludes: ['**/R.class',
+					   '**/R$*.class',
+					   '**/*$ViewInjector*.*',
+					   '**/BuildConfig.*',
+					   '**/Manifest*.*']
+	)
+
+	def coverageSourceDirs = [ '../sdk/src/main/java' ]
+	additionalSourceDirs = files(coverageSourceDirs)
+	sourceDirectories = files(coverageSourceDirs)
+	executionData = files('../sdk/build/jacoco/testDebugUnitTest.exec')
+
+	reports {
+		xml.enabled = true
+		html.enabled = true
+	}
+}
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
-	
+
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 25
@@ -43,11 +72,16 @@ android {
 	    buildConfigField "String", "BUILD_REVISION", "\"${revision()}\""
     }
 
+    packagingOptions {
+        exclude 'META-INF/rxjava.properties'
+    }
+
     buildTypes {
-        release { 
+        release {
 			minifyEnabled true
         }
         debug {
+            testCoverageEnabled true
         }
     }
 
