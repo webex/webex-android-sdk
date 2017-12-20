@@ -112,6 +112,7 @@ import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.ciscospark.androidsdk.Spark;
 import com.ciscospark.androidsdk.auth.JWTAuthenticator;
 import com.ciscospark.androidsdk.auth.OAuthAuthenticator;
+import com.ciscospark.androidsdk.auth.OAuthTestUserAuthenticator;
 import com.ciscospark.androidsdk.auth.OAuthWebViewAuthenticator;
 import com.ciscospark.androidsdk.phone.internal.PhoneImpl;
 import com.ciscospark.androidsdk.utils.http.DefaultHeadersInterceptor;
@@ -136,7 +137,8 @@ import org.greenrobot.eventbus.EventBus;
                 Call.class,
                 JWTAuthenticator.class,
                 OAuthAuthenticator.class,
-                OAuthWebViewAuthenticator.class
+                OAuthWebViewAuthenticator.class,
+                OAuthTestUserAuthenticator.class
         }
 )
 class SparkModule {
