@@ -7,9 +7,13 @@ android:
     # - platform-tools
 
     # The BuildTools version used by your project
-    - build-tools-25.0.2
+    - build-tools-26.0.2
 
     # The SDK version used to compile your project
-    - android-25
+    - android-26
+before_install:
+    - sudo apt-get -qq update
+    - sudo apt-get install -y sendemail libnet-ssleay-perl libcrypt-ssleay-perl libnet-https-any-perl libio-socket-ssl-perl
 script:
-    ./gradlew clean sdk:testDebugUnitTest 
+    - ./gradlew clean sdk:testDebugUnitTest
+    - travis_wait 50 bash IntegrationTesting.sh

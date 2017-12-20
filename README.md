@@ -1,5 +1,6 @@
 # Cisco Spark Android SDK
 
+[![Travis CI](https://travis-ci.org/ciscospark/spark-android-sdk.svg)](https://travis-ci.org/ciscospark/spark-android-sdk)
 [![license](https://img.shields.io/github/license/ciscospark/spark-android-sdk.svg)](https://github.com/ciscospark/spark-android-sdk/blob/master/LICENSE)
 
 > The Cisco Spark™ Android SDK
