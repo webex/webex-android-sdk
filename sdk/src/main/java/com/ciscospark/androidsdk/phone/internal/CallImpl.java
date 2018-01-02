@@ -107,6 +107,10 @@ public class CallImpl implements Call {
         return _option;
     }
 
+    protected void setMediaOption(MediaOption option) {
+        _option = option;
+    }
+
     CompletionHandler<Void> getAnswerCallback() {
         return _answerCallback;
     }
