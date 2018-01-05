@@ -42,6 +42,8 @@ import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
 import com.cisco.spark.android.callcontrol.events.CallControlCallCancelledEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlCallJoinErrorEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlFloorGrantedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlFloorReleasedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLeaveLocusEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocalAudioMutedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocalVideoMutedEvent;
@@ -432,10 +434,7 @@ public class PhoneImpl implements Phone {
 		}
 		stopPreview();
 		CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
-		if (!call.getOption().hasVideo()) {
-			builder = builder.setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly);
-		}
-		//_callControlService.joinCall(builder.build());
+		builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
 		_callControlService.joinCall(builder.build(), false);
 	}
 
@@ -622,7 +621,7 @@ public class PhoneImpl implements Phone {
         //call membership changed
         List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
         for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
-            events.add(new CallObserver.MembershipJoinedEvent(call,new CallMembershipImpl(locusParticipant)));
+            events.add(new CallObserver.MembershipJoinedEvent(call,new CallMembershipImpl(locusParticipant,call)));
         }
         _sendCallMembershipChanged(call,events);
 
@@ -709,7 +708,7 @@ public class PhoneImpl implements Phone {
 			}
             List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
             for (LocusParticipant locusParticipant : event.getLeftParticipants()) {
-                events.add(new CallObserver.MembershipLeftEvent(call,new CallMembershipImpl(locusParticipant)));
+                events.add(new CallObserver.MembershipLeftEvent(call,new CallMembershipImpl(locusParticipant,call)));
             }
             _sendCallMembershipChanged(call,events);
         }
@@ -735,7 +734,7 @@ public class PhoneImpl implements Phone {
             Ln.d("Find group call " + event.getLocusKey());
             List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
             for (LocusParticipant locusParticipant : event.getDeclinedParticipants()) {
-                events.add(new CallObserver.MembershipDeclinedEvent(call,new CallMembershipImpl(locusParticipant)));
+                events.add(new CallObserver.MembershipDeclinedEvent(call,new CallMembershipImpl(locusParticipant,call)));
             }
             _sendCallMembershipChanged(call,events);
         }
@@ -841,7 +840,7 @@ public class PhoneImpl implements Phone {
 				// TODO for local ??
 			}
             List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
-			events.add(new CallObserver.MembershipSendingAudioEvent(call,new CallMembershipImpl(event.getParticipant())));
+			events.add(new CallObserver.MembershipSendingAudioEvent(call,new CallMembershipImpl(event.getParticipant(),call)));
             _sendCallMembershipChanged(call,events);
 		}
 	}
@@ -863,7 +862,7 @@ public class PhoneImpl implements Phone {
 				// TODO for local ??
 			}
             List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
-            events.add(new CallObserver.MembershipSendingVideoEvent(call,new CallMembershipImpl(event.getParticipant())));
+            events.add(new CallObserver.MembershipSendingVideoEvent(call,new CallMembershipImpl(event.getParticipant(),call)));
             _sendCallMembershipChanged(call,events);
 		}
 	}
@@ -882,6 +881,53 @@ public class PhoneImpl implements Phone {
 		permissions.add(Manifest.permission.CAMERA);
 		clearCallback(ResultImpl.error(new SparkError<>(SparkError.ErrorCode.PERMISSION_ERROR, "Permissions Error", permissions)));
 	}
+
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(CallControlFloorGrantedEvent event) {
+		Ln.i("CallControlFloorGrantedEvent is received ");
+		List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+		CallImpl call = _calls.get(event.getLocusKey());
+		if (call != null) {
+			for (CallMembership membership : call.getMemberships()) {
+				if (membership.isSendingScreenShare()) {
+					events.add(new CallObserver.MembershipSendingScreenSharingEvent(call,membership));
+				}
+			}
+			_sendCallMembershipChanged(call,events);
+
+			CallObserver observer = call.getObserver();
+			if (observer != null) {
+				observer.onMediaChanged(new CallObserver.RemoteSendingScreenShareEvent(call, true));
+			}
+		}
+	}
+
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(CallControlFloorReleasedEvent event) {
+		Ln.i("CallControlFloorReleasedEvent is received ");
+		List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+		CallImpl call = _calls.get(event.getLocusKey());
+		LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
+		if (call != null && locusData != null
+				&& locusData.getLocus().isFloorReleased()
+				&& locusData.getReleasedParticipantSharing() != null) {
+			LocusParticipant beneficiary = locusData.getReleasedParticipantSharing();
+			for (CallMembership membership : call.getMemberships()) {
+				if (beneficiary.getPerson() != null
+						&& beneficiary.getPerson().getId() != null
+						&& membership.getPersonId().equalsIgnoreCase(beneficiary.getPerson().getId())) {
+					events.add(new CallObserver.MembershipSendingScreenSharingEvent(call,membership));
+				}
+			}
+			_sendCallMembershipChanged(call,events);
+
+			CallObserver observer = call.getObserver();
+			if (observer != null) {
+				observer.onMediaChanged(new CallObserver.RemoteSendingScreenShareEvent(call, false));
+			}
+		}
+	}
+
 
     private void _removeCall(@NonNull CallObserver.CallDisconnectedEvent event) {
         CallImpl call = (CallImpl) event.getCall();
@@ -904,9 +950,15 @@ public class PhoneImpl implements Phone {
             Ln.d("Already has been connected, return");
             return;
         }
-        if (call.getOption() != null && call.getOption().hasVideo()) {
-            _callControlService.setRemoteWindow(key, call.getOption().getRemoteView());
-            _callControlService.setPreviewWindow(key, call.getOption().getLocalView());
+        if (call.getOption() != null) {
+        	if (call.getOption().hasVideo() && call.getVideoRenderViews() != null) {
+				_callControlService.setRemoteWindow(key, call.getVideoRenderViews().second);
+				_callControlService.setPreviewWindow(key, call.getVideoRenderViews().first);
+			}
+			if (call.getOption().hasScreenShare() && call.getScreenShareRenderView() != null) {
+        		_callControlService.setShareWindow(key, call.getScreenShareRenderView());
+			}
+			_callControlService.updateMediaSession(_callControlService.getCall(call.getKey()),mediaOptionToMediaDirection(call.getOption()));
         }
         call.setStatus(Call.CallStatus.CONNECTED);
 
@@ -952,9 +1004,7 @@ public class PhoneImpl implements Phone {
 	private void doDial(String target, MediaOption option) {
 		Ln.d("Dial " + target);
 		CallContext.Builder builder = new CallContext.Builder(target);
-		if (!option.hasVideo()) {
-			builder = builder.setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly);
-		}
+		builder = builder.setMediaDirection(mediaOptionToMediaDirection(option));
 		_callControlService.joinCall(builder.build(), false);
 	}
 
@@ -966,9 +1016,7 @@ public class PhoneImpl implements Phone {
 				if (response.isSuccessful()) {
 					LocusKey key = LocusKey.fromUri(response.body().getLocusUrl());
 					CallContext.Builder builder = new CallContext.Builder(key);
-					if (!option.hasVideo()) {
-						builder = builder.setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly);
-					}
+					builder = builder.setMediaDirection(mediaOptionToMediaDirection(option));
 					_callControlService.joinCall(builder.build(), false);
 				} else {
 					Ln.w("Failure call: "+response.errorBody().toString());
@@ -1004,7 +1052,7 @@ public class PhoneImpl implements Phone {
 
 		return false;
 	}
-	
+
 	static FacingMode toFacingMode(String s) {
 		if (MediaEngine.WME_BACK_CAMERA.equals(s)) {
 			return FacingMode.ENVIROMENT;
@@ -1017,6 +1065,21 @@ public class PhoneImpl implements Phone {
 			return MediaEngine.WME_BACK_CAMERA;
 		}
 		return MediaEngine.WME_FRONT_CAMERA;
+	}
+
+	static MediaEngine.MediaDirection mediaOptionToMediaDirection(MediaOption option) {
+		MediaEngine.MediaDirection direction = MediaEngine.MediaDirection.SendReceiveAudioVideoShare;
+		if (option.hasVideo() && option.hasScreenShare()) {
+			direction = MediaEngine.MediaDirection.SendReceiveAudioVideoShare;
+		} else if (option.hasVideo() && !option.hasScreenShare()) {
+			direction = MediaEngine.MediaDirection.SendReceiveAudioVideo;
+		} else if (!option.hasVideo() && option.hasScreenShare()) {
+			direction = MediaEngine.MediaDirection.SendReceiveShareOnly;
+		} else {
+			direction = MediaEngine.MediaDirection.SendReceiveAudioOnly;
+		}
+
+		return direction;
 	}
 
 	// -- Ignore Event

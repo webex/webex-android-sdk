@@ -25,6 +25,7 @@ package com.ciscospark.androidsdk.phone.internal;
 import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.cisco.spark.android.locus.model.LocusParticipantInfo;
 import com.cisco.spark.android.locus.model.MediaDirection;
+import com.ciscospark.androidsdk.phone.Call;
 import com.ciscospark.androidsdk.phone.CallMembership;
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
@@ -83,7 +84,10 @@ public class CallMembershipImpl implements CallMembership {
     @StringPart
     private boolean _sendingAudio = false;
 
-    CallMembershipImpl(LocusParticipant participant) {
+    @StringPart
+    private boolean _sendingScreenShare = false;
+
+    CallMembershipImpl(LocusParticipant participant, Call call) {
         LocusParticipantInfo person = participant.getPerson();
         _personId = person.getId();
         _email = person.getEmail();
@@ -93,6 +97,11 @@ public class CallMembershipImpl implements CallMembership {
         _state = fromLocusState(participant.getState());
         _sendingVideo = MediaDirection.SENDRECV.equals(participant.getStatus().getVideoStatus());
         _sendingAudio = MediaDirection.SENDRECV.equals(participant.getStatus().getAudioStatus());
+        _sendingScreenShare = false;
+        if(call instanceof CallImpl && ((CallImpl)call).getScreenShareSender() != null) {
+            _sendingScreenShare = ((CallImpl)call).getScreenShareSender().getPerson().getId().equalsIgnoreCase(person.getId());
+        }
+
     }
 
     public boolean isInitiator() {
@@ -125,6 +134,10 @@ public class CallMembershipImpl implements CallMembership {
 
     public boolean isSendingAudio() {
         return _sendingAudio;
+    }
+
+    public boolean isSendingScreenShare() {
+        return _sendingScreenShare;
     }
 
     public String toString() {

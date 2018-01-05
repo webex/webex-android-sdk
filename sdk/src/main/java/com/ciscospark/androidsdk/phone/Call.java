@@ -28,6 +28,8 @@ import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.ciscospark.androidsdk.CompletionHandler;
+import android.view.View;
+import android.util.Pair;
 
 /**
  * A Call represents a media call on Cisco Spark.
@@ -162,6 +164,12 @@ public interface Call {
 	Rect getRemoteVideoViewSize();
 
 	/**
+	 * @return The screen share render view dimensions (points) of this call.
+	 * @since 1.3
+	 */
+	Rect getScreenShareViewSize();
+
+	/**
 	 * @return True if the remote party of this call is sending video. Otherwise, false.
 	 * @since 0.1
 	 */
@@ -172,6 +180,12 @@ public interface Call {
 	 * @since 0.1
 	 */
 	boolean isRemoteSendingAudio();
+
+	/**
+	 * @return True if the remote party of this call is sending screen content. Otherwise, false.
+	 * @since 1.3
+	 */
+	boolean isRemoteSendingScreenShare();
 
 	/**
 	 * @return True if this call is sending video. Otherwise, false.
@@ -220,6 +234,43 @@ public interface Call {
 	 * @since 0.1   
 	 */
 	void setReceivingAudio(boolean receiving);
+
+	/**
+	 * @return True if the local party of this call is receiving screen share. Otherwise, false.
+	 * @since 1.3
+	 */
+	boolean isReceivingScreenShare();
+
+	/**
+	 * @param receiving True if the local party of this *call* is receiving screen share. Otherwise, false.
+	 * @since 1.3
+	 */
+	void setReceivingScreenShare(boolean receiving);
+
+	/**
+	 * @return The render views for local and remote video of this call.
+	 * @since 1.3
+	 */
+	Pair<View,View> getVideoRenderViews();
+
+	/**
+	 * @param videoRenderViews render views for local and remote video of this call. If is nil, it will update the video state as inactive to the server side.
+	 * @since 1.3
+	 */
+	void setVideoRenderViews(@Nullable Pair<View,View> videoRenderViews);
+
+
+    /**
+     * @return The render view for the remote screen share of this call.
+     * @since 1.3
+     */
+    View getScreenShareRenderView();
+
+    /**
+     * @param screenShareRenderView The render view for the remote screen share of this call. If is nil, it will update the screen sharing state as inactive to the server side.
+     * @since 1.3
+     */
+    void setScreenShareRenderView(View screenShareRenderView);
 
 	/**
 	 * Acknowledge (without answering) an incoming call. Will cause the initiator's Call instance to emit the ringing event.
