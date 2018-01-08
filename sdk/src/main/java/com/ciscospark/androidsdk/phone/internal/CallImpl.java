@@ -107,7 +107,7 @@ public class CallImpl implements Call {
         return _option;
     }
 
-    protected void setMediaOption(MediaOption option) {
+    void setMediaOption(MediaOption option) {
         _option = option;
     }
 

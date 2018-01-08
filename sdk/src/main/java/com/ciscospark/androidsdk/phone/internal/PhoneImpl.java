@@ -581,8 +581,7 @@ public class PhoneImpl implements Phone {
                 if (call.getAnswerCallback() != null) {
                     call.getAnswerCallback().onComplete(ResultImpl.success(null));
                 }
-            }
-            else if(call.getStatus() != Call.CallStatus.CONNECTED) {
+            } else if(call.getStatus() != Call.CallStatus.CONNECTED) {
 				for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
 					if (locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
 						if (call.getAnswerCallback() != null) {
