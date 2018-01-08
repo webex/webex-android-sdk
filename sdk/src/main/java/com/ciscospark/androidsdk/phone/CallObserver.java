@@ -473,7 +473,7 @@ public interface CallObserver {
 	/**
 	 * Call membership change event
 	 *
-	 * @since 1.0
+	 * @since 1.3.0
 	 */
 	interface CallMembershipChangedEvent extends CallEvent {
 		public CallMembership getCallMembership();
@@ -482,7 +482,7 @@ public interface CallObserver {
 	/**
 	 * Base class for the event of a CallMembershipEvent
 	 *
-	 * @since 1.0
+	 * @since 1.3.0
 	 */
 	abstract class AbstractCallMembershipChangedEvent extends AbstractCallEvent implements CallMembershipChangedEvent{
 
@@ -499,7 +499,7 @@ public interface CallObserver {
 		 */
         /**
          * @return changed membership.
-         * @since 0.1
+         * @since 1.3.0
          */
         public CallMembership getCallMembership() { return _membership; }
 
@@ -514,7 +514,7 @@ public interface CallObserver {
 	/**
 	 * This might be triggered when the person in the membership joined this call.
 	 *
-	 * @since 1.0
+	 * @since 1.3.0
 	 */
 	class MembershipJoinedEvent extends AbstractCallMembershipChangedEvent {
 
@@ -524,7 +524,7 @@ public interface CallObserver {
 	/**
 	 * This might be triggered when the person in the membership left this call.
 	 *
-	 * @since 1.0
+	 * @since 1.3.0
 	 */
 	class MembershipLeftEvent extends AbstractCallMembershipChangedEvent {
 
@@ -534,7 +534,7 @@ public interface CallObserver {
     /**
      * This might be triggered when the person in the membership declined this call.
      *
-     * @since 1.0
+     * @since 1.3.0
      */
     class MembershipDeclinedEvent extends AbstractCallMembershipChangedEvent {
 
@@ -544,7 +544,7 @@ public interface CallObserver {
     /**
      * This might be triggered when the person in the membership started sending video this call.
      *
-     * @since 1.0
+     * @since 1.3.0
      */
     class MembershipSendingVideoEvent extends AbstractCallMembershipChangedEvent {
 
@@ -554,7 +554,7 @@ public interface CallObserver {
     /**
      * This might be triggered when the person in the membership started sending audio this call.
      *
-     * @since 1.0
+     * @since 1.3.0
      */
     class MembershipSendingAudioEvent extends AbstractCallMembershipChangedEvent {
 
@@ -564,7 +564,7 @@ public interface CallObserver {
     /**
      * This might be triggered when the person in the membership started screen sharing this call.
      *
-     * @since 1.0
+     * @since 1.3.0
      */
     class MembershipSendingScreenSharingEvent extends AbstractCallMembershipChangedEvent {
 
