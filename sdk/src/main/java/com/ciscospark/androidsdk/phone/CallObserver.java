@@ -69,7 +69,7 @@ public interface CallObserver {
 	 * Callback when the memberships of this call have changed.
 	 *
 	 * @param event event
-	 * @since 1.0
+	 * @since 1.3.0
 	 */
 	void onCallMembershipChanged(CallMembershipChangedEvent event);
 
