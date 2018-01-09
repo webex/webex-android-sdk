@@ -123,7 +123,7 @@ public interface CallMembership {
 
 	/**
 	 * @return True if the CallMembership is sending screen share. Otherwise, false.
-	 * @since 1.3
+	 * @since 1.3.0
 	 */
 	boolean isSendingScreenShare();
 }

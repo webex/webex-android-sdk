@@ -58,7 +58,7 @@ public class MediaOption {
      * Constructs an audio and video media option.
      *
      * @param videoRenderViews Local video view and remote video view.
-     * @since 1.3
+     * @since 1.3.0
      */
     public static MediaOption audioVideo(@Nullable Pair<View,View> videoRenderViews) {
         if (videoRenderViews == null || videoRenderViews.first == null || videoRenderViews.second == null) {
@@ -72,7 +72,7 @@ public class MediaOption {
      *
      * @param videoRenderViews Local video view and remote video view.
      * @param screenShareView Screen share view for remote.
-     * @since 1.3
+     * @since 1.3.0
      */
     public static MediaOption audioVideoScreenShare(@Nullable Pair<View,View> videoRenderViews,@Nullable View screenShareView) {
         if (videoRenderViews == null || videoRenderViews.first == null || videoRenderViews.second == null) {
@@ -113,7 +113,7 @@ public class MediaOption {
      * Whether video is enabled.
      *
      * @return true if screen share is enabled. Otherwise, false.
-     * @since 1.3
+     * @since 1.3.0
      */
     public boolean hasScreenShare() {
         return _hasScreenShare;
@@ -137,7 +137,7 @@ public class MediaOption {
 
     /**
      * @return The screen share view
-     * @since 1.3
+     * @since 1.3.0
      */
     public View getScreenShareView() {
         return _screenShareView;

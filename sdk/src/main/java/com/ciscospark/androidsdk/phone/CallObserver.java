@@ -324,7 +324,7 @@ public interface CallObserver {
 	/**
 	 * This might be triggered when the remote party muted or unmuted the screen share.
 	 *
-	 * @since 1.3
+	 * @since 1.3.0
 	 */
 	class RemoteSendingScreenShareEvent extends AbstractCallEvent implements MediaChangedEvent {
 
@@ -469,7 +469,7 @@ public interface CallObserver {
 	/**
 	 * This might be triggered when the local party muted or unmuted the remote screen share.
 	 *
-	 * @since 1.3
+	 * @since 1.3.0
 	 */
 	class ReceivingScreenShare extends AbstractCallEvent implements MediaChangedEvent {
 
@@ -531,7 +531,7 @@ public interface CallObserver {
 	/**
 	 * Remote screen share rendering view size has changed.
 	 *
-	 * @since 1.3
+	 * @since 1.3.0
 	 */
 	class RemoteScreenShareViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
 		public RemoteScreenShareViewSizeChanged(Call call) {

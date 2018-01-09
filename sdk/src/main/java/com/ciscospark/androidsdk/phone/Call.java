@@ -165,7 +165,7 @@ public interface Call {
 
 	/**
 	 * @return The screen share render view dimensions (points) of this call.
-	 * @since 1.3
+	 * @since 1.3.0
 	 */
 	Rect getScreenShareViewSize();
 
@@ -183,7 +183,7 @@ public interface Call {
 
 	/**
 	 * @return True if the remote party of this call is sending screen content. Otherwise, false.
-	 * @since 1.3
+	 * @since 1.3.0
 	 */
 	boolean isRemoteSendingScreenShare();
 
@@ -237,38 +237,38 @@ public interface Call {
 
 	/**
 	 * @return True if the local party of this call is receiving screen share. Otherwise, false.
-	 * @since 1.3
+	 * @since 1.3.0
 	 */
 	boolean isReceivingScreenShare();
 
 	/**
 	 * @param receiving True if the local party of this *call* is receiving screen share. Otherwise, false.
-	 * @since 1.3
+	 * @since 1.3.0
 	 */
 	void setReceivingScreenShare(boolean receiving);
 
 	/**
 	 * @return The render views for local and remote video of this call.
-	 * @since 1.3
+	 * @since 1.3.0
 	 */
 	Pair<View,View> getVideoRenderViews();
 
 	/**
 	 * @param videoRenderViews render views for local and remote video of this call. If is nil, it will update the video state as inactive to the server side.
-	 * @since 1.3
+	 * @since 1.3.0
 	 */
 	void setVideoRenderViews(@Nullable Pair<View,View> videoRenderViews);
 
 
     /**
      * @return The render view for the remote screen share of this call.
-     * @since 1.3
+     * @since 1.3.0
      */
     View getScreenShareRenderView();
 
     /**
      * @param screenShareRenderView The render view for the remote screen share of this call. If is nil, it will update the screen sharing state as inactive to the server side.
-     * @since 1.3
+     * @since 1.3.0
      */
     void setScreenShareRenderView(View screenShareRenderView);
 
