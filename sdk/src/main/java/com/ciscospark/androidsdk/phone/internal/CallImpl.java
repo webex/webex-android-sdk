@@ -83,12 +83,15 @@ public class CallImpl implements Call {
 
     private Map<SendDtmfOperation, CompletionHandler<Void>> _dtmfOperations = new HashMap<>(1);
 
-    CallImpl(@NonNull PhoneImpl phone, @Nullable MediaOption option, @NonNull Direction direction, @NonNull LocusKey key) {
+    private boolean _isGroup;
+
+    CallImpl(@NonNull PhoneImpl phone, @Nullable MediaOption option, @NonNull Direction direction, @NonNull LocusKey key,boolean group) {
         _phone = phone;
         _option = option;
         _direction = direction;
         _key = key;
         _status = CallStatus.INITIATED;
+        _isGroup = group;
     }
 
     @NonNull
@@ -102,6 +105,10 @@ public class CallImpl implements Call {
 
     MediaOption getOption() {
         return _option;
+    }
+
+    void setMediaOption(MediaOption option) {
+        _option = option;
     }
 
     CompletionHandler<Void> getAnswerCallback() {
@@ -399,4 +406,6 @@ public class CallImpl implements Call {
         }
         return ret;
     }
+
+    boolean isGroup() { return _isGroup; }
 }

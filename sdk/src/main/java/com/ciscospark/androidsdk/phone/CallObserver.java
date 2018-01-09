@@ -65,6 +65,13 @@ public interface CallObserver {
 	 */
 	void onMediaChanged(MediaChangedEvent event);
 
+	/**
+	 * Callback when the memberships of this call have changed.
+	 *
+	 * @param event event
+	 * @since 1.3.0
+	 */
+	void onCallMembershipChanged(CallMembershipChangedEvent event);
 
 	/**
 	 * Base class for the event of a call
@@ -463,4 +470,104 @@ public interface CallObserver {
         }
     }
 
+	/**
+	 * Call membership change event
+	 *
+	 * @since 1.3.0
+	 */
+	interface CallMembershipChangedEvent extends CallEvent {
+		public CallMembership getCallMembership();
+	}
+
+	/**
+	 * Base class for the event of a CallMembershipEvent
+	 *
+	 * @since 1.3.0
+	 */
+	abstract class AbstractCallMembershipChangedEvent extends AbstractCallEvent implements CallMembershipChangedEvent{
+
+        @StringPart
+        protected CallMembership _membership;
+
+		protected AbstractCallMembershipChangedEvent(Call call, CallMembership membership) {
+			super(call);
+            _membership = membership;
+		}
+
+		/**
+		 * @see CallMembershipChangedEvent
+		 */
+        /**
+         * @return changed membership.
+         * @since 1.3.0
+         */
+        public CallMembership getCallMembership() { return _membership; }
+
+		@Override
+		public String toString() {
+			return Objects.toStringByAnnotation(this);
+		}
+
+	}
+
+
+	/**
+	 * This might be triggered when the person in the membership joined this call.
+	 *
+	 * @since 1.3.0
+	 */
+	class MembershipJoinedEvent extends AbstractCallMembershipChangedEvent {
+
+		public MembershipJoinedEvent(Call call, CallMembership membership) { super(call,membership);}
+	}
+
+	/**
+	 * This might be triggered when the person in the membership left this call.
+	 *
+	 * @since 1.3.0
+	 */
+	class MembershipLeftEvent extends AbstractCallMembershipChangedEvent {
+
+        public MembershipLeftEvent(Call call, CallMembership membership) { super(call,membership);}
+	}
+
+    /**
+     * This might be triggered when the person in the membership declined this call.
+     *
+     * @since 1.3.0
+     */
+    class MembershipDeclinedEvent extends AbstractCallMembershipChangedEvent {
+
+        public MembershipDeclinedEvent(Call call, CallMembership membership) { super(call,membership);}
+    }
+
+    /**
+     * This might be triggered when the person in the membership started sending video this call.
+     *
+     * @since 1.3.0
+     */
+    class MembershipSendingVideoEvent extends AbstractCallMembershipChangedEvent {
+
+        public MembershipSendingVideoEvent(Call call, CallMembership membership) { super(call,membership);}
+    }
+
+    /**
+     * This might be triggered when the person in the membership started sending audio this call.
+     *
+     * @since 1.3.0
+     */
+    class MembershipSendingAudioEvent extends AbstractCallMembershipChangedEvent {
+
+        public MembershipSendingAudioEvent(Call call, CallMembership membership) { super(call,membership);}
+    }
+
+    /**
+     * This might be triggered when the person in the membership started screen sharing this call.
+     *
+     * @since 1.3.0
+     */
+    class MembershipSendingScreenSharingEvent extends AbstractCallMembershipChangedEvent {
+
+        public MembershipSendingScreenSharingEvent(Call call, CallMembership membership) { super(call,membership);}
+    }
 }

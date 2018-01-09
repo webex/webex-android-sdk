@@ -64,9 +64,13 @@ import com.cisco.spark.android.events.RequestCallingPermissions;
 import com.cisco.spark.android.locus.events.LocusDeclinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
 import com.cisco.spark.android.locus.events.RetrofitErrorEvent;
+import com.cisco.spark.android.locus.events.ParticipantRoomDeclinedEvent;
+import com.cisco.spark.android.locus.events.ParticipantSelfChangedEvent;
 import com.cisco.spark.android.locus.model.LocusData;
 import com.cisco.spark.android.locus.model.LocusKey;
+import com.cisco.spark.android.locus.model.LocusParticipantDevice;
 import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
+import com.cisco.spark.android.locus.responses.LocusUrlResponse;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaSession;
 import com.cisco.spark.android.media.events.StunTraceServerResultEvent;
@@ -85,6 +89,7 @@ import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.people.Person;
 import com.ciscospark.androidsdk.people.internal.PersonClientImpl;
 import com.ciscospark.androidsdk.phone.Call;
+import com.ciscospark.androidsdk.phone.CallMembership;
 import com.ciscospark.androidsdk.phone.CallObserver;
 import com.ciscospark.androidsdk.phone.MediaOption;
 import com.ciscospark.androidsdk.phone.Phone;
@@ -92,6 +97,9 @@ import com.ciscospark.androidsdk.utils.Utils;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
+import retrofit2.Callback;
+import retrofit2.Response;
+import com.cisco.spark.android.locus.model.LocusParticipant;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.NoSubscriberEvent;
 import org.greenrobot.eventbus.Subscribe;
@@ -146,6 +154,103 @@ public class PhoneImpl implements Phone {
 	private H264LicensePrompter _prompter;
 
 	private MetricsClient _metrics;
+
+	private static class DialTarget {
+		private String address;
+		private AddressType type;
+
+		enum AddressType {
+			PEOPLE_ID,
+			PEOPLE_MAIL,
+			ROOM_ID,
+			ROOM_MAIL,
+			OTHER
+		}
+
+		public boolean isEndpoint() {
+			switch (this.type) {
+				case OTHER:
+				case PEOPLE_ID:
+				case ROOM_MAIL:
+				case PEOPLE_MAIL:
+					return true;
+				case ROOM_ID:
+					return false;
+				default:
+					return true;
+			}
+		}
+
+		public boolean isGroup() {
+			switch (this.type) {
+				case OTHER:
+				case PEOPLE_ID:
+				case PEOPLE_MAIL:
+					return false;
+				case ROOM_MAIL:
+				case ROOM_ID:
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		public DialTarget(@NonNull String address) {
+			this.address = address;
+			lookup();
+		}
+
+		private void lookup() {
+			String target = this.parseHydraId(this.address);
+			if (!Checker.isEmpty(target)) {
+			    this.address = target;
+				return;
+			}
+			else if (this.address.toLowerCase().endsWith("@meet.ciscospark.com")) {
+				this.type = AddressType.ROOM_MAIL;
+				return;
+			}
+			else if (this.address.contains("@") && !this.address.contains(".")) {
+				this.type = AddressType.PEOPLE_MAIL;
+				return;
+			}
+			else {
+				this.type = AddressType.OTHER;
+				return;
+			}
+		}
+
+		private String parseHydraId(String id) {
+			try {
+				byte[] bytes = Base64.decode(id, Base64.URL_SAFE);
+				if (Checker.isEmpty(bytes)) {
+					return null;
+				}
+				String decode = new String(bytes, "UTF-8");
+				Uri uri = Uri.parse(decode);
+				if (uri != null && uri.getScheme() != null && uri.getScheme().equalsIgnoreCase("ciscospark")) {
+					List<String> paths = uri.getPathSegments();
+					if (paths != null && paths.size() >= 2) {
+						String type = paths.get(paths.size() - 2);
+						if (type.equalsIgnoreCase("PEOPLE")) {
+							this.type = AddressType.PEOPLE_ID;
+							return paths.get(paths.size() - 1);
+						}
+						else if (type.equalsIgnoreCase("ROOM")) {
+							this.type = AddressType.ROOM_ID;
+							return paths.get(paths.size() - 1);
+						}
+					}
+				}
+				return null;
+			}
+			catch (Throwable t) {
+				return null;
+			}
+
+		}
+
+	}
 
 	public PhoneImpl(Context context, Authenticator authenticator, SparkInjector injector) {
 		injector.inject(this);
@@ -254,16 +359,20 @@ public class PhoneImpl implements Phone {
 			callback.onComplete(ResultImpl.error("Already calling"));
 			return;
 		}
-		if (_calls.size() > 0) {
-			Ln.e("There are other active calls");
-			callback.onComplete(ResultImpl.error("There are other active calls"));
-			return;
+		for (CallImpl call : _calls.values()) {
+			if (!call.isGroup() || (call.isGroup() && call.getStatus() == Call.CallStatus.CONNECTED)) {
+				Ln.e("There are other active calls");
+				callback.onComplete(ResultImpl.error("There are other active calls"));
+				return;
+			}
 		}
 		stopPreview();
 		_dialOption = option;
 		_dialCallback = callback;
 
-		if (dialString.contains("@") && !dialString.contains(".")) {
+		DialTarget target = new DialTarget(dialString);
+
+		if (target.type == DialTarget.AddressType.PEOPLE_MAIL) {
 			new PersonClientImpl(_authenticator).list(dialString, null, 1, new CompletionHandler<List<Person>>() {
 				@Override
 				public void onComplete(Result<List<Person>> result) {
@@ -271,16 +380,18 @@ public class PhoneImpl implements Phone {
 					if (!Checker.isEmpty(persons)) {
 						Person person = persons.get(0);
 						Ln.d("Lookup target: " + person.getId());
-						doDial(parseHydraId(person.getId()), option);
+						doDial(new DialTarget(person.getId()).address, option);
 					}
 					else {
-						doDial(parseHydraId(dialString), option);
+						doDial(target.address, option);
 					}
 				}
 			});
+		} else if (target.isEndpoint()) {
+			doDial(target.address,option);
 		}
 		else {
-			doDial(parseHydraId(dialString), option);
+			doDialRoomID(target.address,option);
 		}
 	}
 
@@ -320,7 +431,7 @@ public class PhoneImpl implements Phone {
 			}
 		}
 		stopPreview();
-		CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(true);
+		CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
 		if (!call.getOption().hasVideo()) {
 			builder = builder.setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly);
 		}
@@ -370,22 +481,6 @@ public class PhoneImpl implements Phone {
 		}
 		else {
 			_callControlService.leaveCall(call.getKey());
-		}
-	}
-
-	private void _removeCall(@NonNull CallObserver.CallDisconnectedEvent event) {
-		CallImpl call = (CallImpl) event.getCall();
-		Ln.i("Remove " + call);
-		if (call != null) {
-			call.setStatus(Call.CallStatus.DISCONNECTED);
-			CallObserver observer = call.getObserver();
-			if (observer != null) {
-				observer.onDisconnected(event);
-			}
-			_calls.remove(call.getKey());
-			if (_bus.isRegistered(call)) {
-				_bus.unregister(call);
-			}
 		}
 	}
 
@@ -439,12 +534,16 @@ public class PhoneImpl implements Phone {
 		if (call == null) {
 			com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(key);
 			if (locus != null) {
-				call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, key);
+				call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, key,locus.getLocusData().isMeeting());
 				_bus.register(call);
 				_calls.put(key, call);
 				if (_dialCallback != null) {
 					_dialCallback.onComplete(ResultImpl.success(call));
 				}
+				if (call.isGroup()) {
+                    _setCallOnRinging(call);
+                    _setCallOnConnected(call,event.getLocusKey());
+                }
 			}
 			else {
 				Ln.e("Internal callImpl isn't exist " + event.getLocusKey());
@@ -464,11 +563,9 @@ public class PhoneImpl implements Phone {
 		CallImpl call = _calls.get(event.getLocusKey());
 		if (call != null) {
 			Ln.d("Find callImpl " + event.getLocusKey());
-			call.setStatus(Call.CallStatus.RINGING);
-			CallObserver observer = call.getObserver();
-			if (observer != null) {
-				observer.onRinging(call);
-			}
+			if (!call.isGroup() || call.getDirection() == Call.Direction.INCOMING) {
+                _setCallOnRinging(call);
+            }
 		}
 	}
 
@@ -478,26 +575,56 @@ public class PhoneImpl implements Phone {
 		Ln.i("CallControlParticipantJoinedEvent is received " + event.getLocusKey());
 		CallImpl call = _calls.get(event.getLocusKey());
 		if (call != null) {
-			Ln.d("Find callImpl " + event.getLocusKey());
-			if (call.getStatus() == Call.CallStatus.CONNECTED){
-				Ln.d("Already has been connected, return");
-				return;
+            Ln.d("Find callImpl " + event.getLocusKey());
+            if (!call.isGroup()) {
+                _setCallOnConnected(call,event.getLocusKey());
+                if (call.getAnswerCallback() != null) {
+                    call.getAnswerCallback().onComplete(ResultImpl.success(null));
+                }
+            } else if(call.getStatus() != Call.CallStatus.CONNECTED) {
+				for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
+					if (locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
+						if (call.getAnswerCallback() != null) {
+							call.getAnswerCallback().onComplete(ResultImpl.success(null));
+						}
+						if (_dialCallback != null) {
+							_dialCallback.onComplete(ResultImpl.success(call));
+							_setCallOnRinging(call);
+							_dialCallback = null;
+						}
+						if(call.getOption() == null && _dialOption != null) {
+							call.setMediaOption(_dialOption);
+						}
+						_setCallOnConnected(call,event.getLocusKey());
+					}
+				}
 			}
-			if (call.getOption() != null && call.getOption().hasVideo()) {
-				_callControlService.setRemoteWindow(event.getLocusKey(), call.getOption().getRemoteView());
-				_callControlService.setPreviewWindow(event.getLocusKey(), call.getOption().getLocalView());
-			}
-			call.setStatus(Call.CallStatus.CONNECTED);
-			if (call.getAnswerCallback() != null) {
-				call.getAnswerCallback().onComplete(ResultImpl.success(null));
-			}
-			CallObserver observer = call.getObserver();
-			if (observer != null) {
-				observer.onConnected(call);
-			}else{
-				Ln.d("call observer is null");
-			}
-		}
+        } else {
+		    //group call self join.
+            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
+            for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
+                if (locusParticipant.getDeviceUrl().equals(_device.getUrl())
+                        && locus != null
+                        && locus.getLocusData().isMeeting()) {
+                    call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, event.getLocusKey(),locus.getLocusData().isMeeting());
+                    _bus.register(call);
+                    _calls.put(call.getKey(), call);
+                    if (_dialCallback != null) {
+                        _dialCallback.onComplete(ResultImpl.success(call));
+                    }
+                    _setCallOnRinging(call);
+                    _setCallOnConnected(call,event.getLocusKey());
+                    _dialCallback = null;
+                }
+            }
+        }
+        //call membership changed
+        List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+        for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
+            events.add(new CallObserver.MembershipJoinedEvent(call,new CallMembershipImpl(locusParticipant)));
+        }
+        _sendCallMembershipChanged(call,events);
+
 	}
 
 	@Subscribe(threadMode = ThreadMode.MAIN)
@@ -565,9 +692,26 @@ public class PhoneImpl implements Phone {
 		Ln.i("CallControlParticipantLeftEvent is received " + event.getLocusKey());
 		CallImpl call = _calls.get(event.getLocusKey());
 		if (call != null) {
-			Ln.d("Find callImpl " + event.getLocusKey());
-			_removeCall(new CallObserver.RemoteLeft(call));
-		}
+            Ln.d("Find callImpl " + event.getLocusKey());
+            if (!call.isGroup()) {
+                _removeCall(new CallObserver.RemoteLeft(call));
+            } else if(call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING) {
+            	boolean meetingIsOpen = false;
+            	for(CallMembership membership : call.getMemberships()){
+            		if (membership.getState() == CallMembership.State.JOINED) {
+						meetingIsOpen = true;
+					}
+				}
+				if (!meetingIsOpen) {
+					_removeCall(new CallObserver.RemoteCancel(call));
+				}
+			}
+            List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+            for (LocusParticipant locusParticipant : event.getLeftParticipants()) {
+                events.add(new CallObserver.MembershipLeftEvent(call,new CallMembershipImpl(locusParticipant)));
+            }
+            _sendCallMembershipChanged(call,events);
+        }
 	}
 
 	// Remote declined
@@ -581,18 +725,64 @@ public class PhoneImpl implements Phone {
 		}
 	}
 
+    // Room remote declined
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(ParticipantRoomDeclinedEvent event) {
+        Ln.i("ParticipantRoomDeclinedEvent is received " + event.getLocusKey());
+        CallImpl call = _calls.get(event.getLocusKey());
+        if (call != null) {
+            Ln.d("Find group call " + event.getLocusKey());
+            List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+            for (LocusParticipant locusParticipant : event.getDeclinedParticipants()) {
+                events.add(new CallObserver.MembershipDeclinedEvent(call,new CallMembershipImpl(locusParticipant)));
+            }
+            _sendCallMembershipChanged(call,events);
+        }
+
+    }
+
 	// Incoming Call
 	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void onEventMainThread(CallNotificationEvent event) {
 		Ln.i("CallNotificationEvent is received " + event.getType());
 		if (event.getType() == CallNotificationType.INCOMING) {
 			Ln.i("InComing Call " + event.getLocusKey());
-			CallImpl call = new CallImpl(this, null, CallImpl.Direction.INCOMING, event.getLocusKey());
+			LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
+			boolean isGroup = locusData != null ? locusData.isMeeting():false;
+			CallImpl call = new CallImpl(this, null, CallImpl.Direction.INCOMING, event.getLocusKey(),isGroup);
 			_bus.register(call);
 			_calls.put(call.getKey(), call);
 			IncomingCallListener listener = getIncomingCallListener();
 			if (listener != null) {
 				listener.onIncomingCall(call);
+			}
+		}
+	}
+
+	// mutiple device hangup
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(ParticipantSelfChangedEvent event) {
+		Ln.i("ParticipantSelfChangedEvent is received " + event.getLocusKey());
+		CallImpl call = _calls.get(event.getLocusKey());
+		if (call != null && event.getLocus() != null
+				&& event.getLocus().getSelf().getDevices() != null) {
+			List deviceList = event.getLocus().getSelf().getDevices();
+			if(call.getStatus() == Call.CallStatus.CONNECTED && !isJoinedFromThisDevice(deviceList)){
+				Ln.d("Local device left locusKey: " + event.getLocusKey());
+				if (call.getHangupCallback() != null) {
+					call.getHangupCallback().onComplete(ResultImpl.success(null));
+				}
+				_removeCall(new CallObserver.LocalLeft(call));
+			} else if(call.getStatus() != Call.CallStatus.CONNECTED
+					&& isJoinedFromOtherDevice(deviceList)
+					&& !isJoinedFromThisDevice(deviceList)) {
+				Ln.d("other device connected locusKey: " + event.getLocusKey());
+				_removeCall(new CallObserver.OtherConnected(call));
+			} else if(call.getStatus() != Call.CallStatus.CONNECTED
+					&& !isJoinedFromThisDevice(deviceList)
+					&& event.getLocus().getSelf().getState() == LocusParticipant.State.DECLINED) {
+				Ln.d("other device declined locusKey: " + event.getLocusKey());
+				_removeCall(new CallObserver.OtherDeclined(call));
 			}
 		}
 	}
@@ -649,6 +839,9 @@ public class PhoneImpl implements Phone {
 			else {
 				// TODO for local ??
 			}
+            List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+			events.add(new CallObserver.MembershipSendingAudioEvent(call,new CallMembershipImpl(event.getParticipant())));
+            _sendCallMembershipChanged(call,events);
 		}
 	}
 
@@ -668,6 +861,9 @@ public class PhoneImpl implements Phone {
 			else {
 				// TODO for local ??
 			}
+            List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+            events.add(new CallObserver.MembershipSendingVideoEvent(call,new CallMembershipImpl(event.getParticipant())));
+            _sendCallMembershipChanged(call,events);
 		}
 	}
 
@@ -686,6 +882,64 @@ public class PhoneImpl implements Phone {
 		clearCallback(ResultImpl.error(new SparkError<>(SparkError.ErrorCode.PERMISSION_ERROR, "Permissions Error", permissions)));
 	}
 
+    private void _removeCall(@NonNull CallObserver.CallDisconnectedEvent event) {
+        CallImpl call = (CallImpl) event.getCall();
+        Ln.i("Remove " + call);
+        if (call != null) {
+            call.setStatus(Call.CallStatus.DISCONNECTED);
+            CallObserver observer = call.getObserver();
+            if (observer != null) {
+                observer.onDisconnected(event);
+            }
+            _calls.remove(call.getKey());
+            if (_bus.isRegistered(call)) {
+                _bus.unregister(call);
+            }
+        }
+    }
+
+    private void _setCallOnConnected(@NonNull CallImpl call,@NonNull LocusKey key) {
+        if (call.getStatus() == Call.CallStatus.CONNECTED){
+            Ln.d("Already has been connected, return");
+            return;
+        }
+        if (call.getOption() != null && call.getOption().hasVideo()) {
+            _callControlService.setRemoteWindow(key, call.getOption().getRemoteView());
+            _callControlService.setPreviewWindow(key, call.getOption().getLocalView());
+        }
+        call.setStatus(Call.CallStatus.CONNECTED);
+
+        CallObserver observer = call.getObserver();
+        if (observer != null) {
+            observer.onConnected(call);
+        }else{
+            Ln.d("call observer is null");
+        }
+    }
+
+    private void _setCallOnRinging(@NonNull CallImpl call) {
+        call.setStatus(Call.CallStatus.RINGING);
+        CallObserver observer = call.getObserver();
+        if (observer != null) {
+            observer.onRinging(call);
+        }
+    }
+
+    private void _sendCallMembershipChanged(CallImpl call, @NonNull List<CallObserver.CallMembershipChangedEvent> events) {
+        if (call == null) {
+            return;
+        }
+
+        CallObserver observer = call.getObserver();
+        if (observer != null) {
+            for (CallObserver.CallMembershipChangedEvent event : events) {
+                observer.onCallMembershipChanged(event);
+            }
+        } else {
+            Ln.d("call observer is null");
+        }
+    }
+
 	private void clearCallback(Result result) {
 		_dialOption = null;
 		if (_dialCallback != null) {
@@ -700,32 +954,56 @@ public class PhoneImpl implements Phone {
 		if (!option.hasVideo()) {
 			builder = builder.setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly);
 		}
-		//_callControlService.joinCall(builder.build());
 		_callControlService.joinCall(builder.build(), false);
 	}
 
-	private String parseHydraId(String id) {
-		try {
-			byte[] bytes = Base64.decode(id, Base64.URL_SAFE);
-			if (Checker.isEmpty(bytes)) {
-				return id;
-			}
-			String decode = new String(bytes, "UTF-8");
-			Uri uri = Uri.parse(decode);
-			if (uri != null && uri.getScheme() != null && uri.getScheme().equalsIgnoreCase("ciscospark")) {
-				List<String> paths = uri.getPathSegments();
-				if (paths != null && paths.size() >= 2) {
-					return paths.get(paths.size() - 1);
+	private void doDialRoomID(String target, MediaOption option) {
+		Ln.d("Dial " + target);
+		apiClientProvider.getConversationClient().getOrCreatePermanentLocus(target).enqueue(new Callback<LocusUrlResponse>() {
+			@Override
+			public void onResponse(retrofit2.Call<LocusUrlResponse> call, Response<LocusUrlResponse> response) {
+				if (response.isSuccessful()) {
+					LocusKey key = LocusKey.fromUri(response.body().getLocusUrl());
+					CallContext.Builder builder = new CallContext.Builder(key);
+					if (!option.hasVideo()) {
+						builder = builder.setMediaDirection(MediaEngine.MediaDirection.SendReceiveAudioOnly);
+					}
+					_callControlService.joinCall(builder.build(), false);
+				} else {
+					Ln.w("Failure call: "+response.errorBody().toString());
+					clearCallback(ResultImpl.error("Failure call: "+response.errorBody().toString()));
 				}
 			}
-			return id;
-		}
-		catch (Throwable t) {
-			return id;
-		}
 
+			@Override
+			public void onFailure(retrofit2.Call<LocusUrlResponse> call, Throwable t) {
+				clearCallback(ResultImpl.error("Failure call: "+t.getMessage()));
+			}
+		});
 	}
 
+	private boolean isJoinedFromThisDevice(List<LocusParticipantDevice> devices) {
+		for (LocusParticipantDevice device : devices){
+			if(device.getUrl().equals(_device.getUrl())
+					&& device.getState() == LocusParticipant.State.JOINED) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean isJoinedFromOtherDevice(List<LocusParticipantDevice> devices) {
+		for (LocusParticipantDevice device : devices){
+			if(!device.getUrl().equals(_device.getUrl())
+					&& device.getState() == LocusParticipant.State.JOINED) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+	
 	static FacingMode toFacingMode(String s) {
 		if (MediaEngine.WME_BACK_CAMERA.equals(s)) {
 			return FacingMode.ENVIROMENT;
