@@ -338,7 +338,7 @@ public interface CallObserver {
 
 		/**
 		 * @return True if the remote party now is sending screen share. Otherwise false.
-		 * @since 0.1
+		 * @since 1.3.0
 		 */
 		public boolean isSending() {
 			return _sending;

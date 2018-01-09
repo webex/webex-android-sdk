@@ -124,7 +124,7 @@ public class CallImpl implements Call {
         return _option;
     }
 
-    protected void setMediaOption(MediaOption option) {
+    void setMediaOption(@NonNull MediaOption option) {
         _option = option;
         if(option != null) {
             if(option.getLocalView() != null && option.getRemoteView() != null) {
@@ -529,6 +529,9 @@ public class CallImpl implements Call {
     }
 
     private void updateMedia() {
+        if (_status == CallStatus.DISCONNECTED) {
+            return;
+        }
         if (_videoRenderViews != null && _videoRenderViews.first != null && _videoRenderViews.second != null) {
             _phone._callControlService.setPreviewWindow(getKey(),_videoRenderViews.first);
             _phone._callControlService.setRemoteWindow(getKey(),_videoRenderViews.second);
