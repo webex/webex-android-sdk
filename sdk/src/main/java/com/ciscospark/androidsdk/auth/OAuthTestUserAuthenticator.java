@@ -1,10 +1,29 @@
+/*
+ * Copyright 2016-2017 Cisco Systems Inc
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ciscospark.androidsdk.auth;
 
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-import android.util.Log;
-import android.webkit.WebView;
 
 import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
@@ -12,23 +31,13 @@ import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.core.AuthenticatedUser;
-import com.cisco.spark.android.core.Injector;
 import com.cisco.spark.android.model.LoginTestUserRequest;
 import com.cisco.spark.android.sync.ActorRecord;
-import com.cisco.spark.android.util.FileUtils;
 import com.cisco.spark.android.util.LoggingLock;
 import com.ciscospark.androidsdk.CompletionHandler;
-import com.ciscospark.androidsdk.auth.internal.OAuthLauncher;
 import com.ciscospark.androidsdk.internal.ResultImpl;
-import com.ciscospark.androidsdk.internal.SparkInjector;
-import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.github.benoitdion.ln.Ln;
-
-import java.util.Properties;
-
 import javax.inject.Inject;
-
-import me.helloworld.utils.Checker;
 
 /**
  * Created by qimdeng on 12/7/17.
@@ -58,7 +67,7 @@ public class OAuthTestUserAuthenticator extends OAuthAuthenticator{
      * @param scope space-separated string representing which permissions the application needs
      * @param redirectUri the redirect URI that will be called when completing the authentication. This must match the redirect URI registered to your clientId.
      * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
-     * @since 0.1
+     * @since 1.3.0
      */
     public OAuthTestUserAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri,
                                     @NonNull String email, @NonNull String name, @NonNull String password)
@@ -74,7 +83,7 @@ public class OAuthTestUserAuthenticator extends OAuthAuthenticator{
      * Brings up a web-based authorization view and directs the user through the OAuth process.
      *
      * @param handler the completion handler will be called when authentication is complete, the error to indicate if the authentication process was successful.
-     * @since 0.1
+     * @since 1.3.0
      */
     public void authorize(@NonNull CompletionHandler<Void> handler) {
         Ln.d("authorize: " + _provider + "   apiClientProvider: " + apiClientProvider + "  applicationController: " + applicationController);
