@@ -157,6 +157,8 @@ public class PhoneImpl implements Phone {
 
 	private MetricsClient _metrics;
 
+	private Context _context;
+
 	private static class DialTarget {
 		private String address;
 		private AddressType type;
@@ -259,6 +261,7 @@ public class PhoneImpl implements Phone {
 		_authenticator = authenticator;
 		_bus.register(this);
 		_registerTimer = new Handler();
+		_context = context;
 		_prompter = new H264LicensePrompter(context.getSharedPreferences(Spark.class.getPackage().getName(), Context.MODE_PRIVATE));
 	}
 
@@ -310,6 +313,7 @@ public class PhoneImpl implements Phone {
 			return;
 		}
 		_registerCallback = callback;
+		RotationHandler.registerRotationReceiver(_context, this);
 
 		ServiceBuilder.async(_authenticator, callback, s -> {
 			_registerTimeoutTask = () -> {
@@ -325,6 +329,7 @@ public class PhoneImpl implements Phone {
 
 	public void deregister(@NonNull CompletionHandler<Void> callback) {
 		Ln.i("Deregistering");
+		RotationHandler.unregisterRotationReceiver(_context);
 		_applicationController.logout(null, false, false, false);
 		_mediaEngine.uninitialize();
 		_device = null;
@@ -346,6 +351,18 @@ public class PhoneImpl implements Phone {
 		if (_preview != null) {
 			_preview.endSession();
 			_preview = null;
+		}
+	}
+
+	public void setDisplayRotation(int rotation) {
+		if (_preview != null) {
+			_preview.setDisplayRotation(rotation);
+		}
+		for (CallImpl call : _calls.values()) {
+			if (call.getStatus() == Call.CallStatus.CONNECTED) {
+				_callControlService.setDisplayRotation(call.getKey(), rotation);
+				return;
+			}
 		}
 	}
 

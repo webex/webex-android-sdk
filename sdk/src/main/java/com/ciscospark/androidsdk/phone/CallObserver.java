@@ -545,7 +545,7 @@ public interface CallObserver {
 	 * @since 1.3.0
 	 */
 	interface CallMembershipChangedEvent extends CallEvent {
-		public CallMembership getCallMembership();
+		CallMembership getCallMembership();
 	}
 
 	/**
