@@ -24,6 +24,7 @@ package com.ciscospark.androidsdk.phone;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Pair;
 import android.view.View;
 
 /**
@@ -39,7 +40,7 @@ public class MediaOption {
      * @since 0.1
      */
     public static MediaOption audioOnly() {
-        return new MediaOption(null, null);
+        return new MediaOption(null, null,null,false,false);
     }
 
     /**
@@ -50,16 +51,52 @@ public class MediaOption {
      * @since 0.1
      */
     public static MediaOption audioVideo(@NonNull View localView, @NonNull View remoteView) {
-        return new MediaOption(localView, remoteView);
+        return new MediaOption(localView, remoteView,null,false,true);
+    }
+
+    /**
+     * Constructs an audio and video media option.
+     *
+     * @param videoRenderViews Local video view and remote video view.
+     * @since 1.3.0
+     */
+    public static MediaOption audioVideo(@Nullable Pair<View,View> videoRenderViews) {
+        if (videoRenderViews == null || videoRenderViews.first == null || videoRenderViews.second == null) {
+            return new MediaOption(null, null,null,false,true);
+        }
+        return new MediaOption(videoRenderViews.first, videoRenderViews.second,null,false,true);
+    }
+
+    /**
+     * Constructs an audio/video and screen share media option.
+     *
+     * @param videoRenderViews Local video view and remote video view.
+     * @param screenShareView Screen share view for remote.
+     * @since 1.3.0
+     */
+    public static MediaOption audioVideoScreenShare(@Nullable Pair<View,View> videoRenderViews,@Nullable View screenShareView) {
+        if (videoRenderViews == null || videoRenderViews.first == null || videoRenderViews.second == null) {
+            return new MediaOption(null, null,screenShareView,true,true);
+        }
+        return new MediaOption(videoRenderViews.first,videoRenderViews.second,screenShareView,true,true);
     }
 
     private View _remoteView;
 
     private View _localView;
 
-    private MediaOption(@Nullable View localView, @Nullable  View remoteView) {
+    private View _screenShareView;
+
+    private boolean _hasScreenShare;
+
+    private boolean _hasVideo;
+
+    private MediaOption(@Nullable View localView, @Nullable  View remoteView,@Nullable View screenShareView,boolean hasScreenShare,boolean hasVideo) {
         _localView = localView;
         _remoteView = remoteView;
+        _screenShareView = screenShareView;
+        _hasScreenShare = hasScreenShare;
+        _hasVideo = hasVideo;
     }
 	
     /**
@@ -69,9 +106,19 @@ public class MediaOption {
      * @since 0.1
      */
     public boolean hasVideo() {
-        return _localView != null || _remoteView != null;
+        return _hasVideo;
     }
-	
+
+    /**
+     * Whether video is enabled.
+     *
+     * @return true if screen share is enabled. Otherwise, false.
+     * @since 1.3.0
+     */
+    public boolean hasScreenShare() {
+        return _hasScreenShare;
+    }
+
     /**
      * @return The remote video view
      * @since 0.1
@@ -87,4 +134,13 @@ public class MediaOption {
     public View getLocalView() {
         return _localView;
     }
+
+    /**
+     * @return The screen share view
+     * @since 1.3.0
+     */
+    public View getScreenShareView() {
+        return _screenShareView;
+    }
+
 }

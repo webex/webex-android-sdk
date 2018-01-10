@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 import android.graphics.Rect;
+import android.util.Pair;
+import android.view.View;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.cisco.spark.android.callcontrol.events.CallControlMediaDecodeSizeChangedEvent;
@@ -38,6 +40,7 @@ import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
 import com.cisco.spark.android.locus.model.MediaDirection;
+import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaRequestSource;
 import com.cisco.spark.android.media.MediaSession;
 import com.cisco.spark.android.sync.operationqueue.SendDtmfOperation;
@@ -80,10 +83,15 @@ public class CallImpl implements Call {
 
     private Rect _localVideoViewSize = new Rect(0, 0, 0, 0);
     private Rect _remoteVideoViewSize = new Rect(0, 0, 0, 0);
+    private Rect _screenShareViewSize = new Rect(0, 0, 0, 0);
 
     private Map<SendDtmfOperation, CompletionHandler<Void>> _dtmfOperations = new HashMap<>(1);
 
     private boolean _isGroup;
+
+    private View _screenShareRenderView;
+
+    private Pair<View,View> _videoRenderViews;
 
     CallImpl(@NonNull PhoneImpl phone, @Nullable MediaOption option, @NonNull Direction direction, @NonNull LocusKey key,boolean group) {
         _phone = phone;
@@ -92,6 +100,15 @@ public class CallImpl implements Call {
         _key = key;
         _status = CallStatus.INITIATED;
         _isGroup = group;
+
+        if(option != null) {
+            if(option.getLocalView() != null && option.getRemoteView() != null) {
+                _videoRenderViews = new Pair<View,View>(option.getLocalView(),option.getRemoteView());
+            } else {
+                _videoRenderViews = null;
+            }
+            _screenShareRenderView = option.getScreenShareView();
+        }
     }
 
     @NonNull
@@ -107,8 +124,16 @@ public class CallImpl implements Call {
         return _option;
     }
 
-    void setMediaOption(MediaOption option) {
+    void setMediaOption(@NonNull MediaOption option) {
         _option = option;
+        if(option != null) {
+            if(option.getLocalView() != null && option.getRemoteView() != null) {
+                _videoRenderViews = new Pair<View,View>(option.getLocalView(),option.getRemoteView());
+            } else {
+                _videoRenderViews = null;
+            }
+            _screenShareRenderView = option.getScreenShareView();
+        }
     }
 
     CompletionHandler<Void> getAnswerCallback() {
@@ -145,7 +170,7 @@ public class CallImpl implements Call {
         List<LocusParticipant> participants = getParticipants();
         List<CallMembership> memberships = new ArrayList<>(participants.size());
         for (LocusParticipant p : participants) {
-            memberships.add(new CallMembershipImpl(p));
+            memberships.add(new CallMembershipImpl(p,this));
         }
         return memberships;
     }
@@ -176,6 +201,8 @@ public class CallImpl implements Call {
         return _remoteVideoViewSize;
     }
 
+    public Rect getScreenShareViewSize() { return _screenShareViewSize;}
+
     public boolean isRemoteSendingVideo() {
         for (LocusParticipant p : getRemoteParticipants()) {
             if (p.getState() == LocusParticipant.State.JOINED
@@ -194,6 +221,10 @@ public class CallImpl implements Call {
             }
         }
         return false;
+    }
+
+    public boolean isRemoteSendingScreenShare() {
+        return _phone.getCallService().getLocusData(getKey()).isFloorGranted();
     }
 
     public boolean isSendingVideo() {
@@ -254,6 +285,70 @@ public class CallImpl implements Call {
         }
     }
 
+    @Override
+    public boolean isReceivingScreenShare() {
+        if (!_option.hasScreenShare() && _option.hasVideo()) {
+            return isReceivingVideo();
+        } else if (_option.hasScreenShare()) {
+            return !_phone.getCallService().isRemoteScreenShareMuted(getKey());
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
+    public void setReceivingScreenShare(boolean receiving) {
+        if (_option == null || (!_option.hasScreenShare() && !_option.hasVideo())){
+            Ln.d("Can not setReceivingScreenShare in a Audio call, return");
+            return;
+        }
+
+        if (!_option.hasScreenShare() && _option.hasVideo()) {
+            if(!isRemoteSendingScreenShare()) {
+                // not have screen share and have video and the remote doesn't start screen share.
+                // do nothing when user set the receivingScreenShare
+                return;
+            }
+            setReceivingVideo(receiving);
+        }
+        else {
+            _phone.getCallService().muteRemoteScreenShare(getKey(), !receiving);
+        }
+
+        CallObserver observer = getObserver();
+        if (observer != null) {
+            observer.onMediaChanged(new CallObserver.ReceivingScreenShare(this, receiving));
+        }
+    }
+
+    public Pair<View, View> getVideoRenderViews() { return _videoRenderViews; }
+
+    @Override
+    public void setVideoRenderViews(@Nullable Pair<View, View> videoRenderViews) {
+        if (_videoRenderViews != videoRenderViews) {
+            _videoRenderViews = videoRenderViews;
+        } else if (videoRenderViews != null && _videoRenderViews != null
+                && (videoRenderViews.first != _videoRenderViews.first || videoRenderViews.second != _videoRenderViews.second)) {
+            _videoRenderViews = videoRenderViews;
+        } else {
+            return;
+        }
+        updateMedia();
+    }
+
+    public View getScreenShareRenderView() { return _screenShareRenderView; }
+
+    @Override
+    public void setScreenShareRenderView(View screenShareRenderView) {
+        if (screenShareRenderView != _screenShareRenderView) {
+            _screenShareRenderView = screenShareRenderView;
+        } else {
+            return;
+        }
+        updateMedia();
+    }
+
     public void acknowledge(@NonNull CompletionHandler<Void> callback) {
         _phone.getCallService().acknowledge(getKey());
         setStatus(CallStatus.RINGING);
@@ -263,6 +358,15 @@ public class CallImpl implements Call {
 
     public void answer(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
         _option = option;
+        if(option != null) {
+            if(option.getLocalView() != null && option.getRemoteView() != null) {
+                _videoRenderViews = new Pair<View,View>(option.getLocalView(),option.getRemoteView());
+            } else {
+                _videoRenderViews = null;
+            }
+            _screenShareRenderView = option.getScreenShareView();
+        }
+
         _answerCallback = callback;
         _phone.answer(this);
     }
@@ -329,10 +433,18 @@ public class CallImpl implements Call {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlMediaDecodeSizeChangedEvent event) {
         Ln.d("CallControlMediaDecodeSizeChangedEvent is received");
-        _remoteVideoViewSize = event.getSize();
+        CallObserver.MediaChangedEvent mediaEvent = null;
+        if (event.getVid() == MediaEngine.SHARE_MID) {
+            _screenShareViewSize = event.getSize();
+            mediaEvent = new CallObserver.RemoteScreenShareViewSizeChanged(this);
+        }
+        else {
+            _remoteVideoViewSize = event.getSize();
+            mediaEvent = new CallObserver.RemoteVideoViewSizeChanged(this);
+        }
         CallObserver observer = getObserver();
-        if (observer != null) {
-            observer.onMediaChanged(new CallObserver.RemoteVideoViewSizeChanged(this));
+        if (observer != null && mediaEvent != null) {
+            observer.onMediaChanged(mediaEvent);
         }
     }
 
@@ -408,4 +520,33 @@ public class CallImpl implements Call {
     }
 
     boolean isGroup() { return _isGroup; }
+
+    protected LocusParticipant getScreenShareSender() {
+        if (isRemoteSendingScreenShare()) {
+            return _phone.getCallService().getLocusData(getKey()).getParticipantSharing();
+        }
+        return null;
+    }
+
+    private void updateMedia() {
+        if (_status == CallStatus.DISCONNECTED) {
+            return;
+        }
+        if (_videoRenderViews != null && _videoRenderViews.first != null && _videoRenderViews.second != null) {
+            _phone._callControlService.setPreviewWindow(getKey(),_videoRenderViews.first);
+            _phone._callControlService.setRemoteWindow(getKey(),_videoRenderViews.second);
+        }
+        else {
+            _phone._callControlService.setPreviewWindow(getKey(),null);
+            _phone._callControlService.removeRemoteVideoWindows(getKey());
+        }
+
+        if (_screenShareRenderView != null) {
+            _phone._callControlService.setShareWindow(getKey(),_screenShareRenderView);
+        }
+        else {
+            _phone._callControlService.removeShareWindow(getKey());
+        }
+        _phone._callControlService.updateMediaSession(_phone._callControlService.getCall(getKey()),PhoneImpl.mediaOptionToMediaDirection(_option));
+    }
 }

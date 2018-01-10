@@ -322,6 +322,35 @@ public interface CallObserver {
     }
 
 	/**
+	 * This might be triggered when the remote party muted or unmuted the screen share.
+	 *
+	 * @since 1.3.0
+	 */
+	class RemoteSendingScreenShareEvent extends AbstractCallEvent implements MediaChangedEvent {
+
+		@StringPart
+		private boolean _sending;
+
+		public RemoteSendingScreenShareEvent(Call call, boolean sending) {
+			super(call);
+			_sending = sending;
+		}
+
+		/**
+		 * @return True if the remote party now is sending screen share. Otherwise false.
+		 * @since 1.3.0
+		 */
+		public boolean isSending() {
+			return _sending;
+		}
+
+		@Override
+		public String toString() {
+			return Objects.toStringByAnnotation(this);
+		}
+	}
+
+	/**
 	 * This might be triggered when the local party muted or unmuted the video.
 	 * 
 	 * @since 0.1
@@ -438,6 +467,35 @@ public interface CallObserver {
     }
 
 	/**
+	 * This might be triggered when the local party muted or unmuted the remote screen share.
+	 *
+	 * @since 1.3.0
+	 */
+	class ReceivingScreenShare extends AbstractCallEvent implements MediaChangedEvent {
+
+		@StringPart
+		private boolean _receiving;
+
+		public ReceivingScreenShare(Call call, boolean receiving) {
+			super(call);
+			_receiving = receiving;
+		}
+
+		/**
+		 * @return True if the local party now is receiving screen share. Otherwise false.
+		 * @since 0.1
+		 */
+		public boolean isReceiving() {
+			return _receiving;
+		}
+
+		@Override
+		public String toString() {
+			return Objects.toStringByAnnotation(this);
+		}
+	}
+
+	/**
 	 * Camera FacingMode on local device has switched.
 	 * 
 	 * @since 0.1
@@ -469,6 +527,17 @@ public interface CallObserver {
             super(call);
         }
     }
+
+	/**
+	 * Remote screen share rendering view size has changed.
+	 *
+	 * @since 1.3.0
+	 */
+	class RemoteScreenShareViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
+		public RemoteScreenShareViewSizeChanged(Call call) {
+			super(call);
+		}
+	}
 
 	/**
 	 * Call membership change event
