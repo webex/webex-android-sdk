@@ -155,7 +155,7 @@ public class SSOAuthenticator implements Authenticator{
                 .appendQueryParameter("redirect_uri", _authenticator.getRedirectUri())
                 .appendQueryParameter("scope", _authenticator.getScope())
                 .appendQueryParameter("state", "androidsdkstate");
-        if (email != null) {
+        if (email != null && !email.isEmpty()) {
             // Extend the original authorization url with the email parameter.
             orginalUrl.appendQueryParameter("email", email);
         }
