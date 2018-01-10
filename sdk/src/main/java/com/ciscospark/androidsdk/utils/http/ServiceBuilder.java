@@ -59,7 +59,7 @@ public class ServiceBuilder {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
             @Override
             public void log(String message) {
-                Log.i("RetrofitLog","retrofitBack = "+message);
+                Log.d("RetrofitLog","retrofitBack = "+message);
             }
         });
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
