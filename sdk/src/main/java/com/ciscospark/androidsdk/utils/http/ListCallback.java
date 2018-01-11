@@ -26,6 +26,7 @@ import java.util.List;
 
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.internal.ResultImpl;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

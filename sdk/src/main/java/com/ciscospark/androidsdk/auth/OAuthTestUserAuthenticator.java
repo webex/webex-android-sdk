@@ -37,13 +37,14 @@ import com.cisco.spark.android.util.LoggingLock;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.github.benoitdion.ln.Ln;
+
 import javax.inject.Inject;
 
 /**
  * Created by qimdeng on 12/7/17.
  */
 
-public class OAuthTestUserAuthenticator extends OAuthAuthenticator{
+public class OAuthTestUserAuthenticator extends OAuthAuthenticator {
     private LoggingLock lock = new LoggingLock(BuildConfig.DEBUG, "OAuthTestUserAuthenticator Lock");
 
     private String email;
@@ -59,19 +60,19 @@ public class OAuthTestUserAuthenticator extends OAuthAuthenticator{
 
     @Inject
     ApplicationController applicationController;
+
     /**
      * Creates a new OAuth authentication strategy
      *
-     * @param clientId the OAuth client id
+     * @param clientId     the OAuth client id
      * @param clientSecret the OAuth client secret
-     * @param scope space-separated string representing which permissions the application needs
-     * @param redirectUri the redirect URI that will be called when completing the authentication. This must match the redirect URI registered to your clientId.
+     * @param scope        space-separated string representing which permissions the application needs
+     * @param redirectUri  the redirect URI that will be called when completing the authentication. This must match the redirect URI registered to your clientId.
      * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
      * @since 1.3.0
      */
     public OAuthTestUserAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri,
-                                    @NonNull String email, @NonNull String name, @NonNull String password)
-    {
+                                      @NonNull String email, @NonNull String name, @NonNull String password) {
         super(clientId, clientSecret, scope, redirectUri);
         this.email = email;
         this.name = name;
@@ -87,7 +88,7 @@ public class OAuthTestUserAuthenticator extends OAuthAuthenticator{
      */
     public void authorize(@NonNull CompletionHandler<Void> handler) {
         Ln.d("authorize: " + _provider + "   apiClientProvider: " + apiClientProvider + "  applicationController: " + applicationController);
-        if (_provider != null && apiClientProvider != null && applicationController != null){
+        if (_provider != null && apiClientProvider != null && applicationController != null) {
             new AsyncTask() {
                 @Override
                 protected Object doInBackground(Object[] objects) {
@@ -101,7 +102,7 @@ public class OAuthTestUserAuthenticator extends OAuthAuthenticator{
                     return null;
                 }
             }.execute();
-        }else{
+        } else {
             handler.onComplete(ResultImpl.error("Not authorized"));
         }
     }
@@ -110,13 +111,13 @@ public class OAuthTestUserAuthenticator extends OAuthAuthenticator{
         this.lock.lock();
         boolean var4;
         try {
-            if(email != null && name != null && password != null) {
+            if (email != null && name != null && password != null) {
                 LoginTestUserRequest loginTestUserRequest = new LoginTestUserRequest(email, password);
                 java.lang.reflect.Field privateStringField = LoginTestUserRequest.class.getDeclaredField("scopes");
                 privateStringField.setAccessible(true);
                 privateStringField.set(loginTestUserRequest, scope);
 
-                OAuth2Tokens token = (OAuth2Tokens)apiClientProvider.getUserClient().loginTestUser(loginTestUserRequest).execute().body();
+                OAuth2Tokens token = (OAuth2Tokens) apiClientProvider.getUserClient().loginTestUser(loginTestUserRequest).execute().body();
                 if (token != null) {
                     token.setExpiresIn(token.getExpiresIn() + System.currentTimeMillis() / 1000);
                     AuthenticatedUser authenticatedUser = new AuthenticatedUser(email, new ActorRecord.ActorKey(email), name, token, "Unknown", (String) null, 0L, (String) null);

@@ -27,18 +27,19 @@ import java.util.List;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.ciscospark.androidsdk.CompletionHandler;
 
 /**
  * A client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-rooms.html">Rooms REST API</a>
- * 
+ *
  * @since 0.1
  */
 public interface RoomClient {
 
     /**
      * Sort results by room ID (id), most recent activity (lastactivity), or most recently created (created).
-     * 
+     *
      * @since 0.1
      */
     enum SortBy {
@@ -47,31 +48,31 @@ public interface RoomClient {
 
     /**
      * Lists all rooms where the authenticated user belongs.
-     * 
-     * @param teamId If not nil, only list the rooms that are associated with the team by team id.
-     * @param max The maximum number of rooms in the response.
-     * @param type If not nil, only list the rooms of this type. Otherwise all rooms are listed.
-     * @param sortBy Sort results by room ID (id), most recent activity (lastactivity), or most recently created (created).
+     *
+     * @param teamId  If not nil, only list the rooms that are associated with the team by team id.
+     * @param max     The maximum number of rooms in the response.
+     * @param type    If not nil, only list the rooms of this type. Otherwise all rooms are listed.
+     * @param sortBy  Sort results by room ID (id), most recent activity (lastactivity), or most recently created (created).
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
     void list(@Nullable String teamId, int max, @Nullable Room.RoomType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Room>> handler);
 
     /**
-     *  Creates a room. The authenticated user is automatically added as a member of the room. See the Memberships API to learn how to add more people to the room.
-     *  
-     * @param title A user-friendly name for the room.
-     * @param teamId If not nil, this room will be associated with the team by team id. Otherwise, this room is not associated with any team.
+     * Creates a room. The authenticated user is automatically added as a member of the room. See the Memberships API to learn how to add more people to the room.
+     *
+     * @param title   A user-friendly name for the room.
+     * @param teamId  If not nil, this room will be associated with the team by team id. Otherwise, this room is not associated with any team.
      * @param handler A closure to be executed once the request has finished.
-     * @since 0.1
      * @see com.ciscospark.androidsdk.membership.MembershipClient
+     * @since 0.1
      */
     void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Room> handler);
 
     /**
      * Retrieves the details for a room by id.
-     * 
-     * @param roomId The identifier of the room.
+     *
+     * @param roomId  The identifier of the room.
      * @param handler The queue on which the completion handler is dispatched.
      * @since 0.1
      */
@@ -79,9 +80,9 @@ public interface RoomClient {
 
     /**
      * Updates the details for a room by id.
-     * 
-     * @param roomId The identifier of the room.
-     * @param title A user-friendly name for the room.
+     *
+     * @param roomId  The identifier of the room.
+     * @param title   A user-friendly name for the room.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
@@ -89,11 +90,11 @@ public interface RoomClient {
 
     /**
      * Deletes a room by id.
-     * 
-     * @param roomId The identifier of the room.
+     *
+     * @param roomId  The identifier of the room.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
     void delete(@NonNull String roomId, @NonNull CompletionHandler<Void> handler);
-    
+
 }

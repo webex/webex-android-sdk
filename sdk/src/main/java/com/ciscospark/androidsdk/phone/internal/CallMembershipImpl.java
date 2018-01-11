@@ -27,6 +27,7 @@ import com.cisco.spark.android.locus.model.LocusParticipantInfo;
 import com.cisco.spark.android.locus.model.MediaDirection;
 import com.ciscospark.androidsdk.phone.Call;
 import com.ciscospark.androidsdk.phone.CallMembership;
+
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 
@@ -39,23 +40,17 @@ public class CallMembershipImpl implements CallMembership {
     private static CallMembership.State fromLocusState(LocusParticipant.State state) {
         if (state == LocusParticipant.State.IDLE) {
             return CallMembership.State.IDLE;
-        }
-        else if (state == LocusParticipant.State.NOTIFIED) {
+        } else if (state == LocusParticipant.State.NOTIFIED) {
             return State.NOTIFIED;
-        }
-        else if (state == LocusParticipant.State.JOINED) {
+        } else if (state == LocusParticipant.State.JOINED) {
             return State.JOINED;
-        }
-        else if (state == LocusParticipant.State.LEFT) {
+        } else if (state == LocusParticipant.State.LEFT) {
             return State.LEFT;
-        }
-        else if (state == LocusParticipant.State.DECLINED) {
+        } else if (state == LocusParticipant.State.DECLINED) {
             return State.DECLINED;
-        }
-        else if (state == LocusParticipant.State.LEAVING) {
+        } else if (state == LocusParticipant.State.LEAVING) {
             return State.LEFT;
-        }
-        else {
+        } else {
             return State.UNKNOWN;
         }
     }
@@ -98,8 +93,8 @@ public class CallMembershipImpl implements CallMembership {
         _sendingVideo = MediaDirection.SENDRECV.equals(participant.getStatus().getVideoStatus());
         _sendingAudio = MediaDirection.SENDRECV.equals(participant.getStatus().getAudioStatus());
         _sendingScreenShare = false;
-        if(call instanceof CallImpl && ((CallImpl)call).getScreenShareSender() != null) {
-            _sendingScreenShare = ((CallImpl)call).getScreenShareSender().getPerson().getId().equalsIgnoreCase(person.getId());
+        if (call instanceof CallImpl && ((CallImpl) call).getScreenShareSender() != null) {
+            _sendingScreenShare = ((CallImpl) call).getScreenShareSender().getPerson().getId().equalsIgnoreCase(person.getId());
         }
 
     }

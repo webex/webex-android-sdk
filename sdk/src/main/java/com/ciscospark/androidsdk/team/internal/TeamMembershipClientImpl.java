@@ -28,6 +28,7 @@ import java.util.Map;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.team.TeamMembership;
@@ -36,6 +37,7 @@ import com.ciscospark.androidsdk.utils.http.ListBody;
 import com.ciscospark.androidsdk.utils.http.ListCallback;
 import com.ciscospark.androidsdk.utils.http.ObjectCallback;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
+
 import me.helloworld.utils.collection.Maps;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -50,7 +52,7 @@ import retrofit2.http.Query;
 public class TeamMembershipClientImpl implements TeamMembershipClient {
 
     private Authenticator _authenticator;
-    
+
     private TeamMembershipService _service;
 
     public TeamMembershipClientImpl(Authenticator authenticator) {

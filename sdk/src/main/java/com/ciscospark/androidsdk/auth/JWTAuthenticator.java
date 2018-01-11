@@ -25,11 +25,13 @@ package com.ciscospark.androidsdk.auth;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.inject.Inject;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Base64;
+
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.core.AuthenticatedUser;
@@ -40,6 +42,7 @@ import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+
 import me.helloworld.utils.Converter;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -51,7 +54,7 @@ import static com.ciscospark.androidsdk.utils.Utils.checkNotNull;
 
 /**
  * A <a href="https://jwt.io/introduction">JSON Web Token</a> (JWT) based authentication strategy is to be used to authenticate a user on Cisco Spark.
- * 
+ *
  * @since 0.1
  */
 public class JWTAuthenticator implements Authenticator {
@@ -65,49 +68,49 @@ public class JWTAuthenticator implements Authenticator {
     @Inject
     ApiTokenProvider _provider;
 
-	/**
-	 * Creates a new JWT authentication strategy
-	 * 
-	 * @since 0.1
-	 */
-	public JWTAuthenticator() {
+    /**
+     * Creates a new JWT authentication strategy
+     *
+     * @since 0.1
+     */
+    public JWTAuthenticator() {
         _authService = new ServiceBuilder().build(AuthService.class);
     }
-	
-	/**
-	 * @see Authenticator
-	 */
-	@Override
+
+    /**
+     * @see Authenticator
+     */
+    @Override
     public boolean isAuthorized() {
         return getUnexpiredJwt() != null;
     }
 
-	/**
-	 * Sets the JWT access token on the authorization strategy, overriting any existing access token.
-	 * 
-	 * @param jwt the new JSON Web Token to use
-	 * @since 0.1   
-	 */
-	public void authorize(@NonNull String jwt) {
+    /**
+     * Sets the JWT access token on the authorization strategy, overriting any existing access token.
+     *
+     * @param jwt the new JSON Web Token to use
+     * @since 0.1
+     */
+    public void authorize(@NonNull String jwt) {
         deauthorize();
         _jwt = jwt;
     }
 
-	/**
-	 * @see Authenticator
-	 */
+    /**
+     * @see Authenticator
+     */
     @Override
     public void deauthorize() {
         _jwt = null;
         _token = null;
-        if ( _provider != null) {
+        if (_provider != null) {
             _provider.clearAccount();
         }
     }
 
-	/**
-	 * @see Authenticator
-	 */
+    /**
+     * @see Authenticator
+     */
     @Override
     public void getToken(@NonNull CompletionHandler<String> handler) {
         checkNotNull(handler, "CompletionHandler should not be null");
@@ -127,8 +130,7 @@ public class JWTAuthenticator implements Authenticator {
                 JwtToken token = response.body();
                 if (token == null || token.getAccessToken() == null || token.getAccessToken().isEmpty()) {
                     handler.onComplete(ResultImpl.error(response));
-                }
-                else {
+                } else {
                     _token = token.toOAuthToken(jwt);
                     if (_provider != null) {
                         AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
@@ -145,7 +147,8 @@ public class JWTAuthenticator implements Authenticator {
         });
     }
 
-    private @Nullable String getUnexpiredJwt() {
+    private @Nullable
+    String getUnexpiredJwt() {
         if (_jwt == null && _token != null) {
             _jwt = _token.getRefreshToken();
         }
@@ -168,13 +171,13 @@ public class JWTAuthenticator implements Authenticator {
             if (exp > 0 && exp <= (System.currentTimeMillis() / 1000)) {
                 return null;
             }
-        }
-        catch (Throwable ignored) {
+        } catch (Throwable ignored) {
         }
         return _jwt;
     }
 
-    private @Nullable String getUnexpiredAccessToken() {
+    private @Nullable
+    String getUnexpiredAccessToken() {
         if (!isAuthorized()) {
             return null;
         }
@@ -190,7 +193,8 @@ public class JWTAuthenticator implements Authenticator {
         return _token.getAccessToken();
     }
 
-    private @Nullable Map<String, Object> parseJWT(String jwt) {
+    private @Nullable
+    Map<String, Object> parseJWT(String jwt) {
         String[] split = jwt.split("\\.");
         if (split.length != 3) {
             return null;
@@ -198,20 +202,20 @@ public class JWTAuthenticator implements Authenticator {
         try {
             String json = new String(Base64.decode(split[1], Base64.URL_SAFE), "UTF-8");
             Gson gson = new Gson();
-            Map<String,Object> map = new HashMap<>();
+            Map<String, Object> map = new HashMap<>();
             return gson.fromJson(json, map.getClass());
         } catch (UnsupportedEncodingException e) {
             return null;
         }
     }
 
-	@SparkInjector.AfterInjected
-	private void afterInjected() {
-		if (_provider != null && _token != null) {
-			AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
-			_provider.setAuthenticatedUser(authenticatedUser);
-		}
-	}
+    @SparkInjector.AfterInjected
+    private void afterInjected() {
+        if (_provider != null && _token != null) {
+            AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
+            _provider.setAuthenticatedUser(authenticatedUser);
+        }
+    }
 
     interface AuthService {
         @POST("jwt/login")

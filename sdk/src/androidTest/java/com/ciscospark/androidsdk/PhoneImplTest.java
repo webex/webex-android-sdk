@@ -26,7 +26,9 @@ import java.lang.reflect.Field;
 
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.ciscospark.androidsdk.auth.JWTAuthenticator;
+
 import me.helloworld.utils.reflect.Fields;
+
 import org.junit.Test;
 
 /**

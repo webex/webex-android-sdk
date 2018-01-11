@@ -30,20 +30,22 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import android.app.Application;
+
 import com.cisco.spark.android.core.ApplicationDelegate;
 import com.cisco.spark.android.core.RootModule;
 import com.github.benoitdion.ln.DebugLn;
 import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.NaturalLog;
 import com.squareup.leakcanary.RefWatcher;
+
 import me.helloworld.utils.reflect.Methods;
 
 public class SparkInjector extends ApplicationDelegate {
 
-	@Target({ElementType.METHOD})
-	@Retention(RetentionPolicy.RUNTIME)
-	public @interface AfterInjected {
-	}
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface AfterInjected {
+    }
 
     private final SparkModule _module;
 
@@ -75,7 +77,7 @@ public class SparkInjector extends ApplicationDelegate {
 
     @Override
     protected void afterInject() {
-        
+
     }
 
     @Override
@@ -83,22 +85,21 @@ public class SparkInjector extends ApplicationDelegate {
         return new DebugLn();
     }
 
-	@Override
-	protected void initializeExceptionHandlers() {
-		// TODO XXX
-	}
+    @Override
+    protected void initializeExceptionHandlers() {
+        // TODO XXX
+    }
 
-	public void inject(Object o) {
+    public void inject(Object o) {
         super.inject(o);
         List<Method> methods = Methods.getMethodsMarkedWithAnnotation(o.getClass(), AfterInjected.class);
-	    for (Method method : methods) {
-		    try {
-			    method.setAccessible(true);
-			    method.invoke(o);
-		    }
-		    catch (Throwable t) {
-			    Ln.e(t);
-		    }
-	    }
+        for (Method method : methods) {
+            try {
+                method.setAccessible(true);
+                method.invoke(o);
+            } catch (Throwable t) {
+                Ln.e(t);
+            }
+        }
     }
 }

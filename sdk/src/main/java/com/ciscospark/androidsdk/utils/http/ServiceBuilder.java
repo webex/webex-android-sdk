@@ -32,6 +32,7 @@ import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.google.gson.Gson;
+
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -59,7 +60,7 @@ public class ServiceBuilder {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
             @Override
             public void log(String message) {
-                Log.d("RetrofitLog","retrofitBack = "+message);
+                Log.d("RetrofitLog", "retrofitBack = " + message);
             }
         });
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -108,8 +109,7 @@ public class ServiceBuilder {
                 String token = result.getData();
                 if (token != null) {
                     closure.invoke("Bearer " + token);
-                }
-                else {
+                } else {
                     if (handler != null) {
                         handler.onComplete(ResultImpl.error(result.getError()));
                     }

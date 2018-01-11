@@ -23,76 +23,77 @@
 package com.ciscospark.androidsdk.phone;
 
 import com.ciscospark.androidsdk.SparkError;
+
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 
 /**
  * An observer interface for {@link Call} event
- * 
+ *
  * @since 0.1
  */
 public interface CallObserver {
 
-	/**
-	 * Callback when remote participant(s) is ringing.
-	 * 
-	 * @param call Call
-	 * @since 0.1   
-	 */
-	void onRinging(Call call);
+    /**
+     * Callback when remote participant(s) is ringing.
+     *
+     * @param call Call
+     * @since 0.1
+     */
+    void onRinging(Call call);
 
-	/**
-	 * Callback when remote participant(s) answered and the call is connected.
-	 * 
-	 * @param call Call
-	 * @since 0.1   
-	 */
-	void onConnected(Call call);
+    /**
+     * Callback when remote participant(s) answered and the call is connected.
+     *
+     * @param call Call
+     * @since 0.1
+     */
+    void onConnected(Call call);
 
-	/**
-	 * Callback when the call is disconnected (hangup, cancelled, get declined or other self device pickup the call).
-	 * 
-	 * @param event event
-	 * @since 0.1   
-	 */
-	void onDisconnected(CallDisconnectedEvent event);
+    /**
+     * Callback when the call is disconnected (hangup, cancelled, get declined or other self device pickup the call).
+     *
+     * @param event event
+     * @since 0.1
+     */
+    void onDisconnected(CallDisconnectedEvent event);
 
-	/**
-	 * Callback when the media types of the call have changed.
-	 * 
-	 * @param event event
-	 * @since 0.1   
-	 */
-	void onMediaChanged(MediaChangedEvent event);
+    /**
+     * Callback when the media types of the call have changed.
+     *
+     * @param event event
+     * @since 0.1
+     */
+    void onMediaChanged(MediaChangedEvent event);
 
-	/**
-	 * Callback when the memberships of this call have changed.
-	 *
-	 * @param event event
-	 * @since 1.3.0
-	 */
-	void onCallMembershipChanged(CallMembershipChangedEvent event);
+    /**
+     * Callback when the memberships of this call have changed.
+     *
+     * @param event event
+     * @since 1.3.0
+     */
+    void onCallMembershipChanged(CallMembershipChangedEvent event);
 
-	/**
-	 * Base class for the event of a call
-	 * 
-	 * @since 0.1
-	 */
-	interface CallEvent {
+    /**
+     * Base class for the event of a call
+     *
+     * @since 0.1
+     */
+    interface CallEvent {
 
-		/**
-		 * @return Call
-		 * @since 0.1
-		 */
-		Call getCall();
+        /**
+         * @return Call
+         * @since 0.1
+         */
+        Call getCall();
     }
 
-	/**
-	 * Base class for the event of a call
-	 * 
-	 * @since 0.1
-	 */
-	abstract class AbstractCallEvent implements CallEvent {
+    /**
+     * Base class for the event of a call
+     *
+     * @since 0.1
+     */
+    abstract class AbstractCallEvent implements CallEvent {
 
         @StringPart
         protected Call _call;
@@ -101,10 +102,10 @@ public interface CallObserver {
             _call = call;
         }
 
-		/**
-		 * @see CallEvent
-		 */
-		public Call getCall() {
+        /**
+         * @see CallEvent
+         */
+        public Call getCall() {
             return _call;
         }
 
@@ -115,122 +116,122 @@ public interface CallObserver {
 
     }
 
-	/**
-	 * This event is fired when the call is disconnected.
-	 * 
-	 * @since 0.1
-	 */
-	interface CallDisconnectedEvent extends CallEvent {
+    /**
+     * This event is fired when the call is disconnected.
+     *
+     * @since 0.1
+     */
+    interface CallDisconnectedEvent extends CallEvent {
 
     }
 
-	/**
-	 * This event is fired when local party has left the call.
-	 * 
-	 * @since 0.1
-	 */
-	class LocalLeft extends AbstractCallEvent implements CallDisconnectedEvent {
+    /**
+     * This event is fired when local party has left the call.
+     *
+     * @since 0.1
+     */
+    class LocalLeft extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public LocalLeft(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * This event is fired when the local party has declined the call.
+    /**
+     * This event is fired when the local party has declined the call.
      * This is only applicable when the direction of the call is incoming.
-	 * 
-	 * @since 0.1
-	 */
-	class LocalDecline extends AbstractCallEvent implements CallDisconnectedEvent {
+     *
+     * @since 0.1
+     */
+    class LocalDecline extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public LocalDecline(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * TThis event is fired when the local party has cancelled the call.
+    /**
+     * TThis event is fired when the local party has cancelled the call.
      * This is only applicable when the direction of the call is outgoing.
-	 * 
-	 * @since 0.1
-	 */
-	class LocalCancel extends AbstractCallEvent implements CallDisconnectedEvent {
+     *
+     * @since 0.1
+     */
+    class LocalCancel extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public LocalCancel(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * This event is fired when the remote party has left the call.
-	 * 
-	 * @since 0.1
-	 */
-	class RemoteLeft extends AbstractCallEvent implements CallDisconnectedEvent {
+    /**
+     * This event is fired when the remote party has left the call.
+     *
+     * @since 0.1
+     */
+    class RemoteLeft extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public RemoteLeft(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * This event is fired when the remote party has declined the call.
+    /**
+     * This event is fired when the remote party has declined the call.
      * This is only applicable when the direction of the call is outgoing.
-	 * 
-	 * @since 0.1
-	 */
-	class RemoteDecline extends AbstractCallEvent implements CallDisconnectedEvent {
+     *
+     * @since 0.1
+     */
+    class RemoteDecline extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public RemoteDecline(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * This event is fired when the remote party has cancelled the call.
+    /**
+     * This event is fired when the remote party has cancelled the call.
      * This is only applicable when the direction of the call is incoming.
-	 * 
-	 * @since 0.1
-	 */
-	class RemoteCancel extends AbstractCallEvent implements CallDisconnectedEvent {
+     *
+     * @since 0.1
+     */
+    class RemoteCancel extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public RemoteCancel(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * This event is fired when one of the other phones of the authenticated user has answered the call.
+    /**
+     * This event is fired when one of the other phones of the authenticated user has answered the call.
      * This is only applicable when the direction of the call is incoming.
-	 * 
-	 * @since 0.1
-	 */
-	class OtherConnected extends AbstractCallEvent implements CallDisconnectedEvent {
+     *
+     * @since 0.1
+     */
+    class OtherConnected extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public OtherConnected(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * One of the other phones of the authenticated user has declined the call. This is only applicable when the direction of the call is incoming.
-	 * 
-	 * @since 0.1
-	 */
-	class OtherDeclined extends AbstractCallEvent implements CallDisconnectedEvent {
+    /**
+     * One of the other phones of the authenticated user has declined the call. This is only applicable when the direction of the call is incoming.
+     *
+     * @since 0.1
+     */
+    class OtherDeclined extends AbstractCallEvent implements CallDisconnectedEvent {
 
         public OtherDeclined(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * This event is fired when the call to be disconnected due to an error.
-	 * 
-	 * @since 0.1
-	 */
-	class CallErrorEvent extends AbstractCallEvent implements CallDisconnectedEvent {
+    /**
+     * This event is fired when the call to be disconnected due to an error.
+     *
+     * @since 0.1
+     */
+    class CallErrorEvent extends AbstractCallEvent implements CallDisconnectedEvent {
 
         @StringPart
         private SparkError _error;
@@ -240,11 +241,11 @@ public interface CallObserver {
             _error = error;
         }
 
-		/**
-		 * @return Error
-		 * @since 0.1
-		 */
-		public SparkError getError() {
+        /**
+         * @return Error
+         * @since 0.1
+         */
+        public SparkError getError() {
             return _error;
         }
 
@@ -254,21 +255,21 @@ public interface CallObserver {
         }
     }
 
-	/**
-	 * Media change event
-	 * 
-	 * @since 0.1
-	 */
-	interface MediaChangedEvent extends CallEvent {
+    /**
+     * Media change event
+     *
+     * @since 0.1
+     */
+    interface MediaChangedEvent extends CallEvent {
 
     }
 
-	/**
-	 * This might be triggered when the remote party muted or unmuted the video.
-	 * 
-	 * @since 0.1
-	 */
-	class RemoteSendingVideoEvent extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * This might be triggered when the remote party muted or unmuted the video.
+     *
+     * @since 0.1
+     */
+    class RemoteSendingVideoEvent extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _sending;
@@ -278,11 +279,11 @@ public interface CallObserver {
             _sending = sending;
         }
 
-		/**
-		 * @return True if the remote party now is sending video. Otherwise false.
-		 * @since 0.1
-		 */
-		public boolean isSending() {
+        /**
+         * @return True if the remote party now is sending video. Otherwise false.
+         * @since 0.1
+         */
+        public boolean isSending() {
             return _sending;
         }
 
@@ -292,12 +293,12 @@ public interface CallObserver {
         }
     }
 
-	/**
-	 * This might be triggered when the remote party muted or unmuted the audio.
-	 * 
-	 * @since 0.1
-	 */
-	class RemoteSendingAudioEvent extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * This might be triggered when the remote party muted or unmuted the audio.
+     *
+     * @since 0.1
+     */
+    class RemoteSendingAudioEvent extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _sending;
@@ -307,11 +308,11 @@ public interface CallObserver {
             _sending = sending;
         }
 
-		/**
-		 * @return True if the remote party now is sending audio. Otherwise false.
-		 * @since 0.1
-		 */
-		public boolean isSending() {
+        /**
+         * @return True if the remote party now is sending audio. Otherwise false.
+         * @since 0.1
+         */
+        public boolean isSending() {
             return _sending;
         }
 
@@ -321,41 +322,41 @@ public interface CallObserver {
         }
     }
 
-	/**
-	 * This might be triggered when the remote party muted or unmuted the screen share.
-	 *
-	 * @since 1.3.0
-	 */
-	class RemoteSendingScreenShareEvent extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * This might be triggered when the remote party muted or unmuted the screen share.
+     *
+     * @since 1.3.0
+     */
+    class RemoteSendingScreenShareEvent extends AbstractCallEvent implements MediaChangedEvent {
 
-		@StringPart
-		private boolean _sending;
+        @StringPart
+        private boolean _sending;
 
-		public RemoteSendingScreenShareEvent(Call call, boolean sending) {
-			super(call);
-			_sending = sending;
-		}
+        public RemoteSendingScreenShareEvent(Call call, boolean sending) {
+            super(call);
+            _sending = sending;
+        }
 
-		/**
-		 * @return True if the remote party now is sending screen share. Otherwise false.
-		 * @since 1.3.0
-		 */
-		public boolean isSending() {
-			return _sending;
-		}
+        /**
+         * @return True if the remote party now is sending screen share. Otherwise false.
+         * @since 1.3.0
+         */
+        public boolean isSending() {
+            return _sending;
+        }
 
-		@Override
-		public String toString() {
-			return Objects.toStringByAnnotation(this);
-		}
-	}
+        @Override
+        public String toString() {
+            return Objects.toStringByAnnotation(this);
+        }
+    }
 
-	/**
-	 * This might be triggered when the local party muted or unmuted the video.
-	 * 
-	 * @since 0.1
-	 */
-	class SendingVideo extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * This might be triggered when the local party muted or unmuted the video.
+     *
+     * @since 0.1
+     */
+    class SendingVideo extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _sending;
@@ -365,11 +366,11 @@ public interface CallObserver {
             _sending = sending;
         }
 
-		/**
-		 * @return True if the local party now is sending video. Otherwise false.
-		 * @since 0.1
-		 */
-		public boolean isSending() {
+        /**
+         * @return True if the local party now is sending video. Otherwise false.
+         * @since 0.1
+         */
+        public boolean isSending() {
             return _sending;
         }
 
@@ -379,12 +380,12 @@ public interface CallObserver {
         }
     }
 
-	/**
-	 * This might be triggered when the local party muted or unmuted the audio.
-	 * 
-	 * @since 0.1
-	 */
-	class SendingAudio extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * This might be triggered when the local party muted or unmuted the audio.
+     *
+     * @since 0.1
+     */
+    class SendingAudio extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _sending;
@@ -394,11 +395,11 @@ public interface CallObserver {
             _sending = sending;
         }
 
-		/**
-		 * @return True if the local party now is sending aduio. Otherwise false.
-		 * @since 0.1
-		 */
-		public boolean isSending() {
+        /**
+         * @return True if the local party now is sending aduio. Otherwise false.
+         * @since 0.1
+         */
+        public boolean isSending() {
             return _sending;
         }
 
@@ -408,12 +409,12 @@ public interface CallObserver {
         }
     }
 
-	/**
-	 * This might be triggered when the local party muted or unmuted the video.
-	 * 
-	 * @since 0.1
-	 */
-	class ReceivingVideo extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * This might be triggered when the local party muted or unmuted the video.
+     *
+     * @since 0.1
+     */
+    class ReceivingVideo extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _receiving;
@@ -423,11 +424,11 @@ public interface CallObserver {
             _receiving = receiving;
         }
 
-		/**
-		 * @return True if the local party now is receiving video. Otherwise false.
-		 * @since 0.1
-		 */
-		public boolean isReceiving() {
+        /**
+         * @return True if the local party now is receiving video. Otherwise false.
+         * @since 0.1
+         */
+        public boolean isReceiving() {
             return _receiving;
         }
 
@@ -437,12 +438,12 @@ public interface CallObserver {
         }
     }
 
-	/**
-	 * This might be triggered when the local party muted or unmuted the audio.
-	 * 
-	 * @since 0.1
-	 */
-	class ReceivingAudio extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * This might be triggered when the local party muted or unmuted the audio.
+     *
+     * @since 0.1
+     */
+    class ReceivingAudio extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _receiving;
@@ -452,11 +453,11 @@ public interface CallObserver {
             _receiving = receiving;
         }
 
-		/**
-		 * @return True if the local party now is receiving audio. Otherwise false.
-		 * @since 0.1
-		 */
-		public boolean isReceiving() {
+        /**
+         * @return True if the local party now is receiving audio. Otherwise false.
+         * @since 0.1
+         */
+        public boolean isReceiving() {
             return _receiving;
         }
 
@@ -466,139 +467,145 @@ public interface CallObserver {
         }
     }
 
-	/**
-	 * This might be triggered when the local party muted or unmuted the remote screen share.
-	 *
-	 * @since 1.3.0
-	 */
-	class ReceivingScreenShare extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * This might be triggered when the local party muted or unmuted the remote screen share.
+     *
+     * @since 1.3.0
+     */
+    class ReceivingScreenShare extends AbstractCallEvent implements MediaChangedEvent {
 
-		@StringPart
-		private boolean _receiving;
+        @StringPart
+        private boolean _receiving;
 
-		public ReceivingScreenShare(Call call, boolean receiving) {
-			super(call);
-			_receiving = receiving;
-		}
+        public ReceivingScreenShare(Call call, boolean receiving) {
+            super(call);
+            _receiving = receiving;
+        }
 
-		/**
-		 * @return True if the local party now is receiving screen share. Otherwise false.
-		 * @since 0.1
-		 */
-		public boolean isReceiving() {
-			return _receiving;
-		}
+        /**
+         * @return True if the local party now is receiving screen share. Otherwise false.
+         * @since 0.1
+         */
+        public boolean isReceiving() {
+            return _receiving;
+        }
 
-		@Override
-		public String toString() {
-			return Objects.toStringByAnnotation(this);
-		}
-	}
+        @Override
+        public String toString() {
+            return Objects.toStringByAnnotation(this);
+        }
+    }
 
-	/**
-	 * Camera FacingMode on local device has switched.
-	 * 
-	 * @since 0.1
-	 */
-	class CameraSwitched extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * Camera FacingMode on local device has switched.
+     *
+     * @since 0.1
+     */
+    class CameraSwitched extends AbstractCallEvent implements MediaChangedEvent {
         public CameraSwitched(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * Local video rendering view size has changed.
-	 * 
-	 * @since 0.1
-	 */
-	class LocalVideoViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * Local video rendering view size has changed.
+     *
+     * @since 0.1
+     */
+    class LocalVideoViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
         public LocalVideoViewSizeChanged(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * Remote video rendering view size has changed.
-	 * 
-	 * @since 0.1
-	 */
-	class RemoteVideoViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
+    /**
+     * Remote video rendering view size has changed.
+     *
+     * @since 0.1
+     */
+    class RemoteVideoViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
         public RemoteVideoViewSizeChanged(Call call) {
             super(call);
         }
     }
 
-	/**
-	 * Remote screen share rendering view size has changed.
-	 *
-	 * @since 1.3.0
-	 */
-	class RemoteScreenShareViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
-		public RemoteScreenShareViewSizeChanged(Call call) {
-			super(call);
-		}
-	}
+    /**
+     * Remote screen share rendering view size has changed.
+     *
+     * @since 1.3.0
+     */
+    class RemoteScreenShareViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
+        public RemoteScreenShareViewSizeChanged(Call call) {
+            super(call);
+        }
+    }
 
-	/**
-	 * Call membership change event
-	 *
-	 * @since 1.3.0
-	 */
-	interface CallMembershipChangedEvent extends CallEvent {
-		CallMembership getCallMembership();
-	}
+    /**
+     * Call membership change event
+     *
+     * @since 1.3.0
+     */
+    interface CallMembershipChangedEvent extends CallEvent {
+        CallMembership getCallMembership();
+    }
 
-	/**
-	 * Base class for the event of a CallMembershipEvent
-	 *
-	 * @since 1.3.0
-	 */
-	abstract class AbstractCallMembershipChangedEvent extends AbstractCallEvent implements CallMembershipChangedEvent{
+    /**
+     * Base class for the event of a CallMembershipEvent
+     *
+     * @since 1.3.0
+     */
+    abstract class AbstractCallMembershipChangedEvent extends AbstractCallEvent implements CallMembershipChangedEvent {
 
         @StringPart
         protected CallMembership _membership;
 
-		protected AbstractCallMembershipChangedEvent(Call call, CallMembership membership) {
-			super(call);
+        protected AbstractCallMembershipChangedEvent(Call call, CallMembership membership) {
+            super(call);
             _membership = membership;
-		}
+        }
 
-		/**
-		 * @see CallMembershipChangedEvent
-		 */
+        /**
+         * @see CallMembershipChangedEvent
+         */
         /**
          * @return changed membership.
          * @since 1.3.0
          */
-        public CallMembership getCallMembership() { return _membership; }
+        public CallMembership getCallMembership() {
+            return _membership;
+        }
 
-		@Override
-		public String toString() {
-			return Objects.toStringByAnnotation(this);
-		}
+        @Override
+        public String toString() {
+            return Objects.toStringByAnnotation(this);
+        }
 
-	}
+    }
 
 
-	/**
-	 * This might be triggered when the person in the membership joined this call.
-	 *
-	 * @since 1.3.0
-	 */
-	class MembershipJoinedEvent extends AbstractCallMembershipChangedEvent {
+    /**
+     * This might be triggered when the person in the membership joined this call.
+     *
+     * @since 1.3.0
+     */
+    class MembershipJoinedEvent extends AbstractCallMembershipChangedEvent {
 
-		public MembershipJoinedEvent(Call call, CallMembership membership) { super(call,membership);}
-	}
+        public MembershipJoinedEvent(Call call, CallMembership membership) {
+            super(call, membership);
+        }
+    }
 
-	/**
-	 * This might be triggered when the person in the membership left this call.
-	 *
-	 * @since 1.3.0
-	 */
-	class MembershipLeftEvent extends AbstractCallMembershipChangedEvent {
+    /**
+     * This might be triggered when the person in the membership left this call.
+     *
+     * @since 1.3.0
+     */
+    class MembershipLeftEvent extends AbstractCallMembershipChangedEvent {
 
-        public MembershipLeftEvent(Call call, CallMembership membership) { super(call,membership);}
-	}
+        public MembershipLeftEvent(Call call, CallMembership membership) {
+            super(call, membership);
+        }
+    }
 
     /**
      * This might be triggered when the person in the membership declined this call.
@@ -607,7 +614,9 @@ public interface CallObserver {
      */
     class MembershipDeclinedEvent extends AbstractCallMembershipChangedEvent {
 
-        public MembershipDeclinedEvent(Call call, CallMembership membership) { super(call,membership);}
+        public MembershipDeclinedEvent(Call call, CallMembership membership) {
+            super(call, membership);
+        }
     }
 
     /**
@@ -617,7 +626,9 @@ public interface CallObserver {
      */
     class MembershipSendingVideoEvent extends AbstractCallMembershipChangedEvent {
 
-        public MembershipSendingVideoEvent(Call call, CallMembership membership) { super(call,membership);}
+        public MembershipSendingVideoEvent(Call call, CallMembership membership) {
+            super(call, membership);
+        }
     }
 
     /**
@@ -627,7 +638,9 @@ public interface CallObserver {
      */
     class MembershipSendingAudioEvent extends AbstractCallMembershipChangedEvent {
 
-        public MembershipSendingAudioEvent(Call call, CallMembership membership) { super(call,membership);}
+        public MembershipSendingAudioEvent(Call call, CallMembership membership) {
+            super(call, membership);
+        }
     }
 
     /**
@@ -637,6 +650,8 @@ public interface CallObserver {
      */
     class MembershipSendingScreenSharingEvent extends AbstractCallMembershipChangedEvent {
 
-        public MembershipSendingScreenSharingEvent(Call call, CallMembership membership) { super(call,membership);}
+        public MembershipSendingScreenSharingEvent(Call call, CallMembership membership) {
+            super(call, membership);
+        }
     }
 }

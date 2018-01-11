@@ -27,6 +27,7 @@ import java.util.Map;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.message.Message;
@@ -35,6 +36,7 @@ import com.ciscospark.androidsdk.utils.http.ListBody;
 import com.ciscospark.androidsdk.utils.http.ListCallback;
 import com.ciscospark.androidsdk.utils.http.ObjectCallback;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
+
 import me.helloworld.utils.collection.Maps;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -54,55 +56,55 @@ import retrofit2.http.Query;
 
 public class MessageClientImpl implements MessageClient {
 
-	private Authenticator _authenticator;
+    private Authenticator _authenticator;
 
-	private MessageService _service;
+    private MessageService _service;
 
-	public MessageClientImpl(Authenticator authenticator) {
-		_authenticator = authenticator;
-		_service = new ServiceBuilder().build(MessageService.class);
-	}
+    public MessageClientImpl(Authenticator authenticator) {
+        _authenticator = authenticator;
+        _service = new ServiceBuilder().build(MessageService.class);
+    }
 
-	public void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
-		ServiceBuilder.async(_authenticator, handler, s -> {
-			_service.list(s, roomId, before, beforeMessage, mentionedPeople, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-		});
-	}
+    public void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
+        ServiceBuilder.async(_authenticator, handler, s -> {
+            _service.list(s, roomId, before, beforeMessage, mentionedPeople, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
+        });
+    }
 
-	public void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler) {
-		ServiceBuilder.async(_authenticator, handler, s -> {
-			_service.post(s, Maps.makeMap("roomId", roomId, "toPersonId", personId, "toPersonEmail", personEmail, "text", text, "markdown", markdown, "files", files)).enqueue(new ObjectCallback<>(handler));
-		});
-	}
+    public void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler) {
+        ServiceBuilder.async(_authenticator, handler, s -> {
+            _service.post(s, Maps.makeMap("roomId", roomId, "toPersonId", personId, "toPersonEmail", personEmail, "text", text, "markdown", markdown, "files", files)).enqueue(new ObjectCallback<>(handler));
+        });
+    }
 
-	public void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler) {
-		ServiceBuilder.async(_authenticator, handler, s -> {
-			_service.get(s, messageId).enqueue(new ObjectCallback<>(handler));
-		});
-	}
+    public void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler) {
+        ServiceBuilder.async(_authenticator, handler, s -> {
+            _service.get(s, messageId).enqueue(new ObjectCallback<>(handler));
+        });
+    }
 
-	public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
-		ServiceBuilder.async(_authenticator, handler, s -> {
-			_service.delete(s, messageId).enqueue(new ObjectCallback<>(handler));
-		});
-	}
+    public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
+        ServiceBuilder.async(_authenticator, handler, s -> {
+            _service.delete(s, messageId).enqueue(new ObjectCallback<>(handler));
+        });
+    }
 
-	private interface MessageService {
-		@GET("messages")
-		Call<ListBody<Message>> list(@Header("Authorization") String authorization,
-		                             @Query("roomId") String roomId,
-		                             @Query("before") String before,
-		                             @Query("beforeMessage") String beforeMessage,
-		                             @Query("mentionedPeople") String mentionedPeople,
-		                             @Query("max") Integer max);
+    private interface MessageService {
+        @GET("messages")
+        Call<ListBody<Message>> list(@Header("Authorization") String authorization,
+                                     @Query("roomId") String roomId,
+                                     @Query("before") String before,
+                                     @Query("beforeMessage") String beforeMessage,
+                                     @Query("mentionedPeople") String mentionedPeople,
+                                     @Query("max") Integer max);
 
-		@POST("messages")
-		Call<Message> post(@Header("Authorization") String authorization, @Body Map parameters);
+        @POST("messages")
+        Call<Message> post(@Header("Authorization") String authorization, @Body Map parameters);
 
-		@GET("messages/{messageId}")
-		Call<Message> get(@Header("Authorization") String authorization, @Path("messageId") String messageId);
+        @GET("messages/{messageId}")
+        Call<Message> get(@Header("Authorization") String authorization, @Path("messageId") String messageId);
 
-		@DELETE("messages/{messageId}")
-		Call<Void> delete(@Header("Authorization") String authorization, @Path("messageId") String messageId);
-	}
+        @DELETE("messages/{messageId}")
+        Call<Void> delete(@Header("Authorization") String authorization, @Path("messageId") String messageId);
+    }
 }

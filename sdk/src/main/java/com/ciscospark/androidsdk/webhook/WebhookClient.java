@@ -26,19 +26,20 @@ import java.util.List;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.ciscospark.androidsdk.CompletionHandler;
 
 /**
  * A client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-webhooks.html">Webhooks REST API</a>
- * 
+ *
  * @since 0.1
  */
 public interface WebhookClient {
 
     /**
      * Lists all webhooks of the authenticated user.
-     * 
-     * @param max The maximum number of webhooks in the response.
+     *
+     * @param max     The maximum number of webhooks in the response.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
@@ -46,45 +47,45 @@ public interface WebhookClient {
 
     /**
      * Posts a webhook for the authenticated user.
-     * 
-     * @param name A user-friendly name for this webhook.
+     *
+     * @param name      A user-friendly name for this webhook.
      * @param targetUrl The URL that receives POST requests for each event.
-     * @param resource The resource type for the webhook.
-     * @param event The event type for the webhook.
-     * @param filter The filter that defines the webhook scope.
-     * @param secret Secret use to generate payload signiture
-     * @param handler A closure to be executed once the request has finished.
+     * @param resource  The resource type for the webhook.
+     * @param event     The event type for the webhook.
+     * @param filter    The filter that defines the webhook scope.
+     * @param secret    Secret use to generate payload signiture
+     * @param handler   A closure to be executed once the request has finished.
      * @since 0.1
      */
     void create(@NonNull String name, @NonNull String targetUrl, @NonNull String resource, @NonNull String event, @Nullable String filter, @Nullable String secret, @NonNull CompletionHandler<Webhook> handler);
 
     /**
      * Retrieves the details for a webhook by id.
-     * 
+     *
      * @param webhookId The identifier of  the webhook.
-     * @param handler A closure to be executed once the request has finished.
+     * @param handler   A closure to be executed once the request has finished.
      * @since 0.1
      */
     void get(@NonNull String webhookId, @NonNull CompletionHandler<Webhook> handler);
 
     /**
      * Updates a webhook by id.
-     * 
+     *
      * @param webhookId The identifier of  the webhook.
-     * @param name A user-friendly name for this webhook.
+     * @param name      A user-friendly name for this webhook.
      * @param targetUrl The URL that receives POST requests for each event.
-     * @param handler A closure to be executed once the request has finished.
+     * @param handler   A closure to be executed once the request has finished.
      * @since 0.1
      */
     void update(@NonNull String webhookId, @NonNull String name, @NonNull String targetUrl, @NonNull CompletionHandler<Webhook> handler);
 
     /**
      * Deletes a webhook by id.
-     * 
+     *
      * @param webhookId The identifier of  the webhook.
-     * @param handler A closure to be executed once the request has finished.
+     * @param handler   A closure to be executed once the request has finished.
      * @since 0.1
      */
     void delete(@NonNull String webhookId, @NonNull CompletionHandler<Void> handler);
-    
+
 }

@@ -1,16 +1,16 @@
 /**
- *  Copyright 2016-2017 Cisco Systems Inc
- *
+ * Copyright 2016-2017 Cisco Systems Inc
+ * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p>
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * <p>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -18,10 +18,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
-
+ * <p>
  * An Single sign-on [SSO](https://help.webex.com/docs/DOC-9143#reference_E9B2CEDE975E4CD311C56D9B0EF2476C)
  * based authentication strategy used to authenticate a user on Cisco Spark.
- *
+ * <p>
  * - see: [Cisco Spark Integration](https://developer.ciscospark.com/authentication.html)
  * - since: 1.3.0
  */
@@ -54,7 +54,7 @@ import me.helloworld.utils.Checker;
  * Created by qimdeng on 1/10/18.
  */
 
-public class SSOAuthenticator implements Authenticator{
+public class SSOAuthenticator implements Authenticator {
     private static final String TAG = SSOAuthenticator.class.getSimpleName();
 
     private CompletionHandler<Void> _callback;
@@ -124,8 +124,7 @@ public class SSOAuthenticator implements Authenticator{
             String code = result.getData();
             if (!Checker.isEmpty(code)) {
                 _authenticator.authorize(code, handler);
-            }
-            else {
+            } else {
                 handler.onComplete(ResultImpl.error(result.getError()));
             }
         });
@@ -163,9 +162,9 @@ public class SSOAuthenticator implements Authenticator{
         Uri.Builder builder = Uri.parse(identityProviderUri).buildUpon();
         // Provide the modified authorizationUri as a query parameter to the identity provider.
         builder.appendQueryParameter("returnTo", orginalUrl.toString());
-        if (additionalQueryItems != null){
+        if (additionalQueryItems != null) {
             // Append any additional query parameters for the identity provider.
-            for (String key : additionalQueryItems.keySet()){
+            for (String key : additionalQueryItems.keySet()) {
                 builder.appendQueryParameter(key, additionalQueryItems.get(key));
             }
         }

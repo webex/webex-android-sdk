@@ -30,7 +30,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * A data type represents a relationship between Team and Person at Cisco Spark cloud.
- * 
+ *
  * @since 0.1
  */
 public class TeamMembership {
@@ -65,59 +65,59 @@ public class TeamMembership {
         return gson.toJson(this);
     }
 
-	/**
-	 * @return The identifier of this team membership.
-	 * @since 0.1
-	 */
-	public String getId() {
+    /**
+     * @return The identifier of this team membership.
+     * @since 0.1
+     */
+    public String getId() {
         return _id;
     }
 
-	/**
-	 * @return The identifier of the person.
-	 * @since 0.1
-	 */
-	public String getPersonId() {
+    /**
+     * @return The identifier of the person.
+     * @since 0.1
+     */
+    public String getPersonId() {
         return _personId;
     }
 
-	/**
-	 * @return The email address of the person.
-	 * @since 0.1
-	 */
-	public String getPersonEmail() {
+    /**
+     * @return The email address of the person.
+     * @since 0.1
+     */
+    public String getPersonEmail() {
         return _personEmail;
     }
 
-	/**
-	 * @return The display name of the person.
-	 * @since 0.1
-	 */
-	public String getPersonDisplayName() {
+    /**
+     * @return The display name of the person.
+     * @since 0.1
+     */
+    public String getPersonDisplayName() {
         return _personDisplayName;
     }
-	
-	/**
-	 * @return The identifier of the team.
-	 * @since 0.1
-	 */
-	public String getTeamId() {
+
+    /**
+     * @return The identifier of the team.
+     * @since 0.1
+     */
+    public String getTeamId() {
         return _teamId;
     }
 
-	/**
-	 * @return True if the person in this membership is a moderator of the team.
-	 * @since 0.1
-	 */
-	public boolean isModerator() {
+    /**
+     * @return True if the person in this membership is a moderator of the team.
+     * @since 0.1
+     */
+    public boolean isModerator() {
         return _isModerator;
     }
 
-	/**
-	 * @return The timestamp that the team membership being created.
-	 * @since 0.1
-	 */
-	public Date getCreated() {
+    /**
+     * @return The timestamp that the team membership being created.
+     * @since 0.1
+     */
+    public Date getCreated() {
         return _created;
     }
 }

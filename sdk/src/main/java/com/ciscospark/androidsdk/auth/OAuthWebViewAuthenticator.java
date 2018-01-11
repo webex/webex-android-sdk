@@ -29,41 +29,43 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.webkit.WebView;
+
 import com.cisco.spark.android.core.Injector;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.auth.internal.OAuthLauncher;
 import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
+
 import me.helloworld.utils.Checker;
 
 /**
  * An <a href="https://oauth.net/2/">OAuth</a> based authentication with a WebView.
  * This is for authenticating a user on Cisco Spark.
  *
- * @since 0.1
  * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
+ * @since 0.1
  */
 public class OAuthWebViewAuthenticator implements Authenticator {
 
     private static final String TAG = OAuthWebViewAuthenticator.class.getSimpleName();
-    
+
     private CompletionHandler<Void> _callback;
 
     private OAuthAuthenticator _authenticator;
 
     private OAuthLauncher _launcher;
-    
+
     @Inject
     Injector _injector;
 
     /**
      * Creates a new OAuth authentication strategy
      *
-     * @param clientId the OAuth client id
+     * @param clientId     the OAuth client id
      * @param clientSecret the OAuth client secret
-     * @param scope space-separated string representing which permissions the application needs
-     * @param redirectUri the redirect URI that will be called when completing the authentication. This must match the redirect URI registered to your clientId.
+     * @param scope        space-separated string representing which permissions the application needs
+     * @param redirectUri  the redirect URI that will be called when completing the authentication. This must match the redirect URI registered to your clientId.
      * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
      * @since 0.1
      */
@@ -91,8 +93,8 @@ public class OAuthWebViewAuthenticator implements Authenticator {
 
     /**
      * Brings up a web-based authorization view and directs the user through the OAuth process.
-     * 
-     * @param view the web view for the authorization by the end user.
+     *
+     * @param view    the web view for the authorization by the end user.
      * @param handler the completion handler will be called when authentication is complete, the error to indicate if the authentication process was successful.
      * @since 0.1
      */
@@ -102,8 +104,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
             String code = result.getData();
             if (!Checker.isEmpty(code)) {
                 _authenticator.authorize(code, handler);
-            }
-            else {
+            } else {
                 handler.onComplete(ResultImpl.error(result.getError()));
             }
         });

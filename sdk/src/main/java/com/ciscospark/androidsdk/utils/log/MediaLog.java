@@ -1,6 +1,7 @@
 package com.ciscospark.androidsdk.utils.log;
 
 import android.util.Log;
+
 import com.github.benoitdion.ln.Ln;
 
 /**
@@ -11,28 +12,23 @@ import com.github.benoitdion.ln.Ln;
  */
 
 public class MediaLog {
-	
-	public static int outputLog(int priority, String tag, String msg) {
-		String message = "<" + tag + ">" + msg;
-		if (priority == Log.WARN) {
-			Ln.w(message);
-		}
-		else if (priority == Log.ERROR) {
-			Ln.e(message);
-		}
-		else if (priority == Log.DEBUG) {
-			Ln.d(message);
-		}
-		else if (priority == Log.INFO) {
-			Ln.i(message);
-		}
-		else if (priority == Log.VERBOSE) {
-			Ln.v(message);
-		}
-		else {
-			Ln.e(message);
-		}
-		return 0;
-	}
+
+    public static int outputLog(int priority, String tag, String msg) {
+        String message = "<" + tag + ">" + msg;
+        if (priority == Log.WARN) {
+            Ln.w(message);
+        } else if (priority == Log.ERROR) {
+            Ln.e(message);
+        } else if (priority == Log.DEBUG) {
+            Ln.d(message);
+        } else if (priority == Log.INFO) {
+            Ln.i(message);
+        } else if (priority == Log.VERBOSE) {
+            Ln.v(message);
+        } else {
+            Ln.e(message);
+        }
+        return 0;
+    }
 
 }

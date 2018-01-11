@@ -26,20 +26,21 @@ import java.util.List;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.ciscospark.androidsdk.CompletionHandler;
 
 /**
  * A client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-team-memberships.html">TeamMemberships REST API</a>
- * 
+ *
  * @since 0.1
  */
 public interface TeamMembershipClient {
 
     /**
      * Lists all team memberships where the authenticated user belongs.
-     * 
-     * @param teamId Limit results to a specific team, by ID.
-     * @param max The maximum number of team memberships in the response.
+     *
+     * @param teamId  Limit results to a specific team, by ID.
+     * @param max     The maximum number of team memberships in the response.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
@@ -47,42 +48,42 @@ public interface TeamMembershipClient {
 
     /**
      * Adds a person to a team by person id; optionally making the person a moderator of the team.
-     * 
-     * @param teamId The identifier of the team.
-     * @param personId The identifier of the person.
+     *
+     * @param teamId      The identifier of the team.
+     * @param personId    The identifier of the person.
      * @param personEmail The email of the person.
      * @param isModerator If true, make the person a moderator of the team. The default is false.
-     * @param handler A closure to be executed once the request has finished.
+     * @param handler     A closure to be executed once the request has finished.
      * @since 0.1
      */
     void create(@NonNull String teamId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<TeamMembership> handler);
 
     /**
      * Retrieves the details for a membership by id.
-     * 
+     *
      * @param membershipId The identifier of the membership.
-     * @param handler A closure to be executed once the request has finished.
+     * @param handler      A closure to be executed once the request has finished.
      * @since 0.1
      */
     void get(@NonNull String membershipId, @NonNull CompletionHandler<TeamMembership> handler);
 
     /**
      * Updates the details for a membership by id.
-     * 
+     *
      * @param membershipId The identifier of the membership.
-     * @param isModerator If true, make the person a moderator of the team. The default is false.
-     * @param handler A closure to be executed once the request has finished.
+     * @param isModerator  If true, make the person a moderator of the team. The default is false.
+     * @param handler      A closure to be executed once the request has finished.
      * @since 0.1
      */
     void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<TeamMembership> handler);
 
     /**
      * Deletes a membership by id.
-     * 
+     *
      * @param membershipId The identifier of the membership.
-     * @param handler A closure to be executed once the request has finished.
+     * @param handler      A closure to be executed once the request has finished.
      * @since 0.1
      */
     void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler);
-    
+
 }

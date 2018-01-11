@@ -26,71 +26,72 @@ import java.io.IOException;
 
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.SparkError;
+
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 import retrofit2.Response;
 
 public class ResultImpl<T> implements Result<T> {
 
-	public static <T> Result<T> success(T data) {
-		return new ResultImpl<T>(data, null);
-	}
+    public static <T> Result<T> success(T data) {
+        return new ResultImpl<T>(data, null);
+    }
 
-	public static <T> Result<T> error(String message) {
-		return new ResultImpl<T>(null, new SparkError(SparkError.ErrorCode.UNEXPECTED_ERROR, message));
-	}
+    public static <T> Result<T> error(String message) {
+        return new ResultImpl<T>(null, new SparkError(SparkError.ErrorCode.UNEXPECTED_ERROR, message));
+    }
 
-	public static <T> Result<T> error(Throwable t) {
-		return new ResultImpl<T>(null, makeError(t));
-	}
+    public static <T> Result<T> error(Throwable t) {
+        return new ResultImpl<T>(null, makeError(t));
+    }
 
-	public static <T> Result<T> error(SparkError error) {
-		return new ResultImpl<T>(null, error);
-	}
+    public static <T> Result<T> error(SparkError error) {
+        return new ResultImpl<T>(null, error);
+    }
 
-	public static <T> Result<T> error(Response response) {
-		return new ResultImpl<T>(null, makeError(response));
-	}
+    public static <T> Result<T> error(Response response) {
+        return new ResultImpl<T>(null, makeError(response));
+    }
 
-	@StringPart
-	private T _data;
+    @StringPart
+    private T _data;
 
-	@StringPart
-	private SparkError _error;
+    @StringPart
+    private SparkError _error;
 
-	public ResultImpl(T data, SparkError error) {
-		_data = data;
-		_error = error;
-	}
+    public ResultImpl(T data, SparkError error) {
+        _data = data;
+        _error = error;
+    }
 
-	public boolean isSuccessful() {
-		return _error == null;
-	}
+    public boolean isSuccessful() {
+        return _error == null;
+    }
 
-	public SparkError getError() {
-		return _error;
-	}
+    public SparkError getError() {
+        return _error;
+    }
 
-	public T getData() {
-		return _data;
-	}
+    public T getData() {
+        return _data;
+    }
 
-	public String toString() {
-		return Objects.toStringByAnnotation(this);
-	}
+    public String toString() {
+        return Objects.toStringByAnnotation(this);
+    }
 
-	private static SparkError makeError(Throwable t) {
-		return new SparkError(SparkError.ErrorCode.UNEXPECTED_ERROR, t.toString());
-	}
+    private static SparkError makeError(Throwable t) {
+        return new SparkError(SparkError.ErrorCode.UNEXPECTED_ERROR, t.toString());
+    }
 
-	private static SparkError makeError(Response res) {
-		StringBuilder message = new StringBuilder().append(res.code()).append("/").append(res.message());
-		try {
-			String body = res.errorBody().string();
-			message.append("/").append(body);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return new SparkError(SparkError.ErrorCode.SERVICE_ERROR, message.toString());
-	}
+    private static SparkError makeError(Response res) {
+        StringBuilder message = new StringBuilder().append(res.code()).append("/").append(res.message());
+        try {
+            String body = res.errorBody().string();
+            message.append("/").append(body);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new SparkError(SparkError.ErrorCode.SERVICE_ERROR, message.toString());
+    }
 }

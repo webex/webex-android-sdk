@@ -24,84 +24,83 @@ package com.ciscospark.androidsdk.people;
 
 import com.ciscospark.androidsdk.utils.Utils;
 import com.google.gson.annotations.SerializedName;
+
 import org.junit.Test;
 
 /**
- *
- 200 / success
- {
- "items": [
- {
- "id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jZjlmMGNlZC0xZmJiLTQzOWUtODEyMi01NmZiNjAwNDE2Y2Q",
- "emails": [
- "xionxiao@cisco.com"
- ],
- "displayName": "Allen Xiao",
- "nickName": "Allen",
- "firstName": "Allen",
- "lastName": "Xiao",
- "avatar": "https://1efa7a94ed216783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~f007634e3cba657ae074fcef8fc62ba7~IM13HqRHQzua0FIk5Jq92w==~1600",
- "orgId": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWI2NWZkZi05NjQzLTQxN2YtOTk3NC1hZDcyY2FlMGUxMGY",
- "created": "2017-04-14T11:13:13.467Z",
- "lastActivity": "2017-08-17T00:42:15.084Z",
- "status": "active",
- "type": "person"
- }
- ],
- "notFoundIds": null
- }
-
-
- {
- "items": [
- {
- "id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM",
- "emails": [
- "shepx@163.com"
- ],
- "displayName": "Eric",
- "nickName": "Eric",
- "avatar": "https://c74213ddaf67eb02dabb-04de5163e3f90393a9f7bb6f7f0967f1.ssl.cf1.rackcdn.com/V1~691d27c5e879d9b4126edbc0ed0d1683~_V1ZjGddToOslLXzNQPueg==~1600",
- "orgId": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jb25zdW1lcg",
- "created": "2017-04-15T23:56:15.177Z",
- "status": "unknown",
- "type": "person"
- }
- ],
- "notFoundIds": null
- }
-
-
- {
- "items": [],
- "notFoundIds": null
- }
-
-
- {
- "items": [
- {
- "id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83NjkxNjA0NS03MDc3LTQ1ODgtYTUxMi1mZDYyODkxNWZmYzc",
- "emails": [
- "lmtest3@cd5c9af7-8ed3-4e15-9705-025ef30b1b6a"
- ],
- "displayName": "lmtest3",
- "avatar": "https://00792fd90955bc2b54b7-dde9bcd8a491bb35da928cc2123a400b.ssl.cf1.rackcdn.com/default_machine~80",
- "orgId": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jZDVjOWFmNy04ZWQzLTRlMTUtOTcwNS0wMjVlZjMwYjFiNmE",
- "created": "2017-05-11T08:32:06.017Z",
- "type": "bot"
- }
- ],
- "notFoundIds": null
- }
- *
+ * 200 / success
+ * {
+ * "items": [
+ * {
+ * "id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jZjlmMGNlZC0xZmJiLTQzOWUtODEyMi01NmZiNjAwNDE2Y2Q",
+ * "emails": [
+ * "xionxiao@cisco.com"
+ * ],
+ * "displayName": "Allen Xiao",
+ * "nickName": "Allen",
+ * "firstName": "Allen",
+ * "lastName": "Xiao",
+ * "avatar": "https://1efa7a94ed216783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~f007634e3cba657ae074fcef8fc62ba7~IM13HqRHQzua0FIk5Jq92w==~1600",
+ * "orgId": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWI2NWZkZi05NjQzLTQxN2YtOTk3NC1hZDcyY2FlMGUxMGY",
+ * "created": "2017-04-14T11:13:13.467Z",
+ * "lastActivity": "2017-08-17T00:42:15.084Z",
+ * "status": "active",
+ * "type": "person"
+ * }
+ * ],
+ * "notFoundIds": null
+ * }
+ * <p>
+ * <p>
+ * {
+ * "items": [
+ * {
+ * "id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM",
+ * "emails": [
+ * "shepx@163.com"
+ * ],
+ * "displayName": "Eric",
+ * "nickName": "Eric",
+ * "avatar": "https://c74213ddaf67eb02dabb-04de5163e3f90393a9f7bb6f7f0967f1.ssl.cf1.rackcdn.com/V1~691d27c5e879d9b4126edbc0ed0d1683~_V1ZjGddToOslLXzNQPueg==~1600",
+ * "orgId": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jb25zdW1lcg",
+ * "created": "2017-04-15T23:56:15.177Z",
+ * "status": "unknown",
+ * "type": "person"
+ * }
+ * ],
+ * "notFoundIds": null
+ * }
+ * <p>
+ * <p>
+ * {
+ * "items": [],
+ * "notFoundIds": null
+ * }
+ * <p>
+ * <p>
+ * {
+ * "items": [
+ * {
+ * "id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83NjkxNjA0NS03MDc3LTQ1ODgtYTUxMi1mZDYyODkxNWZmYzc",
+ * "emails": [
+ * "lmtest3@cd5c9af7-8ed3-4e15-9705-025ef30b1b6a"
+ * ],
+ * "displayName": "lmtest3",
+ * "avatar": "https://00792fd90955bc2b54b7-dde9bcd8a491bb35da928cc2123a400b.ssl.cf1.rackcdn.com/default_machine~80",
+ * "orgId": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9jZDVjOWFmNy04ZWQzLTRlMTUtOTcwNS0wMjVlZjMwYjFiNmE",
+ * "created": "2017-05-11T08:32:06.017Z",
+ * "type": "bot"
+ * }
+ * ],
+ * "notFoundIds": null
+ * }
  */
 public class PersonTest {
 
     @Test
     public void testConvert() {
         System.out.println(Utils.timestampUTC());
-        
+
 //        String jsonString = "{\n" +
 //                " \"id\": \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNjJkNTBiMi0yYzFkLTRhNWMtOTIzNy0wNjJkZDk3NDc2MmM\",\n" +
 //                " \"emails\": [\n" +

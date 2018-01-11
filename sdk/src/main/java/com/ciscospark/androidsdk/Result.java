@@ -26,29 +26,31 @@ import android.support.annotation.Nullable;
 
 /**
  * Service request results.
- * 
+ *
  * @since 0.1
  */
 public interface Result<T> {
 
-	/**
-	 * Returns true if the result is a success, false otherwise
-	 * 
-	 * @since 0.1
-	 */
-	boolean isSuccessful();
+    /**
+     * Returns true if the result is a success, false otherwise
+     *
+     * @since 0.1
+     */
+    boolean isSuccessful();
 
-	/**
-	 * Returns the associated error value if the result is a failure, null otherwise.
-	 *
-	 * @since 0.1
-	 */
-	@Nullable SparkError getError();
+    /**
+     * Returns the associated error value if the result is a failure, null otherwise.
+     *
+     * @since 0.1
+     */
+    @Nullable
+    SparkError getError();
 
-	/**
-	 * Returns the associated data if the result is a success, `null` otherwise.
-	 *
-	 * @since 0.1
-	 */
-	@Nullable T getData();
+    /**
+     * Returns the associated data if the result is a success, `null` otherwise.
+     *
+     * @since 0.1
+     */
+    @Nullable
+    T getData();
 }

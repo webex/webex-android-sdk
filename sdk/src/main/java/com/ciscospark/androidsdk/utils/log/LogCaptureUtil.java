@@ -18,32 +18,32 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * LogFilePrint reads from logcat and writes the output to files.
- *
+ * <p>
  * Internal FSLP creates and writes logs to a rolling set of files in the apps 'files/logs' storage.
  * The number and size of files is currently hard-coded below and start at zero (e.g. files/logs/wx2log0.txt)
  * If the logs/ zipDirectory does not exist, it is created.  If an available log index does not exist
  * (wx2log[0-N].txt) it will be created and used.  If the whole range of log files exist, then the
  * oldest file will be found and logging and rotation will commence from there.
- *
+ * <p>
  * TODO: The file rolling functionality is home-grown.  Java offers a more full-featured implementation
  * that could/should be investigated.
- *
+ * <p>
  * FSLP implements the println() method of Print to handle logging requests and write them to the
  * current log file.
- *
+ * <p>
  * Externally, FSLP acts as a FileProvider when logs need to be shared to other apps.  The AndroidManifest.xml
  * defines a (FileProvider) <provider>.  NOTE: The authorities parameter must match LOG_FILE_PROVIDER.
  * That block also points to the file_providerider.xml file, which provides URI indirection to the storage
  * location.  This XML indicates that our ZIP_FILE_NAME will can be referenced by:
- *  X,
+ * X,
  * while it is stored in:
- *  Y
- *
+ * Y
+ * <p>
  * Finally, an external ZipUtils class was created to compress all the files in the logs/ zipDirectory into
  * one single ZIP file.  When getZippedLogsUri() is called, a recursive zip of logs/ is done to produce
  * one file in the files/ zipDirectory.  This is referenced by getUriForFile() to generate a URI another
  * app can use to access the FileProvider and retrieve the file.
- *
+ * <p>
  * NOTE: Be aware that changing the LOG_FILE_PROVIDER will require corresponding changes to these
  * XML files.
  */
@@ -53,8 +53,8 @@ public class LogCaptureUtil implements Runnable {
     private static final String LOG_DIR = "logs";
     protected static final String LOG_FILE_NAME = "ssdk";
     protected static final String LOG_FILE_EXT = ".log";
-    private static final int  MAX_DEBUG_LOG_FILES = 5;
-    private static final int  MAX_RELEASE_LOG_FILES = 5;
+    private static final int MAX_DEBUG_LOG_FILES = 5;
+    private static final int MAX_RELEASE_LOG_FILES = 5;
     protected static final long MAX_LOG_FILE_SIZE = 20 * 1024 * 1024; // 20MB file size
 
     protected Context context;
@@ -80,6 +80,7 @@ public class LogCaptureUtil implements Runnable {
     }
 
     private Spark.LogLevel logLevel = Spark.LogLevel.INFO;
+
     public void setLogLevel(Spark.LogLevel logLevel) {
         this.logLevel = logLevel;
     }
@@ -190,7 +191,7 @@ public class LogCaptureUtil implements Runnable {
         int startIndex = maxLogFiles - 1;
         for (int i = startIndex; i > 0; i--) {
             File fromFile = buildLogFile(i - 1);
-            File toFile   = buildLogFile(i);
+            File toFile = buildLogFile(i);
             if (toFile.exists() && (i == startIndex)) {
                 if (!toFile.delete())
                     Log.e(TAG, "Failed to delete 'to' file");
@@ -228,6 +229,7 @@ public class LogCaptureUtil implements Runnable {
     }
 
     private static final String processId = Integer.toString(android.os.Process.myPid());
+
     protected void capture() {
         running.set(true);
         boolean restart = false;
@@ -261,7 +263,7 @@ public class LogCaptureUtil implements Runnable {
                         logFilter = "*:V";
                 }
             }
-            String[] streamLogcat = { "logcat", "-v", "threadtime", logFilter};
+            String[] streamLogcat = {"logcat", "-v", "threadtime", logFilter};
             logcatProcess = new ProcessBuilder()
                     .command(streamLogcat)
                     .redirectErrorStream(true)
@@ -286,7 +288,7 @@ public class LogCaptureUtil implements Runnable {
                                     stopLogcat();
                                     running.set(false);
                                     break;
-                                }else if (logLevel != Spark.LogLevel.ALL && !inputLine.contains(processId)){
+                                } else if (logLevel != Spark.LogLevel.ALL && !inputLine.contains(processId)) {
                                     continue;
                                 }
                                 writer.write(inputLine.getBytes());

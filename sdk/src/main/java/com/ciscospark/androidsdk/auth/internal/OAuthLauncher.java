@@ -33,10 +33,12 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.github.benoitdion.ln.Ln;
+
 import me.helloworld.utils.Checker;
 
 /**
@@ -44,7 +46,7 @@ import me.helloworld.utils.Checker;
  */
 
 public class OAuthLauncher {
-    
+
     public void launchOAuthView(WebView view, String authorizationUrl, String redirectUri, CompletionHandler<String> handler) {
         BrowserWebViewClient client = new BrowserWebViewClient(authorizationUrl, redirectUri, handler);
         view.clearCache(true);
@@ -89,8 +91,8 @@ public class OAuthLauncher {
                 }
                 view.clearCache(true);
                 view.loadUrl("about:blank");
-	            handleResult(ResultImpl.success(code));
-	            return false;
+                handleResult(ResultImpl.success(code));
+                return false;
             }
             return super.shouldOverrideUrlLoading(view, url);
         }
@@ -103,8 +105,8 @@ public class OAuthLauncher {
 
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            Ln.e("Receive: " +  errorCode + ", " + description);
-	        handleResult(ResultImpl.error(errorCode + " " + description));
+            Ln.e("Receive: " + errorCode + ", " + description);
+            handleResult(ResultImpl.error(errorCode + " " + description));
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
@@ -112,16 +114,16 @@ public class OAuthLauncher {
         public void onReceivedSslError(WebView view, final SslErrorHandler handler, SslError error) {
             Ln.e("Receive SSL Error: " + error);
             handler.cancel();
-	        if (error != null) {
-		        handleResult(ResultImpl.error(error.toString()));
-	        }
+            if (error != null) {
+                handleResult(ResultImpl.error(error.toString()));
+            }
         }
-        
+
         private void handleResult(Result<String> result) {
-	        if (_handler != null) {
-		        _handler.onComplete(result);
-		        _handler = null;
-	        }
+            if (_handler != null) {
+                _handler.onComplete(result);
+                _handler = null;
+            }
         }
     }
 

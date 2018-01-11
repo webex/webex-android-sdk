@@ -28,8 +28,10 @@ import java.util.Map;
 
 import android.support.annotation.Nullable;
 import android.util.Base64;
+
 import com.ciscospark.androidsdk.auth.JWTAuthenticator;
 import com.google.gson.Gson;
+
 import org.junit.Test;
 
 /**
@@ -80,7 +82,7 @@ public class SparkTest {
         try {
             String json = new String(Base64.decode(split[1], Base64.URL_SAFE), "UTF-8");
             Gson gson = new Gson();
-            Map<String,Object> map = new HashMap<String,Object>();
+            Map<String, Object> map = new HashMap<String, Object>();
             return gson.fromJson(json, map.getClass());
         } catch (UnsupportedEncodingException e) {
             return null;

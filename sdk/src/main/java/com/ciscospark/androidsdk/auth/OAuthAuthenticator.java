@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.core.AuthenticatedUser;
@@ -36,6 +37,7 @@ import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.github.benoitdion.ln.Ln;
+
 import me.helloworld.utils.Checker;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -48,12 +50,12 @@ import static com.ciscospark.androidsdk.utils.Utils.checkNotNull;
 
 /**
  * An <a href="https://oauth.net/2/">OAuth</a> based authentication strategy for authenticating a user on Cisco Spark.
- * 
- * @since 0.1
+ *
  * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
+ * @since 0.1
  */
 public class OAuthAuthenticator implements Authenticator {
-	
+
     private String _clientId;
     private String _clientSecret;
     private String _scope;
@@ -68,10 +70,10 @@ public class OAuthAuthenticator implements Authenticator {
     /**
      * Creates a new OAuth authentication strategy
      *
-     * @param clientId the OAuth client id
+     * @param clientId     the OAuth client id
      * @param clientSecret the OAuth client secret
-     * @param scope space-separated string representing which permissions the application needs
-     * @param redirectUri the redirect URI that will be called when completing the authentication. This must match the redirect URI registered to your clientId.
+     * @param scope        space-separated string representing which permissions the application needs
+     * @param redirectUri  the redirect URI that will be called when completing the authentication. This must match the redirect URI registered to your clientId.
      * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
      * @since 0.1
      */
@@ -83,33 +85,33 @@ public class OAuthAuthenticator implements Authenticator {
         _authService = new ServiceBuilder().build(AuthService.class);
     }
 
-	/**
-	 * @see Authenticator
-	 */
+    /**
+     * @see Authenticator
+     */
     @Override
     public boolean isAuthorized() {
         return getToken() != null;
     }
 
-	/**
-	 * @see Authenticator
-	 */
+    /**
+     * @see Authenticator
+     */
     @Override
     public void deauthorize() {
         _token = null;
-        if ( _provider != null) {
+        if (_provider != null) {
             _provider.clearAccount();
         }
     }
 
-	/**
-	 * Authorize with the OAuth authorization code
-	 * 
-	 * @param code OAuth authorization code
-	 * @param handler the completion handler will be called when authentication is complete, the error to indicate if the authentication process was successful.
-	 * @since 0.1   
-	 */
-	public void authorize(@NonNull String code, @NonNull CompletionHandler<Void> handler) {
+    /**
+     * Authorize with the OAuth authorization code
+     *
+     * @param code    OAuth authorization code
+     * @param handler the completion handler will be called when authentication is complete, the error to indicate if the authentication process was successful.
+     * @since 0.1
+     */
+    public void authorize(@NonNull String code, @NonNull CompletionHandler<Void> handler) {
         checkNotNull(handler, "CompletionHandler is null");
         Ln.d("Authorize: " + code);
         _authService.getToken(_clientId, _clientSecret, _redirectUri, "authorization_code", code).enqueue(new Callback<OAuth2Tokens>() {
@@ -119,8 +121,7 @@ public class OAuthAuthenticator implements Authenticator {
                 Ln.d("Authorize: " + _token + ", " + _provider);
                 if (_token == null || _token.getAccessToken() == null || _token.getAccessToken().isEmpty()) {
                     handler.onComplete(ResultImpl.error(response));
-                }
-                else {
+                } else {
                     _token.setExpiresIn(_token.getExpiresIn() + System.currentTimeMillis() / 1000);
                     if (_provider != null) {
                         AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
@@ -137,9 +138,9 @@ public class OAuthAuthenticator implements Authenticator {
         });
     }
 
-	/**
-	 * @see Authenticator
-	 */
+    /**
+     * @see Authenticator
+     */
     @Override
     public void getToken(@NonNull CompletionHandler<String> handler) {
         checkNotNull(handler, "CompletionHandler is null");
@@ -159,8 +160,7 @@ public class OAuthAuthenticator implements Authenticator {
                 _token = response.body();
                 if (_token == null || Checker.isEmpty(_token.getAccessToken())) {
                     handler.onComplete(ResultImpl.error(response));
-                }
-                else {
+                } else {
                     _token.setExpiresIn(_token.getExpiresIn() + System.currentTimeMillis() / 1000);
                     if (_provider != null) {
                         AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
@@ -177,7 +177,8 @@ public class OAuthAuthenticator implements Authenticator {
         });
     }
 
-    private @Nullable OAuth2Tokens getToken() {
+    private @Nullable
+    OAuth2Tokens getToken() {
         if (_token == null && _provider != null) {
             AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
             Ln.d("Get user: " + user + ", " + _provider);
@@ -186,15 +187,15 @@ public class OAuthAuthenticator implements Authenticator {
             }
         }
         if (_token == null || _token.getExpiresIn() <= (System.currentTimeMillis() / 1000) + (15 * 60)) {
-	        Ln.d("Check token: " + _token + ", " + _provider);
+            Ln.d("Check token: " + _token + ", " + _provider);
             if (_token != null) {
-	            Ln.d("Check token: " + _token.getExpiresIn() + ", " + (System.currentTimeMillis() / 1000) + (15 * 60) + ", " + _provider);
+                Ln.d("Check token: " + _token.getExpiresIn() + ", " + (System.currentTimeMillis() / 1000) + (15 * 60) + ", " + _provider);
             }
             return null;
         }
         return _token;
     }
-    
+
     @SparkInjector.AfterInjected
     private void afterInjected() {
         if (_provider != null && _token != null) {
@@ -218,7 +219,7 @@ public class OAuthAuthenticator implements Authenticator {
     protected String getRedirectUri() {
         return _redirectUri;
     }
-    
+
     interface AuthService {
         @FormUrlEncoded
         @POST("access_token")

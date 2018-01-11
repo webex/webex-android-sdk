@@ -25,18 +25,19 @@ package com.ciscospark.androidsdk.utils.http;
 import java.io.IOException;
 
 import com.ciscospark.androidsdk.utils.Utils;
+
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
 public class DefaultHeadersInterceptor implements Interceptor {
-	
+
     protected String _userAgent;
-    
+
     public DefaultHeadersInterceptor() {
         _userAgent = Utils.versionInfo();
     }
-    
+
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request original = chain.request();

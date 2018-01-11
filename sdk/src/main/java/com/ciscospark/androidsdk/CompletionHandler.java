@@ -28,10 +28,10 @@ package com.ciscospark.androidsdk;
  * @since 0.1
  */
 public interface CompletionHandler<T> {
-    
+
     /**
      * A callback to be executed when a operation is completed.
-     * 
+     *
      * @param result result of the operation.
      * @since 0.1
      */
