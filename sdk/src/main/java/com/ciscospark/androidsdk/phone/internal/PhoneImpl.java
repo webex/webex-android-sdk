@@ -73,6 +73,7 @@ import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.locus.model.LocusParticipantDevice;
 import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
 import com.cisco.spark.android.locus.responses.LocusUrlResponse;
+import com.cisco.spark.android.media.MediaCapabilityConfig;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaSession;
 import com.cisco.spark.android.media.events.StunTraceServerResultEvent;
@@ -158,6 +159,12 @@ public class PhoneImpl implements Phone {
 	private MetricsClient _metrics;
 
 	private Context _context;
+
+	private int audioMaxBandwidth = DefaultBandwidth.maxBandwidthAudio.getValue();
+
+	private int videoMaxBandwidth = DefaultBandwidth.maxBandwidth720p.getValue();
+
+	private int screenShareMaxBandwidth = DefaultBandwidth.maxBandwidthSession.getValue();
 
 	private static class DialTarget {
 		private String address;
@@ -299,6 +306,36 @@ public class PhoneImpl implements Phone {
 
 	public String getVideoCodecLicenseURL() {
 		return _prompter.getLicenseURL();
+	}
+
+	@Override
+	public void setAudioMaxBandwidth(int bandwidth) {
+		audioMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.maxBandwidthAudio.getValue() : bandwidth;
+	}
+
+	@Override
+	public int getAudioMaxBandwidth() {
+		return audioMaxBandwidth;
+	}
+
+	@Override
+	public void setVideoMaxBandwidth(int bandwidth) {
+		videoMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.maxBandwidth720p.getValue() : bandwidth;
+	}
+
+	@Override
+	public int getVideoMaxBandwidth() {
+		return videoMaxBandwidth;
+	}
+
+	@Override
+	public void setScreenShareMaxBandwidth(int bandwidth) {
+		screenShareMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.maxBandwidthSession.getValue() : bandwidth;
+	}
+
+	@Override
+	public int getScreenShareMaxBandwidth() {
+		return screenShareMaxBandwidth;
 	}
 
 	public void disableVideoCodecActivation() {
@@ -452,6 +489,7 @@ public class PhoneImpl implements Phone {
 		stopPreview();
 		CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
 		builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
+		_mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, screenShareMaxBandwidth));
 		_callControlService.joinCall(builder.build(), false);
 	}
 
@@ -1021,6 +1059,7 @@ public class PhoneImpl implements Phone {
 		Ln.d("Dial " + target);
 		CallContext.Builder builder = new CallContext.Builder(target);
 		builder = builder.setMediaDirection(mediaOptionToMediaDirection(option));
+		_mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, screenShareMaxBandwidth));
 		_callControlService.joinCall(builder.build(), false);
 	}
 
@@ -1033,6 +1072,7 @@ public class PhoneImpl implements Phone {
 					LocusKey key = LocusKey.fromUri(response.body().getLocusUrl());
 					CallContext.Builder builder = new CallContext.Builder(key);
 					builder = builder.setMediaDirection(mediaOptionToMediaDirection(option));
+					_mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, screenShareMaxBandwidth));
 					_callControlService.joinCall(builder.build(), false);
 				} else {
 					Ln.w("Failure call: "+response.errorBody().toString());

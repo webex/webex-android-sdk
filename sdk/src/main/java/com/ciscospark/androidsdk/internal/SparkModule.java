@@ -76,7 +76,6 @@ import com.cisco.spark.android.meetings.LocusMeetingInfoProvider;
 import com.cisco.spark.android.meetings.ScheduledMeetingsService;
 import com.cisco.spark.android.mercury.MercuryClient;
 import com.cisco.spark.android.mercury.MercuryProvider;
-import com.cisco.spark.android.mercury.events.WhiteboardMercuryClient;
 import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.metrics.CallMetricsReporter;
 import com.cisco.spark.android.metrics.MetricsReporter;
@@ -114,6 +113,7 @@ import com.ciscospark.androidsdk.auth.JWTAuthenticator;
 import com.ciscospark.androidsdk.auth.OAuthAuthenticator;
 import com.ciscospark.androidsdk.auth.OAuthTestUserAuthenticator;
 import com.ciscospark.androidsdk.auth.OAuthWebViewAuthenticator;
+import com.ciscospark.androidsdk.auth.SSOAuthenticator;
 import com.ciscospark.androidsdk.phone.internal.PhoneImpl;
 import com.ciscospark.androidsdk.utils.http.DefaultHeadersInterceptor;
 import com.github.benoitdion.ln.Ln;
@@ -138,7 +138,8 @@ import org.greenrobot.eventbus.EventBus;
                 JWTAuthenticator.class,
                 OAuthAuthenticator.class,
                 OAuthWebViewAuthenticator.class,
-                OAuthTestUserAuthenticator.class
+                OAuthTestUserAuthenticator.class,
+                SSOAuthenticator.class
         }
 )
 class SparkModule {
@@ -570,7 +571,7 @@ class SparkModule {
         return new MercuryProvider() {
             @Override
             public MercuryClient buildWhiteboardMercuryClient() {
-                return new WhiteboardMercuryClient(apiClientProvider, gson, bus, deviceRegistration, coreFeatures, activityListener,
+                return new MercuryClient(false, apiClientProvider, gson, bus, deviceRegistration, coreFeatures, activityListener,
                     lnContext, operationQueue, sanitizer, schedulerProvider, clock);
             }
         };
