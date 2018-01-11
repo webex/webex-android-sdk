@@ -63,20 +63,16 @@ import org.greenrobot.eventbus.ThreadMode;
 
 public class CallImpl implements Call {
 
-    private @NonNull
-    PhoneImpl _phone;
+    private @NonNull PhoneImpl _phone;
 
     @StringPart
-    private @NonNull
-    CallStatus _status;
+    private @NonNull CallStatus _status;
 
     @StringPart
-    private @NonNull
-    Direction _direction;
+    private @NonNull Direction _direction;
 
     @StringPart
-    private @NonNull
-    LocusKey _key;
+    private @NonNull LocusKey _key;
 
     private MediaOption _option;
 

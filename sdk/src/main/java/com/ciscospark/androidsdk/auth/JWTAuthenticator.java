@@ -147,8 +147,7 @@ public class JWTAuthenticator implements Authenticator {
         });
     }
 
-    private @Nullable
-    String getUnexpiredJwt() {
+    private @Nullable String getUnexpiredJwt() {
         if (_jwt == null && _token != null) {
             _jwt = _token.getRefreshToken();
         }
@@ -176,8 +175,7 @@ public class JWTAuthenticator implements Authenticator {
         return _jwt;
     }
 
-    private @Nullable
-    String getUnexpiredAccessToken() {
+    private @Nullable String getUnexpiredAccessToken() {
         if (!isAuthorized()) {
             return null;
         }
@@ -193,8 +191,7 @@ public class JWTAuthenticator implements Authenticator {
         return _token.getAccessToken();
     }
 
-    private @Nullable
-    Map<String, Object> parseJWT(String jwt) {
+    private @Nullable Map<String, Object> parseJWT(String jwt) {
         String[] split = jwt.split("\\.");
         if (split.length != 3) {
             return null;
