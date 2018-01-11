@@ -57,6 +57,53 @@ public interface Phone {
     }
 
     /**
+     * The enumeration of common bandwidth choices.
+     *
+     * @since 1.3.0
+     */
+    enum DefaultBandwidth {
+        /**
+         * 177Kbps for 160x90 resolution
+         * @since 1.3.0
+         */
+        maxBandwidth90p(177000),
+        /**
+         * 384Kbps for 320x180 resolution
+         * @since 1.3.0
+         */
+        maxBandwidth180p(384000),
+        /**
+         * 768Kbps for 640x360 resolution
+         * @since 1.3.0
+         */
+        maxBandwidth360p(768000),
+        /**
+         * 2Mbps for 1280x720 resolution
+         * @since 1.3.0
+         */
+        maxBandwidth720p(2000000),
+        /**
+         * 3Mbps for 1920x1080 resolution
+         * @since 1.3.0
+         */
+        maxBandwidth1080p(3000000),
+        /**
+         * 4Mbps data session
+         * @since 1.3.0
+         */
+        maxBandwidthSession(4000000),
+        /**
+         * 64kbps for voice
+         * @since 1.3.0
+         */
+        maxBandwidthAudio(64000);
+
+        private final int id;
+        DefaultBandwidth(int id) { this.id = id; }
+        public int getValue() { return id; }
+    }
+
+    /**
      * The interface for a listener for incoming call
      * 
      * @since 0.1
@@ -176,5 +223,54 @@ public interface Phone {
      * @since 0.1
      */
     String getVideoCodecLicenseURL();
-	
+
+    /**
+     * Set the max bandwidth for audio in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 64 * 1000 is used.
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidthAudio}.
+     * @since 1.3.0
+     */
+    void setAudioMaxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum bandwidth of audio stream.
+     *
+     * @since 1.3.0
+     */
+    int getAudioMaxBandwidth();
+
+    /**
+     * Set the max bandwidth for video in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 2000*1000 is used.
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidth90p}, {@link DefaultBandwidth#maxBandwidth180p},
+     *                  {@link DefaultBandwidth#maxBandwidth360p}, {@link DefaultBandwidth#maxBandwidth720p}, or {@link DefaultBandwidth#maxBandwidth1080p}.
+     * @since 1.3.0
+     */
+    void setVideoMaxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum bandwidth of video stream.
+     *
+     * @since 1.3.0
+     */
+    int getVideoMaxBandwidth();
+
+    /**
+     * Set the max bandwidth for screen sharing in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 4000*1000 is used.
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidthSession}.
+     * @since 1.3.0
+     */
+    void setScreenShareMaxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum bandwidth of screen sharing stream.
+     *
+     * @since 1.3.0
+     */
+    int getScreenShareMaxBandwidth();
+
 }
