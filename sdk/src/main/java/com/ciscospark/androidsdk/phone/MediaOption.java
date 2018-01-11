@@ -68,34 +68,34 @@ public class MediaOption {
     }
 
     /**
-     * Constructs an audio/video and screen share media option.
+     * Constructs an audio/video and share media option.
      *
      * @param videoRenderViews Local video view and remote video view.
-     * @param screenShareView  Screen share view for remote.
+     * @param shareView  share view for remote.
      * @since 1.3.0
      */
-    public static MediaOption audioVideoScreenShare(@Nullable Pair<View, View> videoRenderViews, @Nullable View screenShareView) {
+    public static MediaOption audioVideoShare(@Nullable Pair<View, View> videoRenderViews, @Nullable View shareView) {
         if (videoRenderViews == null || videoRenderViews.first == null || videoRenderViews.second == null) {
-            return new MediaOption(null, null, screenShareView, true, true);
+            return new MediaOption(null, null, shareView, true, true);
         }
-        return new MediaOption(videoRenderViews.first, videoRenderViews.second, screenShareView, true, true);
+        return new MediaOption(videoRenderViews.first, videoRenderViews.second, shareView, true, true);
     }
 
     private View _remoteView;
 
     private View _localView;
 
-    private View _screenShareView;
+    private View _shareView;
 
-    private boolean _hasScreenShare;
+    private boolean _hasShare;
 
     private boolean _hasVideo;
 
-    private MediaOption(@Nullable View localView, @Nullable View remoteView, @Nullable View screenShareView, boolean hasScreenShare, boolean hasVideo) {
+    private MediaOption(@Nullable View localView, @Nullable View remoteView, @Nullable View shareView, boolean hasShare, boolean hasVideo) {
         _localView = localView;
         _remoteView = remoteView;
-        _screenShareView = screenShareView;
-        _hasScreenShare = hasScreenShare;
+        _shareView = shareView;
+        _hasShare = hasShare;
         _hasVideo = hasVideo;
     }
 
@@ -110,13 +110,13 @@ public class MediaOption {
     }
 
     /**
-     * Whether video is enabled.
+     * Whether content share is enabled.
      *
-     * @return true if screen share is enabled. Otherwise, false.
+     * @return true if content share is enabled. Otherwise, false.
      * @since 1.3.0
      */
-    public boolean hasScreenShare() {
-        return _hasScreenShare;
+    public boolean hasShare() {
+        return _hasShare;
     }
 
     /**
@@ -136,11 +136,11 @@ public class MediaOption {
     }
 
     /**
-     * @return The screen share view
+     * @return The share view
      * @since 1.3.0
      */
-    public View getScreenShareView() {
-        return _screenShareView;
+    public View getShareView() {
+        return _shareView;
     }
 
 }

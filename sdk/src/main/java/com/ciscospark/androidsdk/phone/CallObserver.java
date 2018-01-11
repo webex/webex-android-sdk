@@ -323,22 +323,22 @@ public interface CallObserver {
     }
 
     /**
-     * This might be triggered when the remote party muted or unmuted the screen share.
+     * This might be triggered when the remote party muted or unmuted the content share.
      *
      * @since 1.3.0
      */
-    class RemoteSendingScreenShareEvent extends AbstractCallEvent implements MediaChangedEvent {
+    class RemoteSendingShareEvent extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _sending;
 
-        public RemoteSendingScreenShareEvent(Call call, boolean sending) {
+        public RemoteSendingShareEvent(Call call, boolean sending) {
             super(call);
             _sending = sending;
         }
 
         /**
-         * @return True if the remote party now is sending screen share. Otherwise false.
+         * @return True if the remote party now is sending content share. Otherwise false.
          * @since 1.3.0
          */
         public boolean isSending() {
@@ -468,22 +468,22 @@ public interface CallObserver {
     }
 
     /**
-     * This might be triggered when the local party muted or unmuted the remote screen share.
+     * This might be triggered when the local party muted or unmuted the remote content share.
      *
      * @since 1.3.0
      */
-    class ReceivingScreenShare extends AbstractCallEvent implements MediaChangedEvent {
+    class ReceivingShare extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _receiving;
 
-        public ReceivingScreenShare(Call call, boolean receiving) {
+        public ReceivingShare(Call call, boolean receiving) {
             super(call);
             _receiving = receiving;
         }
 
         /**
-         * @return True if the local party now is receiving screen share. Otherwise false.
+         * @return True if the local party now is receiving content share. Otherwise false.
          * @since 0.1
          */
         public boolean isReceiving() {
@@ -530,12 +530,12 @@ public interface CallObserver {
     }
 
     /**
-     * Remote screen share rendering view size has changed.
+     * Remote share rendering view size has changed.
      *
      * @since 1.3.0
      */
-    class RemoteScreenShareViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
-        public RemoteScreenShareViewSizeChanged(Call call) {
+    class RemoteShareViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
+        public RemoteShareViewSizeChanged(Call call) {
             super(call);
         }
     }
@@ -644,13 +644,13 @@ public interface CallObserver {
     }
 
     /**
-     * This might be triggered when the person in the membership started screen sharing this call.
+     * This might be triggered when the person in the membership started sharing this call.
      *
      * @since 1.3.0
      */
-    class MembershipSendingScreenSharingEvent extends AbstractCallMembershipChangedEvent {
+    class MembershipSendingSharingEvent extends AbstractCallMembershipChangedEvent {
 
-        public MembershipSendingScreenSharingEvent(Call call, CallMembership membership) {
+        public MembershipSendingSharingEvent(Call call, CallMembership membership) {
             super(call, membership);
         }
     }

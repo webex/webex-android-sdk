@@ -276,20 +276,20 @@ public interface Phone {
     int getVideoMaxBandwidth();
 
     /**
-     * Set the max bandwidth for screen sharing in unit bps for the call.
+     * Set the max bandwidth for content sharing in unit bps for the call.
      * Only effective if set before the start of call.
      * if 0, default value of 4000*1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidthSession}.
      * @since 1.3.0
      */
-    void setScreenShareMaxBandwidth(int bandwidth);
+    void setShareMaxBandwidth(int bandwidth);
 
     /**
-     * Return the current maximum bandwidth of screen sharing stream.
+     * Return the current maximum bandwidth of content sharing stream.
      *
      * @since 1.3.0
      */
-    int getScreenShareMaxBandwidth();
+    int getShareMaxBandwidth();
 
 }

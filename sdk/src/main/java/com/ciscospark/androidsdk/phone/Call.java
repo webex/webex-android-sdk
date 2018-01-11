@@ -166,10 +166,10 @@ public interface Call {
     Rect getRemoteVideoViewSize();
 
     /**
-     * @return The screen share render view dimensions (points) of this call.
+     * @return The content share render view dimensions (points) of this call.
      * @since 1.3.0
      */
-    Rect getScreenShareViewSize();
+    Rect getShareViewSize();
 
     /**
      * @return True if the remote party of this call is sending video. Otherwise, false.
@@ -184,10 +184,10 @@ public interface Call {
     boolean isRemoteSendingAudio();
 
     /**
-     * @return True if the remote party of this call is sending screen content. Otherwise, false.
+     * @return True if the remote party of this call is sending content share. Otherwise, false.
      * @since 1.3.0
      */
-    boolean isRemoteSendingScreenShare();
+    boolean isRemoteSendingShare();
 
     /**
      * @return True if this call is sending video. Otherwise, false.
@@ -238,16 +238,16 @@ public interface Call {
     void setReceivingAudio(boolean receiving);
 
     /**
-     * @return True if the local party of this call is receiving screen share. Otherwise, false.
+     * @return True if the local party of this call is receiving content share. Otherwise, false.
      * @since 1.3.0
      */
-    boolean isReceivingScreenShare();
+    boolean isReceivingShare();
 
     /**
-     * @param receiving True if the local party of this *call* is receiving screen share. Otherwise, false.
+     * @param receiving True if the local party of this *call* is receiving content share. Otherwise, false.
      * @since 1.3.0
      */
-    void setReceivingScreenShare(boolean receiving);
+    void setReceivingShare(boolean receiving);
 
     /**
      * @return The render views for local and remote video of this call.
@@ -263,16 +263,16 @@ public interface Call {
 
 
     /**
-     * @return The render view for the remote screen share of this call.
+     * @return The render view for the remote content share of this call.
      * @since 1.3.0
      */
-    View getScreenShareRenderView();
+    View getShareRenderView();
 
     /**
-     * @param screenShareRenderView The render view for the remote screen share of this call. If is nil, it will update the screen sharing state as inactive to the server side.
+     * @param shareRenderView The render view for the remote content share of this call. If is nil, it will update the content sharing state as inactive to the server side.
      * @since 1.3.0
      */
-    void setScreenShareRenderView(View screenShareRenderView);
+    void setShareRenderView(View shareRenderView);
 
     /**
      * Acknowledge (without answering) an incoming call. Will cause the initiator's Call instance to emit the ringing event.

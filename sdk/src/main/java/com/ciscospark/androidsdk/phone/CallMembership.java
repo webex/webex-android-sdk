@@ -122,8 +122,8 @@ public interface CallMembership {
     boolean isSendingAudio();
 
     /**
-     * @return True if the CallMembership is sending screen share. Otherwise, false.
+     * @return True if the CallMembership is sending content share. Otherwise, false.
      * @since 1.3.0
      */
-    boolean isSendingScreenShare();
+    boolean isSendingShare();
 }
