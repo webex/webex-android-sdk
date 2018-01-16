@@ -33,11 +33,11 @@ import com.ciscospark.androidsdk.CompletionHandler;
 public interface Authenticator {
 
     /**
-     * Returns True if the user is logically authorized. 
-     * 
+     * Returns True if the user is logically authorized.
+     * <p>
      * This may not mean the user has a valid access token yet,
      * but the authentication strategy should be able to obtain one without further user interaction.
-     * 
+     *
      * @return True if the user is logically authorized
      * @since 0.1
      */
@@ -53,11 +53,11 @@ public interface Authenticator {
     void deauthorize();
 
     /**
-     * Returns an access token of this authenticator. 
-     * 
+     * Returns an access token of this authenticator.
+     * <p>
      * This may involve long-running operations such as service calls, but may also return immediately.
      * The application should not make assumptions about how quickly this completes.
-     * 
+     *
      * @param handler a callback to be executed when completed, with the access token if successfuly retrieved, otherwise nil.
      * @since 0.1
      */

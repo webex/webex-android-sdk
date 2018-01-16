@@ -23,6 +23,7 @@
 package com.ciscospark.androidsdk.membership;
 
 import com.google.gson.Gson;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

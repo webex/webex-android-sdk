@@ -110,7 +110,7 @@ public class AppFeatures implements CoreFeatures {
     public boolean isCalendarSyncEnabled() {
         boolean hasSyncEnabled = deviceRegistration.getFeatures().isDeveloperFeatureEnabled(CALENDAR_SYNC_ENABLED, true);
         boolean hasAnyCalEntitlement = deviceRegistration.getFeatures().isEntitlementFeatureEnabled(HYBRID_CALENDAR_ENTITLEMENT, false)
-            || deviceRegistration.getFeatures().isEntitlementFeatureEnabled(HYBRID_GCALENDAR_ENTITLEMENT, false);
+                || deviceRegistration.getFeatures().isEntitlementFeatureEnabled(HYBRID_GCALENDAR_ENTITLEMENT, false);
         Ln.i("isCalendarSyncEnabled ? %b syncEnabled ? %b hasEntitlements ? %b", hasSyncEnabled && hasAnyCalEntitlement, hasSyncEnabled, hasAnyCalEntitlement);
         return hasSyncEnabled && hasAnyCalEntitlement;
     }
@@ -347,19 +347,19 @@ public class AppFeatures implements CoreFeatures {
 
     // Whiteboard Features
     @Override
-    public boolean isWhiteboardEnabled()  {
+    public boolean isWhiteboardEnabled() {
         return true;
     }
 
     @Override
-    public boolean isNativeWhiteboardEnabled()   {
+    public boolean isNativeWhiteboardEnabled() {
         return true;
     }
 
     @Override
     public boolean isSendWhiteboardEnabled() {
         return deviceRegistration.getFeatures().isAnyToggleEnabled(ANDROID_SEND_WHITEBOARD_EARLYADOPTERS,
-            ANDROID_SEND_WHITEBOARD);
+                ANDROID_SEND_WHITEBOARD);
     }
 
     @Override

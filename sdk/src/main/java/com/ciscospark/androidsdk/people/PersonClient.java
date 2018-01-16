@@ -26,6 +26,7 @@ import java.util.List;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.ciscospark.androidsdk.CompletionHandler;
 
 /**
@@ -35,32 +36,32 @@ import com.ciscospark.androidsdk.CompletionHandler;
  */
 public interface PersonClient {
 
-	/**
-	 * Lists people in the authenticated user's organization.
-	 * 
-	 * @param email If not nil, only list people with this email address.
-	 * @param displayName If not nil, only list people whose name starts with this string.
-	 * @param max The maximum number of people in the response.
-	 * @param handler A closure to be executed once the request has finished.
-	 * @since 0.1   
-	 */
-	void list(@NonNull String email, @Nullable String displayName, int max, @NonNull CompletionHandler<List<Person>> handler);
+    /**
+     * Lists people in the authenticated user's organization.
+     *
+     * @param email       If not nil, only list people with this email address.
+     * @param displayName If not nil, only list people whose name starts with this string.
+     * @param max         The maximum number of people in the response.
+     * @param handler     A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void list(@NonNull String email, @Nullable String displayName, int max, @NonNull CompletionHandler<List<Person>> handler);
 
-	/**
-	 * Retrieves the details for a person by person id.
-	 * 
-	 * @param personId The identifier of the person.
-	 * @param handler A closure to be executed once the request has finished.
-	 * @since 0.1   
-	 */
-	void get(@NonNull String personId, @NonNull CompletionHandler<Person> handler);
+    /**
+     * Retrieves the details for a person by person id.
+     *
+     * @param personId The identifier of the person.
+     * @param handler  A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void get(@NonNull String personId, @NonNull CompletionHandler<Person> handler);
 
-	/**
-	 * Retrieves the details for the authenticated user.
-	 * 
-	 * @param handler A closure to be executed once the request has finished.
-	 * @since 0.1   
-	 */
-	void getMe(@NonNull CompletionHandler<Person> handler);
-    
+    /**
+     * Retrieves the details for the authenticated user.
+     *
+     * @param handler A closure to be executed once the request has finished.
+     * @since 0.1
+     */
+    void getMe(@NonNull CompletionHandler<Person> handler);
+
 }

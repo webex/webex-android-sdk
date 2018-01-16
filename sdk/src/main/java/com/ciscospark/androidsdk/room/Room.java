@@ -28,23 +28,23 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * A data type represents a Room at Cisco Spark cloud. 
- * 
+ * A data type represents a Room at Cisco Spark cloud.
+ * <p>
  * Room has been renamed to Space in Cisco Spark.
- * 
+ *
  * @since 0.1
  */
 public class Room {
 
     /**
      * The enumeration of the types of a room.
-     * 
+     *
      * @since 0.1
      */
     public enum RoomType {
         /**
          * Group room among multiple people
-         * 
+         *
          * @since 0.1
          */
         @SerializedName("group")
@@ -52,7 +52,7 @@ public class Room {
 
         /**
          * 1-to-1 room between two people
-         * 
+         *
          * @since 0.1
          */
         @SerializedName("direct")

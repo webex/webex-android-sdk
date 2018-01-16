@@ -29,7 +29,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Membership contents.
- * 
+ *
  * @since 0.1
  */
 public class Membership {
@@ -71,7 +71,7 @@ public class Membership {
 
     /**
      * @return The id of the person.
-     * @since 0.1 
+     * @since 0.1
      */
     public String getPersonId() {
         return _personId;
@@ -92,7 +92,7 @@ public class Membership {
     public String getPersonDisplayName() {
         return _personDisplayName;
     }
-    
+
     /**
      * @return The id of the room.
      * @since 0.1

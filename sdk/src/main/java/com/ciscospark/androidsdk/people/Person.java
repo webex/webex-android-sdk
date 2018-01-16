@@ -29,7 +29,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Person contents.
- * 
+ *
  * @since 0.1
  */
 public class Person {
@@ -70,46 +70,46 @@ public class Person {
     @SerializedName("type")
     private String _type;          // bot/person
 
-	/**
-	 * @return The id of this person.
-	 * @since 0.1
-	 */
-	public String getId() {
+    /**
+     * @return The id of this person.
+     * @since 0.1
+     */
+    public String getId() {
         return _id;
     }
 
-	/**
-	 * @return The emails of this person.
-	 * @since 0.1
-	 */
-	public String[] getEmails() {
+    /**
+     * @return The emails of this person.
+     * @since 0.1
+     */
+    public String[] getEmails() {
         return _emails;
     }
 
-	/**
-	 * @return The display name of this person.
-	 * @since 0.1
-	 */
-	public String getDisplayName() {
+    /**
+     * @return The display name of this person.
+     * @since 0.1
+     */
+    public String getDisplayName() {
         return _displayName;
     }
-	
-	/**
-	 * @return The URL of this person's avatar.
-	 * @since 0.1
-	 */
-	public String getAvatar() {
+
+    /**
+     * @return The URL of this person's avatar.
+     * @since 0.1
+     */
+    public String getAvatar() {
         return _avatar;
     }
-	
-	/**
-	 * @return The timestamp that this person being created.
-	 * @since 0.1
-	 */
-	public Date getCreated() {
+
+    /**
+     * @return The timestamp that this person being created.
+     * @since 0.1
+     */
+    public Date getCreated() {
         return _created;
     }
-	
+
     @Override
     public String toString() {
         Gson gson = new Gson();

@@ -23,6 +23,7 @@
 package com.ciscospark.androidsdk.internal;
 
 import java.util.List;
+
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -33,6 +34,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+
 import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.app.NotificationManager;
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
@@ -119,9 +121,11 @@ import com.ciscospark.androidsdk.utils.http.DefaultHeadersInterceptor;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 import com.squareup.leakcanary.RefWatcher;
+
 import dagger.Module;
 import dagger.Provides;
 import okhttp3.OkHttpClient;
+
 import org.greenrobot.eventbus.EventBus;
 
 @Module(
@@ -165,38 +169,38 @@ class SparkModule {
     @Provides
     @Singleton
     public ApplicationController provideApplicationController(final Context context, final ApiClientProvider clientProvider,
-                                                       final ApiTokenProvider tokenProvider,
-                                                       final AuthenticatedUserProvider userProvider, final EventBus bus,
-                                                       final DeviceRegistration deviceRegistration, CoreFeatures coreFeatures,
-                                                       final BackgroundCheck backgroundCheck, final Settings settings,
-                                                       final MediaEngine mediaEngine,
-                                                       final ActorRecordProvider actorRecordProvider, final MetricsReporter metricsReporter,
-                                                       final StatusManager statusManager,
-                                                       MercuryClient mercuryClient, final SearchManager searchManager,
-                                                       final LocusService locusService, final RoomService roomService,
-                                                       final CallHistoryService callHistoryService,
-                                                       final CpuLogger cpuLogger, final ConversationSyncQueue conversationSyncQueue,
-                                                       NotificationManager notificationManager, AccessManager accessManager,
-                                                       final KeyManager keyManager, UIServiceAvailability uiServiceAvailability,
-                                                       OperationQueue operationQueue, Injector injector,
-                                                       final VideoMultitaskComponent videoMultitaskComponent, final Ln.Context lnContext,
-                                                       final com.cisco.spark.android.core.AccountUi accountUi, final LogFilePrint log,
-                                                       final LinusReachabilityService linusReachabilityService,
-                                                       final LyraService lyraService,
-                                                       final UrlProvider urlProvider, final SdkClient sdkClient, final VoicemailService voicemailService,
-                                                       final ScheduledMeetingsService scheduledMeetingsService) {
-        return new ApplicationController(context, clientProvider, tokenProvider, userProvider, bus, deviceRegistration, coreFeatures, 
-            backgroundCheck, settings, mediaEngine, actorRecordProvider, metricsReporter, statusManager, mercuryClient, 
-            searchManager, locusService, callHistoryService, cpuLogger, conversationSyncQueue, notificationManager, accessManager, 
-            keyManager, uiServiceAvailability, operationQueue, injector, videoMultitaskComponent, lnContext, accountUi, log, 
-            linusReachabilityService, lyraService, urlProvider, sdkClient, voicemailService, scheduledMeetingsService);
+                                                              final ApiTokenProvider tokenProvider,
+                                                              final AuthenticatedUserProvider userProvider, final EventBus bus,
+                                                              final DeviceRegistration deviceRegistration, CoreFeatures coreFeatures,
+                                                              final BackgroundCheck backgroundCheck, final Settings settings,
+                                                              final MediaEngine mediaEngine,
+                                                              final ActorRecordProvider actorRecordProvider, final MetricsReporter metricsReporter,
+                                                              final StatusManager statusManager,
+                                                              MercuryClient mercuryClient, final SearchManager searchManager,
+                                                              final LocusService locusService, final RoomService roomService,
+                                                              final CallHistoryService callHistoryService,
+                                                              final CpuLogger cpuLogger, final ConversationSyncQueue conversationSyncQueue,
+                                                              NotificationManager notificationManager, AccessManager accessManager,
+                                                              final KeyManager keyManager, UIServiceAvailability uiServiceAvailability,
+                                                              OperationQueue operationQueue, Injector injector,
+                                                              final VideoMultitaskComponent videoMultitaskComponent, final Ln.Context lnContext,
+                                                              final com.cisco.spark.android.core.AccountUi accountUi, final LogFilePrint log,
+                                                              final LinusReachabilityService linusReachabilityService,
+                                                              final LyraService lyraService,
+                                                              final UrlProvider urlProvider, final SdkClient sdkClient, final VoicemailService voicemailService,
+                                                              final ScheduledMeetingsService scheduledMeetingsService) {
+        return new ApplicationController(context, clientProvider, tokenProvider, userProvider, bus, deviceRegistration, coreFeatures,
+                backgroundCheck, settings, mediaEngine, actorRecordProvider, metricsReporter, statusManager, mercuryClient,
+                searchManager, locusService, callHistoryService, cpuLogger, conversationSyncQueue, notificationManager, accessManager,
+                keyManager, uiServiceAvailability, operationQueue, injector, videoMultitaskComponent, lnContext, accountUi, log,
+                linusReachabilityService, lyraService, urlProvider, sdkClient, voicemailService, scheduledMeetingsService);
     }
 
     @Provides
     @Singleton
     public CallNotification provideCallNotification(Context context, LocusDataCache locusDataCache, EventBus eventBus,
-                                             BackgroundCheck backgroundCheck,
-                                             CallOptions options, CallAnalyzerReporter callAnalyzerReporter, AppFeatures appFeatures) {
+                                                    BackgroundCheck backgroundCheck,
+                                                    CallOptions options, CallAnalyzerReporter callAnalyzerReporter, AppFeatures appFeatures) {
         return new CallNotification() {
             @Override
             public void notify(LocusKey locusKey, NotificationActions notificationActions) {
@@ -251,7 +255,7 @@ class SparkModule {
         return new VideoMultitaskComponent() {
             @Override
             public void setApplicationController(ApplicationController applicationController) {
-                
+
             }
 
             @Override
@@ -334,7 +338,7 @@ class SparkModule {
     @Provides
     @Singleton
     public CallUi provideCalUi(Context context, Settings settings, RoomService roomService,
-                        UploadLogsService uploadLogsService, PermissionsHelper permissionsHelper, Toaster toaster) {
+                               UploadLogsService uploadLogsService, PermissionsHelper permissionsHelper, Toaster toaster) {
         return new CallUi() {
 
             @Override
@@ -369,7 +373,7 @@ class SparkModule {
 
             @Override
             public int getRingbackTimeout() {
-                return 3600 * 24 * 365 ;
+                return 3600 * 24 * 365;
             }
 
             @Override
@@ -404,12 +408,12 @@ class SparkModule {
             }
         };
     }
-    
+
     @Provides
     @Singleton
-    public RoomService provideRoomService(EventBus bus, Context context, ApiClientProvider apiClientProvider, 
-                                          DeviceRegistration deviceRegistration, AppFeatures appFeatures, 
-                                          ProximityDetector proximityDetector, ProximityBackend proximityBackend, 
+    public RoomService provideRoomService(EventBus bus, Context context, ApiClientProvider apiClientProvider,
+                                          DeviceRegistration deviceRegistration, AppFeatures appFeatures,
+                                          ProximityDetector proximityDetector, ProximityBackend proximityBackend,
                                           MetricsReporter metricsReporter, android.app.Application application) {
         return new RoomService() {
             @Override
@@ -543,7 +547,7 @@ class SparkModule {
             }
         };
     }
-    
+
     @Provides
     @Singleton
     MediaEngine provideMediaEngine(LogFilePrint log, EventBus bus, Settings settings, Context context, DeviceRegistration deviceRegistration, Gson gson, Ln.Context lnContext, CoreFeatures coreFeatures) {
@@ -555,7 +559,7 @@ class SparkModule {
             return new MediaSessionEngine(log, bus, settings, context, BuildConfig.GIT_COMMIT_SHA, deviceRegistration, gson, lnContext, coreFeatures);
         }
     }
-	
+
     @Provides
     @Singleton
     public ActivityListener provideActivityListener(EventBus bus) {
@@ -572,11 +576,11 @@ class SparkModule {
             @Override
             public MercuryClient buildWhiteboardMercuryClient() {
                 return new MercuryClient(false, apiClientProvider, gson, bus, deviceRegistration, coreFeatures, activityListener,
-                    lnContext, operationQueue, sanitizer, schedulerProvider, clock);
+                        lnContext, operationQueue, sanitizer, schedulerProvider, clock);
             }
         };
     }
-    
+
     public void setRefWatcher(RefWatcher refWatcher) {
         this.refWatcher = refWatcher;
     }
@@ -584,20 +588,20 @@ class SparkModule {
     @Provides
     @Singleton
     public CallControlService provideCallControlService(LocusService locusService, final MediaEngine mediaEngine,
-                                                 CallMetricsReporter callMetricsReporter, EventBus bus, Context context,
-                                                 TrackingIdGenerator trackingIdGenerator,
-                                                 DeviceRegistration deviceRegistration, LogFilePrint logFilePrint,
-                                                 Gson gson,
-                                                 UploadLogsService uploadLogsService, CallNotification callNotification,
-                                                 LocusDataCache locusDataCache,
-                                                 Settings settings,
-                                                 Provider<Batch> batchProvider, Ln.Context lnContext, com.cisco.spark.android.callcontrol.CallUi callUi,
-                                                 LinusReachabilityService linusReachabilityService, SdkClient sdkClient,
-                                                 CallAnalyzerReporter callAnalyzerReporter, Toaster toaster, CoreFeatures coreFeatures, LocusMeetingInfoProvider locusMeetingInfoProvider) {
-        return new CallControlService(locusService, mediaEngine, callMetricsReporter, bus, context, 
-            trackingIdGenerator, deviceRegistration, logFilePrint, gson, uploadLogsService, callNotification,
-            locusDataCache, settings, batchProvider, lnContext, callUi, linusReachabilityService, sdkClient, 
-            callAnalyzerReporter, toaster, coreFeatures);
+                                                        CallMetricsReporter callMetricsReporter, EventBus bus, Context context,
+                                                        TrackingIdGenerator trackingIdGenerator,
+                                                        DeviceRegistration deviceRegistration, LogFilePrint logFilePrint,
+                                                        Gson gson,
+                                                        UploadLogsService uploadLogsService, CallNotification callNotification,
+                                                        LocusDataCache locusDataCache,
+                                                        Settings settings,
+                                                        Provider<Batch> batchProvider, Ln.Context lnContext, com.cisco.spark.android.callcontrol.CallUi callUi,
+                                                        LinusReachabilityService linusReachabilityService, SdkClient sdkClient,
+                                                        CallAnalyzerReporter callAnalyzerReporter, Toaster toaster, CoreFeatures coreFeatures, LocusMeetingInfoProvider locusMeetingInfoProvider) {
+        return new CallControlService(locusService, mediaEngine, callMetricsReporter, bus, context,
+                trackingIdGenerator, deviceRegistration, logFilePrint, gson, uploadLogsService, callNotification,
+                locusDataCache, settings, batchProvider, lnContext, callUi, linusReachabilityService, sdkClient,
+                callAnalyzerReporter, toaster, coreFeatures);
     }
 
     @Provides
@@ -616,61 +620,61 @@ class SparkModule {
     @Singleton
     SdkClient provideSdkClient() {
         return new SdkClient() {
-	        @Override
-	        public String getDeviceType() {
-		        return DeviceInfo.ANDROID_DEVICE_TYPE;
-	        }
+            @Override
+            public String getDeviceType() {
+                return DeviceInfo.ANDROID_DEVICE_TYPE;
+            }
 
-	        @Override
-	        public boolean toastsEnabled() {
-		        return false;
-	        }
+            @Override
+            public boolean toastsEnabled() {
+                return false;
+            }
 
-	        @Override
-	        public boolean supportsHybridKms() {
-		        return false;
-	        }
+            @Override
+            public boolean supportsHybridKms() {
+                return false;
+            }
 
-	        @Override
-	        public boolean supportsVoicemailScopes() {
-		        return false;
-	        }
+            @Override
+            public boolean supportsVoicemailScopes() {
+                return false;
+            }
 
-	        @Override
-	        public boolean operationEnabled(Operation operation) {
-		        return true;
-	        }
+            @Override
+            public boolean operationEnabled(Operation operation) {
+                return true;
+            }
 
-	        @Override
-	        public boolean componentEnabled(Component component) {
-		        return true;
-	        }
+            @Override
+            public boolean componentEnabled(Component component) {
+                return true;
+            }
 
-	        @Override
-	        public boolean conversationCachingEnabled() {
-		        return false;
-	        }
+            @Override
+            public boolean conversationCachingEnabled() {
+                return false;
+            }
 
-	        @Override
-	        public boolean supportsPrivateBoards() {
-		        return false;
-	        }
+            @Override
+            public boolean supportsPrivateBoards() {
+                return false;
+            }
 
-	        @Override
-	        public boolean shouldClearRemoteBoardStore() {
-		        return false;
-	        }
+            @Override
+            public boolean shouldClearRemoteBoardStore() {
+                return false;
+            }
 
-	        @Override
-	        public boolean isMobileDevice() {
-		        return true;
-	        }
+            @Override
+            public boolean isMobileDevice() {
+                return true;
+            }
 
-	        @NonNull
-	        @Override
-	        public String generateClientInfo() {
-		        return "";
-	        }
+            @NonNull
+            @Override
+            public String generateClientInfo() {
+                return "";
+            }
 
             @Override
             public boolean isDebugBuild() {

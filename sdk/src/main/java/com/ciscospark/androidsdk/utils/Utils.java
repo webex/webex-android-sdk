@@ -24,8 +24,10 @@ package com.ciscospark.androidsdk.utils;
 
 import android.os.Build;
 import android.support.annotation.Nullable;
+
 import com.cisco.spark.android.util.Strings;
 import com.ciscospark.androidsdk.Spark;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -42,21 +44,21 @@ public class Utils {
         }
         return object;
     }
-    
+
     public static String timestampUTC() {
-        return DateTime.now( DateTimeZone.UTC ).toString();
+        return DateTime.now(DateTimeZone.UTC).toString();
     }
-    
+
     public static String versionInfo() {
         String tempUserAgent = String.format("%s/%s (Android %s; %s %s / %s %s;)",
-            Spark.APP_NAME, Spark.APP_VERSION,
-            Build.VERSION.RELEASE,
-            Strings.capitalize(Build.MANUFACTURER),
-            Strings.capitalize(Build.DEVICE),
-            Strings.capitalize(Build.BRAND),
-            Strings.capitalize(Build.MODEL)
+                Spark.APP_NAME, Spark.APP_VERSION,
+                Build.VERSION.RELEASE,
+                Strings.capitalize(Build.MANUFACTURER),
+                Strings.capitalize(Build.DEVICE),
+                Strings.capitalize(Build.BRAND),
+                Strings.capitalize(Build.MODEL)
         );
         return Strings.stripInvalidHeaderChars(tempUserAgent);
     }
-    
+
 }

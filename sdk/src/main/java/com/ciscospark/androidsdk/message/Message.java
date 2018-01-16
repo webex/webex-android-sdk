@@ -31,7 +31,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * This class represents a Message on Cisco Spark.
- * 
+ *
  * @since 0.1
  */
 public class Message {
@@ -72,99 +72,99 @@ public class Message {
     @SerializedName("created")
     private Date _created;
 
-	/**
-	 * @return The identifier of this message.
-	 * @since 0.1
-	 */
-	public String getId() {
+    /**
+     * @return The identifier of this message.
+     * @since 0.1
+     */
+    public String getId() {
         return _id;
     }
 
-	/**
-	 * @return The identifier of the person who sent this message.
-	 * @since 0.1
-	 */
-	public String getPersonId() {
+    /**
+     * @return The identifier of the person who sent this message.
+     * @since 0.1
+     */
+    public String getPersonId() {
         return _personId;
     }
 
-	/**
-	 * @return The email address of the person who sent this message.
-	 * @since 0.1
-	 */
-	public String getPersonEmail() {
+    /**
+     * @return The email address of the person who sent this message.
+     * @since 0.1
+     */
+    public String getPersonEmail() {
         return _personEmail;
     }
 
-	/**
-	 * @return The identifier of the room where this message was posted.
-	 * @since 0.1
-	 */
-	public String getRoomId() {
+    /**
+     * @return The identifier of the room where this message was posted.
+     * @since 0.1
+     */
+    public String getRoomId() {
         return _roomId;
     }
 
-	/**
-	 * @return The type of the room where this message was posted.
-	 * @since 0.1
-	 */
-	public Room.RoomType getRoomType() {
+    /**
+     * @return The type of the room where this message was posted.
+     * @since 0.1
+     */
+    public Room.RoomType getRoomType() {
         return _roomType;
     }
 
-	/**
-	 * @return The content of the message in plain text.
-	 * @since 0.1
-	 */
-	public String getText() {
+    /**
+     * @return The content of the message in plain text.
+     * @since 0.1
+     */
+    public String getText() {
         return _text;
     }
 
-	/**
-	 * @return  The content of the message in markdown.
-	 * @since 0.1
-	 */
-	public String getMarkdown() {
+    /**
+     * @return The content of the message in markdown.
+     * @since 0.1
+     */
+    public String getMarkdown() {
         return _markdown;
     }
 
-	/**
-	 * @return The identifier of the recipient when sending a private 1:1 message.
-	 * @since 0.1
-	 */
-	public String getToPersonId() {
+    /**
+     * @return The identifier of the recipient when sending a private 1:1 message.
+     * @since 0.1
+     */
+    public String getToPersonId() {
         return _toPersonId;
     }
 
-	/**
-	 * @return The email address of the recipient when sending a private 1:1 message.
-	 * @since 0.1
-	 */
-	public String getToPersonEmail() {
+    /**
+     * @return The email address of the recipient when sending a private 1:1 message.
+     * @since 0.1
+     */
+    public String getToPersonEmail() {
         return _toPersonEmail;
     }
 
-	/**
-	 * @return The array of mentioned peoples in the message.
-	 * @since 0.1
-	 */
-	public String[] getMentionedPeople() {
+    /**
+     * @return The array of mentioned peoples in the message.
+     * @since 0.1
+     */
+    public String[] getMentionedPeople() {
         return _mentionedPeople;
     }
 
-	/**
-	 * @return A array of public URLs of the attachments in the message.
-	 * @since 0.1
-	 */
-	public String[] getFiles() {
+    /**
+     * @return A array of public URLs of the attachments in the message.
+     * @since 0.1
+     */
+    public String[] getFiles() {
         return _files;
     }
 
-	/**
-	 * @return The timestamp that the message being created.
-	 * @since 0.1
-	 */
-	public Date getCreated() {
+    /**
+     * @return The timestamp that the message being created.
+     * @since 0.1
+     */
+    public Date getCreated() {
         return _created;
     }
 

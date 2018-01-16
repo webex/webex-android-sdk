@@ -99,7 +99,8 @@ public class ErrorHandlingAdapter {
             Executor retrofitExecutor = retrofit.callbackExecutor();
             if (retrofitExecutor == null) {
                 callbackExecutor = new Executor() {
-                    @Override public void execute(Runnable command) {
+                    @Override
+                    public void execute(Runnable command) {
                         command.run();
                     }
                 };

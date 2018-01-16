@@ -32,6 +32,7 @@ import com.ciscospark.androidsdk.utils.http.ListBody;
 import com.ciscospark.androidsdk.utils.http.ListCallback;
 import com.ciscospark.androidsdk.utils.http.ObjectCallback;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
+
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
@@ -48,13 +49,13 @@ public class PersonClientImpl implements PersonClient {
         _authenticator = authenticator;
         _service = new ServiceBuilder().build(PersonService.class);
     }
-    
+
     public void list(String email, String displayName, int max, CompletionHandler<List<Person>> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
             _service.list(s, email, displayName, null, null, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
         });
     }
-    
+
     public void get(String personId, CompletionHandler<Person> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
             _service.get(s, personId).enqueue(new ObjectCallback<>(handler));

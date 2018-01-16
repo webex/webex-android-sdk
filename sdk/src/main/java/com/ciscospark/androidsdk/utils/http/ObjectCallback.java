@@ -24,6 +24,7 @@ package com.ciscospark.androidsdk.utils.http;
 
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.internal.ResultImpl;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

@@ -31,7 +31,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * A data type represents a Team at Cisco Spark cloud.
- * 
+ *
  * @since 0.1
  */
 public class Team {

@@ -25,35 +25,38 @@ package com.ciscospark.androidsdk.phone;
 import android.app.AlertDialog;
 import android.support.annotation.NonNull;
 import android.view.View;
+
 import com.ciscospark.androidsdk.CompletionHandler;
 
 /**
  * Phone represents a Cisco Spark calling device.
- * 
+ * <p>
  * The application can obtain a phone object from Spark object and use phone to call other Cisco Spark users or PSTN when enabled.
- * 
+ * <p>
  * The phone must be registered before it can make or receive calls.
- * 
+ *
  * @since 0.1
  */
 public interface Phone {
 
     /**
      * The enumeration of Camera facing modes.
-     * 
+     *
      * @since 0.1
      */
     enum FacingMode {
-	    /**
-	     * Front camera.
-	     * @since 0.1
-	     */
-	    USER,
-	    /**
-	     * Back camera.
-	     * @since 0.1
-	     */
-	    ENVIROMENT
+        /**
+         * Front camera.
+         *
+         * @since 0.1
+         */
+        USER,
+        /**
+         * Back camera.
+         *
+         * @since 0.1
+         */
+        ENVIROMENT
     }
 
     /**
@@ -64,62 +67,75 @@ public interface Phone {
     enum DefaultBandwidth {
         /**
          * 177Kbps for 160x90 resolution
+         *
          * @since 1.3.0
          */
         maxBandwidth90p(177000),
         /**
          * 384Kbps for 320x180 resolution
+         *
          * @since 1.3.0
          */
         maxBandwidth180p(384000),
         /**
          * 768Kbps for 640x360 resolution
+         *
          * @since 1.3.0
          */
         maxBandwidth360p(768000),
         /**
          * 2Mbps for 1280x720 resolution
+         *
          * @since 1.3.0
          */
         maxBandwidth720p(2000000),
         /**
          * 3Mbps for 1920x1080 resolution
+         *
          * @since 1.3.0
          */
         maxBandwidth1080p(3000000),
         /**
          * 4Mbps data session
+         *
          * @since 1.3.0
          */
         maxBandwidthSession(4000000),
         /**
          * 64kbps for voice
+         *
          * @since 1.3.0
          */
         maxBandwidthAudio(64000);
 
         private final int id;
-        DefaultBandwidth(int id) { this.id = id; }
-        public int getValue() { return id; }
+
+        DefaultBandwidth(int id) {
+            this.id = id;
+        }
+
+        public int getValue() {
+            return id;
+        }
     }
 
     /**
      * The interface for a listener for incoming call
-     * 
+     *
      * @since 0.1
      */
     interface IncomingCallListener {
-	    /**
-	     * Callback when call is incoming.
-	     * 
-	     * @param call incoming call
-	     */
-	    void onIncomingCall(Call call);
+        /**
+         * Callback when call is incoming.
+         *
+         * @param call incoming call
+         */
+        void onIncomingCall(Call call);
     }
 
     /**
      * The listener for incoming call
-     * 
+     *
      * @since 0.1
      */
     IncomingCallListener getIncomingCallListener();
@@ -147,11 +163,11 @@ public interface Phone {
 
     /**
      * Registers this phone to Cisco Spark cloud on behalf of the authenticated user.
-     * 
-     * It also creates the websocket and connects to Cisco Spark cloud. 
-     * 
+     * <p>
+     * It also creates the websocket and connects to Cisco Spark cloud.
+     * <p>
      * Subsequent invocations of this method refresh the registration.
-     * 
+     *
      * @param callback A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
      * @since 0.1
      */
@@ -159,29 +175,29 @@ public interface Phone {
 
     /**
      * Removes this *phone* from Cisco Spark cloud on behalf of the authenticated user.
-     * 
+     * <p>
      * It also disconnects the websocket from Cisco Spark cloud.
-     * 
+     * <p>
      * Subsequent invocations of this method behave as a no-op.
-     * 
+     *
      * @param callback A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
      * @since 0.1
      */
     void deregister(@NonNull CompletionHandler<Void> callback);
 
     /**
-     * Makes a call to an intended recipient on behalf of the authenticated user. 
-     * 
+     * Makes a call to an intended recipient on behalf of the authenticated user.
+     *
      * @param dialString Intended recipient address in one of the supported formats.
-     * @param option Intended media options - audio only or audio and video - for the call.
-     * @param callback A closure to be executed when completed.
+     * @param option     Intended media options - audio only or audio and video - for the call.
+     * @param callback   A closure to be executed when completed.
      * @since 0.1
      */
     void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback);
 
     /**
      * Render a preview of the local party before the call is answered.
-     * 
+     *
      * @param view an UI view for rendering video.
      * @since 0.1
      */
@@ -189,15 +205,15 @@ public interface Phone {
 
     /**
      * Stop rendering the preview of the local party.
-     * 
+     *
      * @since 0.1
      */
     void stopPreview();
 
     /**
      * Pops up an Alert for the end user to approve the use of H.264 codec license from Cisco Systems, Inc.
-     * 
-     * @param builder AlertDialog builder
+     *
+     * @param builder  AlertDialog builder
      * @param callback A closure to be executed when completed. true if the user approve the license , otherwise false.
      * @since 0.1
      */
@@ -205,7 +221,7 @@ public interface Phone {
 
     /**
      * Prevents the SDK from poping up an Alert for the end user to approve the use of H.264 video codec license from Cisco Systems, Inc.
-     * 
+     *
      * @since 0.1
      */
     void disableVideoCodecActivation();
@@ -219,7 +235,7 @@ public interface Phone {
 
     /**
      * Return the URL of the H.264 codec license from Cisco Systems, Inc.
-     * 
+     *
      * @since 0.1
      */
     String getVideoCodecLicenseURL();
@@ -228,6 +244,7 @@ public interface Phone {
      * Set the max bandwidth for audio in unit bps for the call.
      * Only effective if set before the start of call.
      * if 0, default value of 64 * 1000 is used.
+     *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidthAudio}.
      * @since 1.3.0
      */
@@ -244,6 +261,7 @@ public interface Phone {
      * Set the max bandwidth for video in unit bps for the call.
      * Only effective if set before the start of call.
      * if 0, default value of 2000*1000 is used.
+     *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidth90p}, {@link DefaultBandwidth#maxBandwidth180p},
      *                  {@link DefaultBandwidth#maxBandwidth360p}, {@link DefaultBandwidth#maxBandwidth720p}, or {@link DefaultBandwidth#maxBandwidth1080p}.
      * @since 1.3.0
@@ -258,19 +276,20 @@ public interface Phone {
     int getVideoMaxBandwidth();
 
     /**
-     * Set the max bandwidth for screen sharing in unit bps for the call.
+     * Set the max bandwidth for content sharing in unit bps for the call.
      * Only effective if set before the start of call.
      * if 0, default value of 4000*1000 is used.
+     *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidthSession}.
      * @since 1.3.0
      */
-    void setScreenShareMaxBandwidth(int bandwidth);
+    void setShareMaxBandwidth(int bandwidth);
 
     /**
-     * Return the current maximum bandwidth of screen sharing stream.
+     * Return the current maximum bandwidth of content sharing stream.
      *
      * @since 1.3.0
      */
-    int getScreenShareMaxBandwidth();
+    int getShareMaxBandwidth();
 
 }

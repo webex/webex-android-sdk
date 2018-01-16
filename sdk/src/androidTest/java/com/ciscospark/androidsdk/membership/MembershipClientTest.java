@@ -29,6 +29,7 @@ import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.Spark;
 import com.ciscospark.androidsdk.auth.JWTAuthenticator;
 import com.ciscospark.androidsdk.membership.internal.MembershipClientImpl;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 

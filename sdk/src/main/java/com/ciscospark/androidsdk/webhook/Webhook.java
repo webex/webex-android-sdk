@@ -30,8 +30,8 @@ import com.google.gson.annotations.SerializedName;
 /**
  * A data type presents a Webhook at Cisco Spark for Developer.
  *
- * @since 0.1
  * @see <a href="https://developer.ciscospark.com/webhooks-explained.html">Webhook Explained</a>
+ * @since 0.1
  */
 public class Webhook {
 
@@ -72,7 +72,7 @@ public class Webhook {
     public String getId() {
         return _id;
     }
-    
+
     /**
      * @return A user-friendly name for this webhook.
      * @since 0.1

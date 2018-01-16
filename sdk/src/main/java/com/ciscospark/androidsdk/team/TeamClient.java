@@ -26,40 +26,41 @@ package com.ciscospark.androidsdk.team;
 import java.util.List;
 
 import android.support.annotation.NonNull;
+
 import com.ciscospark.androidsdk.CompletionHandler;
 
 /**
  * An client wrapper of the Cisco Spark <a href="https://developer.ciscospark.com/resource-teams.html">Teams REST API</a>
- * 
+ *
  * @since 0.1
  */
 public interface TeamClient {
 
     /**
      * Lists teams to which the authenticated user belongs.
-     * 
-     * @param max The maximum number of teams in the response.
+     *
+     * @param max     The maximum number of teams in the response.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
     void list(int max, @NonNull CompletionHandler<List<Team>> handler);
 
     /**
-     * Creates a team. The authenticated user is automatically added as a member of the team. 
-     * 
+     * Creates a team. The authenticated user is automatically added as a member of the team.
+     * <p>
      * See the Team Memberships API to learn how to add more people to the team.
-     * 
-     * @param name A user-friendly name for the team.
+     *
+     * @param name    A user-friendly name for the team.
      * @param handler A closure to be executed once the request has finished.
-     * @since 0.1
      * @see TeamMembershipClient
+     * @since 0.1
      */
     void create(@NonNull String name, @NonNull CompletionHandler<Team> handler);
 
     /**
      * Retrieves the details for a team by id.
-     * 
-     * @param teamId The identifier of the team.
+     *
+     * @param teamId  The identifier of the team.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
@@ -67,19 +68,19 @@ public interface TeamClient {
 
     /**
      * Updates the details for a team by id.
-     * 
-     * @param teamId The identifier of the team.
-     * @param name A user-friendly name for the team.
+     *
+     * @param teamId  The identifier of the team.
+     * @param name    A user-friendly name for the team.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
     void update(@NonNull String teamId, String name, @NonNull CompletionHandler<Team> handler);
 
     /**
-     * @param teamId The identifier of the team.
+     * @param teamId  The identifier of the team.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
     void delete(@NonNull String teamId, @NonNull CompletionHandler<Void> handler);
-    
+
 }

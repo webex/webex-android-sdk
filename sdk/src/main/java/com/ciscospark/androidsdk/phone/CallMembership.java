@@ -24,106 +24,106 @@ package com.ciscospark.androidsdk.phone;
 
 /**
  * A data type represents a relationship between *Call* and *Person* at Cisco Spark cloud.
- * 
+ *
  * @since 0.1
  */
 public interface CallMembership {
 
-	/**
-	 * The enumeration of the status of the person in the membership.
-	 * 
-	 * @since 0.1
-	 */
-	enum State {
-		/**
-		 * The person status is unknown.
-		 *
-		 * @since 0.1
-		 */
-		UNKNOWN,
-		/**
-		 * The person is idle w/o any call.
-		 *
-		 * @since 0.1
-		 */
-		IDLE,
-		/**
-		 * The person has been notified about the call.
-		 *
-		 * @since 0.1* 
-		 */
-		NOTIFIED,
-		/**
-		 * The person has joined the call.
-		 *
-		 * @since 0.1
-		 */
-		JOINED,
-		/**
-		 * The person has left the call.
-		 *
-		 * @since 0.1
-		 */
-		LEFT,
-		/**
-		 * The person has declined the call.
-		 *
-		 * @since 0.1
-		 */
-		DECLINED
+    /**
+     * The enumeration of the status of the person in the membership.
+     *
+     * @since 0.1
+     */
+    enum State {
+        /**
+         * The person status is unknown.
+         *
+         * @since 0.1
+         */
+        UNKNOWN,
+        /**
+         * The person is idle w/o any call.
+         *
+         * @since 0.1
+         */
+        IDLE,
+        /**
+         * The person has been notified about the call.
+         *
+         * @since 0.1*
+         */
+        NOTIFIED,
+        /**
+         * The person has joined the call.
+         *
+         * @since 0.1
+         */
+        JOINED,
+        /**
+         * The person has left the call.
+         *
+         * @since 0.1
+         */
+        LEFT,
+        /**
+         * The person has declined the call.
+         *
+         * @since 0.1
+         */
+        DECLINED
     }
 
-	/**
-	 * @return True if the person is the initiator of the call.
-	 * @since 0.1
-	 */
-	boolean isInitiator();
+    /**
+     * @return True if the person is the initiator of the call.
+     * @since 0.1
+     */
+    boolean isInitiator();
 
-	/**
-	 * @return The identifier of the person.
-	 * @since 0.1
-	 */
-	String getPersonId();
+    /**
+     * @return The identifier of the person.
+     * @since 0.1
+     */
+    String getPersonId();
 
-	/**
-	 * @return The status of the person in this CallMembership.
-	 * @since 0.1
-	 */
-	State getState();
+    /**
+     * @return The status of the person in this CallMembership.
+     * @since 0.1
+     */
+    State getState();
 
-	/**
-	 * @return The email address of the person in this CallMembership.
-	 * @since 0.1
-	 */
-	String getEmail();
+    /**
+     * @return The email address of the person in this CallMembership.
+     * @since 0.1
+     */
+    String getEmail();
 
-	/**
-	 * @return The SIP address of the person in this CallMembership.
-	 * @since 0.1
-	 */
-	String getSipUrl();
+    /**
+     * @return The SIP address of the person in this CallMembership.
+     * @since 0.1
+     */
+    String getSipUrl();
 
-	/**
-	 * @return The phone number of the person in this CallMembership.
-	 * @since 0.1
-	 */
-	String getPhoneNumber();
+    /**
+     * @return The phone number of the person in this CallMembership.
+     * @since 0.1
+     */
+    String getPhoneNumber();
 
-	/**
-	 * @return  True if the CallMembership is sending video. Otherwise, false.
-	 * @since 0.1
-	 */
-	boolean isSendingVideo();
+    /**
+     * @return True if the CallMembership is sending video. Otherwise, false.
+     * @since 0.1
+     */
+    boolean isSendingVideo();
 
-	/**
-	 * @return True if the CallMembership is sending audio. Otherwise, false.
-	 * @since 0.1
-	 */
-	boolean isSendingAudio();
+    /**
+     * @return True if the CallMembership is sending audio. Otherwise, false.
+     * @since 0.1
+     */
+    boolean isSendingAudio();
 
-	/**
-	 * @return True if the CallMembership is sending screen share. Otherwise, false.
-	 * @since 1.3.0
-	 */
-	boolean isSendingScreenShare();
+    /**
+     * @return True if the CallMembership is sending content share. Otherwise, false.
+     * @since 1.3.0
+     */
+    boolean isSendingShare();
 }
