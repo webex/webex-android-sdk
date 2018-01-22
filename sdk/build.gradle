@@ -72,10 +72,6 @@ android {
 	    buildConfigField "String", "BUILD_REVISION", "\"${revision()}\""
     }
 
-    packagingOptions {
-        exclude 'META-INF/rxjava.properties'
-    }
-
     buildTypes {
         release {
 			minifyEnabled true
