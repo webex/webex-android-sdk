@@ -48,13 +48,17 @@ class RotationHandler {
     }
 
     public static void registerRotationReceiver(Context context, PhoneImpl phoneImpl) {
-        _receiver = new RotationBroadcastReceiver(phoneImpl);
-        context.registerReceiver(_receiver, new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED));
+        if (_receiver == null) {
+            _receiver = new RotationBroadcastReceiver(phoneImpl);
+            context.registerReceiver(_receiver, new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED));
+        }
     }
 
     public static void unregisterRotationReceiver(Context context) {
-        context.unregisterReceiver(_receiver);
-        _receiver = null;
+        if (_receiver != null) {
+            context.unregisterReceiver(_receiver);
+            _receiver = null;
+        }
     }
 }
 
