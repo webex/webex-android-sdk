@@ -507,7 +507,7 @@ public class CallImpl implements Call {
         return locus.getParticipants();
     }
 
-    private List<LocusParticipant> getRemoteParticipants() {
+    protected List<LocusParticipant> getRemoteParticipants() {
         List<LocusParticipant> participants = getParticipants();
         LocusSelfRepresentation self = getSelf();
         if (self == null) {

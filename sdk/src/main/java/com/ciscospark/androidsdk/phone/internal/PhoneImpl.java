@@ -611,8 +611,22 @@ public class PhoneImpl implements Phone {
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d("Find callImpl " + event.getLocusKey());
-            if (!call.isGroup() || call.getDirection() == Call.Direction.INCOMING) {
-                _setCallOnRinging(call);
+            if (call.isGroup()) {
+                if (call.getDirection() == Call.Direction.INCOMING) {
+                    _setCallOnRinging(call);
+                }
+            }else{
+                if (call.getDirection() == Call.Direction.INCOMING) {
+                    for (LocusParticipant participant : call.getRemoteParticipants()) {
+                        Ln.d("participant State: " + participant.getState());
+                        if (participant.getState() == LocusParticipant.State.JOINED) {
+                            _setCallOnRinging(call);
+                            break;
+                        }
+                    }
+                }else{
+                    _setCallOnRinging(call);
+                }
             }
         }
     }
