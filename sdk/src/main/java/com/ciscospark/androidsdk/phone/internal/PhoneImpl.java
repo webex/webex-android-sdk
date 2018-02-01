@@ -837,13 +837,23 @@ public class PhoneImpl implements Phone {
             } else if (call.getStatus() != Call.CallStatus.CONNECTED
                     && isJoinedFromOtherDevice(deviceList)
                     && !isJoinedFromThisDevice(deviceList)) {
-                Ln.d("other device connected locusKey: " + event.getLocusKey());
-                _removeCall(new CallObserver.OtherConnected(call));
+                com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
+                if (locus == null || !locus.isActive()) {
+                    Ln.d("other device connected locusKey: " + event.getLocusKey());
+                    _removeCall(new CallObserver.OtherConnected(call));
+                }else{
+                    Ln.d("Self device has already connected, ignore other device connect");
+                }
             } else if (call.getStatus() != Call.CallStatus.CONNECTED
                     && !isJoinedFromThisDevice(deviceList)
                     && event.getLocus().getSelf().getState() == LocusParticipant.State.DECLINED) {
-                Ln.d("other device declined locusKey: " + event.getLocusKey());
-                _removeCall(new CallObserver.OtherDeclined(call));
+                com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
+                if (locus == null || !locus.isActive()) {
+                    Ln.d("other device declined locusKey: " + event.getLocusKey());
+                    _removeCall(new CallObserver.OtherDeclined(call));
+                }else{
+                    Ln.d("Self device has already connected, ignore other device decline");
+                }
             }
         }
     }
