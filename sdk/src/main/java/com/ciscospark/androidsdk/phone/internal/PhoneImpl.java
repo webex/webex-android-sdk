@@ -639,10 +639,10 @@ public class PhoneImpl implements Phone {
         if (call != null) {
             Ln.d("Find callImpl " + event.getLocusKey());
             if (!call.isGroup()) {
-                _setCallOnConnected(call, event.getLocusKey());
-                if (call.getAnswerCallback() != null) {
+                if (call.getAnswerCallback() != null && (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING)) {
                     call.getAnswerCallback().onComplete(ResultImpl.success(null));
                 }
+                _setCallOnConnected(call, event.getLocusKey());
             } else if (call.getStatus() != Call.CallStatus.CONNECTED) {
                 for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
                     if (locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
