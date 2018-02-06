@@ -1040,10 +1040,14 @@ public class PhoneImpl implements Phone {
     }
 
     private void _setCallOnRinging(@NonNull CallImpl call) {
-        call.setStatus(Call.CallStatus.RINGING);
-        CallObserver observer = call.getObserver();
-        if (observer != null) {
-            observer.onRinging(call);
+        if (call.getStatus() == Call.CallStatus.INITIATED) {
+            call.setStatus(Call.CallStatus.RINGING);
+            CallObserver observer = call.getObserver();
+            if (observer != null) {
+                observer.onRinging(call);
+            }
+        } else {
+            Ln.w("Do not setCallOnRinging, because current state is: " + call.getStatus());
         }
     }
 
