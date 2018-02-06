@@ -1107,6 +1107,11 @@ public class PhoneImpl implements Phone {
     }
 
     private boolean isJoinedFromThisDevice(List<LocusParticipantDevice> devices) {
+        if (_device == null || _device.getUrl() == null) {
+            Ln.w("isJoinedFromThisDevice: self device is null, register device first.");
+            return false;
+        }
+
         for (LocusParticipantDevice device : devices) {
             if (device.getUrl().equals(_device.getUrl())
                     && device.getState() == LocusParticipant.State.JOINED) {
@@ -1118,6 +1123,11 @@ public class PhoneImpl implements Phone {
     }
 
     private boolean isJoinedFromOtherDevice(List<LocusParticipantDevice> devices) {
+        if (_device == null || _device.getUrl() == null) {
+            Ln.w("isJoinedFromOtherDevice: self device is null, register device first.");
+            return false;
+        }
+
         for (LocusParticipantDevice device : devices) {
             if (!device.getUrl().equals(_device.getUrl())
                     && device.getState() == LocusParticipant.State.JOINED) {
