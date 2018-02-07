@@ -611,8 +611,22 @@ public class PhoneImpl implements Phone {
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d("Find callImpl " + event.getLocusKey());
-            if (!call.isGroup() || call.getDirection() == Call.Direction.INCOMING) {
-                _setCallOnRinging(call);
+            if (call.isGroup()) {
+                if (call.getDirection() == Call.Direction.INCOMING) {
+                    _setCallOnRinging(call);
+                }
+            }else{
+                if (call.getDirection() == Call.Direction.INCOMING) {
+                    for (LocusParticipant participant : call.getRemoteParticipants()) {
+                        Ln.d("participant State: " + participant.getState());
+                        if (participant.getState() == LocusParticipant.State.JOINED) {
+                            _setCallOnRinging(call);
+                            break;
+                        }
+                    }
+                }else{
+                    _setCallOnRinging(call);
+                }
             }
         }
     }
@@ -625,10 +639,10 @@ public class PhoneImpl implements Phone {
         if (call != null) {
             Ln.d("Find callImpl " + event.getLocusKey());
             if (!call.isGroup()) {
-                _setCallOnConnected(call, event.getLocusKey());
-                if (call.getAnswerCallback() != null) {
+                if (call.getAnswerCallback() != null && (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING)) {
                     call.getAnswerCallback().onComplete(ResultImpl.success(null));
                 }
+                _setCallOnConnected(call, event.getLocusKey());
             } else if (call.getStatus() != Call.CallStatus.CONNECTED) {
                 for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
                     if (locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
@@ -823,13 +837,23 @@ public class PhoneImpl implements Phone {
             } else if (call.getStatus() != Call.CallStatus.CONNECTED
                     && isJoinedFromOtherDevice(deviceList)
                     && !isJoinedFromThisDevice(deviceList)) {
-                Ln.d("other device connected locusKey: " + event.getLocusKey());
-                _removeCall(new CallObserver.OtherConnected(call));
+                com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
+                if (locus == null || !locus.isActive()) {
+                    Ln.d("other device connected locusKey: " + event.getLocusKey());
+                    _removeCall(new CallObserver.OtherConnected(call));
+                }else{
+                    Ln.d("Self device has already connected, ignore other device connect");
+                }
             } else if (call.getStatus() != Call.CallStatus.CONNECTED
                     && !isJoinedFromThisDevice(deviceList)
                     && event.getLocus().getSelf().getState() == LocusParticipant.State.DECLINED) {
-                Ln.d("other device declined locusKey: " + event.getLocusKey());
-                _removeCall(new CallObserver.OtherDeclined(call));
+                com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
+                if (locus == null || !locus.isActive()) {
+                    Ln.d("other device declined locusKey: " + event.getLocusKey());
+                    _removeCall(new CallObserver.OtherDeclined(call));
+                }else{
+                    Ln.d("Self device has already connected, ignore other device decline");
+                }
             }
         }
     }
@@ -1016,10 +1040,14 @@ public class PhoneImpl implements Phone {
     }
 
     private void _setCallOnRinging(@NonNull CallImpl call) {
-        call.setStatus(Call.CallStatus.RINGING);
-        CallObserver observer = call.getObserver();
-        if (observer != null) {
-            observer.onRinging(call);
+        if (call.getStatus() == Call.CallStatus.INITIATED) {
+            call.setStatus(Call.CallStatus.RINGING);
+            CallObserver observer = call.getObserver();
+            if (observer != null) {
+                observer.onRinging(call);
+            }
+        } else {
+            Ln.w("Do not setCallOnRinging, because current state is: " + call.getStatus());
         }
     }
 
@@ -1079,6 +1107,11 @@ public class PhoneImpl implements Phone {
     }
 
     private boolean isJoinedFromThisDevice(List<LocusParticipantDevice> devices) {
+        if (_device == null || _device.getUrl() == null) {
+            Ln.w("isJoinedFromThisDevice: self device is null, register device first.");
+            return false;
+        }
+
         for (LocusParticipantDevice device : devices) {
             if (device.getUrl().equals(_device.getUrl())
                     && device.getState() == LocusParticipant.State.JOINED) {
@@ -1090,6 +1123,11 @@ public class PhoneImpl implements Phone {
     }
 
     private boolean isJoinedFromOtherDevice(List<LocusParticipantDevice> devices) {
+        if (_device == null || _device.getUrl() == null) {
+            Ln.w("isJoinedFromOtherDevice: self device is null, register device first.");
+            return false;
+        }
+
         for (LocusParticipantDevice device : devices) {
             if (!device.getUrl().equals(_device.getUrl())
                     && device.getState() == LocusParticipant.State.JOINED) {
