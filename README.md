@@ -214,7 +214,83 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
     ```
+7. Make an room call:
 
+    ```java
+    spark.phone().dial(roomId, MediaOption.audioVideoShare(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
+        @Override
+        public void onComplete(Result<Call> result) {
+            Call call = result.getData();
+            if (call != null) {
+                call.setObserver(new CallObserver() {
+                    @Override
+                    public void onConnected(Call call) {
+
+                    }
+
+                 	//...
+
+                    @Override
+                    public void onCallMembershipChanged(CallMembershipChangedEvent callMembershipChangeEvent) {
+                        CallMembership membership = callMembershipChangeEvent.getCallMembership();
+                        if (callMembershipChangeEvent instanceof MembershipJoinedEvent) {
+
+                        } else if (callMembershipChangeEvent instanceof MembershipLeftEvent) {
+
+                        } else if (callMembershipChangeEvent instanceof MembershipDeclinedEvent) {
+
+                        } else if (callMembershipChangeEvent instanceof MembershipSendingVideoEvent) {
+
+                        } else if (callMembershipChangeEvent instanceof MembershipSendingAudioEvent) {
+
+                        } else if (callMembershipChangeEvent instanceof MembershipSendingSharingEvent) {
+
+                        }
+                    }
+                });
+            }
+            else {
+                SparkError error = result.getError();
+            }
+        }
+    });
+    ```
+    
+8. Screen share (view only):
+
+    ```java
+    spark.phone().dial(roomId, MediaOption.audioVideoShare(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
+        @Override
+        public void onComplete(Result<Call> result) {
+            Call call = result.getData();
+            if (call != null) {
+                call.setObserver(new CallObserver() {
+                    @Override
+                    public void onConnected(Call call) {
+
+                    }
+
+                 	//...
+
+                    @Override
+                    public void onMediaChanged(MediaChangedEvent mediaChangedEvent) {
+                        if (mediaChangedEvent instanceof RemoteSendingShareEvent) {
+                            if (((RemoteSendingShareEvent) mediaChangedEvent).isSending()) {
+                                mediaChangedEvent.getCall().setShareRenderView(shareView);
+                            } else if (!((RemoteSendingShareEvent) mediaChangedEvent).isSending()) {
+                                mediaChangedEvent.getCall().setShareRenderView(null);
+                            }
+                        }
+                    }
+                });
+            }
+            else {
+                SparkError error = result.getError();
+            }
+        }
+    });
+    
+    ```
 ## Contribute
 
 Pull requests welcome. To suggest changes to the SDK, please fork this repository and submit a pull request with your changes. Your request will be reviewed by one of the project maintainers.
