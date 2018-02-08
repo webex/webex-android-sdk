@@ -80,7 +80,7 @@ public class CallMembershipImpl implements CallMembership {
     private boolean _sendingAudio = false;
 
     @StringPart
-    private boolean _sendingShare = false;
+    private boolean _sendingSharing = false;
 
     CallMembershipImpl(LocusParticipant participant, Call call) {
         LocusParticipantInfo person = participant.getPerson();
@@ -92,9 +92,9 @@ public class CallMembershipImpl implements CallMembership {
         _state = fromLocusState(participant.getState());
         _sendingVideo = MediaDirection.SENDRECV.equals(participant.getStatus().getVideoStatus());
         _sendingAudio = MediaDirection.SENDRECV.equals(participant.getStatus().getAudioStatus());
-        _sendingShare = false;
-        if (call instanceof CallImpl && ((CallImpl) call).getShareSender() != null) {
-            _sendingShare = ((CallImpl) call).getShareSender().getPerson().getId().equalsIgnoreCase(person.getId());
+        _sendingSharing = false;
+        if (call instanceof CallImpl && ((CallImpl) call).getSharingSender() != null) {
+            _sendingSharing = ((CallImpl) call).getSharingSender().getPerson().getId().equalsIgnoreCase(person.getId());
         }
 
     }
@@ -131,8 +131,8 @@ public class CallMembershipImpl implements CallMembership {
         return _sendingAudio;
     }
 
-    public boolean isSendingShare() {
-        return _sendingShare;
+    public boolean isSendingSharing() {
+        return _sendingSharing;
     }
 
     public String toString() {

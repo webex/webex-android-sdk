@@ -177,8 +177,7 @@ public class OAuthAuthenticator implements Authenticator {
         });
     }
 
-    private @Nullable
-    OAuth2Tokens getToken() {
+    private @Nullable OAuth2Tokens getToken() {
         if (_token == null && _provider != null) {
             AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
             Ln.d("Get user: " + user + ", " + _provider);

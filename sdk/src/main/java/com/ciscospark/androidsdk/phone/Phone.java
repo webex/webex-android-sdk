@@ -283,13 +283,13 @@ public interface Phone {
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidthSession}.
      * @since 1.3.0
      */
-    void setShareMaxBandwidth(int bandwidth);
+    void setSharingMaxBandwidth(int bandwidth);
 
     /**
      * Return the current maximum bandwidth of content sharing stream.
      *
      * @since 1.3.0
      */
-    int getShareMaxBandwidth();
+    int getSharingMaxBandwidth();
 
 }

@@ -246,6 +246,7 @@ task javadoc(type: Javadoc) {
 	exclude '**/R.java'
 	exclude '**/internal/*.java'
 	exclude '**/utils/**'
+	exclude '**/OAuthTestUserAuthenticator.java'
 	failOnError false
 }
 

@@ -28,7 +28,6 @@ import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.ProviderInfo;
-
 import com.cisco.spark.android.core.BackgroundCheck;
 import com.cisco.spark.android.core.SquaredContentProvider;
 import com.cisco.spark.android.media.MediaEngine;
@@ -51,7 +50,6 @@ import com.ciscospark.androidsdk.team.TeamMembershipClient;
 import com.ciscospark.androidsdk.team.internal.TeamClientImpl;
 import com.ciscospark.androidsdk.team.internal.TeamMembershipClientImpl;
 import com.ciscospark.androidsdk.utils.Utils;
-import com.ciscospark.androidsdk.utils.log.LogCaptureUtil;
 import com.ciscospark.androidsdk.utils.log.NoLn;
 import com.ciscospark.androidsdk.utils.log.WarningLn;
 import com.ciscospark.androidsdk.webhook.WebhookClient;
@@ -94,7 +92,7 @@ public class Spark {
 
     private PhoneImpl _phone;
 
-    private LogCaptureUtil _logCapture;
+//    private LogCaptureUtil _logCapture;
 
     @Inject
     MediaEngine _mediaEngine;
@@ -117,8 +115,13 @@ public class Spark {
         _injector = new SparkInjector(application);
         _injector.create();
         _injector.inject(this);
-        _injector.inject(_authenticator);
-        _logCapture = new LogCaptureUtil(application.getApplicationContext());
+        try {
+            _injector.inject(_authenticator);
+        }
+        catch (Throwable t) {
+            Ln.w(t);    
+        }
+        //_logCapture = new LogCaptureUtil(application.getApplicationContext());
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _injector);
         setLogLevel(LogLevel.DEBUG);
         Ln.i(Utils.versionInfo());
@@ -255,7 +258,7 @@ public class Spark {
      * @param logLevel log message level
      */
     public void setLogLevel(LogLevel logLevel) {
-        _logCapture.setLogLevel(logLevel);
+        //_logCapture.setLogLevel(logLevel);
         NaturalLog logger = new com.ciscospark.androidsdk.utils.log.DebugLn();
         MediaSessionAPI.TraceLevelMask mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO;
         if (logLevel != null) {
@@ -293,30 +296,21 @@ public class Spark {
         if (_mediaEngine != null) {
             _mediaEngine.setLoggingLevel(mask);
         }
-//		Class[] parameterTypes = new Class[3];
-//		parameterTypes[0] = Integer.TYPE;
-//		parameterTypes[1] = String.class;
-//		parameterTypes[2] = String.class;
-//		try {
-//			Method method1 = MediaLog.class.getMethod("outputLog", parameterTypes);
-//			com.webex.wme.Log.setLogMethod(method1);
-//		} catch (Throwable ignored) {
-//		}
     }
 
-    /**
-     * Start log capture for spark sdk.
-     */
-    public void startLogCapture() {
-        _logCapture.startCapture();
-    }
-
-    /**
-     * Stop log capture for spark sdk.
-     */
-    public void stopLogCapture() {
-        _logCapture.stopCapture();
-    }
+//    /**
+//     * Start log capture for spark sdk.
+//     */
+//    public void startLogCapture() {
+//        _logCapture.startCapture();
+//    }
+//
+//    /**
+//     * Stop log capture for spark sdk.
+//     */
+//    public void stopLogCapture() {
+//        _logCapture.stopCapture();
+//    }
 
     private static String getAuthority(final Context appContext) {
         try {

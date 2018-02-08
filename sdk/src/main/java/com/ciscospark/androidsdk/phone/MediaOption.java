@@ -71,31 +71,31 @@ public class MediaOption {
      * Constructs an audio/video and share media option.
      *
      * @param videoRenderViews Local video view and remote video view.
-     * @param shareView  share view for remote.
+     * @param sharingView  share view for remote.
      * @since 1.3.0
      */
-    public static MediaOption audioVideoShare(@Nullable Pair<View, View> videoRenderViews, @Nullable View shareView) {
+    public static MediaOption audioVideoSharing(@Nullable Pair<View, View> videoRenderViews, @Nullable View sharingView) {
         if (videoRenderViews == null || videoRenderViews.first == null || videoRenderViews.second == null) {
-            return new MediaOption(null, null, shareView, true, true);
+            return new MediaOption(null, null, sharingView, true, true);
         }
-        return new MediaOption(videoRenderViews.first, videoRenderViews.second, shareView, true, true);
+        return new MediaOption(videoRenderViews.first, videoRenderViews.second, sharingView, true, true);
     }
 
     private View _remoteView;
 
     private View _localView;
 
-    private View _shareView;
+    private View _sharingView;
 
-    private boolean _hasShare;
+    private boolean _hasSharing;
 
     private boolean _hasVideo;
 
-    private MediaOption(@Nullable View localView, @Nullable View remoteView, @Nullable View shareView, boolean hasShare, boolean hasVideo) {
+    private MediaOption(@Nullable View localView, @Nullable View remoteView, @Nullable View sharingView, boolean hasSharing, boolean hasVideo) {
         _localView = localView;
         _remoteView = remoteView;
-        _shareView = shareView;
-        _hasShare = hasShare;
+        _sharingView = sharingView;
+        _hasSharing = hasSharing;
         _hasVideo = hasVideo;
     }
 
@@ -110,13 +110,13 @@ public class MediaOption {
     }
 
     /**
-     * Whether content share is enabled.
+     * Whether content sharing is enabled.
      *
-     * @return true if content share is enabled. Otherwise, false.
+     * @return true if content sharing is enabled. Otherwise, false.
      * @since 1.3.0
      */
-    public boolean hasShare() {
-        return _hasShare;
+    public boolean hasSharing() {
+        return _hasSharing;
     }
 
     /**
@@ -136,11 +136,11 @@ public class MediaOption {
     }
 
     /**
-     * @return The share view
+     * @return The sharing view
      * @since 1.3.0
      */
-    public View getShareView() {
-        return _shareView;
+    public View getSharingView() {
+        return _sharingView;
     }
 
 }

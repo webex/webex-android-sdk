@@ -169,7 +169,7 @@ public class PhoneImpl implements Phone {
 
     private int videoMaxBandwidth = DefaultBandwidth.maxBandwidth720p.getValue();
 
-    private int shareMaxBandwidth = DefaultBandwidth.maxBandwidthSession.getValue();
+    private int sharingMaxBandwidth = DefaultBandwidth.maxBandwidthSession.getValue();
 
     private static class DialTarget {
         private String address;
@@ -329,13 +329,13 @@ public class PhoneImpl implements Phone {
     }
 
     @Override
-    public void setShareMaxBandwidth(int bandwidth) {
-        shareMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.maxBandwidthSession.getValue() : bandwidth;
+    public void setSharingMaxBandwidth(int bandwidth) {
+        sharingMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.maxBandwidthSession.getValue() : bandwidth;
     }
 
     @Override
-    public int getShareMaxBandwidth() {
-        return shareMaxBandwidth;
+    public int getSharingMaxBandwidth() {
+        return sharingMaxBandwidth;
     }
 
     public void disableVideoCodecActivation() {
@@ -486,7 +486,7 @@ public class PhoneImpl implements Phone {
         stopPreview();
         CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
         builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
-        _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, shareMaxBandwidth));
+        _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
         _callControlService.joinCall(builder.build(), false);
     }
 
@@ -958,7 +958,7 @@ public class PhoneImpl implements Phone {
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             for (CallMembership membership : call.getMemberships()) {
-                if (membership.isSendingShare()) {
+                if (membership.isSendingSharing()) {
                     events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
                 }
             }
@@ -966,7 +966,7 @@ public class PhoneImpl implements Phone {
 
             CallObserver observer = call.getObserver();
             if (observer != null) {
-                observer.onMediaChanged(new CallObserver.RemoteSendingShareEvent(call, true));
+                observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, true));
             }
         }
     }
@@ -992,7 +992,7 @@ public class PhoneImpl implements Phone {
 
             CallObserver observer = call.getObserver();
             if (observer != null) {
-                observer.onMediaChanged(new CallObserver.RemoteSendingShareEvent(call, false));
+                observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, false));
             }
         }
     }
@@ -1024,8 +1024,8 @@ public class PhoneImpl implements Phone {
                 _callControlService.setRemoteWindow(key, call.getVideoRenderViews().second);
                 _callControlService.setPreviewWindow(key, call.getVideoRenderViews().first);
             }
-            if (call.getOption().hasShare() && call.getShareRenderView() != null) {
-                _callControlService.setShareWindow(key, call.getShareRenderView());
+            if (call.getOption().hasSharing() && call.getSharingRenderView() != null) {
+                _callControlService.setShareWindow(key, call.getSharingRenderView());
             }
             _callControlService.updateMediaSession(_callControlService.getCall(call.getKey()), mediaOptionToMediaDirection(call.getOption()));
         }
@@ -1078,7 +1078,7 @@ public class PhoneImpl implements Phone {
         Ln.d("Dial " + target);
         CallContext.Builder builder = new CallContext.Builder(target);
         builder = builder.setMediaDirection(mediaOptionToMediaDirection(option));
-        _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, shareMaxBandwidth));
+        _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
         _callControlService.joinCall(builder.build(), false);
     }
 
@@ -1091,7 +1091,7 @@ public class PhoneImpl implements Phone {
                     LocusKey key = LocusKey.fromUri(response.body().getLocusUrl());
                     CallContext.Builder builder = new CallContext.Builder(key);
                     builder = builder.setMediaDirection(mediaOptionToMediaDirection(option));
-                    _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, shareMaxBandwidth));
+                    _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
                     _callControlService.joinCall(builder.build(), false);
                 } else {
                     Ln.w("Failure call: " + response.errorBody().toString());
@@ -1154,11 +1154,11 @@ public class PhoneImpl implements Phone {
 
     static MediaEngine.MediaDirection mediaOptionToMediaDirection(MediaOption option) {
         MediaEngine.MediaDirection direction = MediaEngine.MediaDirection.SendReceiveAudioVideoShare;
-        if (option.hasVideo() && option.hasShare()) {
+        if (option.hasVideo() && option.hasSharing()) {
             direction = MediaEngine.MediaDirection.SendReceiveAudioVideoShare;
-        } else if (option.hasVideo() && !option.hasShare()) {
+        } else if (option.hasVideo() && !option.hasSharing()) {
             direction = MediaEngine.MediaDirection.SendReceiveAudioVideo;
-        } else if (!option.hasVideo() && option.hasShare()) {
+        } else if (!option.hasVideo() && option.hasSharing()) {
             direction = MediaEngine.MediaDirection.SendReceiveShareOnly;
         } else {
             direction = MediaEngine.MediaDirection.SendReceiveAudioOnly;

@@ -86,13 +86,13 @@ public class CallImpl implements Call {
 
     private Rect _localVideoViewSize = new Rect(0, 0, 0, 0);
     private Rect _remoteVideoViewSize = new Rect(0, 0, 0, 0);
-    private Rect _shareViewSize = new Rect(0, 0, 0, 0);
+    private Rect _sharingViewSize = new Rect(0, 0, 0, 0);
 
     private Map<SendDtmfOperation, CompletionHandler<Void>> _dtmfOperations = new HashMap<>(1);
 
     private boolean _isGroup;
 
-    private View _shareRenderView;
+    private View _sharingRenderView;
 
     private Pair<View, View> _videoRenderViews;
 
@@ -110,7 +110,7 @@ public class CallImpl implements Call {
             } else {
                 _videoRenderViews = null;
             }
-            _shareRenderView = option.getShareView();
+            _sharingRenderView = option.getSharingView();
         }
     }
 
@@ -135,7 +135,7 @@ public class CallImpl implements Call {
             } else {
                 _videoRenderViews = null;
             }
-            _shareRenderView = option.getShareView();
+            _sharingRenderView = option.getSharingView();
         }
     }
 
@@ -204,8 +204,8 @@ public class CallImpl implements Call {
         return _remoteVideoViewSize;
     }
 
-    public Rect getShareViewSize() {
-        return _shareViewSize;
+    public Rect getSharingViewSize() {
+        return _sharingViewSize;
     }
 
     public boolean isRemoteSendingVideo() {
@@ -228,7 +228,7 @@ public class CallImpl implements Call {
         return false;
     }
 
-    public boolean isRemoteSendingShare() {
+    public boolean isRemoteSendingSharing() {
         return _phone.getCallService().getLocusData(getKey()).isFloorGranted();
     }
 
@@ -289,10 +289,10 @@ public class CallImpl implements Call {
     }
 
     @Override
-    public boolean isReceivingShare() {
-        if (!_option.hasShare() && _option.hasVideo()) {
+    public boolean isReceivingSharing() {
+        if (!_option.hasSharing() && _option.hasVideo()) {
             return isReceivingVideo();
-        } else if (_option.hasShare()) {
+        } else if (_option.hasSharing()) {
             return !_phone.getCallService().isRemoteScreenShareMuted(getKey());
         } else {
             return false;
@@ -300,16 +300,16 @@ public class CallImpl implements Call {
     }
 
     @Override
-    public void setReceivingShare(boolean receiving) {
-        if (_option == null || (!_option.hasShare() && !_option.hasVideo())) {
-            Ln.d("Can not setReceivingShare in a Audio call, return");
+    public void setReceivingSharing(boolean receiving) {
+        if (_option == null || (!_option.hasSharing() && !_option.hasVideo())) {
+            Ln.d("Can not setReceivingSharing in a Audio call, return");
             return;
         }
 
-        if (!_option.hasShare() && _option.hasVideo()) {
-            if (!isRemoteSendingShare()) {
-                // not have share and have video and the remote doesn't start share.
-                // do nothing when user set the receivingShare
+        if (!_option.hasSharing() && _option.hasVideo()) {
+            if (!isRemoteSendingSharing()) {
+                // not have sharing and have video and the remote doesn't start sharing.
+                // do nothing when user set the receivingSharing
                 return;
             }
             setReceivingVideo(receiving);
@@ -319,7 +319,7 @@ public class CallImpl implements Call {
 
         CallObserver observer = getObserver();
         if (observer != null) {
-            observer.onMediaChanged(new CallObserver.ReceivingShare(this, receiving));
+            observer.onMediaChanged(new CallObserver.ReceivingSharing(this, receiving));
         }
     }
 
@@ -340,14 +340,14 @@ public class CallImpl implements Call {
         updateMedia();
     }
 
-    public View getShareRenderView() {
-        return _shareRenderView;
+    public View getSharingRenderView() {
+        return _sharingRenderView;
     }
 
     @Override
-    public void setShareRenderView(View shareRenderView) {
-        if (shareRenderView != _shareRenderView) {
-            _shareRenderView = shareRenderView;
+    public void setSharingRenderView(View view) {
+        if (view != _sharingRenderView) {
+            _sharingRenderView = view;
         } else {
             return;
         }
@@ -369,7 +369,7 @@ public class CallImpl implements Call {
             } else {
                 _videoRenderViews = null;
             }
-            _shareRenderView = option.getShareView();
+            _sharingRenderView = option.getSharingView();
         }
 
         _answerCallback = callback;
@@ -440,14 +440,14 @@ public class CallImpl implements Call {
         Ln.d("CallControlMediaDecodeSizeChangedEvent is received");
         CallObserver.MediaChangedEvent mediaEvent = null;
         if (event.getVid() == MediaEngine.SHARE_MID) {
-            _shareViewSize = event.getSize();
-            mediaEvent = new CallObserver.RemoteShareViewSizeChanged(this);
+            _sharingViewSize = event.getSize();
+            mediaEvent = new CallObserver.RemoteSharingViewSizeChanged(this);
         } else {
             _remoteVideoViewSize = event.getSize();
             mediaEvent = new CallObserver.RemoteVideoViewSizeChanged(this);
         }
         CallObserver observer = getObserver();
-        if (observer != null && mediaEvent != null) {
+        if (observer != null) {
             observer.onMediaChanged(mediaEvent);
         }
     }
@@ -526,8 +526,8 @@ public class CallImpl implements Call {
         return _isGroup;
     }
 
-    protected LocusParticipant getShareSender() {
-        if (isRemoteSendingShare()) {
+    LocusParticipant getSharingSender() {
+        if (isRemoteSendingSharing()) {
             return _phone.getCallService().getLocusData(getKey()).getParticipantSharing();
         }
         return null;
@@ -545,8 +545,8 @@ public class CallImpl implements Call {
             _phone._callControlService.removeRemoteVideoWindows(getKey());
         }
 
-        if (_shareRenderView != null) {
-            _phone._callControlService.setShareWindow(getKey(), _shareRenderView);
+        if (_sharingRenderView != null) {
+            _phone._callControlService.setShareWindow(getKey(), _sharingRenderView);
         } else {
             _phone._callControlService.removeShareWindow(getKey());
         }

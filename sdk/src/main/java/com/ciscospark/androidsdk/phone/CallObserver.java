@@ -323,22 +323,22 @@ public interface CallObserver {
     }
 
     /**
-     * This might be triggered when the remote party muted or unmuted the content share.
+     * This might be triggered when the remote party muted or unmuted the content sharing.
      *
      * @since 1.3.0
      */
-    class RemoteSendingShareEvent extends AbstractCallEvent implements MediaChangedEvent {
+    class RemoteSendingSharingEvent extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _sending;
 
-        public RemoteSendingShareEvent(Call call, boolean sending) {
+        public RemoteSendingSharingEvent(Call call, boolean sending) {
             super(call);
             _sending = sending;
         }
 
         /**
-         * @return True if the remote party now is sending content share. Otherwise false.
+         * @return True if the remote party now is sending content sharing. Otherwise false.
          * @since 1.3.0
          */
         public boolean isSending() {
@@ -468,22 +468,22 @@ public interface CallObserver {
     }
 
     /**
-     * This might be triggered when the local party muted or unmuted the remote content share.
+     * This might be triggered when the local party muted or unmuted the remote content sharing.
      *
      * @since 1.3.0
      */
-    class ReceivingShare extends AbstractCallEvent implements MediaChangedEvent {
+    class ReceivingSharing extends AbstractCallEvent implements MediaChangedEvent {
 
         @StringPart
         private boolean _receiving;
 
-        public ReceivingShare(Call call, boolean receiving) {
+        public ReceivingSharing(Call call, boolean receiving) {
             super(call);
             _receiving = receiving;
         }
 
         /**
-         * @return True if the local party now is receiving content share. Otherwise false.
+         * @return True if the local party now is receiving content sharing. Otherwise false.
          * @since 0.1
          */
         public boolean isReceiving() {
@@ -530,12 +530,12 @@ public interface CallObserver {
     }
 
     /**
-     * Remote share rendering view size has changed.
+     * Remote sharing rendering view size has changed.
      *
      * @since 1.3.0
      */
-    class RemoteShareViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
-        public RemoteShareViewSizeChanged(Call call) {
+    class RemoteSharingViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
+        public RemoteSharingViewSizeChanged(Call call) {
             super(call);
         }
     }
