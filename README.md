@@ -217,7 +217,7 @@ Here are some examples of how to use the Android SDK in your app.
 7. Make an room call:
 
     ```java
-    spark.phone().dial(roomId, MediaOption.audioVideoShare(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
+    spark.phone().dial(roomId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
         @Override
         public void onComplete(Result<Call> result) {
             Call call = result.getData();
@@ -259,7 +259,7 @@ Here are some examples of how to use the Android SDK in your app.
 8. Screen share (view only):
 
     ```java
-    spark.phone().dial(roomId, MediaOption.audioVideoShare(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
+    spark.phone().dial(roomId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
         @Override
         public void onComplete(Result<Call> result) {
             Call call = result.getData();
@@ -274,11 +274,11 @@ Here are some examples of how to use the Android SDK in your app.
 
                     @Override
                     public void onMediaChanged(MediaChangedEvent mediaChangedEvent) {
-                        if (mediaChangedEvent instanceof RemoteSendingShareEvent) {
-                            if (((RemoteSendingShareEvent) mediaChangedEvent).isSending()) {
-                                mediaChangedEvent.getCall().setShareRenderView(shareView);
-                            } else if (!((RemoteSendingShareEvent) mediaChangedEvent).isSending()) {
-                                mediaChangedEvent.getCall().setShareRenderView(null);
+                        if (mediaChangedEvent instanceof RemoteSendingSharingEvent) {
+                            if (((RemoteSendingSharingEvent) mediaChangedEvent).isSending()) {
+                                mediaChangedEvent.getCall().setSharingRenderView(shareView);
+                            } else if (!((RemoteSendingSharingEvent) mediaChangedEvent).isSending()) {
+                                mediaChangedEvent.getCall().setSharingRenderView(null);
                             }
                         }
                     }
