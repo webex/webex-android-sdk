@@ -1,12 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 1.3.0 Releases
+- `1.3.0` Releases - [1.3.0](#130)
+
 #### 0.2.0 Releases
 
 - `0.2.0` Releases - [0.2.0](#020)
-
-#### 1.3.0 Releases
-- `1.3.0` Releases - [1.3.0](#130)
 
 ---
 ## [1.3.0](https://github.com/ciscospark/spark-android-sdk/releases/tag/1.3.0)
