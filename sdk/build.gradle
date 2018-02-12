@@ -116,6 +116,37 @@ android {
 			options.addStringOption('Xdoclint:none', '-quiet')
 		}
 	}
+
+	def libraryModuleName = 'sdk'
+	def aarName = libraryModuleName + '-debug.aar'
+	def outputAarDir = rootProject.file(libraryModuleName + '/build/outputs/aar')
+	def outputAarUnzipedDir = rootProject.file(libraryModuleName + '/build/outputs/aar/unziped')
+	def aarReleaseFile = rootProject.file(libraryModuleName + '/build/outputs/aar/' + aarName)
+
+	task unzipAar(type: Copy) {
+		from zipTree(aarReleaseFile)
+		into outputAarUnzipedDir
+	}
+
+	task addLicenseFileInUnzipedAar(type: Copy, dependsOn: 'unzipAar') {
+		def fromDir = rootProject.file('.')
+		from fromDir
+		into outputAarUnzipedDir
+		include 'LICENSE'
+	}
+
+	task reZipAar(type: Zip, dependsOn: 'addLicenseFileInUnzipedAar') {
+		from outputAarUnzipedDir
+		include '*'
+		include '*/*'
+		archiveName aarName
+		destinationDir(outputAarDir)
+	}
+
+	afterEvaluate {
+		bundleRelease.finalizedBy(reZipAar)
+		bundleDebug.finalizedBy(reZipAar)
+	}
 }
 
 publishing {
@@ -222,6 +253,7 @@ def revision() {
 
 task sourcesJar(type: Jar) {
 	classifier = 'sources'
+	from "../LICENSE"
 	from android.sourceSets.main.java.srcDirs
 }
 
