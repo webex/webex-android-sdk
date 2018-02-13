@@ -37,7 +37,7 @@ Assuming you already have an Android project, e.g. _MySparkApp_, for your Androi
 
     ```groovy
     dependencies { 
-        compile('com.ciscospark:androidsdk:0.2.0@aar', {
+        compile('com.ciscospark:androidsdk:1.3.0@aar', {
             transitive = true
         })
     }
