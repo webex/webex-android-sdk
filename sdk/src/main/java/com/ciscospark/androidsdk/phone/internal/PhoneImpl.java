@@ -453,7 +453,7 @@ public class PhoneImpl implements Phone {
         Ln.i("Answer " + call);
         for (CallImpl exist : _calls.values()) {
             Ln.d("answer exist.getStatus(): " + exist.getStatus());
-            if (!exist.getKey().equals(call.getKey()) && (exist.getStatus() == Call.CallStatus.RINGING || exist.getStatus() == Call.CallStatus.CONNECTED)) {
+            if (!exist.getKey().equals(call.getKey()) && exist.getStatus() == Call.CallStatus.CONNECTED) {
                 Ln.e("There are other active calls");
                 if (call.getAnswerCallback() != null) {
                     call.getAnswerCallback().onComplete(ResultImpl.error("There are other active calls"));
