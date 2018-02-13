@@ -9,7 +9,7 @@ ext {
 
 	moduleGroupId = 'com.ciscospark'
 	moduleArtifactId = 'androidsdk'
-	moduleVersion = '1.3.0-SNAPSHOT'
+	moduleVersion = '1.3.0'
 
 	moduleDescription = 'Cisco Spark SDK for Android'
 
@@ -133,6 +133,7 @@ android {
 		from fromDir
 		into outputAarUnzipedDir
 		include 'LICENSE'
+		include 'CISCO API LICENSE FINAL.pdf'
 	}
 
 	task reZipAar(type: Zip, dependsOn: 'addLicenseFileInUnzipedAar') {
@@ -227,7 +228,7 @@ publishing {
 dependencies {
 	compile fileTree(dir: 'libs', include: ['*.jar'])
     provided 'com.squareup.dagger:dagger-compiler:1.2.5'
-    compile('com.cisco.spark.android:common-lib:2.0.4055130-SNAPSHOT@aar', {
+    compile('com.cisco.spark.android:common-lib:2.0.4055130@aar', {
         transitive = true
     })
     testCompile 'com.squareup.okhttp3:okhttp:3.9.0'
@@ -254,6 +255,7 @@ def revision() {
 task sourcesJar(type: Jar) {
 	classifier = 'sources'
 	from "../LICENSE"
+	from "../CISCO API LICENSE FINAL.pdf"
 	from android.sourceSets.main.java.srcDirs
 }
 

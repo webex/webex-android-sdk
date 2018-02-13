@@ -1,11 +1,10 @@
-Except the "com.cisco.spark.android:common-lib" and "com.webex:wme4android-release" 
-licensed under Cisco EULA 
-(https://www.cisco.com/c/en/us/products/end-user-license-agreement.html), 
-everything else is licensed under MIT License below.
+- Except the "Wme.framework" licensed under Cisco API license (see CISCO_API_LICENSE.pdf), 
+- And except the H264 codec license under the following license https://developer.ciscospark.com/docs/sdk-widgets/ios/h264-license-information.html
+Everything else is licensed under MIT License below.
 
 MIT License
 
-Copyright (c) 2016-2017 Cisco Systems, Inc.
+Copyright (c) 2016-2018 Cisco Systems, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
