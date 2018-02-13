@@ -22,9 +22,6 @@ allprojects {
     repositories {
         jcenter()
         maven {
-            url 'https://devhub.cisco.com/artifactory/sparksdk-SNAPSHOT/'
-        }
-        maven {
             url 'https://devhub.cisco.com/artifactory/sparksdk/'
         }
     }
