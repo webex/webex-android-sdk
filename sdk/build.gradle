@@ -133,7 +133,7 @@ android {
 		from fromDir
 		into outputAarUnzipedDir
 		include 'LICENSE'
-		include 'CISCO API LICENSE FINAL.pdf'
+		include 'CISCO_API_LICENSE.pdf'
 	}
 
 	task reZipAar(type: Zip, dependsOn: 'addLicenseFileInUnzipedAar') {
@@ -255,7 +255,7 @@ def revision() {
 task sourcesJar(type: Jar) {
 	classifier = 'sources'
 	from "../LICENSE"
-	from "../CISCO API LICENSE FINAL.pdf"
+	from "../CISCO_API_LICENSE.pdf"
 	from android.sourceSets.main.java.srcDirs
 }
 
