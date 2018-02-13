@@ -356,7 +356,7 @@ public class CallImpl implements Call {
 
     public void acknowledge(@NonNull CompletionHandler<Void> callback) {
         _phone.getCallService().acknowledge(getKey());
-        setStatus(CallStatus.RINGING);
+        //setStatus(CallStatus.RINGING);
         // TODO post event when locus alert responsed in common lib
         callback.onComplete(null);
     }
