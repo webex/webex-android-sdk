@@ -22,6 +22,7 @@ Released on 2018-01-12.
 - Fixed always receiving incoming room call even if there is nobody in the meeting room
 - Fixed unstable call state caused by race condition in call control events
 - Fixed random crash when logout
+- Updated the license by adding a term for H264 codec, and adding a new license file for "Cisco API" used in the project.
 
 #### Removed
 The following exclude is no longer needed in the packagingOptions (unless RxJava2 or its related library is involved in developers's app):
