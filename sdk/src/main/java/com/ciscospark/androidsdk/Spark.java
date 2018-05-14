@@ -28,6 +28,7 @@ import android.app.Application;
 import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.core.BackgroundCheck;
 import com.cisco.spark.android.media.MediaEngine;
+import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.auth.OAuthAuthenticator;
 import com.ciscospark.androidsdk.membership.MembershipClient;
@@ -90,6 +91,9 @@ public class Spark {
 
     @Inject
     BackgroundCheck _backgroundCheck;
+    
+    @Inject
+    UserAgentProvider _userAgentProvider;
 
     /**
      * Constructs a new Spark object with an {@link Authenticator} and Application
@@ -108,6 +112,7 @@ public class Spark {
         //_logCapture = new LogCaptureUtil(application.getApplicationContext());
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _common);
         setLogLevel(LogLevel.DEBUG);
+        Ln.i(_userAgentProvider.get());
         Ln.i(Utils.versionInfo());
         Ln.i("SDKCommon (" + com.ciscospark.androidsdk_commlib.BuildConfig.BUILD_TIME + "-" + com.ciscospark.androidsdk_commlib.BuildConfig.BUILD_REVISION + ")");
     }
