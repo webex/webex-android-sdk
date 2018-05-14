@@ -28,32 +28,28 @@
 
 package com.ciscospark.androidsdk.auth;
 
+import java.util.Map;
+import javax.inject.Inject;
+
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.webkit.WebView;
-
 import com.cisco.spark.android.core.Injector;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.auth.internal.OAuthLauncher;
 import com.ciscospark.androidsdk.internal.ResultImpl;
-import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
+import com.ciscospark.androidsdk_commlib.AfterInjected;
 import me.helloworld.utils.Checker;
 
 /**
- * Created by qimdeng on 1/10/18.
+ * An Single sign-on <a href="https://help.webex.com/docs/DOC-9143#reference_E9B2CEDE975E4CD311C56D9B0EF2476C">SSO</a> based authentication strategy used to authenticate a user on Cisco Spark.
+ *
+ * @see <a href="https://developer.ciscospark.com/authentication.html">Cisco Spark Integration</a>
+ * @since 1.3.0
  */
-
 public class SSOAuthenticator implements Authenticator {
     private static final String TAG = SSOAuthenticator.class.getSimpleName();
 
@@ -172,7 +168,7 @@ public class SSOAuthenticator implements Authenticator {
         return builder.toString();
     }
 
-    @SparkInjector.AfterInjected
+    @AfterInjected
     private void afterInjected() {
         Log.d(TAG, "Inject authenticator after self injected");
         _injector.inject(_authenticator);

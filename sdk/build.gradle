@@ -1,24 +1,21 @@
 apply plugin: 'com.android.library'
-apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'maven-publish'
-apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'jacoco'
 
 ext {
 	moduleName = 'Cisco Spark Android SDK'
-
 	moduleGroupId = 'com.ciscospark'
 	moduleArtifactId = 'androidsdk'
-	moduleVersion = '1.3.0-SNAPSHOT'
-
+	moduleVersion = '1.4.0-SNAPSHOT'
 	moduleDescription = 'Cisco Spark SDK for Android'
-
 	moduleSiteUrl = 'https://developer.ciscospark.com/getting-started.html'
 	moduleProjectUrl = 'https://github.com/ciscospark/spark-android-sdk'
 	moduleGitUrl = 'https://github.com/ciscospark/spark-android-sdk/tree/master'
 	moduleConnectionUrl = 'scm:git:git://github.com/ciscospark/spark-android-sdk.git'
 	moduleDeveloperConnectionUrl = 'scm:git:ssh://github.com:ciscospark/spark-android-sdk.git'
-
 	moduleLicenseName = 'MIT License'
 	moduleLicenseURL = 'https://raw.githubusercontent.com/ciscospark/spark-android-sdk/master/LICENSE'
 	moduleDeveloperId = 'devsupport'
@@ -26,8 +23,6 @@ ext {
 	moduleDeveloperEmail = 'devsupport@ciscospark.com'
 	moduleDeveloperOrganization = 'Cisco System Inc'
 	moduleDeveloperOrganizationURL = 'https://www.ciscospark.com/'
-	mavenUser = project.hasProperty('mavenUser') ? project.getProperty('mavenUser') : ''
-	mavenPass = project.hasProperty('mavenPass') ? project.getProperty('mavenPass') : ''
 }
 
 jacoco {
@@ -59,14 +54,15 @@ task jacocoTestReport(type:JacocoReport, dependsOn: "testDebugUnitTest") {
 }
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
-
+	compileSdkVersion 27
+	buildToolsVersion "27.0.2"
+	
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 25
+        targetSdkVersion 27
         testInstrumentationRunner "com.ciscospark.androidsdk.SparkTestRunner"
         multiDexEnabled true
+	    versionCode 1
 	    versionName moduleVersion
 	    buildConfigField "String", "BUILD_TIME", "\"${buildTime()}\""
 	    buildConfigField "String", "BUILD_REVISION", "\"${revision()}\""
@@ -74,7 +70,7 @@ android {
 
     buildTypes {
         release {
-			minifyEnabled true
+			minifyEnabled false
         }
         debug {
             testCoverageEnabled false
@@ -116,6 +112,38 @@ android {
 			options.addStringOption('Xdoclint:none', '-quiet')
 		}
 	}
+
+	def libraryModuleName = 'sdk'
+	def aarName = libraryModuleName + '-debug.aar'
+	def outputAarDir = rootProject.file(libraryModuleName + '/build/outputs/aar')
+	def outputAarUnzipedDir = rootProject.file(libraryModuleName + '/build/outputs/aar/unziped')
+	def aarReleaseFile = rootProject.file(libraryModuleName + '/build/outputs/aar/' + aarName)
+
+	task unzipAar(type: Copy) {
+		from zipTree(aarReleaseFile)
+		into outputAarUnzipedDir
+	}
+
+	task addLicenseFileInUnzipedAar(type: Copy, dependsOn: 'unzipAar') {
+		def fromDir = rootProject.file('.')
+		from fromDir
+		into outputAarUnzipedDir
+		include 'LICENSE'
+		include 'CISCO_API_LICENSE.pdf'
+	}
+
+	task reZipAar(type: Zip, dependsOn: 'addLicenseFileInUnzipedAar') {
+		from outputAarUnzipedDir
+		include '*'
+		include '*/*'
+		archiveName aarName
+		destinationDir(outputAarDir)
+	}
+
+	afterEvaluate {
+		bundleRelease.finalizedBy(reZipAar)
+		bundleDebug.finalizedBy(reZipAar)
+	}
 }
 
 publishing {
@@ -131,13 +159,13 @@ publishing {
 
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
-                configurations.compile.allDependencies.each { dependency ->
+                configurations.implementation.allDependencies.each { dependency ->
                     if (dependency.group?.trim()) {
                         def dependencyNode = dependenciesNode.appendNode('dependency')
                         dependencyNode.appendNode('groupId', dependency.group)
                         dependencyNode.appendNode('artifactId', dependency.name)
                         dependencyNode.appendNode('version', dependency.version)
-                        if (!dependency.transitive || dependency.name == 'common-lib') {
+                        if (!dependency.transitive || dependency.name == 'androidsdk_commlib') {
                             dependencyNode.appendNode('type', 'aar')
                         }
                     }
@@ -177,8 +205,8 @@ publishing {
 			name 'DevSnapshot'
 			url "http://engci-maven.cisco.com/artifactory/sparksdk-SNAPSHOT/"
 			credentials {
-				username project.mavenUser
-				password project.mavenPass
+				username "$CEC_Username"
+				password "$ArtifactoryApiKey"
 			}
 		}
 
@@ -186,17 +214,20 @@ publishing {
 			name 'Release'
 			url "http://engci-maven.cisco.com/artifactory/sparksdk/"
 			credentials {
-				username project.mavenUser
-				password project.mavenPass
+				username "$CEC_Username"
+				password "$ArtifactoryApiKey"
 			}
 		}
 	}
 }
 
 dependencies {
-	compile fileTree(dir: 'libs', include: ['*.jar'])
-    provided 'com.squareup.dagger:dagger-compiler:1.2.5'
-    compile('com.cisco.spark.android:common-lib:2.0.4055130-SNAPSHOT@aar', {
+	//compile fileTree(dir: 'libs', include: ['*.jar'])
+	compileOnly 'com.squareup.dagger:dagger-compiler:1.2.2'
+	kapt 'com.squareup.dagger:dagger-compiler:1.2.2'
+	annotationProcessor 'com.squareup.dagger:dagger-compiler:1.2.2'
+	
+	implementation('com.ciscospark:androidsdk_commlib:1.4.0-SNAPSHOT@aar', {
         transitive = true
     })
     testCompile 'com.squareup.okhttp3:okhttp:3.9.0'
@@ -222,6 +253,8 @@ def revision() {
 
 task sourcesJar(type: Jar) {
 	classifier = 'sources'
+	from "../LICENSE"
+	from "../CISCO_API_LICENSE.pdf"
 	from android.sourceSets.main.java.srcDirs
 }
 
