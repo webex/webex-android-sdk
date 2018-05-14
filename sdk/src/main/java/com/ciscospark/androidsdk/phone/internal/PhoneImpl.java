@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.inject.Inject;
 
 import android.Manifest;
@@ -38,7 +37,6 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Base64;
 import android.view.View;
-
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
@@ -67,21 +65,21 @@ import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.cisco.spark.android.events.RequestCallingPermissions;
 import com.cisco.spark.android.locus.events.LocusDeclinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
-import com.cisco.spark.android.locus.events.RetrofitErrorEvent;
 import com.cisco.spark.android.locus.events.ParticipantRoomDeclinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantSelfChangedEvent;
+import com.cisco.spark.android.locus.events.RetrofitErrorEvent;
 import com.cisco.spark.android.locus.model.Locus;
 import com.cisco.spark.android.locus.model.LocusData;
 import com.cisco.spark.android.locus.model.LocusKey;
+import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.cisco.spark.android.locus.model.LocusParticipantDevice;
 import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
 import com.cisco.spark.android.locus.responses.LocusUrlResponse;
 import com.cisco.spark.android.media.MediaCapabilityConfig;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaSession;
-import com.cisco.spark.android.media.events.StunTraceServerResultEvent;
 import com.cisco.spark.android.metrics.CallAnalyzerReporter;
-import com.cisco.spark.android.sync.operationqueue.core.OperationQueue;
+import com.cisco.spark.android.sync.operationqueue.core.Operations;
 import com.cisco.spark.android.sync.queue.ConversationSyncQueue;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.ciscospark.androidsdk.CompletionHandler;
@@ -91,7 +89,6 @@ import com.ciscospark.androidsdk.SparkError;
 import com.ciscospark.androidsdk.auth.Authenticator;
 import com.ciscospark.androidsdk.internal.MetricsClient;
 import com.ciscospark.androidsdk.internal.ResultImpl;
-import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.people.Person;
 import com.ciscospark.androidsdk.people.internal.PersonClientImpl;
 import com.ciscospark.androidsdk.phone.Call;
@@ -101,18 +98,15 @@ import com.ciscospark.androidsdk.phone.MediaOption;
 import com.ciscospark.androidsdk.phone.Phone;
 import com.ciscospark.androidsdk.utils.Utils;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
+import com.ciscospark.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.Ln;
-
 import me.helloworld.utils.Checker;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-import com.cisco.spark.android.locus.model.LocusParticipant;
-
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.NoSubscriberEvent;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class PhoneImpl implements Phone {
 
@@ -126,7 +120,7 @@ public class PhoneImpl implements Phone {
     CallControlService _callControlService;
 
     @Inject
-    OperationQueue _operationQueue;
+    Operations _operations;
 
     @Inject
     MediaEngine _mediaEngine;
@@ -264,8 +258,8 @@ public class PhoneImpl implements Phone {
 
     }
 
-    public PhoneImpl(Context context, Authenticator authenticator, SparkInjector injector) {
-        injector.inject(this);
+    public PhoneImpl(Context context, Authenticator authenticator, SDKCommon common) {
+        common.inject(this);
         _authenticator = authenticator;
         _bus.register(this);
         _registerTimer = new Handler();
@@ -380,7 +374,9 @@ public class PhoneImpl implements Phone {
     public void startPreview(View view) {
         stopPreview();
         _preview = _mediaEngine.createMediaSession(UUID.randomUUID().toString());
-        _preview.setSelectedCamera(_callControlService.getDefaultCamera());
+        if (!_preview.getSelectedCamera().equals(_callControlService.getDefaultCamera())) {
+            _preview.switchCamera();
+        }
         _preview.setPreviewWindow(view);
         _preview.startSelfView();
     }
@@ -549,8 +545,8 @@ public class PhoneImpl implements Phone {
         return _callControlService;
     }
 
-    OperationQueue getOperationQueue() {
-        return _operationQueue;
+    Operations getOperations() {
+        return _operations;
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1179,12 +1175,7 @@ public class PhoneImpl implements Phone {
     public void onEventMainThread(ConversationSyncQueue.ConversationSyncStartedEvent event) {
 
     }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(StunTraceServerResultEvent event) {
-
-    }
-
+    
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ApplicationControllerStateChangedEvent event) {
 

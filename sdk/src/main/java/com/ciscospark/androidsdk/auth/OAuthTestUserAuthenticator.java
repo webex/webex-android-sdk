@@ -22,23 +22,22 @@
 
 package com.ciscospark.androidsdk.auth;
 
+import javax.inject.Inject;
+
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-
 import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
-import com.cisco.spark.android.core.AuthenticatedUser;
+import com.cisco.spark.android.model.AuthenticatedUser;
 import com.cisco.spark.android.model.LoginTestUserRequest;
-import com.cisco.spark.android.sync.ActorRecord;
+import com.cisco.spark.android.model.conversation.ActorRecord;
 import com.cisco.spark.android.util.LoggingLock;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.github.benoitdion.ln.Ln;
-
-import javax.inject.Inject;
 
 /**
  * Created by qimdeng on 12/7/17.

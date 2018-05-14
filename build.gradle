@@ -3,24 +3,27 @@ apply plugin: 'com.github.ben-manes.versions'
 buildscript {
     repositories {
         jcenter()
-	    mavenCentral()
+        google()
         maven {
             url 'https://maven.fabric.io/public'
         }
     }
+    ext.kotlin_version = "1.1.51"
+    ext.gradleVersion = System.env.GRADLE_VERSION == null ? '3.0.1' : System.env.GRADLE_VERSION
+
     dependencies {
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.12.0'
-        classpath 'io.fabric.tools:gradle:1.21.6'
-        classpath 'com.android.tools.build:gradle:2.3.3'
-        classpath 'me.tatarka:gradle-retrolambda:3.5.0'
-	    classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
-	    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
+        classpath 'com.jakewharton.sdkmanager:gradle-plugin:0.12.+'
+        classpath "com.android.tools.build:gradle:$gradleVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
 allprojects {
     repositories {
+        mavenLocal()
         jcenter()
+        google()
         maven {
             url 'https://devhub.cisco.com/artifactory/sparksdk/'
         }

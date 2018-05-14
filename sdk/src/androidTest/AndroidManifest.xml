@@ -30,12 +30,5 @@
 
     <application android:allowBackup="true"
         android:supportsRtl="true">
-
-        <provider
-            android:name="com.cisco.spark.android.sync.ConversationContentProvider"
-            android:authorities="com.ciscospark.androidsdk.sync.conversation"
-            android:exported="false"
-            />
-
     </application>
 </manifest>

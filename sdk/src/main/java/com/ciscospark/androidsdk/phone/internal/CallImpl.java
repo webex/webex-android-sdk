@@ -392,7 +392,7 @@ public class CallImpl implements Call {
     }
 
     public void sendDTMF(@NonNull String dtmf, @NonNull CompletionHandler<Void> callback) {
-        SendDtmfOperation operation = _phone.getOperationQueue().sendDtmf(dtmf);
+        SendDtmfOperation operation = _phone.getOperations().sendDtmf(dtmf);
         _dtmfOperations.put(operation, callback);
     }
 
@@ -425,7 +425,8 @@ public class CallImpl implements Call {
         if (call != null) {
             MediaSession session = call.getMediaSession();
             if (session != null) {
-                if (session.setSelectedCameraAndChangeDevice(PhoneImpl.fromFacingMode(facingMode))) {
+                if (!session.getSelectedCamera().equals(PhoneImpl.fromFacingMode(facingMode))) {
+                    session.switchCamera();
                     CallObserver observer = getObserver();
                     if (observer != null) {
                         observer.onMediaChanged(new CallObserver.CameraSwitched(this));
@@ -439,7 +440,7 @@ public class CallImpl implements Call {
     public void onEventMainThread(CallControlMediaDecodeSizeChangedEvent event) {
         Ln.d("CallControlMediaDecodeSizeChangedEvent is received");
         CallObserver.MediaChangedEvent mediaEvent = null;
-        if (event.getVid() == MediaEngine.SHARE_MID) {
+        if (event.getVideoId() == MediaEngine.SHARE_MID) {
             _sharingViewSize = event.getSize();
             mediaEvent = new CallObserver.RemoteSharingViewSizeChanged(this);
         } else {

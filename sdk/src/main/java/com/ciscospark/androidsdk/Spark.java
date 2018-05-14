@@ -25,16 +25,11 @@ package com.ciscospark.androidsdk;
 import javax.inject.Inject;
 
 import android.app.Application;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.pm.ProviderInfo;
+import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.core.BackgroundCheck;
-import com.cisco.spark.android.core.SquaredContentProvider;
 import com.cisco.spark.android.media.MediaEngine;
-import com.cisco.spark.android.sync.ConversationContentProvider;
-import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.internal.SparkInjector;
+import com.ciscospark.androidsdk.auth.OAuthAuthenticator;
 import com.ciscospark.androidsdk.membership.MembershipClient;
 import com.ciscospark.androidsdk.membership.internal.MembershipClientImpl;
 import com.ciscospark.androidsdk.message.MessageClient;
@@ -54,6 +49,7 @@ import com.ciscospark.androidsdk.utils.log.NoLn;
 import com.ciscospark.androidsdk.utils.log.WarningLn;
 import com.ciscospark.androidsdk.webhook.WebhookClient;
 import com.ciscospark.androidsdk.webhook.internal.WebhookClientImpl;
+import com.ciscospark.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.DebugLn;
 import com.github.benoitdion.ln.InfoLn;
 import com.github.benoitdion.ln.Ln;
@@ -71,12 +67,7 @@ public class Spark {
     public static final String APP_NAME = "spark_android_sdk";
 
     public static final String APP_VERSION = BuildConfig.VERSION_NAME + "(" + BuildConfig.BUILD_TIME + "_" + BuildConfig.BUILD_REVISION + ")";
-
-    static {
-        UserAgentProvider.APP_NAME = APP_NAME;
-        UserAgentProvider.APP_VERSION = APP_VERSION;
-    }
-
+    
     /**
      * The enumeration of log message level
      *
@@ -86,7 +77,7 @@ public class Spark {
         NO, ERROR, WARNING, INFO, DEBUG, VERBOSE, ALL
     }
 
-    private SparkInjector _injector;
+    private SDKCommon _common;
 
     private Authenticator _authenticator;
 
@@ -108,24 +99,17 @@ public class Spark {
      * @since 0.1
      */
     public Spark(Application application, Authenticator authenticator) {
-        SquaredContentProvider.CONTENT_AUTHORITY = getAuthority(application.getApplicationContext());
-        ConversationContentProvider.resetUriMatcher();
-        com.cisco.spark.android.core.Application.setApplication(application);
-        _authenticator = authenticator;
-        _injector = new SparkInjector(application);
-        _injector.create();
-        _injector.inject(this);
-        try {
-            _injector.inject(_authenticator);
-        }
-        catch (Throwable t) {
-            Ln.w(t);    
-        }
+        _authenticator = authenticator;        
+        _common = new SDKCommon(application, APP_NAME, APP_VERSION);
+        _common.addInjectable(this.getClass(), authenticator.getClass(), OAuthAuthenticator.class, PhoneImpl.class, Call.class);
+        _common.create();
+        _common.inject(this);
+        _common.inject(_authenticator);
         //_logCapture = new LogCaptureUtil(application.getApplicationContext());
-        _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _injector);
+        _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _common);
         setLogLevel(LogLevel.DEBUG);
         Ln.i(Utils.versionInfo());
-        Ln.i("CommonLib (" + com.cisco.spark.android.BuildConfig.BUILD_TIME + "-" + com.cisco.spark.android.BuildConfig.GIT_COMMIT_SHA + ")");
+        Ln.i("SDKCommon (" + com.ciscospark.androidsdk_commlib.BuildConfig.BUILD_TIME + "-" + com.ciscospark.androidsdk_commlib.BuildConfig.BUILD_REVISION + ")");
     }
 
     /**
@@ -311,15 +295,5 @@ public class Spark {
 //    public void stopLogCapture() {
 //        _logCapture.stopCapture();
 //    }
-
-    private static String getAuthority(final Context appContext) {
-        try {
-            final ComponentName componentName = new ComponentName(appContext, ConversationContentProvider.class.getName());
-            final ProviderInfo providerInfo = appContext.getPackageManager().getProviderInfo(componentName, 0);
-            return providerInfo.authority;
-        } catch (Throwable t) {
-            Ln.d("Content provider not found.");
-            return "com.ciscospark.androidsdk.CPOSC";
-        }
-    }
+    
 }

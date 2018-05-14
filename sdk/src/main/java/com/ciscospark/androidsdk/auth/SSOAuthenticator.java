@@ -28,26 +28,20 @@
 
 package com.ciscospark.androidsdk.auth;
 
+import java.util.Map;
+import javax.inject.Inject;
+
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.webkit.WebView;
-
 import com.cisco.spark.android.core.Injector;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.auth.internal.OAuthLauncher;
 import com.ciscospark.androidsdk.internal.ResultImpl;
-import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
+import com.ciscospark.androidsdk_commlib.AfterInjected;
 import me.helloworld.utils.Checker;
 
 /**
@@ -174,7 +168,7 @@ public class SSOAuthenticator implements Authenticator {
         return builder.toString();
     }
 
-    @SparkInjector.AfterInjected
+    @AfterInjected
     private void afterInjected() {
         Log.d(TAG, "Inject authenticator after self injected");
         _injector.inject(_authenticator);
