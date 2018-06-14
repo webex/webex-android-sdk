@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
-## [1.3.0](https://github.com/ciscospark/spark-android-sdk/releases/tag/1.3.0)
+## [1.3.0](https://github.com/webex/webex-android-sdk/releases/tag/1.3.0)
 Released on 2018-01-12.
 
 #### Added
@@ -31,8 +31,8 @@ The following exclude is no longer needed in the packagingOptions (unless RxJava
         exclude 'META-INF/rxjava.properties'
     }
 
-## [0.2.0](https://github.com/ciscospark/spark-android-sdk/releases/tag/0.2.0)
+## [0.2.0](https://github.com/webex/webex-android-sdk/releases/tag/0.2.0)
 Released on 2017-11-30.
 
 #### Added
-- Initial release of Cisco Spark SDK for Android.
+- Initial release of Cisco Webex SDK for Android.

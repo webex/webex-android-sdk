@@ -6,23 +6,23 @@ apply plugin: 'maven-publish'
 apply plugin: 'jacoco'
 
 ext {
-	moduleName = 'Cisco Spark Android SDK'
-	moduleGroupId = 'com.ciscospark'
+	moduleName = 'Cisco Webex Android SDK'
+	moduleGroupId = 'com.ciscowebex'
 	moduleArtifactId = 'androidsdk'
 	moduleVersion = '1.4.0-SNAPSHOT'
-	moduleDescription = 'Cisco Spark SDK for Android'
-	moduleSiteUrl = 'https://developer.ciscospark.com/getting-started.html'
-	moduleProjectUrl = 'https://github.com/ciscospark/spark-android-sdk'
-	moduleGitUrl = 'https://github.com/ciscospark/spark-android-sdk/tree/master'
-	moduleConnectionUrl = 'scm:git:git://github.com/ciscospark/spark-android-sdk.git'
-	moduleDeveloperConnectionUrl = 'scm:git:ssh://github.com:ciscospark/spark-android-sdk.git'
+	moduleDescription = 'Cisco Webex SDK for Android'
+	moduleSiteUrl = 'https://developer.webex.com/getting-started.html'
+	moduleProjectUrl = 'https://github.com/webex/webex-android-sdk'
+	moduleGitUrl = 'https://github.com/webex/webex-android-sdk/tree/master'
+	moduleConnectionUrl = 'scm:git:git://github.com/webex/webex-android-sdk.git'
+	moduleDeveloperConnectionUrl = 'scm:git:ssh://github.com:webex/webex-android-sdk.git'
 	moduleLicenseName = 'MIT License'
-	moduleLicenseURL = 'https://raw.githubusercontent.com/ciscospark/spark-android-sdk/master/LICENSE'
+	moduleLicenseURL = 'https://raw.githubusercontent.com/webex/webex-android-sdk/master/LICENSE'
 	moduleDeveloperId = 'devsupport'
-	moduleDeveloperName = 'Cisco Spark for Developer'
-	moduleDeveloperEmail = 'devsupport@ciscospark.com'
+	moduleDeveloperName = 'Cisco Webex for Developer'
+	moduleDeveloperEmail = 'devsupport@ciscowebex.com'
 	moduleDeveloperOrganization = 'Cisco System Inc'
-	moduleDeveloperOrganizationURL = 'https://www.ciscospark.com/'
+	moduleDeveloperOrganizationURL = 'https://www.webex.com/'
 }
 
 jacoco {
@@ -60,7 +60,7 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 27
-        testInstrumentationRunner "com.ciscospark.androidsdk.SparkTestRunner"
+        testInstrumentationRunner "com.ciscowebex.androidsdk.WebexTestRunner"
         multiDexEnabled true
 	    versionCode 1
 	    versionName moduleVersion
@@ -203,7 +203,7 @@ publishing {
 	repositories{
 		maven {
 			name 'DevSnapshot'
-			url "http://engci-maven.cisco.com/artifactory/sparksdk-SNAPSHOT/"
+			url "http://engci-maven.cisco.com/artifactory/webexsdk-SNAPSHOT/"
 			credentials {
 				username "$CEC_Username"
 				password "$ArtifactoryApiKey"
@@ -212,7 +212,7 @@ publishing {
 
 		maven {
 			name 'Release'
-			url "http://engci-maven.cisco.com/artifactory/sparksdk/"
+			url "http://engci-maven.cisco.com/artifactory/webexsdk/"
 			credentials {
 				username "$CEC_Username"
 				password "$ArtifactoryApiKey"
@@ -222,12 +222,12 @@ publishing {
 }
 
 dependencies {
-	//compile fileTree(dir: 'libs', include: ['*.jar'])
+	compile fileTree(dir: 'libs', include: ['*.jar'])
 	compileOnly 'com.squareup.dagger:dagger-compiler:1.2.2'
 	kapt 'com.squareup.dagger:dagger-compiler:1.2.2'
 	annotationProcessor 'com.squareup.dagger:dagger-compiler:1.2.2'
 	
-	implementation('com.ciscospark:androidsdk_commlib:1.4.0-SNAPSHOT@aar', {
+	implementation('com.ciscowebex:androidsdk_commlib:1.4.0-SNAPSHOT@aar', {
         transitive = true
     })
     testCompile 'com.squareup.okhttp3:okhttp:3.9.0'

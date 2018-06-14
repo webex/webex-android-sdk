@@ -1,11 +1,11 @@
-# Cisco Spark Android SDK
+# Cisco Webex Android SDK
 
-[![Travis CI](https://travis-ci.org/ciscospark/spark-android-sdk.svg)](https://travis-ci.org/ciscospark/spark-android-sdk)
-[![license](https://img.shields.io/github/license/ciscospark/spark-android-sdk.svg)](https://github.com/ciscospark/spark-android-sdk/blob/master/LICENSE)
+[![Travis CI](https://travis-ci.org/webex/webex-android-sdk.svg)](https://travis-ci.org/webex/webex-android-sdk)
+[![license](https://img.shields.io/github/license/webex/webex-android-sdk.svg)](https://github.com/webex/webex-android-sdk/blob/master/LICENSE)
 
-> The Cisco Spark™ Android SDK
+> The Cisco Webex™ Android SDK
 
-The Cisco Spark Android SDK makes it easy to integrate secure and convenient Cisco Spark messaging and calling features in your Android apps.
+The Cisco Webex Android SDK makes it easy to integrate secure and convenient Cisco Webex messaging and calling features in your Android apps.
 
 This SDK is built with **Android SDK Tools 25** and requires **Android API Level 21** or later.
 
@@ -18,7 +18,7 @@ This SDK is built with **Android SDK Tools 25** and requires **Android API Level
 
 ## Install
 
-Assuming you already have an Android project, e.g. _MySparkApp_, for your Android app, here are the steps to integrate the Cisco Spark Android SDK into your project using [Gradle](https://gradle.org):
+Assuming you already have an Android project, e.g. _MyWebexApp_, for your Android app, here are the steps to integrate the Cisco Webex Android SDK into your project using [Gradle](https://gradle.org):
 
 1. Add the following repository to your top-level `build.gradle` file:
 
@@ -27,17 +27,17 @@ Assuming you already have an Android project, e.g. _MySparkApp_, for your Androi
         repositories {
             jcenter()
             maven {
-                url 'https://devhub.cisco.com/artifactory/sparksdk/'
+                url 'https://devhub.cisco.com/artifactory/webexsdk/'
             }
         }
     }
     ```
 
-2. Add the `spark-android-sdk` library as a dependency for your app in the `build.gradle` file:
+2. Add the `webex-android-sdk` library as a dependency for your app in the `build.gradle` file:
 
     ```groovy
     dependencies { 
-        compile('com.ciscospark:androidsdk:1.3.0@aar', {
+        compile('com.ciscowebex:androidsdk:1.3.0@aar', {
             transitive = true
         })
     }
@@ -55,24 +55,24 @@ Assuming you already have an Android project, e.g. _MySparkApp_, for your Androi
 
 ## Usage
 
-To use the SDK, you will need Cisco Spark integration credentials. If you do not already have a Cisco Spark account, visit the [Cisco Spark for Developers portal](https://developer.ciscospark.com/) to create your account and [register an integration](https://developer.ciscospark.com/authentication.html#registering-your-integration). Your app will need to authenticate users via an [OAuth](https://oauth.net/) grant flow for existing Cisco Spark users or a [JSON Web Token](https://jwt.io/) for guest users without a Cisco Spark account.
+To use the SDK, you will need Cisco Webex integration credentials. If you do not already have a Cisco Webex account, visit the [Cisco Webex for Developers portal](https://developer.webex.com/) to create your account and [register an integration](https://developer.webex.com/authentication.html#registering-your-integration). Your app will need to authenticate users via an [OAuth](https://oauth.net/) grant flow for existing Cisco Webex users or a [JSON Web Token](https://jwt.io/) for guest users without a Cisco Webex account.
 
-See the [Android SDK area](https://developer.ciscospark.com/sdk-for-android.html) of the Cisco Spark for Developers site for more information about this SDK.
+See the [Android SDK area](https://developer.webex.com/sdk-for-android.html) of the Cisco Webex for Developers site for more information about this SDK.
 
 ### Examples
 
 Here are some examples of how to use the Android SDK in your app.
 
-1. Create a new `Spark` instance using Spark ID authentication ([OAuth](https://oauth.net/)-based):
+1. Create a new `Webex` instance using Webex ID authentication ([OAuth](https://oauth.net/)-based):
 
     ```java
     String clientId = "YOUR_CLIENT_ID";
     String clientSecret = "YOUR_CLIENT_SECRET";
     String scope = "spark:all";
-    String redirectUri = "Sparkdemoapp://response";
+    String redirectUri = "Webexdemoapp://response";
 
     OAuthWebViewAuthenticator authenticator = new OAuthWebViewAuthenticator(clientId, clientSecret, scope, redirectUri);
-    Spark spark = new Spark(activity.getApplication(), authenticator)
+    Webex webex = new Webex(activity.getApplication(), authenticator)
     if (!authenticator.isAuthorized()) {
         authenticator.authorize(webView, new CompletionHandler<Void>() {
             @Override
@@ -85,11 +85,11 @@ Here are some examples of how to use the Android SDK in your app.
     }
     ```
 
-2. Create a new `Spark` instance using Guest ID authentication ([JWT](https://jwt.io/)-based):
+2. Create a new `Webex` instance using Guest ID authentication ([JWT](https://jwt.io/)-based):
 
     ```java
     JWTAuthenticator authenticator = new JWTAuthenticator();
-    Spark spark = new Spark(activity.getApplication(), authenticator);
+    Webex webex = new Webex(activity.getApplication(), authenticator);
     if (!authenticator.isAuthorized()) {
         authenticator.authorize(myJwt);
     }
@@ -98,7 +98,7 @@ Here are some examples of how to use the Android SDK in your app.
 3. Register the device to send and receive calls:
 
     ```java
-    spark.phone().register(new CompletionHandler<Void>() {
+    webex.phone().register(new CompletionHandler<Void>() {
         @Override
         public void onComplete(Result<Void> result) {
             if (result.isSuccessful()) {
@@ -111,47 +111,47 @@ Here are some examples of how to use the Android SDK in your app.
     });
     ```
 
-4. Create a new Cisco Spark space, add users to the space, and send a message:
+4. Create a new Cisco Webex space, add users to the space, and send a message:
 
     ```java
-    // Create a Cisco Spark space:
+    // Create a Cisco Webex space:
 
-    spark.rooms().create("Hello World", null, new CompletionHandler<Room>() {
+    webex.rooms().create("Hello World", null, new CompletionHandler<Room>() {
         @Override
         public void onComplete(Result<Room> result) {
             if (result.isSuccessful()) {
                 Room room = result.getData();
             }
             else {
-                SparkError error = result.getError();
+                WebexError error = result.getError();
             }
         }
     });
     
     // Add a user to a space:
 
-    spark.memberships().create(roomId, null, "person@example.com", true, new CompletionHandler<Membership>() {
+    webex.memberships().create(roomId, null, "person@example.com", true, new CompletionHandler<Membership>() {
         @Override
         public void onComplete(Result<Membership> result) {
             if (result.isSuccessful()) {
                 Membership membership = result.getData();
             }
             else {
-                SparkError error = result.getError();
+                WebexError error = result.getError();
             }
         }
     });
 
     // Send a message to a space:
 
-    spark.messages().post(roomId, null, null, "Hello there", null, null, new CompletionHandler<Message>() {
+    webex.messages().post(roomId, null, null, "Hello there", null, null, new CompletionHandler<Message>() {
         @Override
         public void onComplete(Result<Message> result) {
             if (result.isSuccessful()) {
                 Message message = result.getData();
             }
             else {
-                SparkError error = result.getError();
+                WebexError error = result.getError();
             }
         }
     });
@@ -160,7 +160,7 @@ Here are some examples of how to use the Android SDK in your app.
 5. Make an outgoing call:
 
     ```java
-    spark.phone().dial("person@example.com", MediaOption.audioVideo(local, remote), new CompletionHandler<Call>() {
+    webex.phone().dial("person@example.com", MediaOption.audioVideo(local, remote), new CompletionHandler<Call>() {
         @Override
         public void onComplete(Result<Call> result) {
             Call call = result.getData();
@@ -188,7 +188,7 @@ Here are some examples of how to use the Android SDK in your app.
                 });
             }
             else {
-                SparkError error = result.getError();
+                WebexError error = result.getError();
             }
         }
     });
@@ -197,7 +197,7 @@ Here are some examples of how to use the Android SDK in your app.
 6. Receive a call:
 
     ```java
-    spark.phone().setIncomingCallListener(new Phone.IncomingCallListener() {
+    webex.phone().setIncomingCallListener(new Phone.IncomingCallListener() {
         @Override
         public void onIncomingCall(Call call) {
             call.answer(MediaOption.audioVideo(local, remote), new CompletionHandler<Void>() {
@@ -207,7 +207,7 @@ Here are some examples of how to use the Android SDK in your app.
                         // success
                     }
                     else {
-                        SparkError error = result.getError();
+                        WebexError error = result.getError();
                     }
                 }
             });
@@ -217,7 +217,7 @@ Here are some examples of how to use the Android SDK in your app.
 7. Make an room call:
 
     ```java
-    spark.phone().dial(roomId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
+    webex.phone().dial(roomId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
         @Override
         public void onComplete(Result<Call> result) {
             Call call = result.getData();
@@ -250,7 +250,7 @@ Here are some examples of how to use the Android SDK in your app.
                 });
             }
             else {
-                SparkError error = result.getError();
+                WebexError error = result.getError();
             }
         }
     });
@@ -259,7 +259,7 @@ Here are some examples of how to use the Android SDK in your app.
 8. Screen share (view only):
 
     ```java
-    spark.phone().dial(roomId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
+    webex.phone().dial(roomId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
         @Override
         public void onComplete(Result<Call> result) {
             Call call = result.getData();
@@ -285,7 +285,7 @@ Here are some examples of how to use the Android SDK in your app.
                 });
             }
             else {
-                SparkError error = result.getError();
+                WebexError error = result.getError();
             }
         }
     });
@@ -299,4 +299,4 @@ Pull requests welcome. To suggest changes to the SDK, please fork this repositor
 
 &copy; 2016-2017 Cisco Systems, Inc. and/or its affiliates. All Rights Reserved.
 
-See [LICENSE](https://github.com/ciscospark/spark-android-sdk/blob/master/LICENSE) for details.
+See [LICENSE](https://github.com/webex/webex-android-sdk/blob/master/LICENSE) for details.
