@@ -30,14 +30,6 @@ allprojects {
         maven {
             url 'http://engci-maven.cisco.com/artifactory/webexsdk/'
         }
-        maven {
-            url 'https://devhub.cisco.com/artifactory/sparksdk-SNAPSHOT'
-        }
-        maven {
-            url 'https://devhub.cisco.com/artifactory/sparksdk/'
-        }
-
-
     }
 }
 
