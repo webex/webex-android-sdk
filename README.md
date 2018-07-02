@@ -13,6 +13,7 @@ This SDK is built with **Android SDK Tools 25** and requires **Android API Level
 
 - [Install](#install)
 - [Usage](#usage)
+- [Migrating from Cisco Spark Android SDK](#Migrating from Cisco Spark Android SDK)
 - [Contribute](#contribute)
 - [License](#license)
 
@@ -37,7 +38,7 @@ Assuming you already have an Android project, e.g. _MyWebexApp_, for your Androi
 
     ```groovy
     dependencies { 
-        compile('com.ciscowebex:androidsdk:1.3.0@aar', {
+        compile('com.ciscowebex:androidsdk:2.0.0@aar', {
             transitive = true
         })
     }
@@ -291,6 +292,52 @@ Here are some examples of how to use the Android SDK in your app.
     });
     
     ```
+
+## Migrating from Cisco Spark Android SDK
+
+The purpose of this guide is to help you to migrate from Cisco Spark Android SDK to Cisco Webex Android SDK.
+
+### Install
+
+Assuming you already have an Android project with Spark Android SDK integrated. For your Android app, here are the steps to migrate to use Webex Android SDK:
+
+1. Change the maven repository url in your top-level `build.gradle` file:
+
+    ```groovy
+    allprojects {
+        repositories {
+            jcenter()
+            maven {
+                // url 'https://devhub.cisco.com/artifactory/sparksdk/'
+                url 'https://devhub.cisco.com/artifactory/webexsdk/'
+            }
+        }
+    }
+    ```
+
+2. Update the library dependency for your app in the `build.gradle` file:
+
+    ```groovy
+    dependencies { 
+        // compile('com.ciscospark:androidsdk:1.4.0@aar', {
+        //     transitive = true
+        // })
+        compile('com.ciscowebex:androidsdk:2.0.0@aar', {
+            transitive = true
+        })
+    }
+    ```
+
+### Usage
+
+Here are API changes list from Spark Android SDK to Webex Android SDK.
+
+| Description | Spark Android SDK | Webex Android SDK |
+| :----:| :----: | :----:
+| Package name | com.ciscospark.androidsdk | com.ciscowebex.androidsdk
+| Create a new instance | Spark spark = new Spark(application, authenticator) | Webex webex = new Webex(application, authenticator)
+| Get error response | SparkError error = result.getError() | WebexError error = result.getError()
+
 ## Contribute
 
 Pull requests welcome. To suggest changes to the SDK, please fork this repository and submit a pull request with your changes. Your request will be reviewed by one of the project maintainers.
