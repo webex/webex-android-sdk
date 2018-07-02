@@ -13,7 +13,7 @@ This SDK is built with **Android SDK Tools 25** and requires **Android API Level
 
 - [Install](#install)
 - [Usage](#usage)
-- [Migrating from Cisco Spark Android SDK](#Migrating from Cisco Spark Android SDK)
+- [Migrating from Cisco Spark Android SDK](#migrating-from-cisco-spark-android-sdk)
 - [Contribute](#contribute)
 - [License](#license)
 
