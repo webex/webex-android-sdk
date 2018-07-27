@@ -173,8 +173,8 @@ public class PhoneImpl implements Phone {
         enum AddressType {
             PEOPLE_ID,
             PEOPLE_MAIL,
-            ROOM_ID,
-            ROOM_MAIL,
+            SPACE_ID,
+            SPACE_MAIL,
             OTHER
         }
 
@@ -182,10 +182,10 @@ public class PhoneImpl implements Phone {
             switch (this.type) {
                 case OTHER:
                 case PEOPLE_ID:
-                case ROOM_MAIL:
+                case SPACE_MAIL:
                 case PEOPLE_MAIL:
                     return true;
-                case ROOM_ID:
+                case SPACE_ID:
                     return false;
                 default:
                     return true;
@@ -198,8 +198,8 @@ public class PhoneImpl implements Phone {
                 case PEOPLE_ID:
                 case PEOPLE_MAIL:
                     return false;
-                case ROOM_MAIL:
-                case ROOM_ID:
+                case SPACE_MAIL:
+                case SPACE_ID:
                     return true;
                 default:
                     return false;
@@ -217,7 +217,7 @@ public class PhoneImpl implements Phone {
                 this.address = target;
                 return;
             } else if (this.address.toLowerCase().endsWith("@meet.ciscospark.com")) {
-                this.type = AddressType.ROOM_MAIL;
+                this.type = AddressType.SPACE_MAIL;
                 return;
             } else if (this.address.contains("@") && !this.address.contains(".")) {
                 this.type = AddressType.PEOPLE_MAIL;
@@ -243,8 +243,8 @@ public class PhoneImpl implements Phone {
                         if (type.equalsIgnoreCase("PEOPLE")) {
                             this.type = AddressType.PEOPLE_ID;
                             return paths.get(paths.size() - 1);
-                        } else if (type.equalsIgnoreCase("ROOM")) {
-                            this.type = AddressType.ROOM_ID;
+                        } else if (type.equalsIgnoreCase("ROOM") || type.equalsIgnoreCase("SPACE")) {
+                            this.type = AddressType.SPACE_ID;
                             return paths.get(paths.size() - 1);
                         }
                     }
@@ -442,7 +442,7 @@ public class PhoneImpl implements Phone {
         } else if (target.isEndpoint()) {
             doDial(target.address, option);
         } else {
-            doDialRoomID(target.address, option);
+            doDialSpaceID(target.address, option);
         }
     }
 
@@ -783,7 +783,7 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    // Room remote declined
+    // Space remote declined
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ParticipantRoomDeclinedEvent event) {
         Ln.i("ParticipantRoomDeclinedEvent is received " + event.getLocusKey());
@@ -1080,7 +1080,7 @@ public class PhoneImpl implements Phone {
         _callControlService.joinCall(builder.build(), false);
     }
 
-    private void doDialRoomID(String target, MediaOption option) {
+    private void doDialSpaceID(String target, MediaOption option) {
         Ln.d("Dial " + target);
         apiClientProvider.getConversationClient().getOrCreatePermanentLocus(target).enqueue(new Callback<LocusUrlResponse>() {
             @Override

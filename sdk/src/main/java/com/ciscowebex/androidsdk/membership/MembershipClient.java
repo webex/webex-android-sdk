@@ -30,35 +30,35 @@ import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.CompletionHandler;
 
 /**
- * A client wrapper of the Cisco Webex <a href="https://developer.webex.com/resource-memberships.html">Room Memberships REST API</a>
+ * A client wrapper of the Cisco Webex <a href="https://developer.webex.com/resource-memberships.html">Space Memberships REST API</a>
  *
  * @since 0.1
  */
 public interface MembershipClient {
 
     /**
-     * Lists all room memberships where the authenticated user belongs.
+     * Lists all space memberships where the authenticated user belongs.
      *
-     * @param roomId      The identifier of the room where the membership belongs.
+     * @param spaceId      The identifier of the space where the membership belongs.
      * @param personId    The identifier of the person who has the memberships.
      * @param personEmail The email address of the person who has the memberships.
      * @param max         The maximum number of items in the response.
      * @param handler     A closure to be executed once the request has finished.
      * @since 0.1
      */
-    void list(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler);
+    void list(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler);
 
     /**
-     * Adds a person to a room by person id; optionally making the person a moderator.
+     * Adds a person to a space by person id; optionally making the person a moderator.
      *
-     * @param roomId      The identifier of the room where the person is to be added.
+     * @param spaceId      The identifier of the space where the person is to be added.
      * @param personId    The identifier of the person to be added.
      * @param personEmail The email address of the person to be added.
-     * @param isModerator If true, make the person a moderator of the room. The default is false.
+     * @param isModerator If true, make the person a moderator of the space. The default is false.
      * @param handler     A closure to be executed once the request has finished.
      * @since 0.1
      */
-    void create(@NonNull String roomId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler);
+    void create(@NonNull String spaceId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler);
 
     /**
      * Retrieves the details for a membership by membership id.
@@ -73,14 +73,14 @@ public interface MembershipClient {
      * Updates the properties of a membership by membership id.
      *
      * @param membershipId The identifier of the membership.
-     * @param isModerator  If true, make the person a moderator of the room in this membership. The default is false.
+     * @param isModerator  If true, make the person a moderator of the space in this membership. The default is false.
      * @param handler      A closure to be executed once the request has finished.
      * @since 0.1
      */
     void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<Membership> handler);
 
     /**
-     * Deletes a membership by membership id. It removes the person from the room where the membership belongs.
+     * Deletes a membership by membership id. It removes the person from the space where the membership belongs.
      *
      * @param membershipId The identifier of the membership.
      * @param handler      A closure to be executed once the request has finished.

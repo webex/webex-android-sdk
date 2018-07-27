@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package com.ciscowebex.androidsdk.room;
+package com.ciscowebex.androidsdk.space;
 
 
 import java.util.List;
@@ -31,14 +31,14 @@ import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.CompletionHandler;
 
 /**
- * A client wrapper of the Cisco Webex <a href="https://developer.webex.com/resource-rooms.html">Rooms REST API</a>
+ * A client wrapper of the Cisco Webex <a href="https://developer.webex.com/resource-rooms.html">Spaces REST API</a>
  *
  * @since 0.1
  */
-public interface RoomClient {
+public interface SpaceClient {
 
     /**
-     * Sort results by room ID (id), most recent activity (lastactivity), or most recently created (created).
+     * Sort results by space ID (id), most recent activity (lastactivity), or most recently created (created).
      *
      * @since 0.1
      */
@@ -47,54 +47,54 @@ public interface RoomClient {
     }
 
     /**
-     * Lists all rooms where the authenticated user belongs.
+     * Lists all spaces where the authenticated user belongs.
      *
-     * @param teamId  If not nil, only list the rooms that are associated with the team by team id.
-     * @param max     The maximum number of rooms in the response.
-     * @param type    If not nil, only list the rooms of this type. Otherwise all rooms are listed.
-     * @param sortBy  Sort results by room ID (id), most recent activity (lastactivity), or most recently created (created).
+     * @param teamId  If not nil, only list the spaces that are associated with the team by team id.
+     * @param max     The maximum number of spaces in the response.
+     * @param type    If not nil, only list the spaces of this type. Otherwise all spaces are listed.
+     * @param sortBy  Sort results by space ID (id), most recent activity (lastactivity), or most recently created (created).
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
-    void list(@Nullable String teamId, int max, @Nullable Room.RoomType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Room>> handler);
+    void list(@Nullable String teamId, int max, @Nullable Space.SpaceType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Space>> handler);
 
     /**
-     * Creates a room. The authenticated user is automatically added as a member of the room. See the Memberships API to learn how to add more people to the room.
+     * Creates a space. The authenticated user is automatically added as a member of the space. See the Memberships API to learn how to add more people to the space.
      *
-     * @param title   A user-friendly name for the room.
-     * @param teamId  If not nil, this room will be associated with the team by team id. Otherwise, this room is not associated with any team.
+     * @param title   A user-friendly name for the space.
+     * @param teamId  If not nil, this space will be associated with the team by team id. Otherwise, this space is not associated with any team.
      * @param handler A closure to be executed once the request has finished.
      * @see com.ciscowebex.androidsdk.membership.MembershipClient
      * @since 0.1
      */
-    void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Room> handler);
+    void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Space> handler);
 
     /**
-     * Retrieves the details for a room by id.
+     * Retrieves the details for a space by id.
      *
-     * @param roomId  The identifier of the room.
+     * @param spaceId  The identifier of the space.
      * @param handler The queue on which the completion handler is dispatched.
      * @since 0.1
      */
-    void get(@NonNull String roomId, @NonNull CompletionHandler<Room> handler);
+    void get(@NonNull String spaceId, @NonNull CompletionHandler<Space> handler);
 
     /**
-     * Updates the details for a room by id.
+     * Updates the details for a space by id.
      *
-     * @param roomId  The identifier of the room.
-     * @param title   A user-friendly name for the room.
+     * @param spaceId  The identifier of the space.
+     * @param title   A user-friendly name for the space.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
-    void update(@NonNull String roomId, @NonNull String title, @NonNull CompletionHandler<Room> handler);
+    void update(@NonNull String spaceId, @NonNull String title, @NonNull CompletionHandler<Space> handler);
 
     /**
-     * Deletes a room by id.
+     * Deletes a space by id.
      *
-     * @param roomId  The identifier of the room.
+     * @param spaceId  The identifier of the space.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
-    void delete(@NonNull String roomId, @NonNull CompletionHandler<Void> handler);
+    void delete(@NonNull String spaceId, @NonNull CompletionHandler<Void> handler);
 
 }

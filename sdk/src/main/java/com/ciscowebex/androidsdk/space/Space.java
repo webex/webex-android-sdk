@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package com.ciscowebex.androidsdk.room;
+package com.ciscowebex.androidsdk.space;
 
 import java.util.Date;
 
@@ -28,22 +28,22 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * A data type represents a Room at Cisco Webex cloud.
+ * A data type represents a Space at Cisco Webex cloud.
  * <p>
  * Room has been renamed to Space in Cisco Webex.
  *
  * @since 0.1
  */
-public class Room {
+public class Space {
 
     /**
-     * The enumeration of the types of a room.
+     * The enumeration of the types of a space.
      *
      * @since 0.1
      */
-    public enum RoomType {
+    public enum SpaceType {
         /**
-         * Group room among multiple people
+         * Group space among multiple people
          *
          * @since 0.1
          */
@@ -51,7 +51,7 @@ public class Room {
         group,
 
         /**
-         * 1-to-1 room between two people
+         * 1-to-1 space between two people
          *
          * @since 0.1
          */
@@ -66,7 +66,7 @@ public class Room {
     private String _title;
 
     @SerializedName("type")
-    private RoomType _type;
+    private SpaceType _type;
 
     @SerializedName("teamId")
     private String _teamId;
@@ -87,7 +87,7 @@ public class Room {
     }
 
     /**
-     * @return The identifier of this room.
+     * @return The identifier of this space.
      * @since 0.1
      */
     public String getId() {
@@ -95,7 +95,7 @@ public class Room {
     }
 
     /**
-     * @return The title of this room.
+     * @return The title of this space.
      * @since 0.1
      */
     public String getTitle() {
@@ -103,15 +103,15 @@ public class Room {
     }
 
     /**
-     * @return The type of this room.
+     * @return The type of this space.
      * @since 0.1
      */
-    public RoomType getType() {
+    public SpaceType getType() {
         return _type;
     }
 
     /**
-     * @return The team Id that this room associated with.
+     * @return The team Id that this space associated with.
      * @since 0.1
      */
     public String getTeamId() {
@@ -119,7 +119,7 @@ public class Room {
     }
 
     /**
-     * @return Indicate if this room is locked.
+     * @return Indicate if this space is locked.
      * @since 0.1
      */
     public boolean isLocked() {
@@ -127,7 +127,7 @@ public class Room {
     }
 
     /**
-     * @return Last activity of this room.
+     * @return Last activity of this space.
      * @since 0.1
      */
     public Date getLastActivity() {
@@ -135,7 +135,7 @@ public class Room {
     }
 
     /**
-     * @return The timestamp that this room being created.
+     * @return The timestamp that this space being created.
      * @since 0.1
      */
     public Date getCreated() {

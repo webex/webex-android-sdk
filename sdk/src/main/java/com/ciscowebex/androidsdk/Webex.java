@@ -25,6 +25,8 @@ package com.ciscowebex.androidsdk;
 import javax.inject.Inject;
 
 import android.app.Application;
+import android.util.Log;
+
 import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.core.BackgroundCheck;
 import com.cisco.spark.android.media.MediaEngine;
@@ -39,8 +41,8 @@ import com.ciscowebex.androidsdk.people.PersonClient;
 import com.ciscowebex.androidsdk.people.internal.PersonClientImpl;
 import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.phone.internal.PhoneImpl;
-import com.ciscowebex.androidsdk.room.RoomClient;
-import com.ciscowebex.androidsdk.room.internal.RoomClientImpl;
+import com.ciscowebex.androidsdk.space.SpaceClient;
+import com.ciscowebex.androidsdk.space.internal.SpaceClientImpl;
 import com.ciscowebex.androidsdk.team.TeamClient;
 import com.ciscowebex.androidsdk.team.TeamMembershipClient;
 import com.ciscowebex.androidsdk.team.internal.TeamClientImpl;
@@ -50,6 +52,7 @@ import com.ciscowebex.androidsdk.utils.log.NoLn;
 import com.ciscowebex.androidsdk.utils.log.WarningLn;
 import com.ciscowebex.androidsdk.webhook.WebhookClient;
 import com.ciscowebex.androidsdk.webhook.internal.WebhookClientImpl;
+import com.ciscowebex.androidsdk_commlib.BuildConfig;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.DebugLn;
 import com.github.benoitdion.ln.InfoLn;
@@ -103,7 +106,7 @@ public class Webex {
      * @since 0.1
      */
     public Webex(Application application, Authenticator authenticator) {
-        _authenticator = authenticator;        
+        _authenticator = authenticator;
         _common = new SDKCommon(application, APP_NAME, APP_VERSION);
         _common.addInjectable(this.getClass(), authenticator.getClass(), OAuthAuthenticator.class, PhoneImpl.class, Call.class);
         _common.create();
@@ -160,10 +163,10 @@ public class Webex {
     }
 
     /**
-     * Messages are how we communicate in a room.
+     * Messages are how we communicate in a space.
      *
      * @return The {@link MessageClient} is uesd to manage the messages on behalf of the authenticated user.
-     * @see RoomClient
+     * @see SpaceClient
      * @see MembershipClient
      * @since 0.1
      */
@@ -184,10 +187,10 @@ public class Webex {
     }
 
     /**
-     * Memberships represent a person's relationships to rooms.
+     * Memberships represent a person's relationships to spaces.
      *
-     * @return The {@link MembershipClient} is used to manage the authenticated user's relationship to rooms.
-     * @see RoomClient
+     * @return The {@link MembershipClient} is used to manage the authenticated user's relationship to spaces.
+     * @see SpaceClient
      * @see MessageClient
      * @since 0.1
      */
@@ -196,7 +199,7 @@ public class Webex {
     }
 
     /**
-     * Teams are groups of people with a set of rooms that are visible to all members of that team.
+     * Teams are groups of people with a set of spaces that are visible to all members of that team.
      *
      * @return The {@link TeamClient} is used to create and manage the teams on behalf of the authenticated user.
      * @see TeamMembershipClient
@@ -212,7 +215,7 @@ public class Webex {
      *
      * @return The {@link TeamMembershipClient} is used to create and manage the team membership on behalf of the authenticated user.
      * @see TeamClient
-     * @see RoomClient
+     * @see SpaceClient
      * @since 0.1
      */
     public TeamMembershipClient teamMembershipClient() {
@@ -220,7 +223,7 @@ public class Webex {
     }
 
     /**
-     * Webhooks allow the application to be notified via HTTP (or HTTPS?) when a specific event occurs in Cisco Webex, e.g. a new message is posted into a specific room.
+     * Webhooks allow the application to be notified via HTTP (or HTTPS?) when a specific event occurs in Cisco Webex, e.g. a new message is posted into a specific space.
      *
      * @return The {@link WebhookClient} is used to create and manage the webhooks for specific events.
      * @since 0.1
@@ -230,15 +233,15 @@ public class Webex {
     }
 
     /**
-     * Rooms are virtual meeting places in Cisco Webex where people post messages and collaborate to get work done.
+     * Spaces are virtual meeting places in Cisco Webex where people post messages and collaborate to get work done.
      *
-     * @return The {@link RoomClient} is used to manage the rooms on behalf of the authenticated user.
+     * @return The {@link SpaceClient} is used to manage the spaces on behalf of the authenticated user.
      * @see MembershipClient
      * @see MessageClient
      * @since 0.1
      */
-    public RoomClient rooms() {
-        return new RoomClientImpl(this._authenticator);
+    public SpaceClient spaces() {
+        return new SpaceClientImpl(this._authenticator);
     }
 
     /**

@@ -63,7 +63,7 @@ public class MessageClientTest {
     public void test() {
 
         Gson gson = new Gson();
-        Message m = gson.fromJson("{\"roomType\":\"drr\"}", Message.class);
+        Message m = gson.fromJson("{\"spaceType\":\"drr\"}", Message.class);
 
         System.out.println(gson.toJson(m));
 

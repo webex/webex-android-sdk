@@ -117,11 +117,11 @@ Here are some examples of how to use the Android SDK in your app.
     ```java
     // Create a Cisco Webex space:
 
-    webex.rooms().create("Hello World", null, new CompletionHandler<Room>() {
+    webex.spaces().create("Hello World", null, new CompletionHandler<Space>() {
         @Override
-        public void onComplete(Result<Room> result) {
+        public void onComplete(Result<Space> result) {
             if (result.isSuccessful()) {
-                Room room = result.getData();
+                Space space = result.getData();
             }
             else {
                 WebexError error = result.getError();
@@ -131,7 +131,7 @@ Here are some examples of how to use the Android SDK in your app.
     
     // Add a user to a space:
 
-    webex.memberships().create(roomId, null, "person@example.com", true, new CompletionHandler<Membership>() {
+    webex.memberships().create(spaceId, null, "person@example.com", true, new CompletionHandler<Membership>() {
         @Override
         public void onComplete(Result<Membership> result) {
             if (result.isSuccessful()) {
@@ -145,7 +145,7 @@ Here are some examples of how to use the Android SDK in your app.
 
     // Send a message to a space:
 
-    webex.messages().post(roomId, null, null, "Hello there", null, null, new CompletionHandler<Message>() {
+    webex.messages().post(spaceId, null, null, "Hello there", null, null, new CompletionHandler<Message>() {
         @Override
         public void onComplete(Result<Message> result) {
             if (result.isSuccessful()) {
@@ -215,10 +215,10 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
     ```
-7. Make an room call:
+7. Make an space call:
 
     ```java
-    webex.phone().dial(roomId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
+    webex.phone().dial(spaceId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
         @Override
         public void onComplete(Result<Call> result) {
             Call call = result.getData();
@@ -260,7 +260,7 @@ Here are some examples of how to use the Android SDK in your app.
 8. Screen share (view only):
 
     ```java
-    webex.phone().dial(roomId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
+    webex.phone().dial(spaceId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
         @Override
         public void onComplete(Result<Call> result) {
             Call call = result.getData();

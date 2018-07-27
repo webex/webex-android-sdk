@@ -25,7 +25,7 @@ package com.ciscowebex.androidsdk.message;
 
 import java.util.Date;
 
-import com.ciscowebex.androidsdk.room.Room;
+import com.ciscowebex.androidsdk.space.Space;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
@@ -45,11 +45,11 @@ public class Message {
     @SerializedName("personEmail")
     private String _personEmail;
 
-    @SerializedName("roomId")
-    private String _roomId;
+    @SerializedName(value = "roomId", alternate = {"spaceId"})
+    private String _spaceId;
 
-    @SerializedName("roomType")
-    private Room.RoomType _roomType;
+    @SerializedName(value = "roomType", alternate = {"spaceType"})
+    private Space.SpaceType _spaceType;
 
     @SerializedName("text")
     private String _text;
@@ -97,19 +97,19 @@ public class Message {
     }
 
     /**
-     * @return The identifier of the room where this message was posted.
+     * @return The identifier of the space where this message was posted.
      * @since 0.1
      */
-    public String getRoomId() {
-        return _roomId;
+    public String getSpaceId() {
+        return _spaceId;
     }
 
     /**
-     * @return The type of the room where this message was posted.
+     * @return The type of the space where this message was posted.
      * @since 0.1
      */
-    public Room.RoomType getRoomType() {
-        return _roomType;
+    public Space.SpaceType getSpaceType() {
+        return _spaceType;
     }
 
     /**

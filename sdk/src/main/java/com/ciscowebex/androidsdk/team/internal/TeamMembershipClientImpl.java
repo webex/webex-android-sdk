@@ -92,7 +92,7 @@ public class TeamMembershipClientImpl implements TeamMembershipClient {
 
     private interface TeamMembershipService {
         @GET("team/memberships")
-        Call<ListBody<TeamMembership>> list(@Header("Authorization") String authorization, @Query("teamId") String roomId, @Query("max") Integer max);
+        Call<ListBody<TeamMembership>> list(@Header("Authorization") String authorization, @Query("teamId") String teamId, @Query("max") Integer max);
 
         @POST("team/memberships")
         Call<TeamMembership> create(@Header("Authorization") String authorization, @Body Map parameters);

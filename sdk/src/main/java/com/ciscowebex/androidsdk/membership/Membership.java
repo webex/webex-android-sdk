@@ -49,8 +49,8 @@ public class Membership {
     @SerializedName("personOrgId")
     private String _personOrgId;
 
-    @SerializedName("roomId")
-    private String _roomId;
+    @SerializedName(value = "roomId", alternate = {"spaceId"})
+    private String _spaceId;
 
     @SerializedName("isModerator")
     private boolean _isModerator;
@@ -94,15 +94,15 @@ public class Membership {
     }
 
     /**
-     * @return The id of the room.
+     * @return The id of the space.
      * @since 0.1
      */
-    public String getRoomId() {
-        return _roomId;
+    public String getSpaceId() {
+        return _spaceId;
     }
 
     /**
-     * @return True if this member is a moderator of the room in this membership. Otherwise false.
+     * @return True if this member is a moderator of the space in this membership. Otherwise false.
      * @since 0.1
      */
     public boolean isModerator() {
@@ -110,7 +110,7 @@ public class Membership {
     }
 
     /**
-     * @return True if this member is a monitor of the room in this membership. Otherwise false.
+     * @return True if this member is a monitor of the space in this membership. Otherwise false.
      * @since 0.1
      */
     public boolean isMonitor() {

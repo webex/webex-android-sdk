@@ -65,15 +65,15 @@ public class MessageClientImpl implements MessageClient {
         _service = new ServiceBuilder().build(MessageService.class);
     }
 
-    public void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
+    public void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, roomId, before, beforeMessage, mentionedPeople, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
+            _service.list(s, spaceId, spaceId, before, beforeMessage, mentionedPeople, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
         });
     }
 
-    public void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler) {
+    public void post(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.post(s, Maps.makeMap("roomId", roomId, "toPersonId", personId, "toPersonEmail", personEmail, "text", text, "markdown", markdown, "files", files)).enqueue(new ObjectCallback<>(handler));
+            _service.post(s, Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "toPersonId", personId, "toPersonEmail", personEmail, "text", text, "markdown", markdown, "files", files)).enqueue(new ObjectCallback<>(handler));
         });
     }
 
@@ -93,6 +93,7 @@ public class MessageClientImpl implements MessageClient {
         @GET("messages")
         Call<ListBody<Message>> list(@Header("Authorization") String authorization,
                                      @Query("roomId") String roomId,
+                                     @Query("spaceId") String spaceId,
                                      @Query("before") String before,
                                      @Query("beforeMessage") String beforeMessage,
                                      @Query("mentionedPeople") String mentionedPeople,

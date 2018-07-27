@@ -14,12 +14,12 @@ Released on 2018-01-12.
 
 #### Added
 - Receive and display content-sharing stream
-- Support room calling/multi-party calling
+- Support space calling/multi-party calling
 - Support Single-Sign-On authentication
 - Set the maximum bandwidth for Audio/Video/Content Sharing
 
 #### Updated
-- Fixed always receiving incoming room call even if there is nobody in the meeting room
+- Fixed always receiving incoming space call even if there is nobody in the meeting space
 - Fixed unstable call state caused by race condition in call control events
 - Fixed random crash when logout
 - Updated the license by adding a term for H264 codec, and adding a new license file for "Cisco API" used in the project.

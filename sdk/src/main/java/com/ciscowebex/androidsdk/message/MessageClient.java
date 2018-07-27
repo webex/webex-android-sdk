@@ -37,11 +37,11 @@ import com.ciscowebex.androidsdk.CompletionHandler;
 public interface MessageClient {
 
     /**
-     * Lists all messages in a room by room Id. If present, it includes the associated media content attachment for each message.
+     * Lists all messages in a space by space Id. If present, it includes the associated media content attachment for each message.
      * <p>
      * The list sorts the messages in descending order by creation date.
      *
-     * @param roomId          The identifier of the room.
+     * @param spaceId          The identifier of the space.
      * @param before          If not nil, only list messages sent only before this date and time, in ISO8601 format.
      * @param beforeMessage   If not nil, only list messages sent only before this message by id.
      * @param mentionedPeople If not nil, only list messages metion people.
@@ -49,21 +49,21 @@ public interface MessageClient {
      * @param handler         A closure to be executed once the request has finished.
      * @since 0.1
      */
-    void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler);
+    void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler);
 
     /**
-     * Posts a plain text message, and optionally, a media content attachment, to a room by room Id.
+     * Posts a plain text message, and optionally, a media content attachment, to a space by space Id.
      *
-     * @param roomId      The identifier of the room where the message is to be posted.
+     * @param spaceId      The identifier of the space where the message is to be posted.
      * @param personId    The identifier of the recipient of this private 1:1 message.
      * @param personEmail The email address of the recipient when sending a private 1:1 message.
-     * @param text        The plain text message to be posted to the room.
-     * @param markdown    The markdown text message to be posted to the room.
+     * @param text        The plain text message to be posted to the space.
+     * @param markdown    The markdown text message to be posted to the space.
      * @param files       A public URL that Cisco Webex can use to fetch attachments. Currently supports only a single URL. Cisco Webex downloads the content from the URL one time shortly after the message is created and automatically converts it to a format that all Cisco Webex clients can render.
      * @param handler     A closure to be executed once the request has finished.
      * @since 0.1
      */
-    void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler);
+    void post(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler);
 
     /**
      * Retrieves the details for a message by message Id.

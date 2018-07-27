@@ -59,15 +59,15 @@ public class MembershipClientImpl implements MembershipClient {
         _service = new ServiceBuilder().build(MembershipService.class);
     }
 
-    public void list(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler) {
+    public void list(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, roomId, personId, personEmail, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
+            _service.list(s, spaceId, spaceId, personId, personEmail, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
         });
     }
 
-    public void create(@NonNull String roomId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
+    public void create(@NonNull String spaceId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.create(s, Maps.makeMap("roomId", roomId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)).enqueue(new ObjectCallback<>(handler));
+            _service.create(s, Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)).enqueue(new ObjectCallback<>(handler));
         });
     }
 
@@ -93,6 +93,7 @@ public class MembershipClientImpl implements MembershipClient {
         @GET("memberships")
         Call<ListBody<Membership>> list(@Header("Authorization") String authorization,
                                         @Query("roomId") String roomId,
+                                        @Query("spaceId") String spaceId,
                                         @Query("personId") String personId,
                                         @Query("personEmail") String personEmail,
                                         @Query("max") Integer max);

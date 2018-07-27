@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package com.ciscowebex.androidsdk.room.internal;
+package com.ciscowebex.androidsdk.space.internal;
 
 
 import java.util.List;
@@ -31,8 +31,8 @@ import android.support.annotation.Nullable;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.room.Room;
-import com.ciscowebex.androidsdk.room.RoomClient;
+import com.ciscowebex.androidsdk.space.Space;
+import com.ciscowebex.androidsdk.space.SpaceClient;
 import com.ciscowebex.androidsdk.utils.http.ListBody;
 import com.ciscowebex.androidsdk.utils.http.ListCallback;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
@@ -49,65 +49,65 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-public class RoomClientImpl implements RoomClient {
+public class SpaceClientImpl implements SpaceClient {
 
     private Authenticator _authenticator;
 
-    private RoomService _service;
+    private SpaceService _service;
 
-    public RoomClientImpl(Authenticator authenticator) {
+    public SpaceClientImpl(Authenticator authenticator) {
         _authenticator = authenticator;
-        _service = new ServiceBuilder().build(RoomService.class);
+        _service = new ServiceBuilder().build(SpaceService.class);
     }
 
-    public void list(@Nullable String teamId, int max, @Nullable Room.RoomType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Room>> handler) {
+    public void list(@Nullable String teamId, int max, @Nullable Space.SpaceType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Space>> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, teamId, type != null ? type.name() : null, sortBy != null ? sortBy.name().toLowerCase() : null, max <= 0 ? null : max).enqueue(new ListCallback<Room>(handler));
+            _service.list(s, teamId, type != null ? type.name() : null, sortBy != null ? sortBy.name().toLowerCase() : null, max <= 0 ? null : max).enqueue(new ListCallback<Space>(handler));
         });
     }
 
-    public void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Room> handler) {
+    public void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Space> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
             _service.create(s, Maps.makeMap("title", title, "teamId", teamId)).enqueue(new ObjectCallback<>(handler));
         });
     }
 
-    public void get(@NonNull String roomId, @NonNull CompletionHandler<Room> handler) {
+    public void get(@NonNull String spaceId, @NonNull CompletionHandler<Space> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, roomId).enqueue(new ObjectCallback<>(handler));
+            _service.get(s, spaceId).enqueue(new ObjectCallback<>(handler));
         });
     }
 
-    public void update(@NonNull String roomId, @NonNull String title, @NonNull CompletionHandler<Room> handler) {
+    public void update(@NonNull String spaceId, @NonNull String title, @NonNull CompletionHandler<Space> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.update(s, roomId, Maps.makeMap("title", title)).enqueue(new ObjectCallback<>(handler));
+            _service.update(s, spaceId, Maps.makeMap("title", title)).enqueue(new ObjectCallback<>(handler));
         });
     }
 
-    public void delete(@NonNull String roomId, @NonNull CompletionHandler<Void> handler) {
+    public void delete(@NonNull String spaceId, @NonNull CompletionHandler<Void> handler) {
         ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, roomId).enqueue(new ObjectCallback<>(handler));
+            _service.delete(s, spaceId).enqueue(new ObjectCallback<>(handler));
         });
     }
 
-    private interface RoomService {
+    private interface SpaceService {
         @GET("rooms")
-        Call<ListBody<Room>> list(@Header("Authorization") String authorization,
-                                  @Query("teamId") String teamId,
-                                  @Query("type") String type,
-                                  @Query("sortBy") String sortBy,
-                                  @Query("max") Integer max);
+        Call<ListBody<Space>> list(@Header("Authorization") String authorization,
+                                   @Query("teamId") String teamId,
+                                   @Query("type") String type,
+                                   @Query("sortBy") String sortBy,
+                                   @Query("max") Integer max);
 
         @POST("rooms")
-        Call<Room> create(@Header("Authorization") String authorization, @Body Map parameters);
+        Call<Space> create(@Header("Authorization") String authorization, @Body Map parameters);
 
-        @GET("rooms/{roomId}")
-        Call<Room> get(@Header("Authorization") String authorization, @Path("roomId") String roomId);
+        @GET("rooms/{spaceId}")
+        Call<Space> get(@Header("Authorization") String authorization, @Path("spaceId") String spaceId);
 
-        @PUT("rooms/{roomId}")
-        Call<Room> update(@Header("Authorization") String authorization, @Path("roomId") String roomId, @Body Map parameters);
+        @PUT("rooms/{spaceId}")
+        Call<Space> update(@Header("Authorization") String authorization, @Path("spaceId") String spaceId, @Body Map parameters);
 
-        @DELETE("rooms/{roomId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("roomId") String membershipId);
+        @DELETE("rooms/{spaceId}")
+        Call<Void> delete(@Header("Authorization") String authorization, @Path("spaceId") String spaceId);
     }
 }
