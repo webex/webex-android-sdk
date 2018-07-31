@@ -44,13 +44,13 @@ public class Person {
     private String _displayName;
 
     @SerializedName("nickName")
-    private String _nickName;   // may not exist
+    private String _nickName;
 
     @SerializedName("firstName")
-    private String _firstName;  // may not exist
+    private String _firstName;
 
     @SerializedName("lastName")
-    private String _lastName;   // may not exist
+    private String _lastName;
 
     @SerializedName("avatar")
     private String _avatar;
@@ -114,5 +114,45 @@ public class Person {
     public String toString() {
         Gson gson = new Gson();
         return gson.toJson(this);
+    }
+
+    /**
+     * @return The nick name of person
+     * @since 1.4
+     */
+    public String getNickName() {
+        return _nickName;
+    }
+
+    /**
+     * @return The nick first name of person
+     * @since 1.4
+     */
+    public String getFirstName() {
+        return _firstName;
+    }
+
+    /**
+     * @return The nick last name of person
+     * @since 1.4
+     */
+    public String getLastName() {
+        return _lastName;
+    }
+
+    /**
+     * @return The nick org Id of person
+     * @since 1.4
+     */
+    public String getOrgId() {
+        return _orgId;
+    }
+
+    /**
+     * @return The nick type of person, default is "person"
+     * @since 1.4
+     */
+    public String getType() {
+        return _type;
     }
 }

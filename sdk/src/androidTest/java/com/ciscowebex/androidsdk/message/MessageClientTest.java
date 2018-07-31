@@ -48,7 +48,7 @@ public class MessageClientTest {
         System.out.println("setup test case");
         authenticator = new JWTAuthenticator();
         authenticator.authorize(auth_token);
-        mClient = new MessageClientImpl(authenticator);
+//        mClient = new MessageClientImpl(authenticator);
     }
 
     @Test

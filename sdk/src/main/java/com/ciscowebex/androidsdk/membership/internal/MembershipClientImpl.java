@@ -60,33 +60,28 @@ public class MembershipClientImpl implements MembershipClient {
     }
 
     public void list(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, spaceId, spaceId, personId, personEmail, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.list(s, spaceId, spaceId, personId, personEmail, max <= 0 ? null : max), new ListCallback<>(handler));
     }
 
     public void create(@NonNull String spaceId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.create(s, Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.create(s, Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)), new ObjectCallback<>(handler));
     }
 
     public void get(@NonNull String membershipId, @NonNull CompletionHandler<Membership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, membershipId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.get(s, membershipId), new ObjectCallback<>(handler));
     }
 
     public void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.update(s, membershipId, Maps.makeMap("isModerator", isModerator)).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.update(s, membershipId, Maps.makeMap("isModerator", isModerator)), new ObjectCallback<>(handler));
     }
 
     public void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, membershipId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.delete(s, membershipId), new ObjectCallback<>(handler));
     }
 
     private interface MembershipService {

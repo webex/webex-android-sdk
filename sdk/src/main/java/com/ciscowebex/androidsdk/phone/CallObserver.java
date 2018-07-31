@@ -352,6 +352,35 @@ public interface CallObserver {
     }
 
     /**
+     * This might be triggered when the local party started or stopped the content sharing.
+     *
+     * @since 1.4.0
+     */
+    class SendingSharingEvent extends AbstractCallEvent implements MediaChangedEvent {
+
+        @StringPart
+        private boolean _sending;
+
+        public SendingSharingEvent(Call call, boolean sending) {
+            super(call);
+            _sending = sending;
+        }
+
+        /**
+         * @return True if the local party now is sending content sharing. Otherwise false.
+         * @since 1.4.0
+         */
+        public boolean isSending() {
+            return _sending;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringByAnnotation(this);
+        }
+    }
+
+    /**
      * This might be triggered when the local party muted or unmuted the video.
      *
      * @since 0.1

@@ -7,7 +7,7 @@
 
 The Cisco Webex Android SDK makes it easy to integrate secure and convenient Cisco Webex messaging and calling features in your Android apps.
 
-This SDK is built with **Android SDK Tools 25** and requires **Android API Level 21** or later.
+This SDK is built with **Android SDK Tools 27** and requires **Android API Level 21** or later.
 
 ## Table of Contents
 
@@ -257,7 +257,7 @@ Here are some examples of how to use the Android SDK in your app.
     });
     ```
     
-8. Screen share (view only):
+8. Receive screen share:
 
     ```java
     webex.phone().dial(spaceId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
@@ -291,6 +291,50 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
     
+    ```
+9. Start/stop sharing screen:
+
+    ```java
+    activeCall.startSharing(r -> Ln.d("startSharing result: " + r));
+    boolean isSharing = activeCall.isSendingSharing();
+    activeCall.stopSharing(r -> Ln.d("stopSharing result: " + r));
+    ```
+
+10. Post a message
+
+    ```java
+    webex.message().post(
+        idOrEmail,  // person id, email or space id
+        message,    // text message to be sent
+        mentions,   // list of Mention object
+        files,      // list of files to be sent
+        new CompletionHandler<Message>() {
+            @Override
+            public void onComplete(Result<Message> result) {
+                if (result.isSuccessful()) {
+                    // message sent success
+                } else {
+                    // message sent failed
+                }
+            }
+        }));
+    ```
+
+11. Receive a message
+
+    ```java
+    webex.message().setMessageObserver(
+        new MessageObserver() {
+            void onEvent(MessageEvent event) {
+                if (event instanceof MessageArrived) {
+                    Message message = event.getMessage();
+                    // new message arrived
+                } else if (event instanceof MessageDeleted) {
+                    // message deleted
+                }
+            }
+        }
+    );
     ```
 
 ## Migrating from Cisco Spark Android SDK
@@ -345,6 +389,6 @@ Pull requests welcome. To suggest changes to the SDK, please fork this repositor
 
 ## License
 
-&copy; 2016-2017 Cisco Systems, Inc. and/or its affiliates. All Rights Reserved.
+&copy; 2016-2018 Cisco Systems, Inc. and/or its affiliates. All Rights Reserved.
 
 See [LICENSE](https://github.com/webex/webex-android-sdk/blob/master/LICENSE) for details.

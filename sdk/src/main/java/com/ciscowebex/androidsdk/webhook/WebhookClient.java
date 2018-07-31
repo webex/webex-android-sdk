@@ -80,6 +80,20 @@ public interface WebhookClient {
     void update(@NonNull String webhookId, @NonNull String name, @NonNull String targetUrl, @NonNull CompletionHandler<Webhook> handler);
 
     /**
+     * Updates a webhook by id.
+     *
+     * @param webhookId The identifier of  the webhook.
+     * @param name      A user-friendly name for this webhook.
+     * @param targetUrl The URL that receives POST requests for each event.
+     * @param secret    The Secret used to generate payload signature.
+     * @param status    The status of the webhook. Use "active" to reactivate a disabled webhook.
+     * @param handler   A closure to be executed once the request has finished.
+     * @since 1.4
+     */
+    void update(@NonNull String webhookId, @NonNull String name, @NonNull String targetUrl, @Nullable String secret, @Nullable String status, @NonNull CompletionHandler<Webhook> handler);
+
+
+    /**
      * Deletes a webhook by id.
      *
      * @param webhookId The identifier of  the webhook.

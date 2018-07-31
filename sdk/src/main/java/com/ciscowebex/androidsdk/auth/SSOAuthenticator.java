@@ -134,6 +134,11 @@ public class SSOAuthenticator implements Authenticator {
         _authenticator.getToken(handler);
     }
 
+    @Override
+    public void refreshToken(CompletionHandler<String> handler) {
+        _authenticator.refreshToken(handler);
+    }
+    
     /** Create the authorizationUrl by taking the original url and redirecting the request through the
      * provided identity provider uri. Once the identity provider has validated the claim with Cisco Services it will
      * redirect back to continue a slimmed down version of oAuth authentication flow which has prefilled the user webex

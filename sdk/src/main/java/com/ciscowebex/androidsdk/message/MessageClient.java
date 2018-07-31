@@ -24,6 +24,7 @@ package com.ciscowebex.androidsdk.message;
 
 import java.util.List;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -57,13 +58,57 @@ public interface MessageClient {
      * @param spaceId      The identifier of the space where the message is to be posted.
      * @param personId    The identifier of the recipient of this private 1:1 message.
      * @param personEmail The email address of the recipient when sending a private 1:1 message.
-     * @param text        The plain text message to be posted to the space.
-     * @param markdown    The markdown text message to be posted to the space.
-     * @param files       A public URL that Cisco Webex can use to fetch attachments. Currently supports only a single URL. Cisco Webex downloads the content from the URL one time shortly after the message is created and automatically converts it to a format that all Cisco Webex clients can render.
+     * @param text        The plain text message to be posted to the room.
+     * @param markdown    The markdown text message to be posted to the room.
+     * @param files       A public URL that Cisco Spark can use to fetch attachments. Currently supports only a single URL. Cisco Spark downloads the content from the URL one time shortly after the message is created and automatically converts it to a format that all Cisco Spark clients can render.
      * @param handler     A closure to be executed once the request has finished.
      * @since 0.1
      */
-    void post(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler);
+    void post(@Nullable String spaceId,
+              @Nullable String personId,
+              @Nullable String personEmail,
+              @Nullable String text,
+              @Nullable String markdown,
+              @Nullable String[] files,
+              @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * @param idOrEmail     The identifier of the space or person or person email where the message is to be posted.
+     * @param text          The plain text message to be posted to the space.
+     * @param mentions      Mention people, if post to a person, this param should be null
+     * @param files         Files to be posted
+     * @param handler       A closure to be executed once the request has finished.
+     * @since 1.4.0
+     */
+    void post(@NonNull String idOrEmail,
+              @Nullable String text,
+              @Nullable Mention[] mentions,
+              @Nullable LocalFile[] files,
+              @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * @param observer
+     * @since 1.4.0
+     */
+    void setMessageObserver(MessageObserver observer);
+
+    /**
+     * @param remoteFile        The RemoteFile object need to be downloaded.
+     * @param to                The local file directory for saving downloaded file.
+     * @param progressHandler   The download progress indicator.
+     * @param completionHandler A closure to be executed when download completed.
+     * @since 1.4.0
+     */
+    void downloadFile(RemoteFile remoteFile, String to, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
+
+    /**
+     * @param remoteFile        The RemoteFile object need to be downloaded.
+     * @param to                The local file directory for saving downloaded file.
+     * @param progressHandler   The download progress indicator.
+     * @param completionHandler A closure to be executed when download completed.
+     * @since 1.4.0
+     */
+    void downloadThumbnail(RemoteFile remoteFile, String to, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
 
     /**
      * Retrieves the details for a message by message Id.
@@ -83,4 +128,11 @@ public interface MessageClient {
      */
     void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler);
 
+    /**
+     * Progress indicator interface
+     * @since 1.4.0
+     */
+    interface ProgressHandler {
+        void onProgress(double percentage);
+    }
 }

@@ -64,4 +64,48 @@ public interface PersonClient {
      */
     void getMe(@NonNull CompletionHandler<Person> handler);
 
+    /** Create people in the authenticated user's organization.
+     *  Only admins are able to use this function
+     *
+     * @param email       Email address of the person.
+     * @param displayName Full name of the person.
+     * @param firstName   firstName name of the person.
+     * @param lastName    lastName firstName name of the person.
+     * @param avatar      URL to the person's avatar in PNG format.
+     * @param orgId       ID of the organization to which this person belongs.
+     * @param roles       Roles of the person.
+     * @param licenses    Licenses allocated to the person.
+     * @param handler     A closure to be executed once the request has finished.
+     * @since 1.4
+     */
+    void create(@NonNull String email, @Nullable String displayName, @Nullable String firstName, @Nullable String lastName,
+                @Nullable String avatar, @Nullable String orgId, @Nullable String roles, @Nullable String licenses, @NonNull CompletionHandler<Person> handler);
+
+    /** Update people in the authenticated user's organization.
+     *  Only admins are able to use this function
+     *
+     * @param personId    The identifier of the person.
+     * @param email       Email address of the person.
+     * @param displayName Full name of the person.
+     * @param firstName   firstName name of the person.
+     * @param lastName    lastName firstName name of the person.
+     * @param avatar      URL to the person's avatar in PNG format.
+     * @param orgId       ID of the organization to which this person belongs.
+     * @param roles       Roles of the person.
+     * @param licenses    Licenses allocated to the person.
+     * @param handler     A closure to be executed once the request has finished.
+     * @since 1.4
+     */
+    void update(@NonNull String personId, @Nullable String email, @Nullable String displayName, @Nullable String firstName, @Nullable String lastName,
+                @Nullable String avatar, @Nullable String orgId, @Nullable String roles, @Nullable String licenses, @NonNull CompletionHandler<Person> handler);
+
+    /** Delete the details of person by person id.
+     *  Only admins are able to use this function
+     *
+     * @param personId    The identifier of the person.
+     * @param handler     A closure to be executed once the request has finished.
+     * @since 1.4
+     */
+    void delete(@NonNull String personId, @NonNull CompletionHandler<Void> handler);
+
 }

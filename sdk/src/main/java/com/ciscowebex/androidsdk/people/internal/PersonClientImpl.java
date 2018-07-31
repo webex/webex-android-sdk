@@ -22,7 +22,11 @@
 
 package com.ciscowebex.androidsdk.people.internal;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.List;
+import java.util.Map;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
@@ -33,9 +37,14 @@ import com.ciscowebex.androidsdk.utils.http.ListCallback;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 
+import me.helloworld.utils.collection.Maps;
 import retrofit2.Call;
+import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -51,21 +60,38 @@ public class PersonClientImpl implements PersonClient {
     }
 
     public void list(String email, String displayName, int max, CompletionHandler<List<Person>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, email, displayName, null, null, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.list(s, email, displayName, null, null, max <= 0 ? null : max), new ListCallback<>(handler));
     }
 
     public void get(String personId, CompletionHandler<Person> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, personId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.get(s, personId), new ObjectCallback<>(handler));
     }
 
     public void getMe(CompletionHandler<Person> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.getMe(s).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.getMe(s), new ObjectCallback<>(handler));
+    }
+
+    @Override
+    public void create(@NonNull String email, @Nullable String displayName, @Nullable String firstName, @Nullable String lastName, @Nullable String avatar, @Nullable String orgId, @Nullable String roles, @Nullable String licenses, @NonNull CompletionHandler<Person> handler) {
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.create(s, Maps.makeMap("email", email, "displayName", displayName, "firstName", firstName, "lastName", lastName
+                , "avatar", avatar, "orgId", orgId, "roles", roles, "licenses", licenses)), new ObjectCallback<>(handler));
+    }
+
+    @Override
+    public void update(@NonNull String personId, @Nullable String email, @Nullable String displayName, @Nullable String firstName, @Nullable String lastName, @Nullable String avatar, @Nullable String orgId, @Nullable String roles, @Nullable String licenses, @NonNull CompletionHandler<Person> handler) {
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.update(s, personId, Maps.makeMap("email", email, "displayName", displayName, "firstName", firstName, "lastName", lastName
+                , "avatar", avatar, "orgId", orgId, "roles", roles, "licenses", licenses)), new ObjectCallback<>(handler));
+    }
+
+    @Override
+    public void delete(@NonNull String personId, @NonNull CompletionHandler<Void> handler) {
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.delete(s, personId), new ObjectCallback<>(handler));
     }
 
     private interface PersonService {
@@ -82,5 +108,14 @@ public class PersonClientImpl implements PersonClient {
 
         @GET("people/me")
         Call<Person> getMe(@Header("Authorization") String authorizationHeader);
+
+        @POST("people")
+        Call<Person> create(@Header("Authorization") String authorizationHeader, @Body Map parameters);
+
+        @PUT("people/{personId}")
+        Call<Person> update(@Header("Authorization") String authorization, @Path("personId") String personId, @Body Map parameters);
+
+        @DELETE("people/{personId}")
+        Call<Void> delete(@Header("Authorization") String authorization, @Path("personId") String personId);
     }
 }

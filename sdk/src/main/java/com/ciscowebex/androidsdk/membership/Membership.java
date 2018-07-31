@@ -124,7 +124,15 @@ public class Membership {
     public Date getCreated() {
         return _created;
     }
-
+    
+    /**
+     * @return The personOrgId name of the person
+     * @since 1.4
+     */
+    public String getPersonOrgId() {
+        return _personOrgId;
+    }
+    
     @Override
     public String toString() {
         Gson gson = new Gson();

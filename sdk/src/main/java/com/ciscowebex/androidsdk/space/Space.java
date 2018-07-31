@@ -80,6 +80,9 @@ public class Space {
     @SerializedName("created")
     private Date _created;
 
+    @SerializedName("sipAddress")
+    private String _sipAddress;
+
     @Override
     public String toString() {
         Gson gson = new Gson();
@@ -140,6 +143,14 @@ public class Space {
      */
     public Date getCreated() {
         return _created;
+    }
+
+    /**
+     * @return The sipAddress that this space associated with.
+     * @since 1.4
+     */
+    public String getSipAddress() {
+        return _sipAddress;
     }
 }
 

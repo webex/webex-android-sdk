@@ -334,4 +334,22 @@ public interface Call {
      * @since 0.1
      */
     void sendFeedback(int rating, @Nullable String comment);
+
+    /**
+     * @return start content sharing.
+     * @since 1.4
+     */
+    void startSharing(@NonNull CompletionHandler<Void> callback);
+
+    /**
+     * @return stop content sharing.
+     * @since 1.4
+     */
+    void stopSharing(@NonNull CompletionHandler<Void> callback);
+
+    /**
+     * @return True if the local party of this call is sharing content. Otherwise, false.
+     * @since 1.4
+     */
+    boolean isSendingSharing();
 }

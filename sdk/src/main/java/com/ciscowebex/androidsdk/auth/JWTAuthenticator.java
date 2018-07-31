@@ -110,7 +110,7 @@ public class JWTAuthenticator implements Authenticator {
      */
     @Override
     public void getToken(@NonNull CompletionHandler<String> handler) {
-        checkNotNull(handler, "CompletionHandler should not be null");
+        checkNotNull(handler, "getToken: CompletionHandler should not be null");
         String jwt = getUnexpiredJwt();
         if (jwt == null) {
             handler.onComplete(ResultImpl.error("JWT is null"));
@@ -119,6 +119,17 @@ public class JWTAuthenticator implements Authenticator {
         String token = getUnexpiredAccessToken();
         if (token != null) {
             handler.onComplete(ResultImpl.success(token));
+            return;
+        }
+        refreshToken(handler);
+    }
+
+    @Override
+    public void refreshToken(CompletionHandler<String> handler) {
+        checkNotNull(handler, "refreshToken: CompletionHandler should not be null");
+        String jwt = getUnexpiredJwt();
+        if (jwt == null) {
+            handler.onComplete(ResultImpl.error("JWT is null"));
             return;
         }
         _authService.getToken(jwt).enqueue(new Callback<JwtToken>() {

@@ -63,4 +63,14 @@ public interface Authenticator {
      */
     void getToken(CompletionHandler<String> handler);
 
+    /**
+     * Refresh an access token of this authenticator.
+     * <p>
+     * This may involve long-running operations such as service calls, but may also return immediately.
+     * The application should not make assumptions about how quickly this completes.
+     *
+     * @param handler a callback to be executed when completed, with the access token if successfuly retrieved, otherwise nil.
+     * @since 1.4
+     */
+    void refreshToken(CompletionHandler<String> handler);
 }

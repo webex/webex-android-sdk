@@ -20,38 +20,41 @@
  * THE SOFTWARE.
  */
 
-package com.ciscowebex.androidsdk.utils.http;
 
-import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.internal.ResultImpl;
+package com.ciscowebex.androidsdk.phone;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.util.AttributeSet;
+
+import com.webex.wseclient.WseSurfaceView;
+
 
 /**
- * Created by zhiyuliu on 02/09/2017.
+ * Spark media view for local, remote and screen share
+ * <p>
+ * This view is use by {@link MediaOption} and should be placed in Android layout xml file.
+ * <p>
+ * e.g. <MediaRenderView android:id="@+id/localView" />
+ *
+ * @see MediaOption
+ * @since 1.4
  */
-
-public class ObjectCallback<T> extends ListenerCallback<T> {
-
-    private CompletionHandler<T> _handler;
-
-    public ObjectCallback(CompletionHandler<T> handler) {
-        _handler = handler;
+public class MediaRenderView extends WseSurfaceView {
+    public MediaRenderView(Context context) {
+        super(context);
     }
 
-    @Override
-    public void onResponse(Call<T> call, Response<T> response) {
-        if (response.isSuccessful()) {
-            _handler.onComplete(ResultImpl.success(response.body()));
-        } else if (!checkUnauthError(response)) {
-            _handler.onComplete(ResultImpl.error(response));
-        }
+    public MediaRenderView(Context var1, AttributeSet var2) {
+        super(var1, var2);
     }
 
-    @Override
-    public void onFailure(Call<T> call, Throwable t) {
-        _handler.onComplete(ResultImpl.error(t));
+    public MediaRenderView(Context var1, AttributeSet var2, int var3) {
+        super(var1, var2, var3);
+    }
+
+    @TargetApi(21)
+    public MediaRenderView(Context var1, AttributeSet var2, int var3, int var4) {
+        super(var1, var2, var3, var4);
     }
 }

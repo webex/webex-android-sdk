@@ -60,33 +60,28 @@ public class TeamClientImpl implements TeamClient {
     }
 
     public void list(int max, @NonNull CompletionHandler<List<Team>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.list(s, max <= 0 ? null : max), new ListCallback<>(handler));
     }
 
     public void create(@NonNull String name, @NonNull CompletionHandler<Team> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.create(s, Maps.makeMap("name", name)).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.create(s, Maps.makeMap("name", name)), new ObjectCallback<>(handler));
     }
 
     public void get(@NonNull String teamId, @NonNull CompletionHandler<Team> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, teamId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.get(s, teamId), new ObjectCallback<>(handler));
     }
 
     public void update(@NonNull String teamId, String name, @NonNull CompletionHandler<Team> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.update(s, teamId, Maps.makeMap("name", name)).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.update(s, teamId, Maps.makeMap("name", name)), new ObjectCallback<>(handler));
     }
 
     public void delete(@NonNull String teamId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, teamId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.delete(s, teamId), new ObjectCallback<>(handler));
     }
 
     private interface TeamService {

@@ -41,6 +41,7 @@ import com.cisco.spark.android.locus.model.LocusKey;
 import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
 import com.cisco.spark.android.locus.model.MediaDirection;
+import com.cisco.spark.android.locus.model.MediaShare;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaRequestSource;
 import com.cisco.spark.android.media.MediaSession;
@@ -83,6 +84,10 @@ public class CallImpl implements Call {
     private CompletionHandler<Void> _rejectCallback;
 
     private CompletionHandler<Void> _hangupCallback;
+
+    private CompletionHandler<Void> _shareRequestCallback;
+
+    private CompletionHandler<Void> _shareReleaseCallback;
 
     private Rect _localVideoViewSize = new Rect(0, 0, 0, 0);
     private Rect _remoteVideoViewSize = new Rect(0, 0, 0, 0);
@@ -151,6 +156,14 @@ public class CallImpl implements Call {
         return _hangupCallback;
     }
 
+    CompletionHandler<Void> getshareRequestCallback() {
+        return _shareRequestCallback;
+    }
+
+    CompletionHandler<Void> getshareReleaseCallback() {
+        return _shareReleaseCallback;
+    }
+    
     @NonNull
     public CallStatus getStatus() {
         return _status;
@@ -229,7 +242,13 @@ public class CallImpl implements Call {
     }
 
     public boolean isRemoteSendingSharing() {
-        return _phone.getCallService().getLocusData(getKey()).isFloorGranted();
+        LocusData locus = _phone.getCallService().getLocusData(getKey());
+        return locus != null && locus.isFloorGranted() && !_phone.isSharingFromThisDevice(locus);
+    }
+
+    public boolean isSendingSharing() {
+        LocusData locus = _phone.getCallService().getLocusData(getKey());
+        return locus != null && _phone.isSharingFromThisDevice(locus);
     }
 
     public boolean isSendingVideo() {
@@ -408,6 +427,52 @@ public class CallImpl implements Call {
         _phone.sendFeedback(info);
     }
 
+    @Override
+    public void startSharing(@NonNull CompletionHandler<Void> callback) {
+        if (_status == CallStatus.CONNECTED) {
+            LocusData locusData = _phone.getCallService().getLocusData(_key);
+            if (locusData != null) {
+                MediaShare contentMediaShare = locusData.getLocus().getShareContentMedia();
+                if (contentMediaShare == null || !contentMediaShare.isMediaShareGranted() || !_phone.isSharingFromThisDevice(locusData)) {
+                    _shareRequestCallback = callback;
+                    _phone.startSharing(_key);
+                } else if (callback != null) {
+                    Ln.w("Can not startSharing, because call is sharing content");
+                    callback.onComplete(ResultImpl.error("Call is sharing content"));
+                }
+            }else if (callback != null) {
+                Ln.w("startSharing callControlService.getLocusData is null");
+                callback.onComplete(ResultImpl.error("Call is not exist"));
+            }
+        }else if (callback != null) {
+            Ln.w("Can not startSharing, because call status is: " + _status);
+            callback.onComplete(ResultImpl.error("Call is not connected"));
+        }
+    }
+
+    @Override
+    public void stopSharing(@NonNull CompletionHandler<Void> callback) {
+        if (_status == CallStatus.CONNECTED) {
+            LocusData locusData = _phone.getCallService().getLocusData(_key);
+            if (locusData != null) {
+                MediaShare contentMediaShare = locusData.getLocus().getShareContentMedia();
+                if (contentMediaShare != null && contentMediaShare.isMediaShareGranted() && _phone.isSharingFromThisDevice(locusData)) {
+                    _shareReleaseCallback = callback;
+                    _phone.stopSharing(_key);
+                }else if (callback != null) {
+                    Ln.w("Can not stopSharing, because call is not sharing content");
+                    callback.onComplete(ResultImpl.error("Call is not sharing content"));
+                }
+            }else if (callback != null) {
+                Ln.w("stopSharing callControlService.getLocusData is null");
+                callback.onComplete(ResultImpl.error("Call is not exist"));
+            }
+        }else if (callback != null) {
+            Ln.w("Can not stopSharing, because call status is: " + _status);
+            callback.onComplete(ResultImpl.error("Call is not connected"));
+        }
+    }
+
     public Phone.FacingMode getFacingMode() {
         com.cisco.spark.android.callcontrol.model.Call call = _phone.getCallService().getCall(getKey());
         if (call == null) {
@@ -451,6 +516,7 @@ public class CallImpl implements Call {
         if (observer != null) {
             observer.onMediaChanged(mediaEvent);
         }
+        _phone.setRemoteSendingVideo(isRemoteSendingVideo());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -528,7 +594,8 @@ public class CallImpl implements Call {
     }
 
     LocusParticipant getSharingSender() {
-        if (isRemoteSendingSharing()) {
+        LocusData locus = _phone.getCallService().getLocusData(getKey());
+        if (locus != null && locus.isFloorGranted()) {
             return _phone.getCallService().getLocusData(getKey()).getParticipantSharing();
         }
         return null;

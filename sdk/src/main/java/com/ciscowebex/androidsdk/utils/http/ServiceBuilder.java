@@ -31,11 +31,15 @@ import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -95,20 +99,34 @@ public class ServiceBuilder {
         }
         OkHttpClient client = httpClient.build();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(_baseURL)
-                .addConverterFactory(_gson == null ? GsonConverterFactory.create() : GsonConverterFactory.create(_gson))
-                .client(client)
-                .build();
+            .baseUrl(_baseURL)
+            .addCallAdapterFactory(RetryCallAdapterFactory.create())
+            .addConverterFactory(_gson == null ? GsonConverterFactory.create() : GsonConverterFactory.create(_gson))
+            .client(client)
+            .build();
         return retrofit.create(service);
     }
 
-    public static <T> void async(Authenticator authenticator, CompletionHandler<T> handler, Closure<String> closure) {
+    public static <T> void async(Authenticator authenticator, CompletionHandler<T> handler, Closure<String> closure, ListenerCallback callback) {
         authenticator.getToken(new CompletionHandler<String>() {
             @Override
             public void onComplete(Result<String> result) {
                 String token = result.getData();
                 if (token != null) {
-                    closure.invoke("Bearer " + token);
+                    if (callback != null) {
+                        callback.setUnauthErrorListener(new UnauthErrorListener() {
+                            @Override
+                            public void onUnauthError(Response response) {
+                                if (!handleUnauthError(authenticator, handler, closure, callback) && handler != null){
+                                    handler.onComplete(ResultImpl.error(response));
+                                }
+                            }
+                        });
+                    }
+
+                    Call call = closure.invoke("Bearer " + token);
+                    if (call != null)
+                        call.enqueue(callback);
                 } else {
                     if (handler != null) {
                         handler.onComplete(ResultImpl.error(result.getError()));
@@ -118,7 +136,34 @@ public class ServiceBuilder {
         });
     }
 
+    private static boolean handleUnauthError(Authenticator authenticator, CompletionHandler handler, Closure<String> closure, Callback callback){
+        Ln.d("handleUnauthError");
+        if (authenticator != null) {
+            Ln.d("refreshToken");
+            authenticator.refreshToken(new CompletionHandler<String>() {
+                @Override
+                public void onComplete(Result<String> result) {
+                    String token = result.getData();
+                    if (token != null) {
+                        Call call = closure.invoke("Bearer " + token);
+                        call.enqueue(callback);
+                    } else {
+                        if (handler != null) {
+                            handler.onComplete(ResultImpl.error(result.getError()));
+                        }
+                    }
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+
     public interface Closure<P> {
-        void invoke(P p);
+        Call invoke(P p);
+    }
+
+    public interface UnauthErrorListener {
+        void onUnauthError(Response response);
     }
 }

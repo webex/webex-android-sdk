@@ -35,7 +35,7 @@ import retrofit2.Response;
  * Created by zhiyuliu on 02/09/2017.
  */
 
-public class ListCallback<T> implements Callback<ListBody<T>> {
+public class ListCallback<T> extends ListenerCallback<ListBody<T>> {
 
     private CompletionHandler<List<T>> _handler;
 
@@ -47,7 +47,7 @@ public class ListCallback<T> implements Callback<ListBody<T>> {
     public void onResponse(Call<ListBody<T>> call, Response<ListBody<T>> response) {
         if (response.isSuccessful()) {
             _handler.onComplete(ResultImpl.success(response.body().getItems()));
-        } else {
+        } else if (!checkUnauthError(response)) {
             _handler.onComplete(ResultImpl.error(response));
         }
     }

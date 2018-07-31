@@ -59,6 +59,9 @@ public class Webhook {
     @SerializedName("created")
     private Date _created;
 
+    @SerializedName("status")
+    private String _status;
+
     @Override
     public String toString() {
         Gson gson = new Gson();

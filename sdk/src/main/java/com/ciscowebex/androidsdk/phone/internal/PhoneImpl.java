@@ -30,12 +30,17 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Base64;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.callcontrol.CallContext;
@@ -63,6 +68,11 @@ import com.cisco.spark.android.events.CallNotificationEvent;
 import com.cisco.spark.android.events.CallNotificationType;
 import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.cisco.spark.android.events.RequestCallingPermissions;
+import com.cisco.spark.android.locus.events.FloorLostEvent;
+import com.cisco.spark.android.locus.events.FloorReleasedAcceptedEvent;
+import com.cisco.spark.android.locus.events.FloorReleasedDeniedEvent;
+import com.cisco.spark.android.locus.events.FloorRequestAcceptedEvent;
+import com.cisco.spark.android.locus.events.FloorRequestDeniedEvent;
 import com.cisco.spark.android.locus.events.LocusDeclinedEvent;
 import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
 import com.cisco.spark.android.locus.events.ParticipantRoomDeclinedEvent;
@@ -82,11 +92,13 @@ import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.sync.operationqueue.core.Operations;
 import com.cisco.spark.android.sync.queue.ConversationSyncQueue;
 import com.cisco.spark.android.wdm.DeviceRegistration;
+import com.cisco.wme.appshare.ScreenShareContext;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.Webex;
 import com.ciscowebex.androidsdk.WebexError;
 import com.ciscowebex.androidsdk.auth.Authenticator;
+import com.ciscowebex.androidsdk.internal.AcquirePermissionActivity;
 import com.ciscowebex.androidsdk.internal.MetricsClient;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.people.Person;
@@ -100,6 +112,7 @@ import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.Ln;
+
 import me.helloworld.utils.Checker;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.NoSubscriberEvent;
@@ -159,6 +172,21 @@ public class PhoneImpl implements Phone {
     private MetricsClient _metrics;
 
     private Context _context;
+
+    private Intent _screenSharingIntent;
+
+    private LocusKey _screenSharingKey;
+
+    private LocusParticipant _lostSharingParticipant;
+
+    private Uri _currentSharingUri;
+
+    private boolean _isRemoteSendingVideo;
+    public void setRemoteSendingVideo(boolean isSending){
+        _isRemoteSendingVideo = isSending;
+    }
+
+    private boolean _isRemoteSendingAudio;
 
     private int audioMaxBandwidth = DefaultBandwidth.maxBandwidthAudio.getValue();
 
@@ -356,7 +384,8 @@ public class PhoneImpl implements Phone {
             };
             _registerTimer.postDelayed(_registerTimeoutTask, 60 * 1000);
             new AuthenticatedUserTask(_applicationController).execute();
-        });
+            return null;
+        }, null);
     }
 
     public void deregister(@NonNull CompletionHandler<Void> callback) {
@@ -379,6 +408,7 @@ public class PhoneImpl implements Phone {
         }
         _preview.setPreviewWindow(view);
         _preview.startSelfView();
+        setDisplayRotation(RotationHandler.getRotation(_context));
     }
 
     public void stopPreview() {
@@ -399,6 +429,61 @@ public class PhoneImpl implements Phone {
             }
         }
     }
+
+	void makeCall(Bundle data, boolean permission) {
+		if (data == null) {
+			Ln.e("makeCall data is null!");
+			return;
+		}
+		int direction = data.getInt(AcquirePermissionActivity.CALL_DIRECTION);
+		if (direction == Call.Direction.INCOMING.ordinal()) {
+			Ln.d("make incoming call");
+			CallImpl call = _calls.get(data.getParcelable(AcquirePermissionActivity.CALL_KEY));
+			if (permission && call != null) {
+				CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
+				builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
+				_mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
+				_callControlService.joinCall(builder.build(), false);
+			}
+			else if (call != null && call.getAnswerCallback() != null) {
+				Ln.w("permission is deined");
+				call.getAnswerCallback().onComplete(ResultImpl.error("permission deined"));
+			}
+		}
+		else if (direction == Call.Direction.OUTGOING.ordinal()) {
+			Ln.d("make outgoing call");
+			String dialString = data.getString(AcquirePermissionActivity.CALL_STRING);
+			if (permission && dialString != null) {
+				DialTarget target = new DialTarget(dialString);
+				if (target.type == DialTarget.AddressType.PEOPLE_MAIL) {
+					new PersonClientImpl(_authenticator).list(dialString, null, 1, new CompletionHandler<List<Person>>() {
+						@Override
+						public void onComplete(Result<List<Person>> result) {
+							List<Person> persons = result.getData();
+							if (!Checker.isEmpty(persons)) {
+								Person person = persons.get(0);
+								Ln.d("Lookup target: " + person.getId());
+								doDial(new DialTarget(person.getId()).address, _dialOption);
+							}
+							else {
+								doDial(target.address, _dialOption);
+							}
+						}
+					});
+				}
+				else if (target.isEndpoint()) {
+					doDial(target.address, _dialOption);
+				}
+				else {
+					doDialSpaceID(target.address, _dialOption);
+				}
+			}
+			else {
+				Ln.w("permission is deined");
+				clearCallback(ResultImpl.error("permission deined"));
+			}
+		}
+	}
 
     public void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
         Ln.i("Dialing: " + dialString + ", " + option.hasVideo());
@@ -423,27 +508,14 @@ public class PhoneImpl implements Phone {
         _dialOption = option;
         _dialCallback = callback;
 
-        DialTarget target = new DialTarget(dialString);
-
-        if (target.type == DialTarget.AddressType.PEOPLE_MAIL) {
-            new PersonClientImpl(_authenticator).list(dialString, null, 1, new CompletionHandler<List<Person>>() {
-                @Override
-                public void onComplete(Result<List<Person>> result) {
-                    List<Person> persons = result.getData();
-                    if (!Checker.isEmpty(persons)) {
-                        Person person = persons.get(0);
-                        Ln.d("Lookup target: " + person.getId());
-                        doDial(new DialTarget(person.getId()).address, option);
-                    } else {
-                        doDial(target.address, option);
-                    }
-                }
-            });
-        } else if (target.isEndpoint()) {
-            doDial(target.address, option);
-        } else {
-            doDialSpaceID(target.address, option);
-        }
+	    final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	    intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
+	    Bundle bundle = new Bundle();
+	    bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.OUTGOING.ordinal());
+	    bundle.putString(AcquirePermissionActivity.CALL_STRING, dialString);
+	    intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
+	    _context.startActivity(intent);
     }
 
     void answer(@NonNull CallImpl call) {
@@ -481,10 +553,14 @@ public class PhoneImpl implements Phone {
             }
         }
         stopPreview();
-        CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
-        builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
-        _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
-        _callControlService.joinCall(builder.build(), false);
+	    final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	    intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
+	    Bundle bundle = new Bundle();
+	    bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.INCOMING.ordinal());
+	    bundle.putParcelable(AcquirePermissionActivity.CALL_KEY, call.getKey());
+	    intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
+	    _context.startActivity(intent);
     }
 
     void reject(@NonNull CallImpl call) {
@@ -680,9 +756,11 @@ public class PhoneImpl implements Phone {
         //call membership changed
         List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
         for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
-            events.add(new CallObserver.MembershipJoinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
+            if (!locusParticipant.getDeviceUrl().equals(_device.getUrl()))
+                events.add(new CallObserver.MembershipJoinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
         }
-        _sendCallMembershipChanged(call, events);
+        if (events.size() > 0)
+            _sendCallMembershipChanged(call, events);
 
     }
 
@@ -775,12 +853,12 @@ public class PhoneImpl implements Phone {
     // Remote declined
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLeaveLocusEvent event) {
-        Ln.i("CallControlLeaveLocusEvent is received " + event.locusData().getKey());
-        CallImpl call = _calls.get(event.locusData().getKey());
-        if (call != null && (!(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
-            Ln.d("Find callImpl " + event.locusData().getKey());
-            _removeCall(new CallObserver.RemoteDecline(call));
-        }
+	    Ln.i("CallControlLeaveLocusEvent is received " + event.locusData().getKey());
+	    CallImpl call = _calls.get(event.locusData().getKey());
+	    if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
+		    Ln.d("Find callImpl " + event.locusData().getKey());
+		    _removeCall(new CallObserver.RemoteDecline(call));
+	    }
     }
 
     // Space remote declined
@@ -820,40 +898,41 @@ public class PhoneImpl implements Phone {
     // mutiple device hangup
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ParticipantSelfChangedEvent event) {
-        Ln.i("ParticipantSelfChangedEvent is received " + event.getLocusKey());
-        CallImpl call = _calls.get(event.getLocusKey());
-        Locus locus = _callControlService.getLocus(event.getLocusKey());
-        if (call != null && locus != null
-                && locus.getSelf().getDevices() != null) {
-            List deviceList = locus.getSelf().getDevices();
-            if (call.getStatus() == Call.CallStatus.CONNECTED && !isJoinedFromThisDevice(deviceList)) {
-                Ln.d("Local device left locusKey: " + event.getLocusKey());
-                if (call.getHangupCallback() != null) {
-                    call.getHangupCallback().onComplete(ResultImpl.success(null));
-                }
-                _removeCall(new CallObserver.LocalLeft(call));
-            } else if (call.getStatus() != Call.CallStatus.CONNECTED
-                    && isJoinedFromOtherDevice(deviceList)
-                    && !isJoinedFromThisDevice(deviceList)) {
-                com.cisco.spark.android.callcontrol.model.Call _call = _callControlService.getCall(event.getLocusKey());
-                if (_call == null || !_call.isActive()) {
-                    Ln.d("other device connected locusKey: " + event.getLocusKey());
-                    _removeCall(new CallObserver.OtherConnected(call));
-                }else{
-                    Ln.d("Self device has already connected, ignore other device connect");
-                }
-            } else if (call.getStatus() != Call.CallStatus.CONNECTED
-                    && !isJoinedFromThisDevice(deviceList)
-                    && locus.getSelf().getState() == LocusParticipant.State.DECLINED) {
-                com.cisco.spark.android.callcontrol.model.Call _call = _callControlService.getCall(event.getLocusKey());
-                if (_call == null || !_call.isActive()) {
-                    Ln.d("other device declined locusKey: " + event.getLocusKey());
-                    _removeCall(new CallObserver.OtherDeclined(call));
-                }else{
-                    Ln.d("Self device has already connected, ignore other device decline");
-                }
-            }
-        }
+	    Ln.i("ParticipantSelfChangedEvent is received " + event.getLocusKey());
+	    CallImpl call = _calls.get(event.getLocusKey());
+	    Locus locus = event.getLocus();
+	    if (call != null && locus != null && locus.getSelf() != null) {
+            Uri deviceUrl = locus.getSelf().getDeviceUrl();
+            Ln.d("ParticipantSelfChangedEvent device url: " + deviceUrl + "  self: " + _device.getUrl()
+                + "  state: " + locus.getSelf().getState());
+		    if (call.getStatus() == Call.CallStatus.CONNECTED && !isJoinedFromThisDevice(locus.getSelf().getDevices())) {
+			    Ln.d("Local device left locusKey: " + event.getLocusKey());
+			    if (call.getHangupCallback() != null) {
+				    call.getHangupCallback().onComplete(ResultImpl.success(null));
+			    }
+			    _removeCall(new CallObserver.LocalLeft(call));
+		    } else if (call.getStatus() != Call.CallStatus.CONNECTED
+			    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
+                && locus.getSelf().getState() == LocusParticipant.State.JOINED) {
+			    com.cisco.spark.android.callcontrol.model.Call _call = _callControlService.getCall(event.getLocusKey());
+			    if (_call == null || !_call.isActive()) {
+				    Ln.d("other device connected locusKey: " + event.getLocusKey());
+				    _removeCall(new CallObserver.OtherConnected(call));
+			    }else{
+				    Ln.d("Self device has already connected, ignore other device connect");
+			    }
+		    } else if (call.getStatus() != Call.CallStatus.CONNECTED
+			    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
+                && locus.getSelf().getState() == LocusParticipant.State.DECLINED) {
+			    com.cisco.spark.android.callcontrol.model.Call _call = _callControlService.getCall(event.getLocusKey());
+			    if (_call == null || !_call.isActive()) {
+				    Ln.d("other device declined locusKey: " + event.getLocusKey());
+				    _removeCall(new CallObserver.OtherDeclined(call));
+			    }else{
+				    Ln.d("Self device has already connected, ignore other device decline");
+			    }
+		    }
+	    }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -892,48 +971,53 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(CallControlParticipantAudioMuteEvent event) {
-        Ln.i("CallControlParticipantAudioMuteEvent is received " + event.getLocusKey());
-        CallImpl call = _calls.get(event.getLocusKey());
-        if (call != null) {
-            Ln.d("Find callImpl " + event.getLocusKey());
-            LocusSelfRepresentation self = call.getSelf();
-            if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
-                CallObserver observer = call.getObserver();
-                if (observer != null) {
-                    observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(call, !event.isMuted()));
-                }
-            } else {
-                // TODO for local ??
-            }
-            List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
-            events.add(new CallObserver.MembershipSendingAudioEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
-            _sendCallMembershipChanged(call, events);
-        }
-    }
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(CallControlParticipantAudioMuteEvent event) {
+		Ln.i("CallControlParticipantAudioMuteEvent is received " + event.getLocusKey());
+		CallImpl call = _calls.get(event.getLocusKey());
+		if (call != null) {
+			Ln.d("Find callImpl " + event.getLocusKey());
+			LocusSelfRepresentation self = call.getSelf();
+			if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
+				CallObserver observer = call.getObserver();
+				boolean isSending = call.isRemoteSendingAudio();
+				Ln.d("_isRemoteSendingAudio: " + _isRemoteSendingAudio + "  isSending: " + isSending);
+				if (observer != null && _isRemoteSendingAudio != isSending) {
+					observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(call, isSending));
+					_isRemoteSendingAudio = isSending;
+				}
+			} else {
+				// TODO for local ??
+			}
+			List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+			events.add(new CallObserver.MembershipSendingAudioEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
+			_sendCallMembershipChanged(call, events);
+		}
+	}
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(CallControlRemoteVideoMutedEvent event) {
-        Ln.i("CallControlRemoteVideoMutedEvent is received " + event.getLocusKey());
-        CallImpl call = _calls.get(event.getLocusKey());
-        if (call != null) {
-            Ln.d("Find callImpl " + event.getLocusKey());
-            LocusSelfRepresentation self = call.getSelf();
-            if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
-                CallObserver observer = call.getObserver();
-                if (observer != null) {
-                    observer.onMediaChanged(new CallObserver.RemoteSendingVideoEvent(call, !event.isMuted()));
-                }
-            } else {
-                // TODO for local ??
-            }
-            List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
-            events.add(new CallObserver.MembershipSendingVideoEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
-            _sendCallMembershipChanged(call, events);
-        }
-    }
-
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(CallControlRemoteVideoMutedEvent event) {
+		Ln.i("CallControlRemoteVideoMutedEvent is received " + event.getLocusKey());
+		CallImpl call = _calls.get(event.getLocusKey());
+		if (call != null) {
+			Ln.d("Find callImpl " + event.getLocusKey());
+			LocusSelfRepresentation self = call.getSelf();
+			if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
+				CallObserver observer = call.getObserver();
+				boolean isSending = call.isRemoteSendingVideo();
+				Ln.d("_isRemoteSendingVideo: " + _isRemoteSendingVideo + "  isSending: " + isSending);
+				if (observer != null && _isRemoteSendingVideo != isSending) {
+					observer.onMediaChanged(new CallObserver.RemoteSendingVideoEvent(call, isSending));
+					_isRemoteSendingVideo = isSending;
+				}
+			} else {
+				// TODO for local ??
+			}
+			List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+			events.add(new CallObserver.MembershipSendingVideoEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
+			_sendCallMembershipChanged(call, events);
+		}
+	}
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLocusChangedEvent event) {
         Ln.i("CallControlLocusChangedEvent is received ");
@@ -949,54 +1033,171 @@ public class PhoneImpl implements Phone {
         clearCallback(ResultImpl.error(new WebexError<>(WebexError.ErrorCode.PERMISSION_ERROR, "Permissions Error", permissions)));
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(CallControlFloorGrantedEvent event) {
-        Ln.i("CallControlFloorGrantedEvent is received ");
-        List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
-        CallImpl call = _calls.get(event.getLocusKey());
-        if (call != null) {
-            for (CallMembership membership : call.getMemberships()) {
-                if (membership.isSendingSharing()) {
-                    events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
-                }
-            }
-            _sendCallMembershipChanged(call, events);
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(CallControlFloorGrantedEvent event) {
+		Ln.i("CallControlFloorGrantedEvent is received ");
+		List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+		CallImpl call = _calls.get(event.getLocusKey());
+		if (call != null) {
+			LocusParticipant beneficiary = _callControlService.getLocus(event.getLocusKey()).getFloorBeneficiary();
+			if (beneficiary != null) {
+				_currentSharingUri = beneficiary.getDeviceUrl();
+			}
+			for (CallMembership membership : call.getMemberships()) {
+				if (membership.isSendingSharing()) {
+					events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
+					break;
+				}
+			}
+			_sendCallMembershipChanged(call, events);
 
-            CallObserver observer = call.getObserver();
-            if (observer != null) {
-                observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, true));
-            }
-        }
-    }
+			CallObserver observer = call.getObserver();
+			if (observer != null) {
+				if (call.isSendingSharing()) {
+					observer.onMediaChanged(new CallObserver.SendingSharingEvent(call, true));
+				} else if (call.isRemoteSendingSharing() && _lostSharingParticipant == null) {
+					observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, true));
+				}
+			}
+		}
+	}
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(CallControlFloorReleasedEvent event) {
-        Ln.i("CallControlFloorReleasedEvent is received ");
-        List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
-        CallImpl call = _calls.get(event.getLocusKey());
-        LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
-        if (call != null && locusData != null
-                && locusData.getLocus().isFloorReleased()
-                && locusData.getReleasedParticipantSharing() != null) {
-            LocusParticipant beneficiary = locusData.getReleasedParticipantSharing();
-            for (CallMembership membership : call.getMemberships()) {
-                if (beneficiary.getPerson() != null
-                        && beneficiary.getPerson().getId() != null
-                        && membership.getPersonId().equalsIgnoreCase(beneficiary.getPerson().getId())) {
-                    events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
-                }
-            }
-            _sendCallMembershipChanged(call, events);
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(CallControlFloorReleasedEvent event) {
+		Ln.i("CallControlFloorReleasedEvent is received ");
+		List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+		CallImpl call = _calls.get(event.getLocusKey());
+		LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
+		LocusParticipant beneficiary = locusData.getReleasedParticipantSharing();
+		if (beneficiary == null){
+			Ln.w("getReleasedParticipantSharing is null!");
+			beneficiary = _lostSharingParticipant;
+		}
+		if (call != null && locusData != null && beneficiary != null) {
+			for (CallMembership membership : call.getMemberships()) {
+				if (beneficiary.getPerson() != null
+					&& beneficiary.getPerson().getId() != null
+					&& membership.getPersonId().equalsIgnoreCase(beneficiary.getPerson().getId())) {
+					events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
+					break;
+				}
+			}
+			_sendCallMembershipChanged(call, events);
 
-            CallObserver observer = call.getObserver();
-            if (observer != null) {
-                observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, false));
-            }
-        }
-    }
+			CallObserver observer = call.getObserver();
+			if (observer != null) {
+				if (_currentSharingUri != null && _currentSharingUri.equals(_device.getUrl())) {
+					observer.onMediaChanged(new CallObserver.SendingSharingEvent(call, false));
+					_lostSharingParticipant = null;
+				}else if (!locusData.isFloorGranted() || isSharingFromThisDevice(locusData)){
+					observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, false));
+					_lostSharingParticipant = null;
+				}
+			}
+		}
+	}
 
+	// ------------------------------------------------------------------------
+	// Screen Sharing
+	// ------------------------------------------------------------------------
 
-    private void _removeCall(@NonNull CallObserver.CallDisconnectedEvent event) {
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(FloorRequestAcceptedEvent event) {
+		Ln.d("FloorRequestAcceptedEvent is received: " + event.isContent());
+		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
+			//sharingScreenTimeoutHandler.removeCallbacksAndMessages(null);
+			ScreenShareContext.getInstance().init(_context, Activity.RESULT_OK, _screenSharingIntent);
+			CallImpl call = _calls.get(_screenSharingKey);
+			if (call != null && call.getshareRequestCallback() != null){
+				call.getshareRequestCallback().onComplete(ResultImpl.success(null));
+			}
+		}
+	}
+
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(FloorRequestDeniedEvent event) {
+		Ln.d("FloorRequestDeniedEvent is received: " + event.isContent());
+		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
+			//sharingScreenTimeoutHandler.removeCallbacksAndMessages(null);
+			CallImpl call = _calls.get(_screenSharingKey);
+			if (call != null && call.getshareRequestCallback() != null){
+				call.getshareRequestCallback().onComplete(ResultImpl.error("Share request is deined"));
+			}
+		}
+	}
+
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(FloorReleasedAcceptedEvent event) {
+		Ln.d("FloorReleasedAcceptedEvent is received: " + event.isContent());
+		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
+			CallImpl call = _calls.get(_screenSharingKey);
+			if (call != null && call.getshareReleaseCallback() != null){
+				call.getshareReleaseCallback().onComplete(ResultImpl.success(null));
+			}
+		}
+	}
+
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(FloorReleasedDeniedEvent event) {
+		Ln.d("FloorReleasedDeniedEvent is received: " + event.isContent());
+		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
+			CallImpl call = _calls.get(_screenSharingKey);
+			if (call != null && call.getshareReleaseCallback() != null){
+				call.getshareReleaseCallback().onComplete(ResultImpl.error("Share release is deined"));
+			}
+		}
+	}
+
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onEventMainThread(FloorLostEvent event) {
+		Ln.d("FloorLostEvent is received");
+		CallImpl call = _calls.get(event.getLocusKey());
+		if (call != null && call.getStatus() == Call.CallStatus.CONNECTED) {
+			LocusParticipant beneficiary = event.getLocalMediaShare().getFloor().getBeneficiary();
+			if (beneficiary != null) {
+				LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
+				if (locusData != null){
+					_lostSharingParticipant = locusData.getParticipant(beneficiary.getUrl());
+					if (_lostSharingParticipant.getPerson() == null)
+						Ln.w("_lostSharingParticipant getPerson is null");
+					else
+						Ln.d("_lostSharingParticipant email: " + _lostSharingParticipant.getPerson().getEmail());
+				}
+			}
+		}
+	}
+
+	public void setScreenshotPermission(final Intent permissionIntent) {
+		if (permissionIntent != null) {
+			_screenSharingIntent = permissionIntent;
+			_callControlService.shareScreen(_screenSharingKey);
+		}else{
+			Ln.w("permission for sharing screen is deined");
+			CallImpl call = _calls.get(_screenSharingKey);
+			if (call != null && call.getshareRequestCallback() != null){
+				call.getshareRequestCallback().onComplete(ResultImpl.error("permission deined"));
+			}
+		}
+	}
+
+	public void startSharing(LocusKey key) {
+		Ln.d("startSharing: " + key);
+		_screenSharingKey = key;
+		final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_SCREEN_SHOT);
+		_context.startActivity(intent);
+	}
+
+	public void stopSharing(LocusKey key) {
+		_callControlService.unshareScreen(key);
+	}
+
+	protected boolean isSharingFromThisDevice(LocusData locusData) {
+		return locusData != null && locusData.isFloorMineThisDevice(_device.getUrl());
+	}
+	
+	private void _removeCall(@NonNull CallObserver.CallDisconnectedEvent event) {
         CallImpl call = (CallImpl) event.getCall();
         Ln.i("Remove " + call);
         if (call != null) {
@@ -1009,6 +1210,8 @@ public class PhoneImpl implements Phone {
             if (_bus.isRegistered(call)) {
                 _bus.unregister(call);
             }
+	        _lostSharingParticipant = null;
+	        _currentSharingUri = null;
         }
     }
 
@@ -1019,11 +1222,101 @@ public class PhoneImpl implements Phone {
         }
         if (call.getOption() != null) {
             if (call.getOption().hasVideo() && call.getVideoRenderViews() != null) {
-                _callControlService.setRemoteWindow(key, call.getVideoRenderViews().second);
                 _callControlService.setPreviewWindow(key, call.getVideoRenderViews().first);
+                if (call.getVideoRenderViews().first instanceof SurfaceView){
+                    ((SurfaceView)call.getVideoRenderViews().first).getHolder().addCallback(new SurfaceHolder.Callback() {
+                        @Override
+                        public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                            Ln.d("preview surfaceCreated !!!");
+                            if (!_callControlService.isPreviewWindowAttached(key, call.getVideoRenderViews().first))
+                                _callControlService.setPreviewWindow(key, call.getVideoRenderViews().first);
+                        }
+
+                        @Override
+                        public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                            Ln.d("preview surfaceChanged !!!");
+                            //_callControlService.updatePreviewWindow(key, call.getVideoRenderViews().first);
+                        }
+
+                        @Override
+                        public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                            Ln.d("preview surfaceDestroyed !!!");
+                            _registerTimer.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    _callControlService.removePreviewWindow(key, call.getVideoRenderViews().first);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                _callControlService.setRemoteWindow(key, call.getVideoRenderViews().second);
+                if (call.getVideoRenderViews().second instanceof SurfaceView){
+                    ((SurfaceView)call.getVideoRenderViews().second).getHolder().addCallback(new SurfaceHolder.Callback() {
+                        @Override
+                        public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                            Ln.d("remote surfaceCreated !!!");
+                            if (!_callControlService.isRemoteWindowAttached(key, call.getVideoRenderViews().second))
+                                _callControlService.setRemoteWindow(key, call.getVideoRenderViews().second);
+                        }
+
+                        @Override
+                        public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                            Ln.d("remote surfaceChanged !!!");
+                            //_callControlService.updateRemoteWindow(key, call.getVideoRenderViews().second);
+                        }
+
+                        @Override
+                        public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                            Ln.d("remote surfaceDestroyed !!!");
+                            _registerTimer.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    _callControlService.removeRemoteWindow(key, call.getVideoRenderViews().second);
+                                }
+                            });
+                        }
+                    });
+                }
             }
             if (call.getOption().hasSharing() && call.getSharingRenderView() != null) {
                 _callControlService.setShareWindow(key, call.getSharingRenderView());
+                if (call.getSharingRenderView() instanceof SurfaceView){
+                    ((SurfaceView)call.getSharingRenderView()).getHolder().addCallback(new SurfaceHolder.Callback() {
+                        @Override
+                        public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                            Ln.d("share surfaceCreated !!!");
+                            //if (!_callControlService.isShareWindowAttached(key, call.getSharingRenderView())) {
+                                _registerTimer.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        _callControlService.setShareWindow(key, call.getSharingRenderView());
+                                    }
+                                }, 100);
+                            //}
+                        }
+
+                        @Override
+                        public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                            Ln.d("share surfaceChanged !!!");
+                            //_callControlService.updateShareWindow(key, call.getSharingRenderView());
+                        }
+
+                        @Override
+                        public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                            Ln.d("share surfaceDestroyed !!!");
+                            if (_callControlService.isShareRendered()) {
+                                _registerTimer.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        _callControlService.removeShareWindow(key);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
             }
             _callControlService.updateMediaSession(_callControlService.getCall(call.getKey()), mediaOptionToMediaDirection(call.getOption()));
         }
@@ -1035,6 +1328,8 @@ public class PhoneImpl implements Phone {
         } else {
             Ln.d("call observer is null");
         }
+	    _isRemoteSendingVideo = call.isRemoteSendingVideo();
+	    _isRemoteSendingAudio = call.isRemoteSendingAudio();
     }
 
     private void _setCallOnRinging(@NonNull CallImpl call) {
@@ -1119,24 +1414,8 @@ public class PhoneImpl implements Phone {
 
         return false;
     }
-
-    private boolean isJoinedFromOtherDevice(List<LocusParticipantDevice> devices) {
-        if (_device == null || _device.getUrl() == null) {
-            Ln.w("isJoinedFromOtherDevice: self device is null, register device first.");
-            return false;
-        }
-
-        for (LocusParticipantDevice device : devices) {
-            if (!device.getUrl().equals(_device.getUrl())
-                    && device.getState() == LocusParticipant.State.JOINED) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    static FacingMode toFacingMode(String s) {
+	
+	static FacingMode toFacingMode(String s) {
         if (MediaEngine.WME_BACK_CAMERA.equals(s)) {
             return FacingMode.ENVIROMENT;
         }

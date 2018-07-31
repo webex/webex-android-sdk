@@ -61,33 +61,28 @@ public class SpaceClientImpl implements SpaceClient {
     }
 
     public void list(@Nullable String teamId, int max, @Nullable Space.SpaceType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Space>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, teamId, type != null ? type.name() : null, sortBy != null ? sortBy.name().toLowerCase() : null, max <= 0 ? null : max).enqueue(new ListCallback<Space>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _service.list(s, teamId, type != null ? type.name() : null, sortBy != null ? sortBy.name().toLowerCase() : null, max <= 0 ? null : max), new ListCallback<Space>(handler));
     }
 
     public void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Space> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.create(s, Maps.makeMap("title", title, "teamId", teamId)).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _service.create(s, Maps.makeMap("title", title, "teamId", teamId)), new ObjectCallback<>(handler));
     }
 
     public void get(@NonNull String spaceId, @NonNull CompletionHandler<Space> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, spaceId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _service.get(s, spaceId), new ObjectCallback<>(handler));
     }
 
     public void update(@NonNull String spaceId, @NonNull String title, @NonNull CompletionHandler<Space> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.update(s, spaceId, Maps.makeMap("title", title)).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _service.update(s, spaceId, Maps.makeMap("title", title)), new ObjectCallback<>(handler));
     }
 
     public void delete(@NonNull String spaceId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, spaceId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _service.delete(s, spaceId), new ObjectCallback<>(handler));
     }
 
     private interface SpaceService {
