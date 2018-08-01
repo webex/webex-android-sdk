@@ -58,9 +58,9 @@ public interface MessageClient {
      * @param spaceId      The identifier of the space where the message is to be posted.
      * @param personId    The identifier of the recipient of this private 1:1 message.
      * @param personEmail The email address of the recipient when sending a private 1:1 message.
-     * @param text        The plain text message to be posted to the room.
-     * @param markdown    The markdown text message to be posted to the room.
-     * @param files       A public URL that Cisco Spark can use to fetch attachments. Currently supports only a single URL. Cisco Spark downloads the content from the URL one time shortly after the message is created and automatically converts it to a format that all Cisco Spark clients can render.
+     * @param text        The plain text message to be posted to the space.
+     * @param markdown    The markdown text message to be posted to the space.
+     * @param files       A public URL that Cisco Webex can use to fetch attachments. Currently supports only a single URL. Cisco Spark downloads the content from the URL one time shortly after the message is created and automatically converts it to a format that all Cisco Spark clients can render.
      * @param handler     A closure to be executed once the request has finished.
      * @since 0.1
      */
