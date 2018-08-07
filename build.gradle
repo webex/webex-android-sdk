@@ -1,4 +1,5 @@
 apply plugin: 'com.github.ben-manes.versions'
+apply plugin: "org.sonarqube"
 
 buildscript {
     repositories {
@@ -12,6 +13,7 @@ buildscript {
     ext.gradleVersion = System.env.GRADLE_VERSION == null ? '3.0.1' : System.env.GRADLE_VERSION
 
     dependencies {
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.6.1"
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.12.0'
         classpath 'com.jakewharton.sdkmanager:gradle-plugin:0.12.+'
         classpath "com.android.tools.build:gradle:$gradleVersion"
