@@ -123,7 +123,7 @@ public class Message {
 
     private transient List<RemoteFile> _remoteFiles;
 
-    public boolean isSelfMentioned;
+    private boolean isSelfMentioned;
 
     public List<RemoteFile> getRemoteFiles() {
         return _remoteFiles;
@@ -227,6 +227,14 @@ public class Message {
      */
     public Date getCreated() {
         return _created;
+    }
+
+    public boolean isSelfMentioned() {
+        return isSelfMentioned;
+    }
+
+    public void setSelfMentioned(boolean selfMentioned) {
+        isSelfMentioned = selfMentioned;
     }
 
     @Override

@@ -210,10 +210,10 @@ public class MessageClientImpl implements MessageClient {
             modelFile.setUri(contentUri);
             modelFile.setMimeType(MimeUtils.getMimeType(contentUri.toString()));
             modelFile.setDisplayName(contentUri.getLastPathSegment());
-            if (contentFile.thumbnail != null) {
-                java.io.File thumbFile = new java.io.File(contentFile.thumbnail.path);
+            if (contentFile.getThumbnail() != null) {
+                java.io.File thumbFile = new java.io.File(contentFile.getThumbnail().getPath());
                 if (thumbFile.exists() && thumbFile.isFile()) {
-                    Image newThumb = new Image(Uri.fromFile(thumbFile), contentFile.thumbnail.width, contentFile.thumbnail.height, true);
+                    Image newThumb = new Image(Uri.fromFile(thumbFile), contentFile.getThumbnail().getWidth(), contentFile.getThumbnail().getHeight(), true);
                     modelFile.setImage(newThumb);
                 }
             }
@@ -285,7 +285,7 @@ public class MessageClientImpl implements MessageClient {
         ItemCollection<Person> mentionedPersons = new ItemCollection<>();
         for (Mention m : mentions) {
             if (m instanceof Mention.MentionPerson) {
-                HydraId personId = HydraId.decode(((Mention.MentionPerson) m).personId);
+                HydraId personId = HydraId.decode(((Mention.MentionPerson) m).getPersonId());
                 if (personId.type != null && personId.type.equals(HydraId.HydraIdType.PEOPLE_ID)) {
                     Person person = new Person(personId.id);
                     mentionedPersons.addItem(person);
@@ -343,9 +343,9 @@ public class MessageClientImpl implements MessageClient {
             this.url = file.getUrl().toString();
             if (file.getImage() != null) {
                 this.thumbnail = new Thumbnail();
-                this.thumbnail.url = file.getImage().getUrl().toString();
-                this.thumbnail.width = file.getImage().getWidth();
-                this.thumbnail.height = file.getImage().getHeight();
+                this.thumbnail.setUrl(file.getImage().getUrl().toString());
+                this.thumbnail.setWidth(file.getImage().getWidth());
+                this.thumbnail.setHeight(file.getImage().getHeight());
             }
         }
 
@@ -416,7 +416,7 @@ public class MessageClientImpl implements MessageClient {
         message.setPersonEmail(activity.getActor().getEmail());
 
         if (activity.isSelfMention(_provider.getAuthenticatedUser(), 0)) {
-            message.isSelfMentioned = true;
+            message.setSelfMentioned(true);
         }
 
         formMessageFiles(message, activity);
@@ -503,8 +503,8 @@ public class MessageClientImpl implements MessageClient {
             int progress;
             progress = uploadMonitor.getProgressForKey(contentUri.toString());
             runOnUiThread(() -> {
-                if (file.progressHandler != null) {
-                    file.progressHandler.onProgress(progress >= 0 ? progress : 0);
+                if (file.getProgressHandler() != null) {
+                    file.getProgressHandler().onProgress(progress >= 0 ? progress : 0);
                 }
             });
             if (progress >= 100) {

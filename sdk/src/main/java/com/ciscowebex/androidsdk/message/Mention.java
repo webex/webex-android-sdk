@@ -11,9 +11,17 @@ public abstract class Mention {
      * @since 1.4.0
      */
     public static class MentionPerson extends Mention {
-        public String personId;
+        private String personId;
 
         public MentionPerson(String personId) {
+            this.personId = personId;
+        }
+
+        public String getPersonId() {
+            return personId;
+        }
+
+        public void setPersonId(String personId) {
             this.personId = personId;
         }
     }

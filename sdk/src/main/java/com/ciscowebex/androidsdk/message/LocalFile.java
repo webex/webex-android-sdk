@@ -15,23 +15,64 @@ public class LocalFile {
      * @since 1.4.0
      */
     public static class Thumbnail {
-        public String path;
-        public int width;
-        public int height;
-        public long size;
-        public String mimeType;
+        private String path;
+        private int width;
+        private int height;
+        private long size;
+        private String mimeType;
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
+        public int getWidth() {
+            return width;
+        }
+
+        public void setWidth(int width) {
+            this.width = width;
+        }
+
+        public int getHeight() {
+            return height;
+        }
+
+        public void setHeight(int height) {
+            this.height = height;
+        }
+
+        public long getSize() {
+            return size;
+        }
+
+        public void setSize(long size) {
+            this.size = size;
+        }
+
+        public String getMimeType() {
+            return mimeType;
+        }
+
+        public void setMimeType(String mimeType) {
+            this.mimeType = mimeType;
+        }
     }
 
-    public String path;
-    public String name;
-    public long size;
-    public String mimeType;
-    public MessageClient.ProgressHandler progressHandler;
-    public Thumbnail thumbnail;
+    private File file;
+    private String path;
+    private String name;
+    private long size;
+    private String mimeType;
+    private MessageClient.ProgressHandler progressHandler;
+    private Thumbnail thumbnail;
 
     public LocalFile(File file) {
-        this._file = file;
-        if (_file.exists() && _file.isFile()) {
+        this.file = file;
+        if (this.file.exists() && this.file.isFile()) {
             this.name = file.getName();
             this.size = file.length();
             this.path = file.getPath();
@@ -39,8 +80,58 @@ public class LocalFile {
     }
 
     public File getFile() {
-        return _file;
+        return file;
     }
 
-    private File _file;
+    public void setFile(File file) {
+        this.file = file;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    public MessageClient.ProgressHandler getProgressHandler() {
+        return progressHandler;
+    }
+
+    public void setProgressHandler(MessageClient.ProgressHandler progressHandler) {
+        this.progressHandler = progressHandler;
+    }
+
+    public Thumbnail getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(Thumbnail thumbnail) {
+        this.thumbnail = thumbnail;
+    }
 }
