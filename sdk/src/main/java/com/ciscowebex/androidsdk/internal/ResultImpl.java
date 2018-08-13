@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.WebexError;
+import com.github.benoitdion.ln.Ln;
 
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
@@ -90,7 +91,7 @@ public class ResultImpl<T> implements Result<T> {
             String body = res.errorBody().string();
             message.append("/").append(body);
         } catch (IOException e) {
-            e.printStackTrace();
+            Ln.e(e);
         }
         return new WebexError(WebexError.ErrorCode.SERVICE_ERROR, message.toString());
     }
