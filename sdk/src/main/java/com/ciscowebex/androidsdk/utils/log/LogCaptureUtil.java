@@ -55,7 +55,7 @@ public class LogCaptureUtil implements Runnable {
     protected static final String LOG_FILE_EXT = ".log";
     private static final int MAX_DEBUG_LOG_FILES = 5;
     private static final int MAX_RELEASE_LOG_FILES = 5;
-    protected static final long MAX_LOG_FILE_SIZE = 20 * 1024 * 1024; // 20MB file size
+    protected static final long MAX_LOG_FILE_SIZE = 20L * 1024 * 1024; // 20MB file size
 
     protected Context context;
     protected Process logcatProcess;

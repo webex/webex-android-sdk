@@ -382,7 +382,7 @@ public class PhoneImpl implements Phone {
                     _registerCallback.onComplete(ResultImpl.error("Register timeout"));
                 }
             };
-            _registerTimer.postDelayed(_registerTimeoutTask, 60 * 1000);
+            _registerTimer.postDelayed(_registerTimeoutTask, 60L * 1000);
             new AuthenticatedUserTask(_applicationController).execute();
             return null;
         }, null);
