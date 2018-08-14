@@ -37,8 +37,7 @@ public class RotationHandler {
 
     static int getRotation(Context context) {
         WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        int rotation = windowManager.getDefaultDisplay().getRotation();
-        return rotation;
+        return windowManager.getDefaultDisplay().getRotation();
     }
 
 

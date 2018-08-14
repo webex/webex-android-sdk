@@ -31,7 +31,6 @@ public class RetryCallAdapterFactory extends CallAdapter.Factory {
 
 	@Override
 	public CallAdapter get(final Type returnType, Annotation[] annotations, Retrofit retrofit) {
-		final boolean shouldRetryCall = true;
 		final CallAdapter delegate = retrofit.nextCallAdapter(this, returnType, annotations);
 		return new CallAdapter() {
 			@Override

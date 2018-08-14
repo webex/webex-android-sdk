@@ -111,7 +111,7 @@ public class CallImpl implements Call {
 
         if (option != null) {
             if (option.getLocalView() != null && option.getRemoteView() != null) {
-                _videoRenderViews = new Pair<View, View>(option.getLocalView(), option.getRemoteView());
+                _videoRenderViews = new Pair<>(option.getLocalView(), option.getRemoteView());
             } else {
                 _videoRenderViews = null;
             }
@@ -136,7 +136,7 @@ public class CallImpl implements Call {
         _option = option;
         if (option != null) {
             if (option.getLocalView() != null && option.getRemoteView() != null) {
-                _videoRenderViews = new Pair<View, View>(option.getLocalView(), option.getRemoteView());
+                _videoRenderViews = new Pair<>(option.getLocalView(), option.getRemoteView());
             } else {
                 _videoRenderViews = null;
             }
@@ -383,7 +383,7 @@ public class CallImpl implements Call {
         _option = option;
         if (option != null) {
             if (option.getLocalView() != null && option.getRemoteView() != null) {
-                _videoRenderViews = new Pair<View, View>(option.getLocalView(), option.getRemoteView());
+                _videoRenderViews = new Pair<>(option.getLocalView(), option.getRemoteView());
             } else {
                 _videoRenderViews = null;
             }

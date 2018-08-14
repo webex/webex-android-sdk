@@ -25,8 +25,6 @@ package com.ciscowebex.androidsdk.internal;
 import java.util.List;
 import java.util.Map;
 
-import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.github.benoitdion.ln.Ln;
@@ -45,9 +43,9 @@ public class MetricsClient {
 
     private MetricsService _service;
 
-    public MetricsClient(Authenticator authenticator, String URL) {
+    public MetricsClient(Authenticator authenticator, String url) {
         _authenticator = authenticator;
-        _service = new ServiceBuilder().baseURL(URL).build(MetricsService.class);
+        _service = new ServiceBuilder().baseURL(url).build(MetricsService.class);
     }
 
     public void post(List<Map<String, String>> metrics) {

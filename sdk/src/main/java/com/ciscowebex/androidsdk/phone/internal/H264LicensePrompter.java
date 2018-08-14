@@ -40,6 +40,9 @@ import com.github.benoitdion.ln.Ln;
 
 public class H264LicensePrompter {
 
+    private static final String STR_ENABLE_HINT = "To enable video calls, activate a free video license (H.264 AVC) from Cisco. By selecting 'Activate', you accept the Cisco End User License Agreement and Notices.";
+    private static final String STR_LICENSE_URL= "http://www.openh264.org/BINARY_LICENSE.txt";
+
     public interface CompletionHandler<T> {
         void onComplete(T result);
     }
@@ -51,11 +54,11 @@ public class H264LicensePrompter {
     }
 
     String getLicense() {
-        return "To enable video calls, activate a free video license (H.264 AVC) from Cisco. By selecting 'Activate', you accept the Cisco End User License Agreement and Notices.";
+        return STR_ENABLE_HINT;
     }
 
     String getLicenseURL() {
-        return "http://www.openh264.org/BINARY_LICENSE.txt";
+        return STR_LICENSE_URL;
     }
 
     void check(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Boolean> handler) {

@@ -253,16 +253,12 @@ public class PhoneImpl implements Phone {
             String target = this.parseHydraId(this.address);
             if (!Checker.isEmpty(target)) {
                 this.address = target;
-                return;
             } else if (this.address.toLowerCase().endsWith("@meet.ciscospark.com")) {
                 this.type = AddressType.SPACE_MAIL;
-                return;
             } else if (this.address.contains("@") && !this.address.contains(".")) {
                 this.type = AddressType.PEOPLE_MAIL;
-                return;
             } else {
                 this.type = AddressType.OTHER;
-                return;
             }
         }
 
@@ -328,9 +324,7 @@ public class PhoneImpl implements Phone {
     }
 
     public void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Boolean> callback) {
-        _prompter.check(builder, result -> {
-            callback.onComplete(ResultImpl.success(result));
-        });
+        _prompter.check(builder, result -> callback.onComplete(ResultImpl.success(result)));
     }
 
     public String getVideoCodecLicense() {
@@ -670,8 +664,8 @@ public class PhoneImpl implements Phone {
                     _dialCallback.onComplete(ResultImpl.success(call));
                 }
                 if (call.isGroup()) {
-                    _setCallOnRinging(call);
-                    _setCallOnConnected(call, event.getLocusKey());
+                    setCallOnRinging(call);
+                    setCallOnConnected(call, event.getLocusKey());
                 }
             } else {
                 Ln.e("Internal callImpl isn't exist " + event.getLocusKey());
@@ -693,19 +687,19 @@ public class PhoneImpl implements Phone {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (call.isGroup()) {
                 if (call.getDirection() == Call.Direction.INCOMING) {
-                    _setCallOnRinging(call);
+                    setCallOnRinging(call);
                 }
             }else{
                 if (call.getDirection() == Call.Direction.INCOMING) {
                     for (LocusParticipant participant : call.getRemoteParticipants()) {
                         Ln.d("participant State: " + participant.getState());
                         if (participant.getState() == LocusParticipant.State.JOINED) {
-                            _setCallOnRinging(call);
+                            setCallOnRinging(call);
                             break;
                         }
                     }
                 }else{
-                    _setCallOnRinging(call);
+                    setCallOnRinging(call);
                 }
             }
         }
@@ -722,7 +716,7 @@ public class PhoneImpl implements Phone {
                 if (call.getAnswerCallback() != null && (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING)) {
                     call.getAnswerCallback().onComplete(ResultImpl.success(null));
                 }
-                _setCallOnConnected(call, event.getLocusKey());
+                setCallOnConnected(call, event.getLocusKey());
             } else if (call.getStatus() != Call.CallStatus.CONNECTED) {
                 for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
                     if (locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
@@ -731,13 +725,13 @@ public class PhoneImpl implements Phone {
                         }
                         if (_dialCallback != null) {
                             _dialCallback.onComplete(ResultImpl.success(call));
-                            _setCallOnRinging(call);
+                            setCallOnRinging(call);
                             _dialCallback = null;
                         }
                         if (call.getOption() == null && _dialOption != null) {
                             call.setMediaOption(_dialOption);
                         }
-                        _setCallOnConnected(call, event.getLocusKey());
+                        setCallOnConnected(call, event.getLocusKey());
                     }
                 }
             }
@@ -754,8 +748,8 @@ public class PhoneImpl implements Phone {
                     if (_dialCallback != null) {
                         _dialCallback.onComplete(ResultImpl.success(call));
                     }
-                    _setCallOnRinging(call);
-                    _setCallOnConnected(call, event.getLocusKey());
+                    setCallOnRinging(call);
+                    setCallOnConnected(call, event.getLocusKey());
                     _dialCallback = null;
                 }
             }
@@ -766,8 +760,8 @@ public class PhoneImpl implements Phone {
             if (!locusParticipant.getDeviceUrl().equals(_device.getUrl()))
                 events.add(new CallObserver.MembershipJoinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
         }
-        if (events.size() > 0)
-            _sendCallMembershipChanged(call, events);
+        if (!events.isEmpty())
+            sendCallMembershipChanged(call, events);
 
     }
 
@@ -793,7 +787,7 @@ public class PhoneImpl implements Phone {
             if (call.getHangupCallback() != null) {
                 call.getHangupCallback().onComplete(ResultImpl.success(null));
             }
-            _removeCall(new CallObserver.LocalLeft(call));
+            removeCall(new CallObserver.LocalLeft(call));
         }
     }
 
@@ -807,7 +801,7 @@ public class PhoneImpl implements Phone {
                 call.getRejectCallback().onComplete(ResultImpl.success(null));
             }
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
-            _removeCall(new CallObserver.LocalDecline(call));
+            removeCall(new CallObserver.LocalDecline(call));
         }
     }
 
@@ -819,12 +813,12 @@ public class PhoneImpl implements Phone {
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (event.getReason() == CallControlService.CancelReason.REMOTE_CANCELLED) {
-                _removeCall(new CallObserver.RemoteCancel(call));
+                removeCall(new CallObserver.RemoteCancel(call));
             } else {
                 if (call.getHangupCallback() != null) {
                     call.getHangupCallback().onComplete(ResultImpl.success(null));
                 }
-                _removeCall(new CallObserver.LocalCancel(call));
+                removeCall(new CallObserver.LocalCancel(call));
             }
         }
     }
@@ -837,7 +831,7 @@ public class PhoneImpl implements Phone {
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (!call.isGroup()) {
-                _removeCall(new CallObserver.RemoteLeft(call));
+                removeCall(new CallObserver.RemoteLeft(call));
             } else if (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING) {
                 boolean meetingIsOpen = false;
                 for (CallMembership membership : call.getMemberships()) {
@@ -846,14 +840,14 @@ public class PhoneImpl implements Phone {
                     }
                 }
                 if (!meetingIsOpen) {
-                    _removeCall(new CallObserver.RemoteCancel(call));
+                    removeCall(new CallObserver.RemoteCancel(call));
                 }
             }
             List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
             for (LocusParticipant locusParticipant : event.getLeftParticipants()) {
                 events.add(new CallObserver.MembershipLeftEvent(call, new CallMembershipImpl(locusParticipant, call)));
             }
-            _sendCallMembershipChanged(call, events);
+            sendCallMembershipChanged(call, events);
         }
     }
 
@@ -864,7 +858,7 @@ public class PhoneImpl implements Phone {
 	    CallImpl call = _calls.get(event.locusData().getKey());
 	    if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
 		    Ln.d(STR_FIND_CALLIMPL + event.locusData().getKey());
-		    _removeCall(new CallObserver.RemoteDecline(call));
+		    removeCall(new CallObserver.RemoteDecline(call));
 	    }
     }
 
@@ -879,7 +873,7 @@ public class PhoneImpl implements Phone {
             for (LocusParticipant locusParticipant : event.getDeclinedParticipants()) {
                 events.add(new CallObserver.MembershipDeclinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
             }
-            _sendCallMembershipChanged(call, events);
+            sendCallMembershipChanged(call, events);
         }
 
     }
@@ -891,7 +885,7 @@ public class PhoneImpl implements Phone {
         if (event.getType() == CallNotificationType.INCOMING) {
             Ln.i("InComing Call " + event.getLocusKey());
             LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
-            boolean isGroup = locusData != null ? locusData.isMeeting() : false;
+            boolean isGroup = locusData != null && locusData.isMeeting();
             CallImpl call = new CallImpl(this, null, CallImpl.Direction.INCOMING, event.getLocusKey(), isGroup);
             _bus.register(call);
             _calls.put(call.getKey(), call);
@@ -917,14 +911,14 @@ public class PhoneImpl implements Phone {
 			    if (call.getHangupCallback() != null) {
 				    call.getHangupCallback().onComplete(ResultImpl.success(null));
 			    }
-			    _removeCall(new CallObserver.LocalLeft(call));
+			    removeCall(new CallObserver.LocalLeft(call));
 		    } else if (call.getStatus() != Call.CallStatus.CONNECTED
 			    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
                 && locus.getSelf().getState() == LocusParticipant.State.JOINED) {
 			    com.cisco.spark.android.callcontrol.model.Call _call = _callControlService.getCall(event.getLocusKey());
 			    if (_call == null || !_call.isActive()) {
 				    Ln.d("other device connected locusKey: " + event.getLocusKey());
-				    _removeCall(new CallObserver.OtherConnected(call));
+				    removeCall(new CallObserver.OtherConnected(call));
 			    }else{
 				    Ln.d("Self device has already connected, ignore other device connect");
 			    }
@@ -934,7 +928,7 @@ public class PhoneImpl implements Phone {
 			    com.cisco.spark.android.callcontrol.model.Call _call = _callControlService.getCall(event.getLocusKey());
 			    if (_call == null || !_call.isActive()) {
 				    Ln.d("other device declined locusKey: " + event.getLocusKey());
-				    _removeCall(new CallObserver.OtherDeclined(call));
+				    removeCall(new CallObserver.OtherDeclined(call));
 			    }else{
 				    Ln.d("Self device has already connected, ignore other device decline");
 			    }
@@ -998,7 +992,7 @@ public class PhoneImpl implements Phone {
 			}
 			List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
 			events.add(new CallObserver.MembershipSendingAudioEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
-			_sendCallMembershipChanged(call, events);
+			sendCallMembershipChanged(call, events);
 		}
 	}
 
@@ -1022,7 +1016,7 @@ public class PhoneImpl implements Phone {
 			}
 			List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
 			events.add(new CallObserver.MembershipSendingVideoEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
-			_sendCallMembershipChanged(call, events);
+			sendCallMembershipChanged(call, events);
 		}
 	}
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1056,7 +1050,7 @@ public class PhoneImpl implements Phone {
 					break;
 				}
 			}
-			_sendCallMembershipChanged(call, events);
+			sendCallMembershipChanged(call, events);
 
 			CallObserver observer = call.getObserver();
 			if (observer != null) {
@@ -1089,7 +1083,7 @@ public class PhoneImpl implements Phone {
 					break;
 				}
 			}
-			_sendCallMembershipChanged(call, events);
+			sendCallMembershipChanged(call, events);
 
 			CallObserver observer = call.getObserver();
 			if (observer != null) {
@@ -1202,7 +1196,7 @@ public class PhoneImpl implements Phone {
 		return locusData != null && locusData.isFloorMineThisDevice(_device.getUrl());
 	}
 	
-	private void _removeCall(@NonNull CallObserver.CallDisconnectedEvent event) {
+	private void removeCall(@NonNull CallObserver.CallDisconnectedEvent event) {
         CallImpl call = (CallImpl) event.getCall();
         Ln.i("Remove " + call);
         if (call != null) {
@@ -1220,7 +1214,7 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    private void _setCallOnConnected(@NonNull CallImpl call, @NonNull LocusKey key) {
+    private void setCallOnConnected(@NonNull CallImpl call, @NonNull LocusKey key) {
         if (call.getStatus() == Call.CallStatus.CONNECTED) {
             Ln.d("Already has been connected, return");
             return;
@@ -1312,7 +1306,7 @@ public class PhoneImpl implements Phone {
 	    _isRemoteSendingAudio = call.isRemoteSendingAudio();
     }
 
-    private void _setCallOnRinging(@NonNull CallImpl call) {
+    private void setCallOnRinging(@NonNull CallImpl call) {
         if (call.getStatus() == Call.CallStatus.INITIATED) {
             call.setStatus(Call.CallStatus.RINGING);
             CallObserver observer = call.getObserver();
@@ -1324,7 +1318,7 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    private void _sendCallMembershipChanged(CallImpl call, @NonNull List<CallObserver.CallMembershipChangedEvent> events) {
+    private void sendCallMembershipChanged(CallImpl call, @NonNull List<CallObserver.CallMembershipChangedEvent> events) {
         if (call == null) {
             return;
         }

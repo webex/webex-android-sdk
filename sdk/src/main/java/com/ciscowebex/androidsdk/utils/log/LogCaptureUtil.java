@@ -114,14 +114,14 @@ public class LogCaptureUtil implements Runnable {
     }
 
     public synchronized String getLogString() {
-        String result = "";
+        StringBuilder result = new StringBuilder("");
         for (int i = maxLogFiles - 1; i >= 0; i--) {
             File aLogFile = buildLogFile(i);
             if (aLogFile.exists()) {
-                result += FileUtils.readFile(aLogFile);
+                result.append(FileUtils.readFile(aLogFile));
             }
         }
-        return result;
+        return result.toString();
     }
 
     public File[] getAllLogFiles() {

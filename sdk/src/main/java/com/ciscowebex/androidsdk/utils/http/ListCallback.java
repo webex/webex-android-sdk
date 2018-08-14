@@ -28,7 +28,6 @@ import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 /**

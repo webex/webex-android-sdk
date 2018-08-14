@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.github.benoitdion.ln.Ln;

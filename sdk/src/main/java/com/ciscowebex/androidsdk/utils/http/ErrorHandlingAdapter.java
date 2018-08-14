@@ -98,7 +98,7 @@ public class ErrorHandlingAdapter {
 			final Executor callbackExecutor;
 			Executor retrofitExecutor = retrofit.callbackExecutor();
 			if (retrofitExecutor == null) {
-				callbackExecutor = command -> command.run();
+				callbackExecutor = Runnable::run;
 			} else {
 				callbackExecutor = retrofitExecutor;
 			}
