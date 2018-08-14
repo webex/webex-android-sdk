@@ -51,12 +51,12 @@ public class MembershipTest {
         Gson gson = new Gson();
         Membership membership = gson.fromJson(jsonString, Membership.class);
         assertNotNull(membership);
-        assertEquals(membership.getId(), "Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg");
-        assertEquals(membership.getPersonEmail(), "john.andersen@example.com");
-        assertEquals(membership.getPersonDisplayName(), "John Andersen");
-        assertEquals(membership.getSpaceId(), "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0");
-        assertEquals(membership.isModerator(), true);
-        assertEquals(membership.isMonitor(), true);
+        assertEquals("Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg", membership.getId());
+        assertEquals("john.andersen@example.com", membership.getPersonEmail());
+        assertEquals("John Andersen", membership.getPersonDisplayName());
+        assertEquals("Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0", membership.getSpaceId());
+        assertEquals(true, membership.isModerator());
+        assertEquals(true, membership.isMonitor());
         assertNotNull(membership.getCreated());
     }
 
