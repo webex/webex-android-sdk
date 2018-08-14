@@ -145,7 +145,7 @@ public class PhoneImpl implements Phone {
     CallAnalyzerReporter _callAnalyzerReporter;
 
     @Inject
-    transient Settings settings;
+    volatile Settings settings;
 
     private IncomingCallListener _incomingCallListener;
 
