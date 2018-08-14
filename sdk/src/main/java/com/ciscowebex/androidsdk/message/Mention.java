@@ -6,6 +6,8 @@ package com.ciscowebex.androidsdk.message;
  */
 public abstract class Mention {
 
+    private Mention(){}
+
     /**
      * Mention one particular person by person Id.
      * @since 1.4.0

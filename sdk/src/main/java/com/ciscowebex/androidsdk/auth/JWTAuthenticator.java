@@ -23,6 +23,7 @@
 package com.ciscowebex.androidsdk.auth;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import javax.inject.Inject;
@@ -41,6 +42,8 @@ import com.ciscowebex.androidsdk_commlib.AfterInjected;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
+
 import me.helloworld.utils.Converter;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -179,7 +182,7 @@ public class JWTAuthenticator implements Authenticator {
             if (exp > 0 && exp <= (System.currentTimeMillis() / 1000)) {
                 return null;
             }
-        } catch (Throwable ignored) {
+        } catch (Exception ignored) {
             Ln.e(ignored);
         }
         return _jwt;
@@ -209,8 +212,8 @@ public class JWTAuthenticator implements Authenticator {
         try {
             String json = new String(Base64.decode(split[1], Base64.URL_SAFE), "UTF-8");
             Gson gson = new Gson();
-            Map<String, Object> map = new HashMap<>();
-            return gson.fromJson(json, map.getClass());
+            Type strObjType = new TypeToken<HashMap<String, Object>>(){}.getType();
+            return gson.fromJson(json, strObjType);
         } catch (UnsupportedEncodingException e) {
             return null;
         }

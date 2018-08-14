@@ -35,23 +35,23 @@ import retrofit2.Response;
 public class ResultImpl<T> implements Result<T> {
 
     public static <T> Result<T> success(T data) {
-        return new ResultImpl<T>(data, null);
+        return new ResultImpl<>(data, null);
     }
 
     public static <T> Result<T> error(String message) {
-        return new ResultImpl<T>(null, new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, message));
+        return new ResultImpl<>(null, new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, message));
     }
 
     public static <T> Result<T> error(Throwable t) {
-        return new ResultImpl<T>(null, makeError(t));
+        return new ResultImpl<>(null, makeError(t));
     }
 
     public static <T> Result<T> error(WebexError error) {
-        return new ResultImpl<T>(null, error);
+        return new ResultImpl<>(null, error);
     }
 
     public static <T> Result<T> error(Response response) {
-        return new ResultImpl<T>(null, makeError(response));
+        return new ResultImpl<>(null, makeError(response));
     }
 
     @StringPart

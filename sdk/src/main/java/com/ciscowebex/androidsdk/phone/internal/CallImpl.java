@@ -489,13 +489,11 @@ public class CallImpl implements Call {
         com.cisco.spark.android.callcontrol.model.Call call = _phone.getCallService().getCall(getKey());
         if (call != null) {
             MediaSession session = call.getMediaSession();
-            if (session != null) {
-                if (!session.getSelectedCamera().equals(PhoneImpl.fromFacingMode(facingMode))) {
-                    session.switchCamera();
-                    CallObserver observer = getObserver();
-                    if (observer != null) {
-                        observer.onMediaChanged(new CallObserver.CameraSwitched(this));
-                    }
+            if (session != null && !session.getSelectedCamera().equals(PhoneImpl.fromFacingMode(facingMode))) {
+                session.switchCamera();
+                CallObserver observer = getObserver();
+                if (observer != null) {
+                    observer.onMediaChanged(new CallObserver.CameraSwitched(this));
                 }
             }
         }

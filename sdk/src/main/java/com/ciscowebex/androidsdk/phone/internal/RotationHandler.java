@@ -33,6 +33,8 @@ import android.view.WindowManager;
 public class RotationHandler {
     private static BroadcastReceiver _receiver;
 
+    private RotationHandler(){}
+
     static int getRotation(Context context) {
         WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         int rotation = windowManager.getDefaultDisplay().getRotation();

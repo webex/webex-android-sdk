@@ -25,7 +25,6 @@ package com.ciscowebex.androidsdk;
 import javax.inject.Inject;
 
 import android.app.Application;
-import android.util.Log;
 
 import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.core.BackgroundCheck;

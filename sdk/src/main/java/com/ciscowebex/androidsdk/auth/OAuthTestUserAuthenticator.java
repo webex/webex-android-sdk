@@ -116,7 +116,7 @@ public class OAuthTestUserAuthenticator extends OAuthAuthenticator {
                 privateStringField.setAccessible(true);
                 privateStringField.set(loginTestUserRequest, scope);
 
-                OAuth2Tokens token = (OAuth2Tokens) apiClientProvider.getUserClient().loginTestUser(loginTestUserRequest).execute().body();
+                OAuth2Tokens token = apiClientProvider.getUserClient().loginTestUser(loginTestUserRequest).execute().body();
                 if (token != null) {
                     token.setExpiresIn(token.getExpiresIn() + System.currentTimeMillis() / 1000);
                     AuthenticatedUser authenticatedUser = new AuthenticatedUser(email, new ActorRecord.ActorKey(email), name, token, "Unknown", (String) null, 0L, (String) null);
@@ -126,8 +126,7 @@ public class OAuthTestUserAuthenticator extends OAuthAuthenticator {
                 }
             }
 
-            boolean var18 = _provider.getAuthenticatedUserOrNull() != null;
-            return var18;
+            return _provider.getAuthenticatedUserOrNull() != null;
         } catch (Exception var16) {
             Ln.e(var16);
             var4 = false;

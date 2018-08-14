@@ -217,16 +217,6 @@ public class MessageClientImpl implements MessageClient {
                     modelFile.setImage(newThumb);
                 }
             }
-            /* Generate thumbnail automatically */
-            /*
-            MimeUtils.ContentType type = MimeUtils.getContentTypeByFilename(contentUri.getLastPathSegment());
-            if (type == MimeUtils.ContentType.IMAGE || type == MimeUtils.ContentType.VIDEO) {
-                java.io.File thumbDir = contentManager.getContentDirectory(ConversationContract.ContentDataCacheEntry.Cache.THUMBNAIL, modelFile.getUrl());
-                java.io.File thumbFile = new java.io.File(thumbDir, modelFile.getUrl().getLastPathSegment() + ".png");
-                Image newThumb = ImageUtils.getThumbnailTempFile(thumbFile, contentUri, type);
-                modelFile.setImage(newThumb);
-            }
-            */
             return modelFile;
         } catch (URISyntaxException e) {
             Ln.e(e, "Failed parsing content URI.");

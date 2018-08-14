@@ -7,6 +7,7 @@ import com.cisco.spark.android.BuildConfig;
 import com.cisco.spark.android.core.PSUtils;
 import com.cisco.spark.android.util.FileUtils;
 import com.ciscowebex.androidsdk.Webex;
+import com.github.benoitdion.ln.Ln;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -115,9 +116,9 @@ public class LogCaptureUtil implements Runnable {
     public synchronized String getLogString() {
         String result = "";
         for (int i = maxLogFiles - 1; i >= 0; i--) {
-            File logFile = buildLogFile(i);
-            if (logFile.exists()) {
-                result += FileUtils.readFile(logFile);
+            File aLogFile = buildLogFile(i);
+            if (aLogFile.exists()) {
+                result += FileUtils.readFile(aLogFile);
             }
         }
         return result;
@@ -138,11 +139,9 @@ public class LogCaptureUtil implements Runnable {
     public void clearLogs() {
         stopCapture();
         for (int i = 0; i < maxLogFiles; i++) {
-            File logFile = buildLogFile(i);
-            if (logFile.exists())
-                if (!logFile.delete()) {
-                    Log.e(TAG, "Unable to delete log file " + logFile.getName());
-                }
+            File aLogFile = buildLogFile(i);
+            if (aLogFile.exists() && !aLogFile.delete())
+                Log.e(TAG, "Unable to delete log file " + aLogFile.getName());
         }
         startCapture();
     }
@@ -166,9 +165,8 @@ public class LogCaptureUtil implements Runnable {
 
     private void getNewLogFile() {
         File logDir = getLogDirectory();
-        if (!logDir.exists()) {
-            if (!logDir.mkdirs())
-                Log.e(TAG, "Failed to make directory");
+        if (!logDir.exists() && !logDir.mkdirs()) {
+            Log.e(TAG, "Failed to make directory");
         }
 
         rotateLogFiles();
@@ -192,13 +190,11 @@ public class LogCaptureUtil implements Runnable {
         for (int i = startIndex; i > 0; i--) {
             File fromFile = buildLogFile(i - 1);
             File toFile = buildLogFile(i);
-            if (toFile.exists() && (i == startIndex)) {
-                if (!toFile.delete())
-                    Log.e(TAG, "Failed to delete 'to' file");
+            if (toFile.exists() && (i == startIndex) && !toFile.delete()) {
+                Log.e(TAG, "Failed to delete 'to' file");
             }
-            if (fromFile.exists()) {
-                if (!fromFile.renameTo(toFile))
-                    Log.e(TAG, "Failed to rename file");
+            if (fromFile.exists() && !fromFile.renameTo(toFile)) {
+                Log.e(TAG, "Failed to rename file");
             }
         }
     }
@@ -224,6 +220,7 @@ public class LogCaptureUtil implements Runnable {
 
             @Override
             public void onException(Exception ex) {
+                Ln.e(ex);
             }
         });
     }
@@ -324,7 +321,11 @@ public class LogCaptureUtil implements Runnable {
                     }
                 }
             } finally {
-                reader.close();
+                try{
+                    reader.close();
+                } catch (IOException e) {
+                    Log.d(TAG, "Error closing log writer", e);
+                }
             }
         } catch (IOException e) {
             Log.e(TAG, "Error capturing logcat output:", e);

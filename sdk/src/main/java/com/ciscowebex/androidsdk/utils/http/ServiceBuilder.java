@@ -61,12 +61,7 @@ public class ServiceBuilder {
 
     public ServiceBuilder() {
         _interceptors.add(new DefaultHeadersInterceptor());
-        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
-            @Override
-            public void log(String message) {
-                Log.d("RetrofitLog", "retrofitBack = " + message);
-            }
-        });
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> Log.d("RetrofitLog", "retrofitBack = " + message));
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         _interceptors.add(loggingInterceptor);
     }
@@ -108,29 +103,23 @@ public class ServiceBuilder {
     }
 
     public static <T> void async(Authenticator authenticator, CompletionHandler<T> handler, Closure<String> closure, ListenerCallback callback) {
-        authenticator.getToken(new CompletionHandler<String>() {
-            @Override
-            public void onComplete(Result<String> result) {
-                String token = result.getData();
-                if (token != null) {
-                    if (callback != null) {
-                        callback.setUnauthErrorListener(new UnauthErrorListener() {
-                            @Override
-                            public void onUnauthError(Response response) {
-                                if (!handleUnauthError(authenticator, handler, closure, callback) && handler != null){
-                                    handler.onComplete(ResultImpl.error(response));
-                                }
-                            }
-                        });
-                    }
+        authenticator.getToken(result -> {
+            String token = result.getData();
+            if (token != null) {
+                if (callback != null) {
+                    callback.setUnauthErrorListener(response -> {
+                        if (!handleUnauthError(authenticator, handler, closure, callback) && handler != null){
+                            handler.onComplete(ResultImpl.error(response));
+                        }
+                    });
+                }
 
-                    Call call = closure.invoke("Bearer " + token);
-                    if (call != null)
-                        call.enqueue(callback);
-                } else {
-                    if (handler != null) {
-                        handler.onComplete(ResultImpl.error(result.getError()));
-                    }
+                Call call = closure.invoke("Bearer " + token);
+                if (call != null)
+                    call.enqueue(callback);
+            } else {
+                if (handler != null) {
+                    handler.onComplete(ResultImpl.error(result.getError()));
                 }
             }
         });
@@ -140,17 +129,14 @@ public class ServiceBuilder {
         Ln.d("handleUnauthError");
         if (authenticator != null) {
             Ln.d("refreshToken");
-            authenticator.refreshToken(new CompletionHandler<String>() {
-                @Override
-                public void onComplete(Result<String> result) {
-                    String token = result.getData();
-                    if (token != null) {
-                        Call call = closure.invoke("Bearer " + token);
-                        call.enqueue(callback);
-                    } else {
-                        if (handler != null) {
-                            handler.onComplete(ResultImpl.error(result.getError()));
-                        }
+            authenticator.refreshToken(result -> {
+                String token = result.getData();
+                if (token != null) {
+                    Call call = closure.invoke("Bearer " + token);
+                    call.enqueue(callback);
+                } else {
+                    if (handler != null) {
+                        handler.onComplete(ResultImpl.error(result.getError()));
                     }
                 }
             });

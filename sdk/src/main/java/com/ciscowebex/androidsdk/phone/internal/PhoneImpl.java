@@ -267,18 +267,18 @@ public class PhoneImpl implements Phone {
                 if (uri != null && uri.getScheme() != null && uri.getScheme().equalsIgnoreCase("ciscospark")) {
                     List<String> paths = uri.getPathSegments();
                     if (paths != null && paths.size() >= 2) {
-                        String type = paths.get(paths.size() - 2);
-                        if (type.equalsIgnoreCase("PEOPLE")) {
+                        String aType = paths.get(paths.size() - 2);
+                        if (aType.equalsIgnoreCase("PEOPLE")) {
                             this.type = AddressType.PEOPLE_ID;
                             return paths.get(paths.size() - 1);
-                        } else if (type.equalsIgnoreCase("ROOM") || type.equalsIgnoreCase("SPACE")) {
+                        } else if (aType.equalsIgnoreCase("ROOM") || aType.equalsIgnoreCase("SPACE")) {
                             this.type = AddressType.SPACE_ID;
                             return paths.get(paths.size() - 1);
                         }
                     }
                 }
                 return null;
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 return null;
             }
 
@@ -456,20 +456,17 @@ public class PhoneImpl implements Phone {
 			if (permission && dialString != null) {
 				DialTarget target = new DialTarget(dialString);
 				if (target.type == DialTarget.AddressType.PEOPLE_MAIL) {
-					new PersonClientImpl(_authenticator).list(dialString, null, 1, new CompletionHandler<List<Person>>() {
-						@Override
-						public void onComplete(Result<List<Person>> result) {
-							List<Person> persons = result.getData();
-							if (!Checker.isEmpty(persons)) {
-								Person person = persons.get(0);
-								Ln.d("Lookup target: " + person.getId());
-								doDial(new DialTarget(person.getId()).address, _dialOption);
-							}
-							else {
-								doDial(target.address, _dialOption);
-							}
-						}
-					});
+					new PersonClientImpl(_authenticator).list(dialString, null, 1, result -> {
+                        List<Person> persons = result.getData();
+                        if (!Checker.isEmpty(persons)) {
+                            Person person = persons.get(0);
+                            Ln.d("Lookup target: " + person.getId());
+                            doDial(new DialTarget(person.getId()).address, _dialOption);
+                        }
+                        else {
+                            doDial(target.address, _dialOption);
+                        }
+                    });
 				}
 				else if (target.isEndpoint()) {
 					doDial(target.address, _dialOption);
@@ -1105,7 +1102,6 @@ public class PhoneImpl implements Phone {
 	public void onEventMainThread(FloorRequestAcceptedEvent event) {
 		Ln.d("FloorRequestAcceptedEvent is received: " + event.isContent());
 		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
-			//sharingScreenTimeoutHandler.removeCallbacksAndMessages(null);
 			ScreenShareContext.getInstance().init(_context, Activity.RESULT_OK, _screenSharingIntent);
 			CallImpl call = _calls.get(_screenSharingKey);
 			if (call != null && call.getshareRequestCallback() != null){
@@ -1118,7 +1114,6 @@ public class PhoneImpl implements Phone {
 	public void onEventMainThread(FloorRequestDeniedEvent event) {
 		Ln.d("FloorRequestDeniedEvent is received: " + event.isContent());
 		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
-			//sharingScreenTimeoutHandler.removeCallbacksAndMessages(null);
 			CallImpl call = _calls.get(_screenSharingKey);
 			if (call != null && call.getshareRequestCallback() != null){
 				call.getshareRequestCallback().onComplete(ResultImpl.error("Share request is deined"));
@@ -1235,18 +1230,12 @@ public class PhoneImpl implements Phone {
                         @Override
                         public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
                             Ln.d("preview surfaceChanged !!!");
-                            //_callControlService.updatePreviewWindow(key, call.getVideoRenderViews().first);
                         }
 
                         @Override
                         public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                             Ln.d("preview surfaceDestroyed !!!");
-                            _registerTimer.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    _callControlService.removePreviewWindow(key, call.getVideoRenderViews().first);
-                                }
-                            });
+                            _registerTimer.post(() -> _callControlService.removePreviewWindow(key, call.getVideoRenderViews().first));
                         }
                     });
                 }
@@ -1264,18 +1253,12 @@ public class PhoneImpl implements Phone {
                         @Override
                         public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
                             Ln.d("remote surfaceChanged !!!");
-                            //_callControlService.updateRemoteWindow(key, call.getVideoRenderViews().second);
                         }
 
                         @Override
                         public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                             Ln.d("remote surfaceDestroyed !!!");
-                            _registerTimer.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    _callControlService.removeRemoteWindow(key, call.getVideoRenderViews().second);
-                                }
-                            });
+                            _registerTimer.post(() -> _callControlService.removeRemoteWindow(key, call.getVideoRenderViews().second));
                         }
                     });
                 }
@@ -1287,32 +1270,19 @@ public class PhoneImpl implements Phone {
                         @Override
                         public void surfaceCreated(SurfaceHolder surfaceHolder) {
                             Ln.d("share surfaceCreated !!!");
-                            //if (!_callControlService.isShareWindowAttached(key, call.getSharingRenderView())) {
-                                _registerTimer.postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        _callControlService.setShareWindow(key, call.getSharingRenderView());
-                                    }
-                                }, 100);
-                            //}
+                            _registerTimer.postDelayed(() -> _callControlService.setShareWindow(key, call.getSharingRenderView()), 100);
                         }
 
                         @Override
                         public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
                             Ln.d("share surfaceChanged !!!");
-                            //_callControlService.updateShareWindow(key, call.getSharingRenderView());
                         }
 
                         @Override
                         public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                             Ln.d("share surfaceDestroyed !!!");
                             if (_callControlService.isShareRendered()) {
-                                _registerTimer.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        _callControlService.removeShareWindow(key);
-                                    }
-                                });
+                                _registerTimer.post(() -> _callControlService.removeShareWindow(key));
                             }
                         }
                     });
@@ -1430,7 +1400,7 @@ public class PhoneImpl implements Phone {
     }
 
     static MediaEngine.MediaDirection mediaOptionToMediaDirection(MediaOption option) {
-        MediaEngine.MediaDirection direction = MediaEngine.MediaDirection.SendReceiveAudioVideoShare;
+        MediaEngine.MediaDirection direction;
         if (option.hasVideo() && option.hasSharing()) {
             direction = MediaEngine.MediaDirection.SendReceiveAudioVideoShare;
         } else if (option.hasVideo() && !option.hasSharing()) {
@@ -1444,19 +1414,18 @@ public class PhoneImpl implements Phone {
         return direction;
     }
 
-    // -- Ignore Event
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(NoSubscriberEvent event) {
-
+        // -- Ignore Event
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ConversationSyncQueue.ConversationSyncStartedEvent event) {
-
+        // -- Ignore Event
     }
     
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ApplicationControllerStateChangedEvent event) {
-
+        // -- Ignore Event
     }
 }

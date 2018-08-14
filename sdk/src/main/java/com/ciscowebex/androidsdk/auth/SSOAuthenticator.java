@@ -165,8 +165,8 @@ public class SSOAuthenticator implements Authenticator {
         builder.appendQueryParameter("returnTo", orginalUrl.toString());
         if (additionalQueryItems != null) {
             // Append any additional query parameters for the identity provider.
-            for (String key : additionalQueryItems.keySet()) {
-                builder.appendQueryParameter(key, additionalQueryItems.get(key));
+            for (Map.Entry<String, String> entry : additionalQueryItems.entrySet()) {
+                builder.appendQueryParameter(entry.getKey(), entry.getValue());
             }
         }
         Log.d(TAG, builder.toString());

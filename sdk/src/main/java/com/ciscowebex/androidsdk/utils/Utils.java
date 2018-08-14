@@ -38,6 +38,9 @@ import org.joda.time.DateTimeZone;
  */
 
 public class Utils {
+
+    private Utils(){}
+
     public static <T> T checkNotNull(@Nullable T object, String message) {
         if (object == null) {
             throw new NullPointerException(message);

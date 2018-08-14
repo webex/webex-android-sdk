@@ -19,12 +19,12 @@ public class ListenerCallback<T> implements Callback<T> {
 
 	@Override
 	public void onResponse(Call<T> call, Response<T> response) {
-
+		// -- Implementation Class should override this method
 	}
 
 	@Override
 	public void onFailure(Call<T> call, Throwable t) {
-
+		// -- Implementation Class should override this method
 	}
 
 	protected boolean checkUnauthError(Response response){

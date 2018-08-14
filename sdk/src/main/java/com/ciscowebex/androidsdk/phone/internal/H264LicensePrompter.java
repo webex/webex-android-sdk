@@ -66,33 +66,24 @@ public class H264LicensePrompter {
             Context context = builder.getContext();
             builder.setTitle("Activate License");
             builder.setMessage(getLicense());
-            builder.setPositiveButton("Activate", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Ln.i("Video license has been activated");
-                    setVideoLicenseActivated(true);
-                    handler.onComplete(true);
-                }
+            builder.setPositiveButton("Activate", (dialog, which) -> {
+                Ln.i("Video license has been activated");
+                setVideoLicenseActivated(true);
+                handler.onComplete(true);
             });
 
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Ln.i("Video license has not been activated");
-                    dialog.cancel();
-                    handler.onComplete(false);
-                }
+            builder.setNegativeButton("Cancel", (dialog, which) -> {
+                Ln.i("Video license has not been activated");
+                dialog.cancel();
+                handler.onComplete(false);
             });
 
-            builder.setNeutralButton("View License", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Ln.i("Video license opened for viewing");
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getLicenseURL()));
-                    context.startActivity(browserIntent);
-                    dialog.cancel();
-                    handler.onComplete(false);
-                }
+            builder.setNeutralButton("View License", (dialog, which) -> {
+                Ln.i("Video license opened for viewing");
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getLicenseURL()));
+                context.startActivity(browserIntent);
+                dialog.cancel();
+                handler.onComplete(false);
             });
             AlertDialog diag = builder.create();
             diag.show();

@@ -13,6 +13,8 @@ import com.github.benoitdion.ln.Ln;
 
 public class MediaLog {
 
+    private MediaLog(){}
+
     public static int outputLog(int priority, String tag, String msg) {
         String message = "<" + tag + ">" + msg;
         if (priority == Log.WARN) {

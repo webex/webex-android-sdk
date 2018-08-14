@@ -119,14 +119,11 @@ public class RetryCallAdapterFactory extends CallAdapter.Factory {
 		}
 
 		private void retryCall(int interval) {
-			mExecutor.schedule(new Runnable() {
-				@Override
-				public void run() {
-					Ln.d("retryCall: " + (mRetries + 1));
-					final Call<T> call = mCall.clone();
-					call.enqueue(new RetryingCallback<>(call, mDelegate, mExecutor, mMaxRetries, mRetries + 1));
-				}
-			}, interval, TimeUnit.SECONDS);
+			mExecutor.schedule(() -> {
+                Ln.d("retryCall: " + (mRetries + 1));
+                final Call<T> call = mCall.clone();
+                call.enqueue(new RetryingCallback<>(call, mDelegate, mExecutor, mMaxRetries, mRetries + 1));
+            }, interval, TimeUnit.SECONDS);
 		}
 
 		private int get429RetryAfterSeconds(final Response<T> response) {
