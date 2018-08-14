@@ -129,8 +129,8 @@ public class Message {
         return _remoteFiles;
     }
 
-    public void setRemoteFiles(List<RemoteFile> _remoteFiles) {
-        this._remoteFiles = _remoteFiles;
+    public void setRemoteFiles(List<RemoteFile> remoteFiles) {
+        this._remoteFiles = remoteFiles;
     }
 
     /**

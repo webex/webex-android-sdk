@@ -78,21 +78,21 @@ public class AcquirePermissionActivity extends Activity {
         } else if (PERMISSION_CAMERA_MIC.equals(type)) {
             Ln.d("request PERMISSION_CAMERA_MIC");
             _callData = getIntent().getBundleExtra(CALL_DATA);
-            int permissionCheck_camera = ContextCompat.checkSelfPermission(this,
+            int permissionCheckCamera = ContextCompat.checkSelfPermission(this,
                     Manifest.permission.CAMERA);
-            int permissionCheck_mic = ContextCompat.checkSelfPermission(this,
+            int permissionCheckMic = ContextCompat.checkSelfPermission(this,
                     Manifest.permission.RECORD_AUDIO);
             String[] permissions = null;
-            if (permissionCheck_camera != PackageManager.PERMISSION_GRANTED && permissionCheck_mic != PackageManager.PERMISSION_GRANTED) {
+            if (permissionCheckCamera != PackageManager.PERMISSION_GRANTED && permissionCheckMic != PackageManager.PERMISSION_GRANTED) {
                 permissions = new String[]{
                         Manifest.permission.CAMERA,
                         Manifest.permission.RECORD_AUDIO
                 };
-            } else if (permissionCheck_camera != PackageManager.PERMISSION_GRANTED) {
+            } else if (permissionCheckCamera != PackageManager.PERMISSION_GRANTED) {
                 permissions = new String[]{
                         Manifest.permission.CAMERA
                 };
-            } else if (permissionCheck_mic != PackageManager.PERMISSION_GRANTED) {
+            } else if (permissionCheckMic != PackageManager.PERMISSION_GRANTED) {
                 permissions = new String[]{
                         Manifest.permission.RECORD_AUDIO
                 };
@@ -126,15 +126,15 @@ public class AcquirePermissionActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == REQUEST_CAMERA_MIC) {
-            boolean result_ok = true;
+            boolean resultOk = true;
             for (int result : grantResults) {
                 if (result != PackageManager.PERMISSION_GRANTED) {
-                    result_ok = false;
+                    resultOk = false;
                     break;
                 }
             }
-            Ln.d("onRequestPermissionsResult: " + result_ok);
-            RotationHandler.makeCall(_callData, result_ok);
+            Ln.d("onRequestPermissionsResult: " + resultOk);
+            RotationHandler.makeCall(_callData, resultOk);
         }
         finish();
     }

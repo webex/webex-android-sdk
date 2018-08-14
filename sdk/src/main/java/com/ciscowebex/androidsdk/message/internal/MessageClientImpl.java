@@ -237,13 +237,13 @@ public class MessageClientImpl implements MessageClient {
                 return false;
             }
             item.setContentFile(contentFile);
-            Operation upload_content = operations.uploadContent(conversationId, item.getContentFile());
-            item.setOperationId(upload_content.getOperationId());
+            Operation uploadContent = operations.uploadContent(conversationId, item.getContentFile());
+            item.setOperationId(uploadContent.getOperationId());
             shareContentData.addContentItem(item);
             // Check upload progress
             executor.scheduleAtFixedRate(new CheckUploadProgressTask(file), 0, 1, TimeUnit.SECONDS);
         }
-        PostContentActivityOperation post_content = new PostContentActivityOperation(
+        PostContentActivityOperation postContent = new PostContentActivityOperation(
                 injector,
                 conversationId,
                 shareContentData,
@@ -251,7 +251,7 @@ public class MessageClientImpl implements MessageClient {
                 shareContentData.getContentFiles(),
                 shareContentData.getOperationIds()
         );
-        operations.submit(post_content);
+        operations.submit(postContent);
         return true;
     }
 
@@ -364,11 +364,11 @@ public class MessageClientImpl implements MessageClient {
         private static HydraId decode(String hydraId) {
             HydraId object = new HydraId();
             try {
-                String decode_str = new String(Base64.decode(hydraId, Base64.URL_SAFE), "UTF-8");
-                if (TextUtils.isEmpty(decode_str)) {
+                String decodeStr = new String(Base64.decode(hydraId, Base64.URL_SAFE), "UTF-8");
+                if (TextUtils.isEmpty(decodeStr)) {
                     return object;
                 }
-                String[] subs = decode_str.split("/");
+                String[] subs = decodeStr.split("/");
                 object.id = subs[subs.length - 1];
                 object.type = HydraIdType.values()[typeString.indexOf(subs[subs.length - 2])];
             } catch (Exception e) {
@@ -379,8 +379,8 @@ public class MessageClientImpl implements MessageClient {
 
         // encode space_id, people_id, message_id to hydra_id
         private static String encode(String id, HydraIdType type) {
-            String encode_string = "ciscospark://us/" + typeString.get(type.ordinal()) + "/" + id;
-            return new String(Base64.encode(encode_string.getBytes(),
+            String encodeString = "ciscospark://us/" + typeString.get(type.ordinal()) + "/" + id;
+            return new String(Base64.encode(encodeString.getBytes(),
                     Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP));
         }
     }

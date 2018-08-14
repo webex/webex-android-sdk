@@ -915,8 +915,8 @@ public class PhoneImpl implements Phone {
 		    } else if (call.getStatus() != Call.CallStatus.CONNECTED
 			    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
                 && locus.getSelf().getState() == LocusParticipant.State.JOINED) {
-			    com.cisco.spark.android.callcontrol.model.Call _call = _callControlService.getCall(event.getLocusKey());
-			    if (_call == null || !_call.isActive()) {
+			    com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
+			    if (aCall == null || !aCall.isActive()) {
 				    Ln.d("other device connected locusKey: " + event.getLocusKey());
 				    removeCall(new CallObserver.OtherConnected(call));
 			    }else{
@@ -925,8 +925,8 @@ public class PhoneImpl implements Phone {
 		    } else if (call.getStatus() != Call.CallStatus.CONNECTED
 			    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
                 && locus.getSelf().getState() == LocusParticipant.State.DECLINED) {
-			    com.cisco.spark.android.callcontrol.model.Call _call = _callControlService.getCall(event.getLocusKey());
-			    if (_call == null || !_call.isActive()) {
+			    com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
+			    if (aCall == null || !aCall.isActive()) {
 				    Ln.d("other device declined locusKey: " + event.getLocusKey());
 				    removeCall(new CallObserver.OtherDeclined(call));
 			    }else{

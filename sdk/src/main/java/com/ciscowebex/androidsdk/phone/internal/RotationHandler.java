@@ -42,16 +42,16 @@ public class RotationHandler {
 
 
     static class RotationBroadcastReceiver extends BroadcastReceiver {
-        PhoneImpl _phoneImpl;
+        PhoneImpl phoneImpl;
 
         public RotationBroadcastReceiver(PhoneImpl phoneImpl) {
             super();
-            _phoneImpl = phoneImpl;
+            this.phoneImpl = phoneImpl;
         }
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            _phoneImpl.setDisplayRotation(getRotation(context));
+            phoneImpl.setDisplayRotation(getRotation(context));
         }
     }
 
@@ -71,13 +71,13 @@ public class RotationHandler {
 
     public static void setScreenshotPermission(final Intent permissionIntent) {
         if (_receiver != null) {
-            ((RotationBroadcastReceiver) _receiver)._phoneImpl.setScreenshotPermission(permissionIntent);
+            ((RotationBroadcastReceiver) _receiver).phoneImpl.setScreenshotPermission(permissionIntent);
         }
     }
 
     public static void makeCall(Bundle data, boolean permission) {
         if (_receiver != null) {
-            ((RotationBroadcastReceiver) _receiver)._phoneImpl.makeCall(data, permission);
+            ((RotationBroadcastReceiver) _receiver).phoneImpl.makeCall(data, permission);
         }
     }
 }

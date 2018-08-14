@@ -234,17 +234,17 @@ public class OAuthAuthenticator implements Authenticator {
     interface AuthService {
         @FormUrlEncoded
         @POST("access_token")
-        Call<OAuth2Tokens> getToken(@Field("client_id") String client_id,
-                                    @Field("client_secret") String client_secret,
-                                    @Field("redirect_uri") String redirect_uri,
-                                    @Field("grant_type") String grant_type,
+        Call<OAuth2Tokens> getToken(@Field("client_id") String clientId,
+                                    @Field("client_secret") String clientSecret,
+                                    @Field("redirect_uri") String redirectUri,
+                                    @Field("grant_type") String grantType,
                                     @Field("code") String code);
 
         @FormUrlEncoded
         @POST("access_token")
-        Call<OAuth2Tokens> refreshToken(@Field("client_id") String client_id,
-                                        @Field("client_secret") String client_secret,
-                                        @Field("refresh_token") String refresh_token,
-                                        @Field("grant_type") String grant_type);
+        Call<OAuth2Tokens> refreshToken(@Field("client_id") String clientId,
+                                        @Field("client_secret") String clientSecret,
+                                        @Field("refresh_token") String refreshToken,
+                                        @Field("grant_type") String grantType);
     }
 }
