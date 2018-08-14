@@ -143,7 +143,7 @@ public class JWTAuthenticator implements Authenticator {
                 if (token == null || token.getAccessToken() == null || token.getAccessToken().isEmpty()) {
                     handler.onComplete(ResultImpl.error(response));
                 } else {
-                    _token = token.toOAuthToken(jwt);
+                    _token = token.toOAuthToken();
                     if (_provider != null) {
                         AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
                         _provider.setAuthenticatedUser(authenticatedUser);
@@ -248,7 +248,7 @@ public class JWTAuthenticator implements Authenticator {
             return this.accessToken;
         }
 
-        OAuth2Tokens toOAuthToken(String jwt) {
+        OAuth2Tokens toOAuthToken() {
             OAuth2Tokens tokens = new OAuth2Tokens();
             tokens.setAccessToken(this.getAccessToken());
             tokens.setExpiresIn(this.getExpiresIn() + (System.currentTimeMillis() / 1000));

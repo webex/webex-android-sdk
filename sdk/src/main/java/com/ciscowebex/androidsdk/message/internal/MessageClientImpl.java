@@ -355,7 +355,6 @@ public class MessageClientImpl implements MessageClient {
             ROOM_ID,
         }
 
-        private String hydraId;
         private String id;
         private HydraIdType type;
         private static final List typeString = Arrays.asList("MESSAGE", "PEOPLE", "ROOM");
@@ -364,7 +363,6 @@ public class MessageClientImpl implements MessageClient {
         @NonNull
         private static HydraId decode(String hydraId) {
             HydraId object = new HydraId();
-            object.hydraId = hydraId;
             try {
                 String decode_str = new String(Base64.decode(hydraId, Base64.URL_SAFE), "UTF-8");
                 if (TextUtils.isEmpty(decode_str)) {

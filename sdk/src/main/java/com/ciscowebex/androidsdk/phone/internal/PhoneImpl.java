@@ -194,6 +194,16 @@ public class PhoneImpl implements Phone {
 
     private int sharingMaxBandwidth = DefaultBandwidth.maxBandwidthSession.getValue();
 
+    private static final String STR_PERMISSION_DENIED = "permission deined";
+    private static final String STR_OTHER_ACTIVE_CALLS = "There are other active calls";
+    private static final String STR_UNSUPPORTED_FOR_OUTGOING_CALL = "Unsupport function for outgoing call";
+    private static final String STR_ALREADY_CONNECTED = "Already connected";
+    private static final String STR_ALREADY_DISCONNECTED = "Already disconnected";
+    private static final String STR_FIND_CALLIMPL = "Find callImpl ";
+    private static final String STR_FAILURE_CALL = "Failure call: ";
+
+
+
     private static class DialTarget {
         private String address;
         private AddressType type;
@@ -446,8 +456,8 @@ public class PhoneImpl implements Phone {
 				_callControlService.joinCall(builder.build(), false);
 			}
 			else if (call != null && call.getAnswerCallback() != null) {
-				Ln.w("permission is deined");
-				call.getAnswerCallback().onComplete(ResultImpl.error("permission deined"));
+				Ln.w(STR_PERMISSION_DENIED);
+				call.getAnswerCallback().onComplete(ResultImpl.error(STR_PERMISSION_DENIED));
 			}
 		}
 		else if (direction == Call.Direction.OUTGOING.ordinal()) {
@@ -476,8 +486,8 @@ public class PhoneImpl implements Phone {
 				}
 			}
 			else {
-				Ln.w("permission is deined");
-				clearCallback(ResultImpl.error("permission deined"));
+				Ln.w(STR_PERMISSION_DENIED);
+				clearCallback(ResultImpl.error(STR_PERMISSION_DENIED));
 			}
 		}
 	}
@@ -496,8 +506,8 @@ public class PhoneImpl implements Phone {
         }
         for (CallImpl call : _calls.values()) {
             if (!call.isGroup() || (call.isGroup() && call.getStatus() == Call.CallStatus.CONNECTED)) {
-                Ln.e("There are other active calls");
-                callback.onComplete(ResultImpl.error("There are other active calls"));
+                Ln.e(STR_OTHER_ACTIVE_CALLS);
+                callback.onComplete(ResultImpl.error(STR_OTHER_ACTIVE_CALLS));
                 return;
             }
         }
@@ -520,31 +530,31 @@ public class PhoneImpl implements Phone {
         for (CallImpl exist : _calls.values()) {
             Ln.d("answer exist.getStatus(): " + exist.getStatus());
             if (!exist.getKey().equals(call.getKey()) && exist.getStatus() == Call.CallStatus.CONNECTED) {
-                Ln.e("There are other active calls");
+                Ln.e(STR_OTHER_ACTIVE_CALLS);
                 if (call.getAnswerCallback() != null) {
-                    call.getAnswerCallback().onComplete(ResultImpl.error("There are other active calls"));
+                    call.getAnswerCallback().onComplete(ResultImpl.error(STR_OTHER_ACTIVE_CALLS));
                 }
                 return;
             }
         }
         if (call.getDirection() == Call.Direction.OUTGOING) {
-            Ln.e("Unsupport function for outgoing call");
+            Ln.e(STR_UNSUPPORTED_FOR_OUTGOING_CALL);
             if (call.getAnswerCallback() != null) {
-                call.getAnswerCallback().onComplete(ResultImpl.error("Unsupport function for outgoing call"));
+                call.getAnswerCallback().onComplete(ResultImpl.error(STR_UNSUPPORTED_FOR_OUTGOING_CALL));
             }
             return;
         }
         if (call.getDirection() == Call.Direction.INCOMING) {
             if (call.getStatus() == Call.CallStatus.CONNECTED) {
-                Ln.e("Already connected");
+                Ln.e(STR_ALREADY_CONNECTED);
                 if (call.getAnswerCallback() != null) {
-                    call.getAnswerCallback().onComplete(ResultImpl.error("Already connected"));
+                    call.getAnswerCallback().onComplete(ResultImpl.error(STR_ALREADY_CONNECTED));
                 }
                 return;
             } else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
-                Ln.e("Already disconnected");
+                Ln.e(STR_ALREADY_DISCONNECTED);
                 if (call.getAnswerCallback() != null) {
-                    call.getAnswerCallback().onComplete(ResultImpl.error("Already disconnected"));
+                    call.getAnswerCallback().onComplete(ResultImpl.error(STR_ALREADY_DISCONNECTED));
                 }
                 return;
             }
@@ -563,23 +573,23 @@ public class PhoneImpl implements Phone {
     void reject(@NonNull CallImpl call) {
         Ln.i("Reject " + call);
         if (call.getDirection() == Call.Direction.OUTGOING) {
-            Ln.e("Unsupport function for outgoing call");
+            Ln.e(STR_UNSUPPORTED_FOR_OUTGOING_CALL);
             if (call.getRejectCallback() != null) {
-                call.getRejectCallback().onComplete(ResultImpl.error("Unsupport function for outgoing call"));
+                call.getRejectCallback().onComplete(ResultImpl.error(STR_UNSUPPORTED_FOR_OUTGOING_CALL));
             }
             return;
         }
         if (call.getDirection() == Call.Direction.INCOMING) {
             if (call.getStatus() == Call.CallStatus.CONNECTED) {
-                Ln.e("Already connected");
+                Ln.e(STR_ALREADY_CONNECTED);
                 if (call.getRejectCallback() != null) {
-                    call.getRejectCallback().onComplete(ResultImpl.error("Already connected"));
+                    call.getRejectCallback().onComplete(ResultImpl.error(STR_ALREADY_CONNECTED));
                 }
                 return;
             } else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
-                Ln.e("Already disconnected");
+                Ln.e(STR_ALREADY_DISCONNECTED);
                 if (call.getRejectCallback() != null) {
-                    call.getRejectCallback().onComplete(ResultImpl.error("Already disconnected"));
+                    call.getRejectCallback().onComplete(ResultImpl.error(STR_ALREADY_DISCONNECTED));
                 }
                 return;
             }
@@ -590,9 +600,9 @@ public class PhoneImpl implements Phone {
     void hangup(@NonNull CallImpl call) {
         Ln.i("Hangup " + call);
         if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
-            Ln.e("Already disconnected");
+            Ln.e(STR_ALREADY_DISCONNECTED);
             if (call.getHangupCallback() != null) {
-                call.getHangupCallback().onComplete(ResultImpl.error("Already disconnected"));
+                call.getHangupCallback().onComplete(ResultImpl.error(STR_ALREADY_DISCONNECTED));
             }
             return;
         }
@@ -680,7 +690,7 @@ public class PhoneImpl implements Phone {
         Ln.i("ParticipantNotifiedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
-            Ln.d("Find callImpl " + event.getLocusKey());
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (call.isGroup()) {
                 if (call.getDirection() == Call.Direction.INCOMING) {
                     _setCallOnRinging(call);
@@ -707,7 +717,7 @@ public class PhoneImpl implements Phone {
         Ln.i("CallControlParticipantJoinedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
-            Ln.d("Find callImpl " + event.getLocusKey());
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (!call.isGroup()) {
                 if (call.getAnswerCallback() != null && (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING)) {
                     call.getAnswerCallback().onComplete(ResultImpl.success(null));
@@ -779,7 +789,7 @@ public class PhoneImpl implements Phone {
         Ln.i("CallControlSelfParticipantLeftEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
-            Ln.d("Find callImpl " + event.getLocusKey());
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (call.getHangupCallback() != null) {
                 call.getHangupCallback().onComplete(ResultImpl.success(null));
             }
@@ -796,7 +806,7 @@ public class PhoneImpl implements Phone {
             if (call.getRejectCallback() != null) {
                 call.getRejectCallback().onComplete(ResultImpl.success(null));
             }
-            Ln.d("Find callImpl " + event.getLocusKey());
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             _removeCall(new CallObserver.LocalDecline(call));
         }
     }
@@ -807,7 +817,7 @@ public class PhoneImpl implements Phone {
         Ln.i("CallControlCallCancelledEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
-            Ln.d("Find callImpl " + event.getLocusKey());
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (event.getReason() == CallControlService.CancelReason.REMOTE_CANCELLED) {
                 _removeCall(new CallObserver.RemoteCancel(call));
             } else {
@@ -825,7 +835,7 @@ public class PhoneImpl implements Phone {
         Ln.i("CallControlParticipantLeftEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
-            Ln.d("Find callImpl " + event.getLocusKey());
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (!call.isGroup()) {
                 _removeCall(new CallObserver.RemoteLeft(call));
             } else if (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING) {
@@ -853,7 +863,7 @@ public class PhoneImpl implements Phone {
 	    Ln.i("CallControlLeaveLocusEvent is received " + event.locusData().getKey());
 	    CallImpl call = _calls.get(event.locusData().getKey());
 	    if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
-		    Ln.d("Find callImpl " + event.locusData().getKey());
+		    Ln.d(STR_FIND_CALLIMPL + event.locusData().getKey());
 		    _removeCall(new CallObserver.RemoteDecline(call));
 	    }
     }
@@ -864,7 +874,7 @@ public class PhoneImpl implements Phone {
         Ln.i("ParticipantRoomDeclinedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
-            Ln.d("Find group call " + event.getLocusKey());
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
             for (LocusParticipant locusParticipant : event.getDeclinedParticipants()) {
                 events.add(new CallObserver.MembershipDeclinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
@@ -947,7 +957,7 @@ public class PhoneImpl implements Phone {
         Ln.i("CallControlLocalAudioMutedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
-            Ln.d("Find callImpl " + event.getLocusKey());
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             CallObserver observer = call.getObserver();
             if (observer != null) {
                 observer.onMediaChanged(new CallObserver.SendingAudio(call, !event.isMuted()));
@@ -960,7 +970,7 @@ public class PhoneImpl implements Phone {
         Ln.i("CallControlLocalVideoMutedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
-            Ln.d("Find callImpl " + event.getLocusKey());
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             CallObserver observer = call.getObserver();
             if (observer != null) {
                 observer.onMediaChanged(new CallObserver.SendingVideo(call, !event.isMuted()));
@@ -973,7 +983,7 @@ public class PhoneImpl implements Phone {
 		Ln.i("CallControlParticipantAudioMuteEvent is received " + event.getLocusKey());
 		CallImpl call = _calls.get(event.getLocusKey());
 		if (call != null) {
-			Ln.d("Find callImpl " + event.getLocusKey());
+			Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
 			LocusSelfRepresentation self = call.getSelf();
 			if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
 				CallObserver observer = call.getObserver();
@@ -997,7 +1007,7 @@ public class PhoneImpl implements Phone {
 		Ln.i("CallControlRemoteVideoMutedEvent is received " + event.getLocusKey());
 		CallImpl call = _calls.get(event.getLocusKey());
 		if (call != null) {
-			Ln.d("Find callImpl " + event.getLocusKey());
+			Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
 			LocusSelfRepresentation self = call.getSelf();
 			if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
 				CallObserver observer = call.getObserver();
@@ -1170,7 +1180,7 @@ public class PhoneImpl implements Phone {
 			Ln.w("permission for sharing screen is deined");
 			CallImpl call = _calls.get(_screenSharingKey);
 			if (call != null && call.getshareRequestCallback() != null){
-				call.getshareRequestCallback().onComplete(ResultImpl.error("permission deined"));
+				call.getshareRequestCallback().onComplete(ResultImpl.error(STR_PERMISSION_DENIED));
 			}
 		}
 	}
@@ -1357,14 +1367,14 @@ public class PhoneImpl implements Phone {
                     _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
                     _callControlService.joinCall(builder.build(), false);
                 } else {
-                    Ln.w("Failure call: " + response.errorBody().toString());
-                    clearCallback(ResultImpl.error("Failure call: " + response.errorBody().toString()));
+                    Ln.w(STR_FAILURE_CALL + response.errorBody().toString());
+                    clearCallback(ResultImpl.error(STR_FAILURE_CALL + response.errorBody().toString()));
                 }
             }
 
             @Override
             public void onFailure(retrofit2.Call<LocusUrlResponse> call, Throwable t) {
-                clearCallback(ResultImpl.error("Failure call: " + t.getMessage()));
+                clearCallback(ResultImpl.error(STR_FAILURE_CALL + t.getMessage()));
             }
         });
     }

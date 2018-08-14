@@ -62,6 +62,8 @@ public class OAuthAuthenticator implements Authenticator {
     private OAuth2Tokens _token;
     private AuthService _authService;
 
+    private static final String DEPARTMENT_UNKNOWN = "Unknown";
+
     @Inject
     ApiTokenProvider _provider;
 
@@ -122,7 +124,7 @@ public class OAuthAuthenticator implements Authenticator {
                 } else {
                     _token.setExpiresIn(_token.getExpiresIn() + System.currentTimeMillis() / 1000);
                     if (_provider != null) {
-                        AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
+                        AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, DEPARTMENT_UNKNOWN, null, 0, null);
                         _provider.setAuthenticatedUser(authenticatedUser);
                     }
                     handler.onComplete(ResultImpl.success(null));
@@ -173,7 +175,7 @@ public class OAuthAuthenticator implements Authenticator {
                 } else {
                     _token.setExpiresIn(_token.getExpiresIn() + System.currentTimeMillis() / 1000);
                     if (_provider != null) {
-                        AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
+                        AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, DEPARTMENT_UNKNOWN, null, 0, null);
                         _provider.setAuthenticatedUser(authenticatedUser);
                     }
                     handler.onComplete(ResultImpl.success(_token.getAccessToken()));
@@ -208,7 +210,7 @@ public class OAuthAuthenticator implements Authenticator {
     @AfterInjected
     private void afterInjected() {
         if (_provider != null && _token != null) {
-            AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
+            AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, DEPARTMENT_UNKNOWN, null, 0, null);
             _provider.setAuthenticatedUser(authenticatedUser);
         }
     }

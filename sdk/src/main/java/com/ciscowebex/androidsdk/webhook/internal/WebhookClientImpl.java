@@ -54,6 +54,8 @@ public class WebhookClientImpl implements WebhookClient {
 
     private WebhookService _service;
 
+    private static final String KEY_TARGET_URL = "targetUrl";
+
     public WebhookClientImpl(Authenticator authenticator) {
         _authenticator = authenticator;
         _service = new ServiceBuilder().build(WebhookService.class);
@@ -66,7 +68,7 @@ public class WebhookClientImpl implements WebhookClient {
 
     public void create(@NonNull String name, @NonNull String targetUrl, @NonNull String resource, @NonNull String event, @Nullable String filter, @Nullable String secret, @NonNull CompletionHandler<Webhook> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.create(s, Maps.makeMap("name", name, "targetUrl", targetUrl, "filter", filter, "secret", secret, "resource", resource, "event", event)), new ObjectCallback<>(handler));
+            _service.create(s, Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl, "filter", filter, "secret", secret, "resource", resource, "event", event)), new ObjectCallback<>(handler));
     }
 
     public void get(@NonNull String webhookId, @NonNull CompletionHandler<Webhook> handler) {
@@ -76,13 +78,13 @@ public class WebhookClientImpl implements WebhookClient {
 
     public void update(@NonNull String webhookId, @NonNull String name, @NonNull String targetUrl, @NonNull CompletionHandler<Webhook> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.update(s, webhookId, Maps.makeMap("name", name, "targetUrl", targetUrl)), new ObjectCallback<>(handler));
+            _service.update(s, webhookId, Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl)), new ObjectCallback<>(handler));
     }
 
     @Override
     public void update(@NonNull String webhookId, @NonNull String name, @NonNull String targetUrl, @Nullable String secret, @Nullable String status, @NonNull CompletionHandler<Webhook> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.update(s, webhookId, Maps.makeMap("name", name, "targetUrl", targetUrl, "secret", secret, "status", status)), new ObjectCallback<>(handler));
+            _service.update(s, webhookId, Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl, "secret", secret, "status", status)), new ObjectCallback<>(handler));
     }
 
     public void delete(@NonNull String webhookId, @NonNull CompletionHandler<Void> handler) {

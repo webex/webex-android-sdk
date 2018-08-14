@@ -53,8 +53,6 @@ import me.helloworld.utils.Checker;
 public class SSOAuthenticator implements Authenticator {
     private static final String TAG = SSOAuthenticator.class.getSimpleName();
 
-    private CompletionHandler<Void> _callback;
-
     private OAuthAuthenticator _authenticator;
 
     private OAuthLauncher _launcher;

@@ -48,7 +48,7 @@ import me.helloworld.utils.Checker;
 public class OAuthLauncher {
 
     public void launchOAuthView(WebView view, String authorizationUrl, String redirectUri, CompletionHandler<String> handler) {
-        BrowserWebViewClient client = new BrowserWebViewClient(authorizationUrl, redirectUri, handler);
+        BrowserWebViewClient client = new BrowserWebViewClient(redirectUri, handler);
         view.clearCache(true);
         view.setWebViewClient(client);
         WebSettings webSettings = view.getSettings();
@@ -66,14 +66,11 @@ public class OAuthLauncher {
 
     private class BrowserWebViewClient extends WebViewClient {
 
-        private String _url;
-
         private String _redirectUri;
 
         private CompletionHandler<String> _handler;
 
-        BrowserWebViewClient(String url, String redirectUri, CompletionHandler<String> handler) {
-            _url = url;
+        BrowserWebViewClient(String redirectUri, CompletionHandler<String> handler) {
             _redirectUri = redirectUri;
             _handler = handler;
         }

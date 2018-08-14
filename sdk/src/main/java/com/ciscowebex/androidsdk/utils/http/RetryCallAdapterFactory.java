@@ -29,8 +29,6 @@ public class RetryCallAdapterFactory extends CallAdapter.Factory {
 		return new RetryCallAdapterFactory();
 	}
 
-	private static int count = 0;
-
 	@Override
 	public CallAdapter get(final Type returnType, Annotation[] annotations, Retrofit retrofit) {
 		final boolean shouldRetryCall = true;

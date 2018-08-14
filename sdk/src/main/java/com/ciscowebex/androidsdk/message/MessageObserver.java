@@ -9,14 +9,14 @@ public interface MessageObserver {
     /**
      *
      */
-    abstract class MessageEvent {
+    interface MessageEvent {
     }
 
     /**
      * The struct of a new message received event
      * @since 1.4.0
      */
-    class MessageArrived extends  MessageEvent {
+    class MessageArrived implements MessageEvent {
         private Message message;
 
         public MessageArrived(Message message) {
@@ -35,7 +35,7 @@ public interface MessageObserver {
      * The struct of a message delete event
      * @since 1.4.0
      */
-    class MessageDeleted extends MessageEvent {
+    class MessageDeleted implements MessageEvent {
         private String messageId;
 
         public MessageDeleted(String messageId) {

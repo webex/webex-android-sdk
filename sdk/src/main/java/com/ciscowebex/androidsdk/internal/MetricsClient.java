@@ -51,23 +51,20 @@ public class MetricsClient {
     }
 
     public void post(List<Map<String, String>> metrics) {
-        _authenticator.getToken(new CompletionHandler<String>() {
-            @Override
-            public void onComplete(Result<String> result) {
-                String token = result.getData();
-                if (token != null) {
-                    _service.post("Bearer " + token, Maps.makeMap("metrics", metrics)).enqueue(new Callback<Void>() {
-                        @Override
-                        public void onResponse(Call<Void> call, Response<Void> response) {
-                            Ln.d("%s", response);
-                        }
+        _authenticator.getToken(result -> {
+            String token = result.getData();
+            if (token != null) {
+                _service.post("Bearer " + token, Maps.makeMap("metrics", metrics)).enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        Ln.d("%s", response);
+                    }
 
-                        @Override
-                        public void onFailure(Call<Void> call, Throwable t) {
-                            Ln.e(t);
-                        }
-                    });
-                }
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        Ln.e(t);
+                    }
+                });
             }
         });
     }
