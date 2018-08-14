@@ -38,6 +38,7 @@ import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.AfterInjected;
+import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import me.helloworld.utils.Converter;
@@ -179,6 +180,7 @@ public class JWTAuthenticator implements Authenticator {
                 return null;
             }
         } catch (Throwable ignored) {
+            Ln.e(ignored);
         }
         return _jwt;
     }

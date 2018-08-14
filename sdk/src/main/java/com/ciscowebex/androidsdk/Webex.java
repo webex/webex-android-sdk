@@ -89,8 +89,6 @@ public class Webex {
 
     private MessageClientImpl _message;
 
-//    private LogCaptureUtil _logCapture;
-
     @Inject
     MediaEngine _mediaEngine;
 
@@ -114,7 +112,6 @@ public class Webex {
         _common.create();
         _common.inject(this);
         _common.inject(_authenticator);
-        //_logCapture = new LogCaptureUtil(application.getApplicationContext());
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _common);
         _message = new MessageClientImpl(application.getApplicationContext(), _authenticator, _common);
         setLogLevel(LogLevel.DEBUG);
@@ -253,7 +250,6 @@ public class Webex {
      * @param logLevel log message level
      */
     public void setLogLevel(LogLevel logLevel) {
-        //_logCapture.setLogLevel(logLevel);
         NaturalLog logger = new com.ciscowebex.androidsdk.utils.log.DebugLn();
         MediaSessionAPI.TraceLevelMask mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO;
         if (logLevel != null) {
@@ -292,19 +288,5 @@ public class Webex {
             _mediaEngine.setLoggingLevel(mask);
         }
     }
-
-//    /**
-//     * Start log capture for webex sdk.
-//     */
-//    public void startLogCapture() {
-//        _logCapture.startCapture();
-//    }
-//
-//    /**
-//     * Stop log capture for webex sdk.
-//     */
-//    public void stopLogCapture() {
-//        _logCapture.stopCapture();
-//    }
     
 }
