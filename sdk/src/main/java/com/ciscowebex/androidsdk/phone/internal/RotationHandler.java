@@ -31,7 +31,7 @@ import android.os.Bundle;
 import android.view.WindowManager;
 
 public class RotationHandler {
-    private static BroadcastReceiver _receiver;
+    private static BroadcastReceiver receiver;
 
     private RotationHandler(){}
 
@@ -56,28 +56,28 @@ public class RotationHandler {
     }
 
     static void registerRotationReceiver(Context context, PhoneImpl phoneImpl) {
-        if (_receiver == null) {
-            _receiver = new RotationBroadcastReceiver(phoneImpl);
-            context.registerReceiver(_receiver, new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED));
+        if (receiver == null) {
+            receiver = new RotationBroadcastReceiver(phoneImpl);
+            context.registerReceiver(receiver, new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED));
         }
     }
 
     static void unregisterRotationReceiver(Context context) {
-        if (_receiver != null) {
-            context.unregisterReceiver(_receiver);
-            _receiver = null;
+        if (receiver != null) {
+            context.unregisterReceiver(receiver);
+            receiver = null;
         }
     }
 
     public static void setScreenshotPermission(final Intent permissionIntent) {
-        if (_receiver != null) {
-            ((RotationBroadcastReceiver) _receiver).phoneImpl.setScreenshotPermission(permissionIntent);
+        if (receiver != null) {
+            ((RotationBroadcastReceiver) receiver).phoneImpl.setScreenshotPermission(permissionIntent);
         }
     }
 
     public static void makeCall(Bundle data, boolean permission) {
-        if (_receiver != null) {
-            ((RotationBroadcastReceiver) _receiver).phoneImpl.makeCall(data, permission);
+        if (receiver != null) {
+            ((RotationBroadcastReceiver) receiver).phoneImpl.makeCall(data, permission);
         }
     }
 }
