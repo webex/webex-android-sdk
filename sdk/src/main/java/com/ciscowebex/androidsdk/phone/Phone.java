@@ -70,43 +70,43 @@ public interface Phone {
          *
          * @since 1.3.0
          */
-        maxBandwidth90p(177000),
+        MAX_BANDWIDTH_90P(177000),
         /**
          * 384Kbps for 320x180 resolution
          *
          * @since 1.3.0
          */
-        maxBandwidth180p(384000),
+        MAX_BANDWIDTH_180P(384000),
         /**
          * 768Kbps for 640x360 resolution
          *
          * @since 1.3.0
          */
-        maxBandwidth360p(768000),
+        MAX_BANDWIDTH_360P(768000),
         /**
          * 2Mbps for 1280x720 resolution
          *
          * @since 1.3.0
          */
-        maxBandwidth720p(2000000),
+        MAX_BANDWIDTH_720P(2000000),
         /**
          * 3Mbps for 1920x1080 resolution
          *
          * @since 1.3.0
          */
-        maxBandwidth1080p(3000000),
+        MAX_BANDWIDTH_1080P(3000000),
         /**
          * 4Mbps data session
          *
          * @since 1.3.0
          */
-        maxBandwidthSession(4000000),
+        MAX_BANDWIDTH_SESSION(4000000),
         /**
          * 64kbps for voice
          *
          * @since 1.3.0
          */
-        maxBandwidthAudio(64000);
+        MAX_BANDWIDTH_AUDIO(64000);
 
         private final int id;
 
@@ -245,7 +245,7 @@ public interface Phone {
      * Only effective if set before the start of call.
      * if 0, default value of 64 * 1000 is used.
      *
-     * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidthAudio}.
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_AUDIO}.
      * @since 1.3.0
      */
     void setAudioMaxBandwidth(int bandwidth);
@@ -262,8 +262,8 @@ public interface Phone {
      * Only effective if set before the start of call.
      * if 0, default value of 2000*1000 is used.
      *
-     * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidth90p}, {@link DefaultBandwidth#maxBandwidth180p},
-     *                  {@link DefaultBandwidth#maxBandwidth360p}, {@link DefaultBandwidth#maxBandwidth720p}, or {@link DefaultBandwidth#maxBandwidth1080p}.
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_90P}, {@link DefaultBandwidth#MAX_BANDWIDTH_180P},
+     *                  {@link DefaultBandwidth#MAX_BANDWIDTH_360P}, {@link DefaultBandwidth#MAX_BANDWIDTH_720P}, or {@link DefaultBandwidth#MAX_BANDWIDTH_1080P}.
      * @since 1.3.0
      */
     void setVideoMaxBandwidth(int bandwidth);
@@ -280,7 +280,7 @@ public interface Phone {
      * Only effective if set before the start of call.
      * if 0, default value of 4000*1000 is used.
      *
-     * @param bandwidth the suggest value could be {@link DefaultBandwidth#maxBandwidthSession}.
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_SESSION}.
      * @since 1.3.0
      */
     void setSharingMaxBandwidth(int bandwidth);

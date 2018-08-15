@@ -188,11 +188,11 @@ public class PhoneImpl implements Phone {
 
     private boolean _isRemoteSendingAudio;
 
-    private int audioMaxBandwidth = DefaultBandwidth.maxBandwidthAudio.getValue();
+    private int audioMaxBandwidth = DefaultBandwidth.MAX_BANDWIDTH_AUDIO.getValue();
 
-    private int videoMaxBandwidth = DefaultBandwidth.maxBandwidth720p.getValue();
+    private int videoMaxBandwidth = DefaultBandwidth.MAX_BANDWIDTH_720P.getValue();
 
-    private int sharingMaxBandwidth = DefaultBandwidth.maxBandwidthSession.getValue();
+    private int sharingMaxBandwidth = DefaultBandwidth.MAX_BANDWIDTH_SESSION.getValue();
 
     private static final String STR_PERMISSION_DENIED = "permission deined";
     private static final String STR_OTHER_ACTIVE_CALLS = "There are other active calls";
@@ -337,7 +337,7 @@ public class PhoneImpl implements Phone {
 
     @Override
     public void setAudioMaxBandwidth(int bandwidth) {
-        audioMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.maxBandwidthAudio.getValue() : bandwidth;
+        audioMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.MAX_BANDWIDTH_AUDIO.getValue() : bandwidth;
     }
 
     @Override
@@ -347,7 +347,7 @@ public class PhoneImpl implements Phone {
 
     @Override
     public void setVideoMaxBandwidth(int bandwidth) {
-        videoMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.maxBandwidth720p.getValue() : bandwidth;
+        videoMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.MAX_BANDWIDTH_720P.getValue() : bandwidth;
     }
 
     @Override
@@ -357,7 +357,7 @@ public class PhoneImpl implements Phone {
 
     @Override
     public void setSharingMaxBandwidth(int bandwidth) {
-        sharingMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.maxBandwidthSession.getValue() : bandwidth;
+        sharingMaxBandwidth = bandwidth <= 0 ? DefaultBandwidth.MAX_BANDWIDTH_SESSION.getValue() : bandwidth;
     }
 
     @Override

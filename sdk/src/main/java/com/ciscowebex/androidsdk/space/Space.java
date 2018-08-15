@@ -48,7 +48,7 @@ public class Space {
          * @since 0.1
          */
         @SerializedName("group")
-        group,
+        GROUP,
 
         /**
          * 1-to-1 space between two people
@@ -56,7 +56,7 @@ public class Space {
          * @since 0.1
          */
         @SerializedName("direct")
-        direct
+        DIRECT
     }
 
     @SerializedName("id")
