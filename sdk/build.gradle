@@ -144,6 +144,10 @@ android {
 		bundleRelease.finalizedBy(reZipAar)
 		bundleDebug.finalizedBy(reZipAar)
 	}
+
+	packagingOptions {
+		exclude 'META-INF/rxjava.properties'
+	}
 }
 
 publishing {
