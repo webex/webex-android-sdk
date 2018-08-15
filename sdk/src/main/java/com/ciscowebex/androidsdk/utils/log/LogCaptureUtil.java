@@ -225,7 +225,7 @@ public class LogCaptureUtil implements Runnable {
         });
     }
 
-    private static final String processId = Integer.toString(android.os.Process.myPid());
+    private static final String PROCESS_ID = Integer.toString(android.os.Process.myPid());
 
     protected void capture() {
         running.set(true);
@@ -285,7 +285,7 @@ public class LogCaptureUtil implements Runnable {
                                     stopLogcat();
                                     running.set(false);
                                     break;
-                                } else if (logLevel != Webex.LogLevel.ALL && !inputLine.contains(processId)) {
+                                } else if (logLevel != Webex.LogLevel.ALL && !inputLine.contains(PROCESS_ID)) {
                                     continue;
                                 }
                                 writer.write(inputLine.getBytes());
