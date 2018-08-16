@@ -73,6 +73,7 @@ import com.cisco.spark.android.util.Action;
 import com.cisco.spark.android.util.FileUtils;
 import com.cisco.spark.android.util.MimeUtils;
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.message.LocalFile;
@@ -501,46 +502,44 @@ public class MessageClientImpl implements MessageClient {
         }
     }
 
+    private void progressUpdate(ProgressHandler progressHandler, Long item){
+        if (progressHandler != null) {
+            runOnUiThread(() -> progressHandler.onProgress(item));
+        }
+    }
+    private void completionUpdate(CompletionHandler<Uri> completionHandler, Result<Uri> result){
+        if (completionHandler != null) {
+            runOnUiThread(() -> completionHandler.onComplete(result));
+        }
+    }
+
     private void download(ContentReference reference, String to, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler) {
         Action<Long> callback = new Action<Long>() {
             @Override
             public void call(Long item) {
-                if (progressHandler != null) {
-                    runOnUiThread(() -> progressHandler.onProgress(item));
-                }
+                progressUpdate(progressHandler, item);
             }
         };
 
         Action<ContentDataCacheRecord> action = new Action<ContentDataCacheRecord>() {
             @Override
             public void call(ContentDataCacheRecord item) {
-                if (progressHandler != null) {
-                    runOnUiThread(() -> progressHandler.onProgress(item.getDataSize()));
-                }
-
+                progressUpdate(progressHandler, item.getDataSize());
                 if (!TextUtils.isEmpty(to)) {
                     try {
                         java.io.File destFile = new java.io.File(to);
                         if (!destFile.createNewFile()) {
-                            if (completionHandler != null) {
-                                runOnUiThread(() -> completionHandler.onComplete(ResultImpl.error("failed to create File " + destFile.toString())));
-                            }
+                            completionUpdate(completionHandler, ResultImpl.error("failed to create File " + destFile.toString()));
                             return;
                         }
                         FileUtils.copyFile(item.getLocalUriAsFile(), destFile);
-                        if (completionHandler != null) {
-                            runOnUiThread(() -> completionHandler.onComplete(ResultImpl.success(Uri.fromFile(destFile))));
-                        }
+                        completionUpdate(completionHandler, ResultImpl.success(Uri.fromFile(destFile)));
                     } catch (IOException e) {
                         Ln.e(e, "copy file exception");
-                        if (completionHandler != null) {
-                            runOnUiThread(() -> completionHandler.onComplete(ResultImpl.error("failed to copy File ")));
-                        }
+                        completionUpdate(completionHandler, ResultImpl.error("failed to copy File "));
                     }
                 } else {
-                    if (completionHandler != null) {
-                        runOnUiThread(() -> completionHandler.onComplete(ResultImpl.success(item.getLocalUri())));
-                    }
+                    completionUpdate(completionHandler, ResultImpl.success(item.getLocalUri()));
                 }
             }
         };
