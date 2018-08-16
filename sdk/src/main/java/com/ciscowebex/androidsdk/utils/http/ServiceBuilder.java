@@ -126,20 +126,22 @@ public class ServiceBuilder {
 
     private static boolean handleUnauthError(Authenticator authenticator, CompletionHandler handler, Closure<String> closure, Callback callback){
         Ln.d("handleUnauthError");
-        if (authenticator == null) return false;
-        Ln.d("refreshToken");
-        authenticator.refreshToken(result -> {
-            String token = result.getData();
-            if (token != null){
-                Call call = closure.invoke("Bearer " + token);
-                call.enqueue(callback);
-            }
-            if (token == null && handler != null){
-                handler.onComplete(ResultImpl.error(result.getError()));
-            }
-
-        });
-        return true;
+        if (authenticator != null) {
+            Ln.d("refreshToken");
+            authenticator.refreshToken(result -> {
+                String token = result.getData();
+                if (token != null) {
+                    Call call = closure.invoke("Bearer " + token);
+                    call.enqueue(callback);
+                } else {
+                    if (handler != null) {
+                        handler.onComplete(ResultImpl.error(result.getError()));
+                    }
+                }
+            });
+            return true;
+        }
+        return false;
     }
 
     public interface Closure<P> {

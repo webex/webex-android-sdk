@@ -73,7 +73,6 @@ import com.cisco.spark.android.util.Action;
 import com.cisco.spark.android.util.FileUtils;
 import com.cisco.spark.android.util.MimeUtils;
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.message.LocalFile;
