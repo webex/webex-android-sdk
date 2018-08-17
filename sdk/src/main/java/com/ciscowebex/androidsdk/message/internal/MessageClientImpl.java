@@ -262,11 +262,10 @@ public class MessageClientImpl implements MessageClient {
         }
         if (files != null && files.length > 0) {
             boolean rst = postContent(conversationId, comment, files);
-            runOnUiThread(() -> handler.onComplete(
-                    rst ? ResultImpl.success(null) : ResultImpl.error("post content failed!")));
+            runOnUiThread(() -> handler.onComplete(rst ? ResultImpl.success(null) : ResultImpl.error("post content failed!")), handler);
         } else {
             postComment(conversationId, comment);
-            runOnUiThread(() -> handler.onComplete(ResultImpl.success(null)));
+            runOnUiThread(() -> handler.onComplete(ResultImpl.success(null)), handler);
         }
     }
 
@@ -461,12 +460,11 @@ public class MessageClientImpl implements MessageClient {
                 Ln.e("unknown verb " + activity.getVerb());
                 return;
         }
-        if (_observer != null) {
-            runOnUiThread(() -> _observer.onEvent(event));
-        }
+        runOnUiThread(() -> _observer.onEvent(event), _observer);
     }
 
-    private void runOnUiThread(Runnable r) {
+    private void runOnUiThread(Runnable r, Object conditioner) {
+        if (conditioner == null) return;
         Handler handler = new Handler(_context.getMainLooper());
         handler.post(r);
     }
@@ -494,7 +492,7 @@ public class MessageClientImpl implements MessageClient {
                 if (file.getProgressHandler() != null) {
                     file.getProgressHandler().onProgress(progress >= 0 ? progress : 0);
                 }
-            });
+            }, file);
             if (progress >= 100) {
                 t.cancel(false);
             }
@@ -505,42 +503,29 @@ public class MessageClientImpl implements MessageClient {
         Action<Long> callback = new Action<Long>() {
             @Override
             public void call(Long item) {
-                if (progressHandler != null) {
-                    runOnUiThread(() -> progressHandler.onProgress(item));
-                }
+                runOnUiThread(() -> progressHandler.onProgress(item), progressHandler);
             }
         };
 
         Action<ContentDataCacheRecord> action = new Action<ContentDataCacheRecord>() {
             @Override
             public void call(ContentDataCacheRecord item) {
-                if (progressHandler != null) {
-                    runOnUiThread(() -> progressHandler.onProgress(item.getDataSize()));
-                }
-
+                runOnUiThread(() -> progressHandler.onProgress(item.getDataSize()), progressHandler);
                 if (!TextUtils.isEmpty(to)) {
                     try {
                         java.io.File destFile = new java.io.File(to);
                         if (!destFile.createNewFile()) {
-                            if (completionHandler != null) {
-                                runOnUiThread(() -> completionHandler.onComplete(ResultImpl.error("failed to create File " + destFile.toString())));
-                            }
+                            runOnUiThread(() -> completionHandler.onComplete(ResultImpl.error("failed to create File " + destFile.toString())), completionHandler);
                             return;
                         }
                         FileUtils.copyFile(item.getLocalUriAsFile(), destFile);
-                        if (completionHandler != null) {
-                            runOnUiThread(() -> completionHandler.onComplete(ResultImpl.success(Uri.fromFile(destFile))));
-                        }
+                        runOnUiThread(() -> completionHandler.onComplete(ResultImpl.success(Uri.fromFile(destFile))), completionHandler);
                     } catch (IOException e) {
                         Ln.e(e, "copy file exception");
-                        if (completionHandler != null) {
-                            runOnUiThread(() -> completionHandler.onComplete(ResultImpl.error("failed to copy File ")));
-                        }
+                        runOnUiThread(() -> completionHandler.onComplete(ResultImpl.error("failed to copy File ")), completionHandler);
                     }
                 } else {
-                    if (completionHandler != null) {
-                        runOnUiThread(() -> completionHandler.onComplete(ResultImpl.success(item.getLocalUri())));
-                    }
+                    runOnUiThread(() -> completionHandler.onComplete(ResultImpl.success(item.getLocalUri())), completionHandler);
                 }
             }
         };
