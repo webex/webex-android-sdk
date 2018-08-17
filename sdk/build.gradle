@@ -45,7 +45,10 @@ task jacocoTestReport(type:JacocoReport, dependsOn: "testDebugUnitTest") {
 	def coverageSourceDirs = [ '../sdk/src/main/java' ]
 	additionalSourceDirs = files(coverageSourceDirs)
 	sourceDirectories = files(coverageSourceDirs)
-	executionData = files('../sdk/build/jacoco/testDebugUnitTest.exec')
+	executionData = fileTree(dir: "../sdk", includes: [
+            "jacoco/testDebugUnitTest.exec",
+            "outputs/code-coverage/connected/*coverage.ec"
+    ])
 
 	reports {
 		xml.enabled = true
@@ -73,7 +76,7 @@ android {
 			minifyEnabled false
         }
         debug {
-            testCoverageEnabled false
+            testCoverageEnabled true
         }
     }
 
@@ -95,6 +98,7 @@ android {
                 outputs.upToDateWhen {false}
                 showStandardStreams = true
             }
+            jacoco.includeNoLocationClasses = true
         }
     }
 

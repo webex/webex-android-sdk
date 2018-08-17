@@ -40,6 +40,4 @@ public class JWTAuthenticatorTest {
         authenticator.authorize(auth_token);
         authenticator.getToken(System.out::println);
     }
-
-
 }
