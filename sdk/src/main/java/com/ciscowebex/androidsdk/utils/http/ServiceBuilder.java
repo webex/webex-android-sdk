@@ -112,14 +112,11 @@ public class ServiceBuilder {
                         }
                     });
                 }
-
                 Call call = closure.invoke("Bearer " + token);
                 if (call != null)
                     call.enqueue(callback);
-            } else {
-                if (handler != null) {
-                    handler.onComplete(ResultImpl.error(result.getError()));
-                }
+            } else if (handler != null){
+                handler.onComplete(ResultImpl.error(result.getError()));
             }
         });
     }
@@ -133,10 +130,8 @@ public class ServiceBuilder {
                 if (token != null) {
                     Call call = closure.invoke("Bearer " + token);
                     call.enqueue(callback);
-                } else {
-                    if (handler != null) {
-                        handler.onComplete(ResultImpl.error(result.getError()));
-                    }
+                } else if (handler != null){
+                    handler.onComplete(ResultImpl.error(result.getError()));
                 }
             });
             return true;
