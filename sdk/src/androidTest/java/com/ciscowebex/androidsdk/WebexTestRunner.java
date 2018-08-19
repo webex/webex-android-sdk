@@ -41,13 +41,13 @@ import java.util.concurrent.TimeUnit;
 
 
 public class WebexTestRunner extends AndroidJUnitRunner {
-    private static String SparkUserEmail;
-    private static String SparkUserName;
-    private static String SparkUserPwd;
-    private static String CLIENT_ID;
-    private static String CLIENT_SEC;
-    private static String REDIRECT_URL;
-    private static String SCOPE;
+    private static String SparkUserEmail = BuildConfig.TEST_USER_EMAIL;
+    private static String SparkUserName = BuildConfig.VERSION_NAME;
+    private static String SparkUserPwd = BuildConfig.TEST_USER_PWD;
+    private static String CLIENT_ID = BuildConfig.CLIENT_ID;
+    private static String CLIENT_SEC = BuildConfig.CLIENT_SEC;
+    private static String REDIRECT_URL = BuildConfig.REDIRECT_URL;
+    private static String SCOPE = BuildConfig.SCOPE;
 
     static Application application;
     static Webex webex;
@@ -66,7 +66,6 @@ public class WebexTestRunner extends AndroidJUnitRunner {
 
     private void loginBySparkId() {
         System.out.println("!!! loginBySparkId !!!");
-        final CountDownLatch signal = new CountDownLatch(1);
         File file = new File(application.getExternalFilesDir("login"), "login.txt");
         if (file.exists()) {
             HashMap map = readKeyValueTxtToMap(file);
@@ -77,20 +76,24 @@ public class WebexTestRunner extends AndroidJUnitRunner {
             CLIENT_SEC = (String) map.get("CLIENT_SEC");
             REDIRECT_URL = (String) map.get("REDIRECT_URL");
             SCOPE = (String) map.get("SCOPE");
-            OAuthTestUserAuthenticator auth = new OAuthTestUserAuthenticator(CLIENT_ID, CLIENT_SEC, SCOPE, REDIRECT_URL,
-                    SparkUserEmail, SparkUserName, SparkUserPwd);
-            webex = new Webex(application, auth);
-            auth.authorize(result -> {
-                if (result.isSuccessful()) {
-                    System.out.println("loginBySparkId isSuccessful!");
-                } else {
-                    System.out.println("loginBySparkId failed!");
-                }
-                signal.countDown();
-            });
         } else {
             System.out.println("!!! login file is not exist !!!");
         }
+
+        final CountDownLatch signal = new CountDownLatch(1);
+        OAuthTestUserAuthenticator auth = new OAuthTestUserAuthenticator(CLIENT_ID, CLIENT_SEC, SCOPE, REDIRECT_URL,
+                SparkUserEmail, SparkUserName, SparkUserPwd);
+        webex = new Webex(application, auth);
+        auth.authorize(result -> {
+            if (result.isSuccessful()) {
+                System.out.println("loginBySparkId isSuccessful!");
+            } else {
+                System.out.println("loginBySparkId failed!");
+                System.exit(-1);
+            }
+            signal.countDown();
+        });
+
         try {
             signal.await(60, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
