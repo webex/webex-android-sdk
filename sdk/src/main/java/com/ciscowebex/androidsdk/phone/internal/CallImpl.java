@@ -54,6 +54,7 @@ import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.phone.CallObserver;
 import com.ciscowebex.androidsdk.phone.MediaOption;
 import com.ciscowebex.androidsdk.phone.Phone;
+import com.ciscowebex.androidsdk.phone.RemoteAuxVideo;
 import com.github.benoitdion.ln.Ln;
 
 import me.helloworld.utils.Objects;
@@ -100,6 +101,11 @@ public class CallImpl implements Call {
     private View _sharingRenderView;
 
     private Pair<View, View> _videoRenderViews;
+
+    private Map<Long, RemoteAuxVideoImpl> _remoteAuxVideoList = new HashMap<>();
+    public RemoteAuxVideoImpl getRemoteAuxVideo(long vid){
+        return _remoteAuxVideoList.get(vid);
+    }
 
     CallImpl(@NonNull PhoneImpl phone, @Nullable MediaOption option, @NonNull Direction direction, @NonNull LocusKey key, boolean group) {
         _phone = phone;
@@ -251,6 +257,28 @@ public class CallImpl implements Call {
         return locus != null && _phone.isSharingFromThisDevice(locus);
     }
 
+    @Override
+    public void subscribeRemoteAuxVideo(View view, @NonNull CompletionHandler<RemoteAuxVideo> callback) {
+        long vid = _phone.getCallService().subscribeRemoteAuxVideo(getKey(), view);
+        if (vid >= 0){
+            RemoteAuxVideoImpl remoteAuxVideo = new RemoteAuxVideoImpl(getKey(), _phone, vid, view);
+            _remoteAuxVideoList.put(vid, remoteAuxVideo);
+            callback.onComplete(ResultImpl.success(remoteAuxVideo));
+        }else{
+            callback.onComplete(ResultImpl.error("Subscribe remote aux video error"));
+        }
+    }
+
+    @Override
+    public void unsubscribeRemoteAuxVideo(RemoteAuxVideo remoteAuxVideo, @NonNull CompletionHandler<Void> callback) {
+        if (remoteAuxVideo != null && _phone.getCallService().unsubscribeRemoteAuxVideo(getKey(), remoteAuxVideo.getVid())){
+            _remoteAuxVideoList.remove(remoteAuxVideo.getVid());
+            callback.onComplete(ResultImpl.success(null));
+        }else{
+            callback.onComplete(ResultImpl.error("Unsubscribe remote aux video error"));
+        }
+    }
+
     public boolean isSendingVideo() {
         return _option != null && _option.hasVideo() && !_phone.getCallService().isVideoMuted(getKey());
     }
@@ -288,7 +316,7 @@ public class CallImpl implements Call {
             Ln.d("Can not setReceivingVideo in a Audio call, return");
             return;
         }
-        _phone.getCallService().muteRemoteVideos(getKey(), !receiving);
+        _phone.getCallService().muteRemoteVideo(getKey(), !receiving);
         CallObserver observer = getObserver();
         if (observer != null) {
             observer.onMediaChanged(new CallObserver.ReceivingVideo(this, receiving));

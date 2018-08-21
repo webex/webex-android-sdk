@@ -75,6 +75,14 @@ public interface CallObserver {
     void onCallMembershipChanged(CallMembershipChangedEvent event);
 
     /**
+     *
+     *
+     * @param event event
+     * @since 2.0.0
+     */
+    void onRemoteAuxVideoChanged(RemoteAuxVideoChangeEvent event);
+
+    /**
      * Base class for the event of a call
      *
      * @since 0.1
@@ -570,6 +578,54 @@ public interface CallObserver {
     }
 
     /**
+     * Remote sharing rendering view size has changed.
+     *
+     * @since 2.0.0
+     */
+    class RemoteAuxVideosCountChanged extends AbstractCallEvent implements MediaChangedEvent {
+        @StringPart
+        private int _count;
+
+        public RemoteAuxVideosCountChanged(Call call, int count) {
+            super(call);
+            _count = count;
+        }
+
+        public int getCount(){
+            return _count;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringByAnnotation(this);
+        }
+    }
+
+    /**
+     * Remote sharing rendering view size has changed.
+     *
+     * @since 2.0.0
+     */
+    class ActiveSpeakerChangedEvent extends AbstractCallEvent implements MediaChangedEvent {
+        @StringPart
+        private CallMembership _activeSpeaker;
+
+        public ActiveSpeakerChangedEvent(Call call, CallMembership activeSpeaker) {
+            super(call);
+            _activeSpeaker = activeSpeaker;
+        }
+
+        public CallMembership getActiveSpeaker(){
+            return _activeSpeaker;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringByAnnotation(this);
+        }
+    }
+
+    /**
      * Call membership change event
      *
      * @since 1.3.0
@@ -681,6 +737,72 @@ public interface CallObserver {
 
         public MembershipSendingSharingEvent(Call call, CallMembership membership) {
             super(call, membership);
+        }
+    }
+
+    /**
+     * Remote aux video change event
+     *
+     * @since 2.0.0
+     */
+    interface RemoteAuxVideoChangeEvent extends CallEvent {
+        RemoteAuxVideo getRemoteAuxVideo();
+    }
+
+    /**
+     * Base class for the event of a RemoteAuxVideoChangeEvent
+     *
+     * @since 2.0.0
+     */
+    abstract class AbstractRemoteAuxVideoChangeEvent extends AbstractCallEvent implements RemoteAuxVideoChangeEvent{
+
+        @StringPart
+        protected RemoteAuxVideo _remoteAuxVideo;
+
+        protected AbstractRemoteAuxVideoChangeEvent(Call call, RemoteAuxVideo remoteAuxVideo) {
+            super(call);
+            _remoteAuxVideo = remoteAuxVideo;
+        }
+
+        /**
+         * @return changed RemoteAuxVideo.
+         * @since 2.0.0
+         */
+        public RemoteAuxVideo getRemoteAuxVideo() {
+            return _remoteAuxVideo;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringByAnnotation(this);
+        }
+    }
+
+    class RemoteAuxVideoPersonChangedEvent extends AbstractRemoteAuxVideoChangeEvent {
+
+        public RemoteAuxVideoPersonChangedEvent(Call call, RemoteAuxVideo remoteAuxVideo) {
+            super(call, remoteAuxVideo);
+        }
+    }
+
+    class RemoteAuxVideoSizeChangedEvent extends AbstractRemoteAuxVideoChangeEvent {
+
+        public RemoteAuxVideoSizeChangedEvent(Call call, RemoteAuxVideo remoteAuxVideo) {
+            super(call, remoteAuxVideo);
+        }
+    }
+
+    class RemoteAuxSendingVideoEvent extends AbstractRemoteAuxVideoChangeEvent {
+
+        public RemoteAuxSendingVideoEvent(Call call, RemoteAuxVideo remoteAuxVideo) {
+            super(call, remoteAuxVideo);
+        }
+    }
+
+    class ReceivingAuxVideoEvent extends AbstractRemoteAuxVideoChangeEvent {
+
+        public ReceivingAuxVideoEvent(Call call, RemoteAuxVideo remoteAuxVideo) {
+            super(call, remoteAuxVideo);
         }
     }
 }

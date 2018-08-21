@@ -352,4 +352,8 @@ public interface Call {
      * @since 1.4
      */
     boolean isSendingSharing();
+
+    void subscribeRemoteAuxVideo(View view, @NonNull CompletionHandler<RemoteAuxVideo> callback);
+
+    void unsubscribeRemoteAuxVideo(RemoteAuxVideo remoteAuxVideo, @NonNull CompletionHandler<Void> callback);
 }

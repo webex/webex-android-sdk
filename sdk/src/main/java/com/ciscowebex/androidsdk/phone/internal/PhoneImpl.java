@@ -39,12 +39,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Base64;
+import android.util.Size;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
+import com.cisco.spark.android.callcontrol.events.CallControlActiveSpeakerChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlCallCancelledEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlCallJoinErrorEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlFloorGrantedEvent;
@@ -54,9 +56,11 @@ import com.cisco.spark.android.callcontrol.events.CallControlLocalAudioMutedEven
 import com.cisco.spark.android.callcontrol.events.CallControlLocalVideoMutedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocusChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlLocusCreatedEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlMediaDecodeSizeChangedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantAudioMuteEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantJoinedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlParticipantLeftEvent;
+import com.cisco.spark.android.callcontrol.events.CallControlParticipantVideoMutedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlRemoteVideoMutedEvent;
 import com.cisco.spark.android.callcontrol.events.CallControlSelfParticipantLeftEvent;
 import com.cisco.spark.android.callcontrol.events.DismissCallNotificationEvent;
@@ -88,6 +92,9 @@ import com.cisco.spark.android.locus.responses.LocusUrlResponse;
 import com.cisco.spark.android.media.MediaCapabilityConfig;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaSession;
+import com.cisco.spark.android.media.events.AvailableMediaChangeEvent;
+import com.cisco.spark.android.media.events.MediaBlockedChangeEvent;
+import com.cisco.spark.android.media.events.MediaMutedChangeEvent;
 import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.sync.operationqueue.core.Operations;
 import com.cisco.spark.android.sync.queue.ConversationSyncQueue;
@@ -101,6 +108,7 @@ import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.AcquirePermissionActivity;
 import com.ciscowebex.androidsdk.internal.MetricsClient;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.membership.Membership;
 import com.ciscowebex.androidsdk.people.Person;
 import com.ciscowebex.androidsdk.people.internal.PersonClientImpl;
 import com.ciscowebex.androidsdk.phone.Call;
@@ -187,6 +195,10 @@ public class PhoneImpl implements Phone {
     }
 
     private boolean _isRemoteSendingAudio;
+
+    private int _joinedParticipantCount;
+
+    private LocusKey _activeCallLocusKey;
 
     private int audioMaxBandwidth = DefaultBandwidth.MAX_BANDWIDTH_AUDIO.getValue();
 
@@ -1098,6 +1110,141 @@ public class PhoneImpl implements Phone {
 		}
 	}
 
+    // ------------------------------------------------------------------------
+    // MultiStream
+    // ------------------------------------------------------------------------
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(MediaBlockedChangeEvent event) {
+        Ln.d("MediaBlockedChangeEvent is received  mid: " + event.getMediaId() + "  vid: " + event.getVideoId() + "  isBlocked: " + event.isBlocked());
+        if (_activeCallLocusKey == null)
+            return;
+        CallImpl activeCall = _calls.get(_activeCallLocusKey);
+        if (activeCall != null && activeCall.isGroup()) {
+            switch (event.getMediaId()) {
+                case MediaEngine.VIDEO_MID:
+                    // If 'blocked' is changed, publish blocked change event.
+                    RemoteAuxVideoImpl remoteAuxVideo = activeCall.getRemoteAuxVideo(event.getVideoId());
+                    if (remoteAuxVideo != null && remoteAuxVideo.isSendingVideo() == event.isBlocked()) {
+                        remoteAuxVideo.setSendingVideo(!event.isBlocked());
+                        if (activeCall.getObserver() != null)
+                            activeCall.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxSendingVideoEvent(activeCall, remoteAuxVideo));
+                    }
+                    break;
+                case MediaEngine.SHARE_MID:
+                    // If 'blocked' is changed, publish blocked change event.
+                    break;
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlActiveSpeakerChangedEvent event) {
+        Ln.d("CallControlActiveSpeakerChangedEvent is received vid: " + event.getVid() + "   participant: " + event.getParticipant());
+        CallImpl call = _calls.get(event.getCall().getKey());
+        if (call != null){
+            for (CallMembership membership : call.getMemberships()){
+                if (membership.getPersonId().equals(event.getParticipant().getPerson().getId())) {
+                    if (call.getObserver() != null){
+                        if (event.getVid() == 0)
+                            call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, membership));
+                        else if (call.isGroup()){
+                            RemoteAuxVideoImpl remoteAuxVideo = call.getRemoteAuxVideo(event.getVid());
+                            if (remoteAuxVideo != null && (remoteAuxVideo.getPerson() == null || !remoteAuxVideo.getPerson().getPersonId().equals(membership.getPersonId()))) {
+                                remoteAuxVideo.setPerson(membership);
+                                call.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxVideoPersonChangedEvent(call, remoteAuxVideo));
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
+        Ln.d("CallControlParticipantVideoMutedEvent is received  participant: " + event.getParticipant().getPerson().getDisplayName() +
+                "  vid: " + event.getVid() + "  mute: " + event.isMuted());
+        CallImpl call = _calls.get(event.getLocusKey());
+        if (call != null && call.isGroup()){
+            for (CallMembership membership : call.getMemberships()){
+                if (membership.getPersonId().equals(event.getParticipant().getPerson().getId())) {
+                    if (call.getObserver() != null){
+                        RemoteAuxVideoImpl remoteAuxVideo = call.getRemoteAuxVideo(event.getVid());
+                        if (remoteAuxVideo != null && (remoteAuxVideo.getPerson() == null || !remoteAuxVideo.getPerson().getPersonId().equals(membership.getPersonId()))) {
+                            remoteAuxVideo.setPerson(membership);
+                            call.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxVideoPersonChangedEvent(call, remoteAuxVideo));
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(AvailableMediaChangeEvent event) {
+        Ln.d("AvailableMediaChangeEvent is received  mid: " + event.getMediaId() + "  count: " + event.getCount());
+        if (_activeCallLocusKey == null)
+            return;
+        CallImpl activeCall = _calls.get(_activeCallLocusKey);
+        if (activeCall != null && activeCall.isGroup() && activeCall.getObserver() != null && event.getMediaId() == MediaEngine.VIDEO_MID) {
+            activeCall.getObserver().onMediaChanged(new CallObserver.RemoteAuxVideosCountChanged(activeCall, event.getCount()));
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlMediaDecodeSizeChangedEvent event) {
+        Ln.d("CallControlMediaDecodeSizeChangedEvent is received  mid: " + event.getMediaId() + "  size: " + event.getSize());
+        if (_activeCallLocusKey == null)
+            return;
+        CallImpl activeCall = _calls.get(_activeCallLocusKey);
+        if (activeCall != null && activeCall.isGroup()) {
+            switch (event.getMediaId()) {
+                case MediaEngine.VIDEO_MID:
+                    RemoteAuxVideoImpl remoteAuxVideo = activeCall.getRemoteAuxVideo(event.getVideoId());
+                    if (remoteAuxVideo != null) {
+                        remoteAuxVideo.setAuxVideoSize(event.getSize());
+                        if (activeCall.getObserver() != null)
+                            activeCall.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxVideoSizeChangedEvent(activeCall, remoteAuxVideo));
+                    }
+                    break;
+                case MediaEngine.SHARE_MID:
+                    break;
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(MediaMutedChangeEvent event) {
+        Ln.d("CallControlMediaDecodeSizeChangedEvent is received  vid: " + event.getVideoId() + "  mute: " + event.isMuted());
+        if (_activeCallLocusKey == null)
+            return;
+        CallImpl activeCall = _calls.get(_activeCallLocusKey);
+        if (activeCall != null && activeCall.isGroup()) {
+            switch (event.getMediaId()) {
+                case MediaEngine.VIDEO_MID:
+                    RemoteAuxVideoImpl remoteAuxVideo = activeCall.getRemoteAuxVideo(event.getVideoId());
+                    if (remoteAuxVideo != null && activeCall.getObserver() != null) {
+                        activeCall.getObserver().onRemoteAuxVideoChanged(new CallObserver.ReceivingAuxVideoEvent(activeCall, remoteAuxVideo));
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void _sendJoinedParticipantCountChanged(CallImpl call){
+        if (call == null || !call.getKey().equals(_activeCallLocusKey))
+            return;
+
+        int count = _callControlService.getLocus(call.getKey()).getFullState().getCount() - 2;
+        Ln.d("Joined Participant Count old: " + _joinedParticipantCount + "  new: " + count);
+        if (call.isGroup() && call.getObserver() != null && count >= 0 && _joinedParticipantCount != count) {
+            _joinedParticipantCount = count;
+//            call.getObserver().onMediaChanged(new CallObserver.RemoteAuxVideosCountChanged(call, _joinedParticipantCount));
+        }
+    }
 	// ------------------------------------------------------------------------
 	// Screen Sharing
 	// ------------------------------------------------------------------------
@@ -1209,8 +1356,11 @@ public class PhoneImpl implements Phone {
             if (_bus.isRegistered(call)) {
                 _bus.unregister(call);
             }
-	        _lostSharingParticipant = null;
-	        _currentSharingUri = null;
+            if (call.getKey().equals(_activeCallLocusKey)) {
+                _lostSharingParticipant = null;
+                _currentSharingUri = null;
+                _joinedParticipantCount = 0;
+            }
         }
     }
 
@@ -1304,6 +1454,7 @@ public class PhoneImpl implements Phone {
         }
 	    _isRemoteSendingVideo = call.isRemoteSendingVideo();
 	    _isRemoteSendingAudio = call.isRemoteSendingAudio();
+        _activeCallLocusKey = key;
     }
 
     private void setCallOnRinging(@NonNull CallImpl call) {
