@@ -45,10 +45,10 @@ task jacocoTestReport(type:JacocoReport, dependsOn: "testDebugUnitTest") {
 	def coverageSourceDirs = [ '../sdk/src/main/java' ]
 	additionalSourceDirs = files(coverageSourceDirs)
 	sourceDirectories = files(coverageSourceDirs)
-	executionData = fileTree(dir: "../sdk", includes: [
-            "jacoco/testDebugUnitTest.exec",
-            "outputs/code-coverage/connected/*coverage.ec"
-    ])
+//	executionData = fileTree(dir: "../sdk", includes: [
+//            "jacoco/testDebugUnitTest.exec",
+//            "outputs/code-coverage/connected/*coverage.ec"
+//    ])
 
 	reports {
 		xml.enabled = true
@@ -76,14 +76,14 @@ android {
 			minifyEnabled false
         }
         debug {
-            testCoverageEnabled true
-            buildConfigField "String", "CLIENT_ID", getPropertyOrDefault('CLIENT_ID')
-            buildConfigField "String", "CLIENT_SEC", getPropertyOrDefault('CLIENT_SEC')
-            buildConfigField "String", "REDIRECT_URL", getPropertyOrDefault('REDIRECT_URL')
-            buildConfigField "String", "SCOPE", getPropertyOrDefault('SCOPE')
-            buildConfigField "String", "TEST_USER_NAME", getPropertyOrDefault('TEST_USER_NAME')
-            buildConfigField "String", "TEST_USER_EMAIL", getPropertyOrDefault('TEST_USER_EMAIL')
-            buildConfigField "String", "TEST_USER_PWD", getPropertyOrDefault('TEST_USER_PWD')
+//            testCoverageEnabled true
+//            buildConfigField "String", "CLIENT_ID", getPropertyOrDefault('CLIENT_ID')
+//            buildConfigField "String", "CLIENT_SEC", getPropertyOrDefault('CLIENT_SEC')
+//            buildConfigField "String", "REDIRECT_URL", getPropertyOrDefault('REDIRECT_URL')
+//            buildConfigField "String", "SCOPE", getPropertyOrDefault('SCOPE')
+//            buildConfigField "String", "TEST_USER_NAME", getPropertyOrDefault('TEST_USER_NAME')
+//            buildConfigField "String", "TEST_USER_EMAIL", getPropertyOrDefault('TEST_USER_EMAIL')
+//            buildConfigField "String", "TEST_USER_PWD", getPropertyOrDefault('TEST_USER_PWD')
         }
     }
 
@@ -106,7 +106,7 @@ android {
                 outputs.upToDateWhen {false}
                 showStandardStreams = true
             }
-            jacoco.includeNoLocationClasses = true
+//            jacoco.includeNoLocationClasses = true
         }
     }
 
@@ -267,10 +267,10 @@ def revision() {
 	return code.toString().replaceAll("\n", "")
 }
 
-def getPropertyOrDefault(prop, defaultValue='') {
-    def value = System.getProperty(prop)
-    return value ? '\"' + value + '\"' : defaultValue
-}
+//def getPropertyOrDefault(prop, defaultValue='') {
+//    def value = System.getProperty(prop)
+//    return value ? '\"' + value + '\"' : defaultValue
+//}
 
 task sourcesJar(type: Jar) {
 	classifier = 'sources'
