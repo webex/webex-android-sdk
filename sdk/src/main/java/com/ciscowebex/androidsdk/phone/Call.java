@@ -356,4 +356,6 @@ public interface Call {
     void subscribeRemoteAuxVideo(View view, @NonNull CompletionHandler<RemoteAuxVideo> callback);
 
     void unsubscribeRemoteAuxVideo(RemoteAuxVideo remoteAuxVideo, @NonNull CompletionHandler<Void> callback);
+
+    int getAvailableAuxVideoCount();
 }

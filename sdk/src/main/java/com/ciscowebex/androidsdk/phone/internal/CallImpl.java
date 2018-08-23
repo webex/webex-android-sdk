@@ -29,6 +29,8 @@ import java.util.Map;
 
 import android.graphics.Rect;
 import android.util.Pair;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -105,6 +107,31 @@ public class CallImpl implements Call {
     private Map<Long, RemoteAuxVideoImpl> _remoteAuxVideoList = new HashMap<>();
     public RemoteAuxVideoImpl getRemoteAuxVideo(long vid){
         return _remoteAuxVideoList.get(vid);
+    }
+
+    private int remoteAvailableMediaCount;
+    public void setAvailableMediaCount(int count){
+        remoteAvailableMediaCount = count;
+    }
+    public int getAvailableMediaCount() {
+        return remoteAvailableMediaCount;
+    }
+
+    private int remoteAvailableAuxVideoCount;
+    public void setAvailableAuxVideoCount(int count){
+        remoteAvailableAuxVideoCount = count;
+    }
+    @Override
+    public int getAvailableAuxVideoCount() {
+        return remoteAvailableAuxVideoCount;
+    }
+
+    private CallMembership _activeSpeaker;
+    public CallMembership getActiveSpeaker(){
+        return _activeSpeaker;
+    }
+    public void setActiveSpeaker(CallMembership person){
+        _activeSpeaker = person;
     }
 
     CallImpl(@NonNull PhoneImpl phone, @Nullable MediaOption option, @NonNull Direction direction, @NonNull LocusKey key, boolean group) {
@@ -263,6 +290,27 @@ public class CallImpl implements Call {
         if (vid >= 0){
             RemoteAuxVideoImpl remoteAuxVideo = new RemoteAuxVideoImpl(getKey(), _phone, vid, view);
             _remoteAuxVideoList.put(vid, remoteAuxVideo);
+            if (view instanceof SurfaceView){
+                ((SurfaceView)view).getHolder().addCallback(new SurfaceHolder.Callback() {
+                    @Override
+                    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                        Ln.d("remote surfaceCreated vid: " + vid);
+                        if (!_phone.getCallService().isRemoteWindowAttached(_key, vid, view))
+                            _phone.getCallService().setRemoteWindowForVid(_key, vid, view);
+                    }
+
+                    @Override
+                    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                        Ln.d("remote surfaceChanged vid: " + vid);
+                    }
+
+                    @Override
+                    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                        Ln.d("remote surfaceDestroyed vid: " + vid);
+                        _phone.getHandler().post(() -> _phone.getCallService().removeRemoteWindowForVid(_key, vid, view));
+                    }
+                });
+            }
             callback.onComplete(ResultImpl.success(remoteAuxVideo));
         }else{
             callback.onComplete(ResultImpl.error("Subscribe remote aux video error"));

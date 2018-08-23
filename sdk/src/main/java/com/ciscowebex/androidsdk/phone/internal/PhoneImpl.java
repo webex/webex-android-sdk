@@ -162,6 +162,7 @@ public class PhoneImpl implements Phone {
     private DeviceRegistration _device;
 
     private Handler _registerTimer;
+    public Handler getHandler(){return _registerTimer;}
 
     private Runnable _registerTimeoutTask;
 
@@ -195,8 +196,6 @@ public class PhoneImpl implements Phone {
     }
 
     private boolean _isRemoteSendingAudio;
-
-    private int _joinedParticipantCount;
 
     private LocusKey _activeCallLocusKey;
 
@@ -772,9 +771,8 @@ public class PhoneImpl implements Phone {
             if (!locusParticipant.getDeviceUrl().equals(_device.getUrl()))
                 events.add(new CallObserver.MembershipJoinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
         }
-        if (!events.isEmpty())
-            sendCallMembershipChanged(call, events);
-
+        sendCallMembershipChanged(call, events);
+        sendJoinedParticipantCountChanged(call);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -860,6 +858,7 @@ public class PhoneImpl implements Phone {
                 events.add(new CallObserver.MembershipLeftEvent(call, new CallMembershipImpl(locusParticipant, call)));
             }
             sendCallMembershipChanged(call, events);
+            sendJoinedParticipantCountChanged(call);
         }
     }
 
@@ -1145,13 +1144,18 @@ public class PhoneImpl implements Phone {
             for (CallMembership membership : call.getMemberships()){
                 if (membership.getPersonId().equals(event.getParticipant().getPerson().getId())) {
                     if (call.getObserver() != null){
-                        if (event.getVid() == 0)
-                            call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, membership));
-                        else if (call.isGroup()){
+                        if (event.getVid() == 0) {
+                            CallMembership old = call.getActiveSpeaker();
+                            if (old == null || !old.getPersonId().equals(membership.getPersonId())) {
+                                call.setActiveSpeaker(membership);
+                                call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, old, membership));
+                            }
+                        } else if (call.isGroup()){
                             RemoteAuxVideoImpl remoteAuxVideo = call.getRemoteAuxVideo(event.getVid());
                             if (remoteAuxVideo != null && (remoteAuxVideo.getPerson() == null || !remoteAuxVideo.getPerson().getPersonId().equals(membership.getPersonId()))) {
+                                CallMembership old = remoteAuxVideo.getPerson();
                                 remoteAuxVideo.setPerson(membership);
-                                call.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxVideoPersonChangedEvent(call, remoteAuxVideo));
+                                call.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxVideoPersonChangedEvent(call, remoteAuxVideo, old, membership));
                             }
                         }
                     }
@@ -1173,8 +1177,9 @@ public class PhoneImpl implements Phone {
                     if (call.getObserver() != null){
                         RemoteAuxVideoImpl remoteAuxVideo = call.getRemoteAuxVideo(event.getVid());
                         if (remoteAuxVideo != null && (remoteAuxVideo.getPerson() == null || !remoteAuxVideo.getPerson().getPersonId().equals(membership.getPersonId()))) {
+                            CallMembership old = remoteAuxVideo.getPerson();
                             remoteAuxVideo.setPerson(membership);
-                            call.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxVideoPersonChangedEvent(call, remoteAuxVideo));
+                            call.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxVideoPersonChangedEvent(call, remoteAuxVideo, old, membership));
                         }
                     }
                     break;
@@ -1189,8 +1194,9 @@ public class PhoneImpl implements Phone {
         if (_activeCallLocusKey == null)
             return;
         CallImpl activeCall = _calls.get(_activeCallLocusKey);
-        if (activeCall != null && activeCall.isGroup() && activeCall.getObserver() != null && event.getMediaId() == MediaEngine.VIDEO_MID) {
-            activeCall.getObserver().onMediaChanged(new CallObserver.RemoteAuxVideosCountChanged(activeCall, event.getCount()));
+        if (activeCall != null && activeCall.isGroup() && event.getMediaId() == MediaEngine.VIDEO_MID) {
+            activeCall.setAvailableMediaCount(event.getCount());
+            sendJoinedParticipantCountChanged(activeCall);
         }
     }
 
@@ -1234,15 +1240,15 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    private void _sendJoinedParticipantCountChanged(CallImpl call){
-        if (call == null || !call.getKey().equals(_activeCallLocusKey))
+    private void sendJoinedParticipantCountChanged(CallImpl call){
+        if (call == null || !call.getKey().equals(_activeCallLocusKey) || !call.isGroup())
             return;
 
-        int count = _callControlService.getLocus(call.getKey()).getFullState().getCount() - 2;
-        Ln.d("Joined Participant Count old: " + _joinedParticipantCount + "  new: " + count);
-        if (call.isGroup() && call.getObserver() != null && count >= 0 && _joinedParticipantCount != count) {
-            _joinedParticipantCount = count;
-//            call.getObserver().onMediaChanged(new CallObserver.RemoteAuxVideosCountChanged(call, _joinedParticipantCount));
+        int min = Math.min(_callControlService.getLocus(call.getKey()).getFullState().getCount() - 2, call.getAvailableMediaCount());
+        Ln.d("sendJoinedParticipantCountChanged old: " + call.getAvailableAuxVideoCount() + "  new: " + min);
+        if (call.getObserver() != null && min >= 0 && call.getAvailableAuxVideoCount() != min) {
+            call.setAvailableAuxVideoCount(min);
+            call.getObserver().onMediaChanged(new CallObserver.RemoteAuxVideosCountChanged(call, min));
         }
     }
 	// ------------------------------------------------------------------------
@@ -1359,7 +1365,6 @@ public class PhoneImpl implements Phone {
             if (call.getKey().equals(_activeCallLocusKey)) {
                 _lostSharingParticipant = null;
                 _currentSharingUri = null;
-                _joinedParticipantCount = 0;
             }
         }
     }
@@ -1400,7 +1405,7 @@ public class PhoneImpl implements Phone {
                         @Override
                         public void surfaceCreated(SurfaceHolder surfaceHolder) {
                             Ln.d("remote surfaceCreated !!!");
-                            if (!_callControlService.isRemoteWindowAttached(key, call.getVideoRenderViews().second))
+                            if (!_callControlService.isRemoteWindowAttached(key, 0, call.getVideoRenderViews().second))
                                 _callControlService.setRemoteWindow(key, call.getVideoRenderViews().second);
                         }
 

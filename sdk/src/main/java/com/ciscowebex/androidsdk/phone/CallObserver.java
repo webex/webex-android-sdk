@@ -608,15 +608,23 @@ public interface CallObserver {
      */
     class ActiveSpeakerChangedEvent extends AbstractCallEvent implements MediaChangedEvent {
         @StringPart
-        private CallMembership _activeSpeaker;
+        private CallMembership _from;
 
-        public ActiveSpeakerChangedEvent(Call call, CallMembership activeSpeaker) {
+        @StringPart
+        private CallMembership _to;
+
+        public ActiveSpeakerChangedEvent(Call call, CallMembership from, CallMembership to) {
             super(call);
-            _activeSpeaker = activeSpeaker;
+            _from = from;
+            _to = to;
         }
 
-        public CallMembership getActiveSpeaker(){
-            return _activeSpeaker;
+        public CallMembership from(){
+            return _from;
+        }
+
+        public CallMembership to(){
+            return _to;
         }
 
         @Override
@@ -779,9 +787,24 @@ public interface CallObserver {
     }
 
     class RemoteAuxVideoPersonChangedEvent extends AbstractRemoteAuxVideoChangeEvent {
+        @StringPart
+        private CallMembership _from;
 
-        public RemoteAuxVideoPersonChangedEvent(Call call, RemoteAuxVideo remoteAuxVideo) {
+        @StringPart
+        private CallMembership _to;
+
+        public RemoteAuxVideoPersonChangedEvent(Call call, RemoteAuxVideo remoteAuxVideo, CallMembership from, CallMembership to) {
             super(call, remoteAuxVideo);
+            _from = from;
+            _to = to;
+        }
+
+        public CallMembership from(){
+            return _from;
+        }
+
+        public CallMembership to(){
+            return _to;
         }
     }
 
