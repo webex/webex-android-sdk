@@ -358,4 +358,6 @@ public interface Call {
     void unsubscribeRemoteAuxVideo(RemoteAuxVideo remoteAuxVideo, @NonNull CompletionHandler<Void> callback);
 
     int getAvailableAuxVideoCount();
+
+    CallMembership getActiveSpeaker();
 }

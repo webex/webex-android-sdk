@@ -127,6 +127,7 @@ public class CallImpl implements Call {
     }
 
     private CallMembership _activeSpeaker;
+    @Override
     public CallMembership getActiveSpeaker(){
         return _activeSpeaker;
     }
