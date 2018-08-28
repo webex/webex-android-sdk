@@ -1214,7 +1214,7 @@ public class PhoneImpl implements Phone {
                             if (call.getObserver() != null)
                                 call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, old, membership));
                         }
-                    } else if (call.isGroup()){
+                    } else if (vid > 0 && call.isGroup()){
                         RemoteAuxVideoImpl remoteAuxVideo = call.getRemoteAuxVideo(vid);
                         if (remoteAuxVideo != null && (remoteAuxVideo.getPerson() == null || !remoteAuxVideo.getPerson().getPersonId().equals(membership.getPersonId()))) {
                             CallMembership old = remoteAuxVideo.getPerson();
@@ -1233,12 +1233,13 @@ public class PhoneImpl implements Phone {
         if (call == null || !call.getKey().equals(_activeCallLocusKey) || !call.isGroup())
             return;
 
-        int min = Math.min(_callControlService.getLocus(call.getKey()).getFullState().getCount() - 3, call.getAvailableMediaCount() - 1);
-        Ln.d("sendJoinedParticipantCountChanged old: " + call.getAvailableAuxVideoCount() + "  new: " + min);
-        if (min >= 0 && call.getAvailableAuxVideoCount() != min) {
-            call.setAvailableAuxVideoCount(min);
+        int oldCount = call.getAvailableAuxVideoCount();
+        int newCount = Math.min(_callControlService.getLocus(call.getKey()).getFullState().getCount() - 3, call.getAvailableMediaCount() - 1);
+        Ln.d("sendJoinedParticipantCountChanged old: " + oldCount + "  new: " + newCount);
+        if (newCount >= 0 && call.getAvailableAuxVideoCount() != newCount) {
+            call.setAvailableAuxVideoCount(newCount);
             if (call.getObserver() != null)
-                call.getObserver().onMediaChanged(new CallObserver.RemoteAuxVideosCountChanged(call, min));
+                call.getObserver().onMediaChanged(new CallObserver.RemoteAuxVideosCountChanged(call, newCount));
         }else if (call.getAvailableMediaCount() == 0 && call.getActiveSpeaker() != null){
             CallMembership old = call.getActiveSpeaker();
             call.setActiveSpeaker(null);
