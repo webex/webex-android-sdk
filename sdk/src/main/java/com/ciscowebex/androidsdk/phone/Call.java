@@ -353,11 +353,27 @@ public interface Call {
      */
     boolean isSendingSharing();
 
-    void subscribeRemoteAuxVideo(View view, @NonNull CompletionHandler<RemoteAuxVideo> callback);
+    void openAuxStream(@NonNull View view);
 
-    void unsubscribeRemoteAuxVideo(RemoteAuxVideo remoteAuxVideo, @NonNull CompletionHandler<Void> callback);
+    void closeAuxStream(@NonNull View view);
 
-    int getAvailableAuxVideoCount();
+    AuxStream getAuxStream(@NonNull View view);
+
+    int getAvailableAuxStreamCount();
+
+    int getOpenedAuxStreamCount();
 
     CallMembership getActiveSpeaker();
+
+    /**
+     * @param observer Observer for the events of this call
+     * @since 2.0
+     */
+    void setMultiStreamObserver(MultiStreamObserver observer);
+
+    /**
+     * @return Observer for the events of this call
+     * @since 2.0
+     */
+    MultiStreamObserver getMultiStreamObserver();
 }

@@ -50,13 +50,15 @@ import com.cisco.spark.android.media.MediaSession;
 import com.cisco.spark.android.sync.operationqueue.SendDtmfOperation;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.WebexError;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.phone.AuxStream;
 import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.phone.CallObserver;
 import com.ciscowebex.androidsdk.phone.MediaOption;
+import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
 import com.ciscowebex.androidsdk.phone.Phone;
-import com.ciscowebex.androidsdk.phone.RemoteAuxVideo;
 import com.github.benoitdion.ln.Ln;
 
 import me.helloworld.utils.Objects;
@@ -104,26 +106,36 @@ public class CallImpl implements Call {
 
     private Pair<View, View> _videoRenderViews;
 
-    private Map<Long, RemoteAuxVideoImpl> _remoteAuxVideoList = new HashMap<>();
-    public RemoteAuxVideoImpl getRemoteAuxVideo(long vid){
-        return _remoteAuxVideoList.get(vid);
+    private List<AuxStreamImpl> _openedAuxStreamList = new ArrayList<>();
+    @Override
+    public int getOpenedAuxStreamCount() {
+        return _openedAuxStreamList.size();
     }
 
-    private int remoteAvailableMediaCount;
-    public void setAvailableMediaCount(int count){
-        remoteAvailableMediaCount = count;
-    }
-    public int getAvailableMediaCount() {
-        return remoteAvailableMediaCount;
+    public AuxStreamImpl getAuxStream(long vid){
+        for (AuxStreamImpl auxStream : _openedAuxStreamList){
+            if (auxStream.getVid() == vid)
+                return auxStream;
+        }
+        return null;
     }
 
-    private int remoteAvailableAuxVideoCount;
-    public void setAvailableAuxVideoCount(int count){
-        remoteAvailableAuxVideoCount = count;
+    @Override
+    public AuxStream getAuxStream(View view){
+        for (AuxStreamImpl auxStream : _openedAuxStreamList){
+            if (auxStream.getRenderView() == view)
+                return auxStream;
+        }
+        return null;
+    }
+
+    private int availableAuxStreamCount;
+    public void setAvailableAuxStreamCount(int count){
+        availableAuxStreamCount = count;
     }
     @Override
-    public int getAvailableAuxVideoCount() {
-        return remoteAvailableAuxVideoCount;
+    public int getAvailableAuxStreamCount() {
+        return availableAuxStreamCount;
     }
 
     private CallMembership _activeSpeaker;
@@ -131,6 +143,18 @@ public class CallImpl implements Call {
     public CallMembership getActiveSpeaker(){
         return _activeSpeaker;
     }
+
+    private MultiStreamObserver _multiStreamObserver;
+    @Override
+    public void setMultiStreamObserver(MultiStreamObserver observer) {
+        _multiStreamObserver = observer;
+    }
+
+    @Override
+    public MultiStreamObserver getMultiStreamObserver() {
+        return _multiStreamObserver;
+    }
+
     public void setActiveSpeaker(CallMembership person){
         _activeSpeaker = person;
     }
@@ -286,46 +310,77 @@ public class CallImpl implements Call {
     }
 
     @Override
-    public void subscribeRemoteAuxVideo(View view, @NonNull CompletionHandler<RemoteAuxVideo> callback) {
-        long vid = _phone.getCallService().subscribeRemoteAuxVideo(getKey(), view);
-        if (vid >= 0){
-            RemoteAuxVideoImpl remoteAuxVideo = new RemoteAuxVideoImpl(getKey(), _phone, vid, view);
-            _remoteAuxVideoList.put(vid, remoteAuxVideo);
-            if (view instanceof SurfaceView){
-                ((SurfaceView)view).getHolder().addCallback(new SurfaceHolder.Callback() {
-                    @Override
-                    public void surfaceCreated(SurfaceHolder surfaceHolder) {
-                        Ln.d("remote surfaceCreated vid: " + vid);
-                        if (!_phone.getCallService().isRemoteWindowAttached(_key, vid, view))
-                            _phone.getCallService().setRemoteWindowForVid(_key, vid, view);
-                    }
-
-                    @Override
-                    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-                        Ln.d("remote surfaceChanged vid: " + vid);
-                    }
-
-                    @Override
-                    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-                        Ln.d("remote surfaceDestroyed vid: " + vid);
-                        _phone.getHandler().post(() -> _phone.getCallService().removeRemoteWindowForVid(_key, vid, view));
-                    }
-                });
-            }
-            callback.onComplete(ResultImpl.success(remoteAuxVideo));
-        }else{
-            callback.onComplete(ResultImpl.error("Subscribe remote aux video error"));
+    public void openAuxStream(@NonNull View view) {
+        String error = null;
+        if (getOpenedAuxStreamCount() >= availableAuxStreamCount || getOpenedAuxStreamCount() >= MediaEngine.MAX_NUMBER_STREAMS){
+            error = "Reach maximum count";
         }
+
+        if (getAuxStream(view) != null){
+            error = "This view has been used";
+        }
+
+        if (!isGroup()){
+            error = "Only can be used for group call";
+        }
+
+        if (error == null) {
+            long vid = _phone.getCallService().subscribeRemoteAuxVideo(getKey(), view);
+            Ln.d("openAuxStream vid: " + vid);
+            if (vid >= 0) {
+                AuxStreamImpl auxStream = new AuxStreamImpl(getKey(), _phone, vid, view);
+                _openedAuxStreamList.add(auxStream);
+                if (view instanceof SurfaceView) {
+                    ((SurfaceView) view).getHolder().addCallback(new SurfaceHolder.Callback() {
+                        @Override
+                        public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                            Ln.d("remote surfaceCreated vid: " + vid);
+                            if (!_phone.getCallService().isRemoteWindowAttached(_key, vid, view))
+                                _phone.getCallService().setRemoteWindowForVid(_key, vid, view);
+                        }
+
+                        @Override
+                        public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                            Ln.d("remote surfaceChanged vid: " + vid);
+                        }
+
+                        @Override
+                        public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                            Ln.d("remote surfaceDestroyed vid: " + vid);
+                            _phone.getHandler().post(() -> _phone.getCallService().removeRemoteWindowForVid(_key, vid, view));
+                        }
+                    });
+                }
+            } else {
+                error = "Open aux stream error";
+            }
+        }
+
+        if (_multiStreamObserver != null)
+            _multiStreamObserver.onAuxStreamChanged(new MultiStreamObserver.AuxStreamOpenedEvent(this, view, error));
     }
 
     @Override
-    public void unsubscribeRemoteAuxVideo(RemoteAuxVideo remoteAuxVideo, @NonNull CompletionHandler<Void> callback) {
-        if (remoteAuxVideo != null && _phone.getCallService().unsubscribeRemoteAuxVideo(getKey(), remoteAuxVideo.getVid())){
-            _remoteAuxVideoList.remove(remoteAuxVideo.getVid());
-            callback.onComplete(ResultImpl.success(null));
+    public void closeAuxStream(@NonNull View view) {
+        closeAuxStream(getAuxStream(view));
+    }
+
+    public void closeAuxStream(AuxStream auxStream) {
+        Ln.d("closeAuxStream auxStream: " + auxStream);
+        String error = null;
+        if (auxStream != null && _phone.getCallService().unsubscribeRemoteAuxVideo(getKey(), ((AuxStreamImpl) auxStream).getVid())){
+            _openedAuxStreamList.remove(auxStream);
         }else{
-            callback.onComplete(ResultImpl.error("Unsubscribe remote aux video error"));
+            error = "Close aux stream error";
         }
+
+        if (_multiStreamObserver != null)
+            _multiStreamObserver.onAuxStreamChanged(new MultiStreamObserver.AuxStreamClosedEvent(this, auxStream.getRenderView(), error));
+    }
+
+    public void closeAuxStream(){
+        if (getOpenedAuxStreamCount() > availableAuxStreamCount)
+            closeAuxStream(_openedAuxStreamList.get(_openedAuxStreamList.size() - 1));
     }
 
     public boolean isSendingVideo() {

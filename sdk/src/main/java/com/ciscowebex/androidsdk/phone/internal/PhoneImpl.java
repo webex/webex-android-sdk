@@ -39,7 +39,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Base64;
-import android.util.Size;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -108,13 +107,14 @@ import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.AcquirePermissionActivity;
 import com.ciscowebex.androidsdk.internal.MetricsClient;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
-import com.ciscowebex.androidsdk.membership.Membership;
 import com.ciscowebex.androidsdk.people.Person;
 import com.ciscowebex.androidsdk.people.internal.PersonClientImpl;
+import com.ciscowebex.androidsdk.phone.AuxStream;
 import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.phone.CallObserver;
 import com.ciscowebex.androidsdk.phone.MediaOption;
+import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
 import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
@@ -198,6 +198,8 @@ public class PhoneImpl implements Phone {
     private boolean _isRemoteSendingAudio;
 
     private LocusKey _activeCallLocusKey;
+
+    private int _availableMediaCount;
 
     private int audioMaxBandwidth = DefaultBandwidth.MAX_BANDWIDTH_AUDIO.getValue();
 
@@ -1122,11 +1124,11 @@ public class PhoneImpl implements Phone {
             switch (event.getMediaId()) {
                 case MediaEngine.VIDEO_MID:
                     // If 'blocked' is changed, publish blocked change event.
-                    RemoteAuxVideoImpl remoteAuxVideo = activeCall.getRemoteAuxVideo(event.getVideoId());
-                    if (remoteAuxVideo != null && remoteAuxVideo.isSendingVideo() == event.isBlocked()) {
-                        remoteAuxVideo.setSendingVideo(!event.isBlocked());
-                        if (activeCall.getObserver() != null)
-                            activeCall.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxSendingVideoEvent(activeCall, remoteAuxVideo));
+                    AuxStreamImpl auxStream = activeCall.getAuxStream(event.getVideoId());
+                    if (auxStream != null && auxStream.isSendingVideo() == event.isBlocked()) {
+                        auxStream.setSendingVideo(!event.isBlocked());
+                        if (activeCall.getMultiStreamObserver() != null)
+                            activeCall.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamSendingVideoEvent(activeCall, auxStream));
                     }
                     break;
                 case MediaEngine.SHARE_MID:
@@ -1157,7 +1159,7 @@ public class PhoneImpl implements Phone {
             return;
         CallImpl activeCall = _calls.get(_activeCallLocusKey);
         if (activeCall != null && activeCall.isGroup() && event.getMediaId() == MediaEngine.VIDEO_MID) {
-            activeCall.setAvailableMediaCount(event.getCount());
+            _availableMediaCount = event.getCount();
             sendJoinedParticipantCountChanged(activeCall);
         }
     }
@@ -1171,32 +1173,14 @@ public class PhoneImpl implements Phone {
         if (activeCall != null && activeCall.isGroup()) {
             switch (event.getMediaId()) {
                 case MediaEngine.VIDEO_MID:
-                    RemoteAuxVideoImpl remoteAuxVideo = activeCall.getRemoteAuxVideo(event.getVideoId());
-                    if (remoteAuxVideo != null) {
-                        remoteAuxVideo.setAuxVideoSize(event.getSize());
-                        if (activeCall.getObserver() != null)
-                            activeCall.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxVideoSizeChangedEvent(activeCall, remoteAuxVideo));
+                    AuxStreamImpl auxStream = activeCall.getAuxStream(event.getVideoId());
+                    if (auxStream != null) {
+                        auxStream.setSize(event.getSize());
+                        if (activeCall.getMultiStreamObserver() != null)
+                            activeCall.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamSizeChangedEvent(activeCall, auxStream));
                     }
                     break;
                 case MediaEngine.SHARE_MID:
-                    break;
-            }
-        }
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(MediaMutedChangeEvent event) {
-        Ln.d("CallControlMediaDecodeSizeChangedEvent is received  vid: " + event.getVideoId() + "  mute: " + event.isMuted());
-        if (_activeCallLocusKey == null)
-            return;
-        CallImpl activeCall = _calls.get(_activeCallLocusKey);
-        if (activeCall != null && activeCall.isGroup()) {
-            switch (event.getMediaId()) {
-                case MediaEngine.VIDEO_MID:
-                    RemoteAuxVideoImpl remoteAuxVideo = activeCall.getRemoteAuxVideo(event.getVideoId());
-                    if (remoteAuxVideo != null && activeCall.getObserver() != null) {
-                        activeCall.getObserver().onRemoteAuxVideoChanged(new CallObserver.ReceivingAuxVideoEvent(activeCall, remoteAuxVideo));
-                    }
                     break;
             }
         }
@@ -1215,12 +1199,12 @@ public class PhoneImpl implements Phone {
                                 call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, old, membership));
                         }
                     } else if (vid > 0 && call.isGroup()){
-                        RemoteAuxVideoImpl remoteAuxVideo = call.getRemoteAuxVideo(vid);
-                        if (remoteAuxVideo != null && (remoteAuxVideo.getPerson() == null || !remoteAuxVideo.getPerson().getPersonId().equals(membership.getPersonId()))) {
-                            CallMembership old = remoteAuxVideo.getPerson();
-                            remoteAuxVideo.setPerson(membership);
-                            if (call.getObserver() != null)
-                                call.getObserver().onRemoteAuxVideoChanged(new CallObserver.RemoteAuxVideoPersonChangedEvent(call, remoteAuxVideo, old, membership));
+                        AuxStreamImpl auxStream = call.getAuxStream(vid);
+                        if (auxStream != null && (auxStream.getPerson() == null || !auxStream.getPerson().getPersonId().equals(membership.getPersonId()))) {
+                            CallMembership old = auxStream.getPerson();
+                            auxStream.setPerson(membership);
+                            if (call.getMultiStreamObserver() != null)
+                                call.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamPersonChangedEvent(call, auxStream, old, membership));
                         }
                     }
                     break;
@@ -1233,14 +1217,34 @@ public class PhoneImpl implements Phone {
         if (call == null || !call.getKey().equals(_activeCallLocusKey) || !call.isGroup())
             return;
 
-        int oldCount = call.getAvailableAuxVideoCount();
-        int newCount = Math.min(_callControlService.getLocus(call.getKey()).getFullState().getCount() - 3, call.getAvailableMediaCount() - 1);
+        int oldCount = call.getAvailableAuxStreamCount();
+        int newCount = Math.min(Math.min(_callControlService.getLocus(call.getKey()).getFullState().getCount() - 3, _availableMediaCount - 1), MediaEngine.MAX_NUMBER_STREAMS);
         Ln.d("sendJoinedParticipantCountChanged old: " + oldCount + "  new: " + newCount);
-        if (newCount >= 0 && call.getAvailableAuxVideoCount() != newCount) {
-            call.setAvailableAuxVideoCount(newCount);
-            if (call.getObserver() != null)
-                call.getObserver().onMediaChanged(new CallObserver.RemoteAuxVideosCountChanged(call, newCount));
-        }else if (call.getAvailableMediaCount() == 0 && call.getActiveSpeaker() != null){
+        if (newCount >= 0 && oldCount != newCount) {
+            call.setAvailableAuxStreamCount(newCount);
+            if (newCount > oldCount && call.getMultiStreamObserver() != null) {
+                for (int i = oldCount; i < newCount; i++) {
+                    View view = call.getMultiStreamObserver().onAuxStreamAvailable();
+                    if (view != null){
+                        call.openAuxStream(view);
+                    }
+                }
+            } else if (newCount < oldCount){
+                for (int i = oldCount; i > newCount; i--) {
+                    if (call.getMultiStreamObserver() != null) {
+                        View view = call.getMultiStreamObserver().onAuxStreamUnavailable();
+                        AuxStream auxStream = call.getAuxStream(view);
+                        if (auxStream != null) {
+                            call.closeAuxStream(auxStream);
+                        } else {
+                            call.closeAuxStream();
+                        }
+                    }else{
+                        call.closeAuxStream();
+                    }
+                }
+            }
+        } else if (_availableMediaCount == 0 && call.getActiveSpeaker() != null){
             CallMembership old = call.getActiveSpeaker();
             call.setActiveSpeaker(null);
             if (call.getObserver() != null)

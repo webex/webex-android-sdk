@@ -4,20 +4,17 @@ package com.ciscowebex.androidsdk.phone.internal;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Size;
 import android.view.View;
 
 import com.cisco.spark.android.locus.model.LocusKey;
-import com.ciscowebex.androidsdk.membership.Membership;
-import com.ciscowebex.androidsdk.people.Person;
 import com.ciscowebex.androidsdk.phone.CallMembership;
-import com.ciscowebex.androidsdk.phone.RemoteAuxVideo;
+import com.ciscowebex.androidsdk.phone.AuxStream;
 
 /**
  * Created by qimdeng on 8/8/18.
  */
 
-public class RemoteAuxVideoImpl implements RemoteAuxVideo {
+public class AuxStreamImpl implements AuxStream {
     private @NonNull
     LocusKey _key;
 
@@ -29,41 +26,26 @@ public class RemoteAuxVideoImpl implements RemoteAuxVideo {
 
     private boolean isSendingVideo;
 
-    private boolean isReceivingVideo = true;
-
     private CallMembership _person;
 
     private Rect _size;
 
-    RemoteAuxVideoImpl(@NonNull LocusKey key, @NonNull PhoneImpl phone, @NonNull long vid, @Nullable View view)  {
+    AuxStreamImpl(@NonNull LocusKey key, @NonNull PhoneImpl phone, @NonNull long vid, @Nullable View view)  {
         _key = key;
         _phone = phone;
         _vid = vid;
         _renderView = view;
     }
 
+    public long getVid(){return _vid;}
+
     @Override
-    public long getVid() {
-        return _vid;
+    public View getRenderView() {
+        return _renderView;
     }
 
     @Override
-    public void addRenderView(View view){
-        if (_renderView == null){
-            _renderView = view;
-            _phone.getCallService().setRemoteWindowForVid(_key, _vid, view);
-        }
-    }
-
-    @Override
-    public void removeRenderView(){
-        if (_renderView != null){
-            _phone.getCallService().removeRemoteWindowForVid(_key, _vid, _renderView);
-        }
-    }
-
-    @Override
-    public void updateRenderView() {
+    public void refresh() {
         if (_renderView != null){
             _phone.getCallService().updateRemoteWindowForVid(_key, _vid, _renderView);
         }
@@ -79,22 +61,11 @@ public class RemoteAuxVideoImpl implements RemoteAuxVideo {
     }
 
     @Override
-    public boolean isReceivingVideo() {
-        return isReceivingVideo;
-    }
-
-    @Override
-    public void setReceivingVideo(boolean isReceiving){
-        isReceivingVideo = isReceiving;
-        _phone.getCallService().muteRemoteVideoForVid(_key, _vid, !isReceiving);
-    }
-
-    @Override
-    public Rect getAuxVideoSize() {
+    public Rect getSize() {
         return _size;
     }
 
-    public void setAuxVideoSize(Rect size){
+    public void setSize(Rect size){
         _size = size;
     }
 
