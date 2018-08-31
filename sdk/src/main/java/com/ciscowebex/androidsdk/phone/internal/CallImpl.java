@@ -280,13 +280,7 @@ public class CallImpl implements Call {
     }
 
     public boolean isRemoteSendingVideo() {
-        for (LocusParticipant p : getRemoteParticipants()) {
-            if (p.getState() == LocusParticipant.State.JOINED
-                    && p.getStatus().getVideoStatus().equals(MediaDirection.SENDONLY) || p.getStatus().getVideoStatus().equals(MediaDirection.SENDRECV)) {
-                return true;
-            }
-        }
-        return false;
+        return _phone.getRemoteSendingVideo();
     }
 
     public boolean isRemoteSendingAudio() {
@@ -645,7 +639,6 @@ public class CallImpl implements Call {
         if (observer != null) {
             observer.onMediaChanged(mediaEvent);
         }
-        _phone.setRemoteSendingVideo(isRemoteSendingVideo());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -692,15 +685,21 @@ public class CallImpl implements Call {
     }
 
     private List<LocusParticipant> getParticipants() {
+        List<LocusParticipant> participants = new ArrayList<>();
         LocusData locusData = _phone.getCallService().getLocusData(getKey());
         if (locusData == null) {
-            return new ArrayList<>(0);
+            return participants;
         }
         Locus locus = locusData.getLocus();
         if (locus == null) {
-            return new ArrayList<>(0);
+            return participants;
         }
-        return locus.getParticipants();
+        for(LocusParticipant p : locus.getParticipants()){
+            if (p.getType() == LocusParticipant.Type.USER || p.getType() == LocusParticipant.Type.RESOURCE_ROOM){
+                participants.add(p);
+            }
+        }
+        return participants;
     }
 
     protected List<LocusParticipant> getRemoteParticipants() {
