@@ -93,7 +93,6 @@ import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaSession;
 import com.cisco.spark.android.media.events.AvailableMediaChangeEvent;
 import com.cisco.spark.android.media.events.MediaBlockedChangeEvent;
-import com.cisco.spark.android.media.events.MediaMutedChangeEvent;
 import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.sync.operationqueue.core.Operations;
 import com.cisco.spark.android.sync.queue.ConversationSyncQueue;
