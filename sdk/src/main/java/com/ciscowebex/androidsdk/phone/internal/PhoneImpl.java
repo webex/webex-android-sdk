@@ -1365,6 +1365,7 @@ public class PhoneImpl implements Phone {
             if (call.getKey().equals(_activeCallLocusKey)) {
                 _lostSharingParticipant = null;
                 _currentSharingUri = null;
+                _availableMediaCount = 0;
             }
         }
     }
