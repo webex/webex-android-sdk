@@ -51,7 +51,6 @@ import com.ciscowebex.androidsdk.utils.log.NoLn;
 import com.ciscowebex.androidsdk.utils.log.WarningLn;
 import com.ciscowebex.androidsdk.webhook.WebhookClient;
 import com.ciscowebex.androidsdk.webhook.internal.WebhookClientImpl;
-import com.ciscowebex.androidsdk_commlib.BuildConfig;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.DebugLn;
 import com.github.benoitdion.ln.InfoLn;
