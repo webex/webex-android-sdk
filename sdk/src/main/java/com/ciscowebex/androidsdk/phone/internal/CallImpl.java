@@ -50,7 +50,6 @@ import com.cisco.spark.android.media.MediaSession;
 import com.cisco.spark.android.sync.operationqueue.SendDtmfOperation;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.WebexError;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.phone.AuxStream;
 import com.ciscowebex.androidsdk.phone.Call;
@@ -356,10 +355,10 @@ public class CallImpl implements Call {
 
     @Override
     public void closeAuxStream(@NonNull View view) {
-        closeAuxStream(getAuxStream(view));
+        closeAuxStream(getAuxStream(view), view);
     }
 
-    public void closeAuxStream(AuxStream auxStream) {
+    public void closeAuxStream(AuxStream auxStream, View view) {
         Ln.d("closeAuxStream auxStream: " + auxStream);
         String error = null;
         if (auxStream != null && _phone.getCallService().unsubscribeRemoteAuxVideo(getKey(), ((AuxStreamImpl) auxStream).getVid())){
@@ -369,12 +368,14 @@ public class CallImpl implements Call {
         }
 
         if (_multiStreamObserver != null)
-            _multiStreamObserver.onAuxStreamChanged(new MultiStreamObserver.AuxStreamClosedEvent(this, auxStream.getRenderView(), error));
+            _multiStreamObserver.onAuxStreamChanged(new MultiStreamObserver.AuxStreamClosedEvent(this, view, error));
     }
 
     public void closeAuxStream(){
-        if (getOpenedAuxStreamCount() > availableAuxStreamCount)
-            closeAuxStream(_openedAuxStreamList.get(_openedAuxStreamList.size() - 1));
+        if (getOpenedAuxStreamCount() > availableAuxStreamCount) {
+            AuxStream auxStream = _openedAuxStreamList.get(_openedAuxStreamList.size() - 1);
+            closeAuxStream(auxStream, auxStream.getRenderView());
+        }
     }
 
     public boolean isSendingVideo() {

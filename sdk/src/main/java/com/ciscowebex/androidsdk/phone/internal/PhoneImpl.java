@@ -1132,6 +1132,8 @@ public class PhoneImpl implements Phone {
                 case MediaEngine.SHARE_MID:
                     // If 'blocked' is changed, publish blocked change event.
                     break;
+                default:
+                    break;
             }
         }
     }
@@ -1180,33 +1182,36 @@ public class PhoneImpl implements Phone {
                     break;
                 case MediaEngine.SHARE_MID:
                     break;
+                default:
+                    break;
             }
         }
     }
 
     private void sendParticipantChanged(CallImpl call, LocusParticipant participant, long vid){
         Ln.d("sendParticipantChanged: " + call + "  person: " + participant);
-        if (call != null){
-            for (CallMembership membership : call.getMemberships()){
-                if (membership.getPersonId().equals(participant.getPerson().getId())) {
-                    if (vid == 0) {
-                        CallMembership old = call.getActiveSpeaker();
-                        if (old == null || !old.getPersonId().equals(membership.getPersonId())) {
-                            call.setActiveSpeaker(membership);
-                            if (call.getObserver() != null)
-                                call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, old, membership));
-                        }
-                    } else if (vid > 0 && call.isGroup()){
-                        AuxStreamImpl auxStream = call.getAuxStream(vid);
-                        if (auxStream != null && (auxStream.getPerson() == null || !auxStream.getPerson().getPersonId().equals(membership.getPersonId()))) {
-                            CallMembership old = auxStream.getPerson();
-                            auxStream.setPerson(membership);
-                            if (call.getMultiStreamObserver() != null)
-                                call.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamPersonChangedEvent(call, auxStream, old, membership));
-                        }
+        if (call == null)
+            return;
+
+        for (CallMembership membership : call.getMemberships()){
+            if (membership.getPersonId().equals(participant.getPerson().getId())) {
+                if (vid == 0) {
+                    CallMembership old = call.getActiveSpeaker();
+                    if (old == null || !old.getPersonId().equals(membership.getPersonId())) {
+                        call.setActiveSpeaker(membership);
+                        if (call.getObserver() != null)
+                            call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, old, membership));
                     }
-                    break;
+                } else if (vid > 0 && call.isGroup()){
+                    AuxStreamImpl auxStream = call.getAuxStream(vid);
+                    if (auxStream != null && (auxStream.getPerson() == null || !auxStream.getPerson().getPersonId().equals(membership.getPersonId()))) {
+                        CallMembership old = auxStream.getPerson();
+                        auxStream.setPerson(membership);
+                        if (call.getMultiStreamObserver() != null)
+                            call.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamPersonChangedEvent(call, auxStream, old, membership));
+                    }
                 }
+                break;
             }
         }
     }
@@ -1220,7 +1225,12 @@ public class PhoneImpl implements Phone {
         Ln.d("sendJoinedParticipantCountChanged old: " + oldCount + "  new: " + newCount);
         if (newCount >= 0 && oldCount != newCount) {
             call.setAvailableAuxStreamCount(newCount);
-            if (newCount > oldCount && call.getMultiStreamObserver() != null) {
+            if (call.getMultiStreamObserver() == null) {
+                int maxCount = Math.min(oldCount, MediaEngine.MAX_NUMBER_STREAMS);
+                for (int i = maxCount; i > newCount; i--) {
+                    call.closeAuxStream();
+                }
+            } else if (newCount > oldCount) {
                 int maxCount = Math.min(newCount, MediaEngine.MAX_NUMBER_STREAMS);
                 for (int i = oldCount; i < maxCount; i++) {
                     View view = call.getMultiStreamObserver().onAuxStreamAvailable();
@@ -1231,15 +1241,11 @@ public class PhoneImpl implements Phone {
             } else if (newCount < oldCount){
                 int maxCount = Math.min(oldCount, MediaEngine.MAX_NUMBER_STREAMS);
                 for (int i = maxCount; i > newCount; i--) {
-                    if (call.getMultiStreamObserver() != null) {
-                        View view = call.getMultiStreamObserver().onAuxStreamUnavailable();
-                        AuxStream auxStream = call.getAuxStream(view);
-                        if (auxStream != null) {
-                            call.closeAuxStream(auxStream);
-                        } else {
-                            call.closeAuxStream();
-                        }
-                    }else{
+                    View view = call.getMultiStreamObserver().onAuxStreamUnavailable();
+                    AuxStream auxStream = call.getAuxStream(view);
+                    if (auxStream != null) {
+                        call.closeAuxStream(auxStream, view);
+                    } else {
                         call.closeAuxStream();
                     }
                 }

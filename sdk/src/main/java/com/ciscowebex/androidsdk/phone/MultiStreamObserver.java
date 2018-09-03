@@ -2,9 +2,7 @@ package com.ciscowebex.androidsdk.phone;
 
 import android.view.View;
 
-import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.WebexError;
-import com.ciscowebex.androidsdk.internal.ResultImpl;
 
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
