@@ -1244,7 +1244,7 @@ public class PhoneImpl implements Phone {
                     View view = call.getMultiStreamObserver().onAuxStreamAvailable();
                     call.openAuxStream(view);
                 }
-            } else if (newCount < oldCount){
+            } else {
                 int maxCount = Math.min(oldCount, MediaEngine.MAX_NUMBER_STREAMS);
                 for (int i = maxCount; i > newCount; i--) {
                     View view = call.getMultiStreamObserver().onAuxStreamUnavailable();
