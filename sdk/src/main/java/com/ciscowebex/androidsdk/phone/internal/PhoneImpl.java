@@ -773,7 +773,7 @@ public class PhoneImpl implements Phone {
                 events.add(new CallObserver.MembershipJoinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
         }
         sendCallMembershipChanged(call, events);
-        sendJoinedParticipantCountChanged(call);
+        onJoinedParticipantCountChanged(call);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -859,7 +859,7 @@ public class PhoneImpl implements Phone {
                 events.add(new CallObserver.MembershipLeftEvent(call, new CallMembershipImpl(locusParticipant, call)));
             }
             sendCallMembershipChanged(call, events);
-            sendJoinedParticipantCountChanged(call);
+            onJoinedParticipantCountChanged(call);
         }
     }
 
@@ -1141,7 +1141,7 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlActiveSpeakerChangedEvent event) {
         Ln.d("CallControlActiveSpeakerChangedEvent is received vid: " + event.getVid() + "   participant: " + event.getParticipant());
-        sendParticipantChanged(_calls.get(event.getCall().getKey()), event.getParticipant(), event.getVid());
+        onParticipantChanged(_calls.get(event.getCall().getKey()), event.getParticipant(), event.getVid());
     }
 
 
@@ -1149,7 +1149,7 @@ public class PhoneImpl implements Phone {
     public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
         Ln.d("CallControlParticipantVideoMutedEvent is received  participant: " + event.getParticipant().getPerson().getDisplayName() +
                 "  vid: " + event.getVid() + "  mute: " + event.isMuted());
-        sendParticipantChanged(_calls.get(event.getLocusKey()), event.getParticipant(), event.getVid());
+        onParticipantChanged(_calls.get(event.getLocusKey()), event.getParticipant(), event.getVid());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1160,7 +1160,7 @@ public class PhoneImpl implements Phone {
         CallImpl activeCall = _calls.get(_activeCallLocusKey);
         if (activeCall != null && activeCall.isGroup() && event.getMediaId() == MediaEngine.VIDEO_MID) {
             _availableMediaCount = event.getCount();
-            sendJoinedParticipantCountChanged(activeCall);
+            onJoinedParticipantCountChanged(activeCall);
         }
     }
 
@@ -1188,7 +1188,7 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    private void sendParticipantChanged(CallImpl call, LocusParticipant participant, long vid){
+    private void onParticipantChanged(CallImpl call, LocusParticipant participant, long vid){
         Ln.d("sendParticipantChanged: " + call + "  person: " + participant);
         if (call == null)
             return;
@@ -1199,16 +1199,14 @@ public class PhoneImpl implements Phone {
                     CallMembership old = call.getActiveSpeaker();
                     if (old == null || !old.getPersonId().equals(membership.getPersonId())) {
                         call.setActiveSpeaker(membership);
-                        if (call.getObserver() != null)
-                            call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, old, membership));
+                        sendActiveSpeakerChanged(call, old);
                     }
                 } else if (vid > 0 && call.isGroup()){
                     AuxStreamImpl auxStream = call.getAuxStream(vid);
                     if (auxStream != null && (auxStream.getPerson() == null || !auxStream.getPerson().getPersonId().equals(membership.getPersonId()))) {
                         CallMembership old = auxStream.getPerson();
                         auxStream.setPerson(membership);
-                        if (call.getMultiStreamObserver() != null)
-                            call.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamPersonChangedEvent(call, auxStream, old, membership));
+                        sendAuxStreamPersonChanged(call, auxStream, old);
                     }
                 }
                 break;
@@ -1216,7 +1214,17 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    private void sendJoinedParticipantCountChanged(CallImpl call){
+    private void sendActiveSpeakerChanged(CallImpl call, CallMembership callMembership){
+        if (call != null && call.getObserver() != null)
+            call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, callMembership, call.getActiveSpeaker()));
+    }
+
+    private void sendAuxStreamPersonChanged(CallImpl call, AuxStreamImpl auxStream, CallMembership callMembership){
+        if (call != null && call.getMultiStreamObserver() != null && auxStream != null)
+            call.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamPersonChangedEvent(call, auxStream, callMembership, auxStream.getPerson()));
+    }
+
+    private void onJoinedParticipantCountChanged(CallImpl call){
         if (call == null || !call.getKey().equals(_activeCallLocusKey) || !call.isGroup())
             return;
 
@@ -1234,9 +1242,7 @@ public class PhoneImpl implements Phone {
                 int maxCount = Math.min(newCount, MediaEngine.MAX_NUMBER_STREAMS);
                 for (int i = oldCount; i < maxCount; i++) {
                     View view = call.getMultiStreamObserver().onAuxStreamAvailable();
-                    if (view != null){
-                        call.openAuxStream(view);
-                    }
+                    call.openAuxStream(view);
                 }
             } else if (newCount < oldCount){
                 int maxCount = Math.min(oldCount, MediaEngine.MAX_NUMBER_STREAMS);
@@ -1253,8 +1259,7 @@ public class PhoneImpl implements Phone {
         } else if (_availableMediaCount == 0 && call.getActiveSpeaker() != null){
             CallMembership old = call.getActiveSpeaker();
             call.setActiveSpeaker(null);
-            if (call.getObserver() != null)
-                call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, old, null));
+            sendActiveSpeakerChanged(call, old);
         }
     }
 	// ------------------------------------------------------------------------
