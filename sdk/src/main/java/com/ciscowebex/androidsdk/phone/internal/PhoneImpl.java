@@ -1234,24 +1234,22 @@ public class PhoneImpl implements Phone {
         int oldCount = call.getAvailableAuxStreamCount();
         int newCount = Math.min(_callControlService.getLocus(call.getKey()).getFullState().getCount() - 3, _availableMediaCount - 1);
         Ln.d("sendJoinedParticipantCountChanged old: " + oldCount + "  new: " + newCount);
+        newCount = Math.min(newCount, MediaEngine.MAX_NUMBER_STREAMS);
         if (newCount >= 0 && oldCount != newCount) {
             call.setAvailableAuxStreamCount(newCount);
             if (call.getMultiStreamObserver() == null) {
-                int maxCount = Math.min(oldCount, MediaEngine.MAX_NUMBER_STREAMS);
-                for (int i = maxCount; i > newCount; i--) {
+                for (int i = oldCount; i > newCount; i--) {
                     call.closeAuxStream();
                 }
             } else if (newCount > oldCount) {
-                int maxCount = Math.min(newCount, MediaEngine.MAX_NUMBER_STREAMS);
-                for (int i = oldCount; i < maxCount; i++) {
+                for (int i = oldCount; i < newCount; i++) {
                     View view = call.getMultiStreamObserver().onAuxStreamAvailable();
                     if (view != null) {
                         call.openAuxStream(view);
                     }
                 }
             } else {
-                int maxCount = Math.min(oldCount, MediaEngine.MAX_NUMBER_STREAMS);
-                for (int i = maxCount; i > newCount; i--) {
+                for (int i = oldCount; i > newCount; i--) {
                     View view = call.getMultiStreamObserver().onAuxStreamUnavailable();
                     AuxStream auxStream = call.getAuxStream(view);
                     if (auxStream != null) {
