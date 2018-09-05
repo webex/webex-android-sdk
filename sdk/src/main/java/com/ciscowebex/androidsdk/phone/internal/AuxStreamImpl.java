@@ -56,6 +56,14 @@ public class AuxStreamImpl implements AuxStream {
         return isSendingVideo;
     }
 
+    @Override
+    public void close() {
+        CallImpl call = _phone.getCall(_key);
+        if (call != null){
+            call.closeAuxStream(this, _renderView);
+        }
+    }
+
     public void setSendingVideo(boolean isSending){
         isSendingVideo = isSending;
     }

@@ -168,6 +168,9 @@ public class PhoneImpl implements Phone {
     private CompletionHandler<Void> _registerCallback;
 
     private Map<LocusKey, CallImpl> _calls = new HashMap<>();
+    public CallImpl getCall(LocusKey key){
+        return _calls.get(key);
+    }
 
     private CompletionHandler<Call> _dialCallback;
 
@@ -1242,7 +1245,9 @@ public class PhoneImpl implements Phone {
                 int maxCount = Math.min(newCount, MediaEngine.MAX_NUMBER_STREAMS);
                 for (int i = oldCount; i < maxCount; i++) {
                     View view = call.getMultiStreamObserver().onAuxStreamAvailable();
-                    call.openAuxStream(view);
+                    if (view != null) {
+                        call.openAuxStream(view);
+                    }
                 }
             } else {
                 int maxCount = Math.min(oldCount, MediaEngine.MAX_NUMBER_STREAMS);
