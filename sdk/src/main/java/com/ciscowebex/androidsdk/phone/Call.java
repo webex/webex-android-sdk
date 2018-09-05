@@ -353,27 +353,64 @@ public interface Call {
      */
     boolean isSendingSharing();
 
+    /**
+     * Open a new auxiliary stream with a view. The Maximum of auxiliary streams can be opened is 4 currently.
+     * You can invoke this API instead of {@link MultiStreamObserver#onAuxStreamAvailable} to open an available auxiliary stream
+     *
+     * @param view the view to be rendering upon an auxiliary stream
+     * @since 2.0.0
+     */
     void openAuxStream(@NonNull View view);
 
+    /**
+     * Close the indicated auxiliary stream.
+     * You can invoke this API instead of {@link MultiStreamObserver#onAuxStreamUnavailable} to close an opened auxiliary stream
+     *
+     * @param view the view rendering upon an auxiliary stream
+     * @since 2.0.0
+     */
     void closeAuxStream(@NonNull View view);
 
+    /**
+     * Get an indicated auxiliary stream.
+     *
+     * @param view the view rendering upon an auxiliary stream
+     * @since 2.0.0
+     */
     AuxStream getAuxStream(@NonNull View view);
 
+    /**
+     * Get the count of current available auxiliary streams
+     *
+     * @since 2.0.0
+     */
     int getAvailableAuxStreamCount();
 
+    /**
+     * Get the count of already opened auxiliary streams
+     *
+     * @since 2.0.0
+     */
     int getOpenedAuxStreamCount();
 
+    /**
+     * Get the current active speaker
+     *
+     * @since 2.0.0
+     */
     CallMembership getActiveSpeaker();
 
     /**
-     * @param observer Observer for the events of this call
-     * @since 2.0
+     * Set the observer for the events of multi-stream in this call
+     *
+     * @since 2.0.0
      */
     void setMultiStreamObserver(MultiStreamObserver observer);
 
     /**
-     * @return Observer for the events of this call
-     * @since 2.0
+     * Get the observer for the events of multi-stream in this call
+     *
+     * @since 2.0.0
      */
     MultiStreamObserver getMultiStreamObserver();
 }

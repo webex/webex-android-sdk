@@ -304,6 +304,7 @@ public class CallImpl implements Call {
 
     @Override
     public void openAuxStream(@NonNull View view) {
+        Ln.d("openAuxStream: " + view);
         String error = null;
         if (getOpenedAuxStreamCount() >= availableAuxStreamCount || getOpenedAuxStreamCount() >= MediaEngine.MAX_NUMBER_STREAMS){
             error = "Reach maximum count";
@@ -355,6 +356,7 @@ public class CallImpl implements Call {
 
     @Override
     public void closeAuxStream(@NonNull View view) {
+        Ln.d("closeAuxStream: " + view);
         closeAuxStream(getAuxStream(view), view);
     }
 
