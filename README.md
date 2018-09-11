@@ -337,6 +337,51 @@ Here are some examples of how to use the Android SDK in your app.
     );
     ```
 
+12. Multi-Stream to receive more video streams 
+
+    ```java
+    activeCall.setMultiStreamObserver(new MultiStreamObserver() {
+        @Override
+        public void onAuxStreamChanged(AuxStreamChangedEvent event) {
+            if (event instanceof MultiStreamObserver.AuxStreamOpenedEvent) {
+		if ((MultiStreamObserver.AuxStreamOpenedEvent)event.isSuccessful()) {
+		    // success to open a stream
+		    ...
+		} else {
+		    // fail to open a stream
+		    ...
+		}
+            } else if (event instanceof MultiStreamObserver.AuxStreamClosedEvent) {
+		if ((MultiStreamObserver.AuxStreamClosedEvent)event.isSuccessful()) {
+		    // success to close a stream
+		    ...
+		} else {
+		    // fail to close a stream
+		    ...
+		}
+	    } else if (event instanceof MultiStreamObserver.AuxStreamSendingVideoEvent) {
+	        ...
+            } else if (event instanceof MultiStreamObserver.AuxStreamPersonChangedEvent) {
+		...
+            } else if (event instanceof MultiStreamObserver.AuxStreamSizeChangedEvent) {
+		...
+            }
+        }
+
+        @Override
+        public View onAuxStreamAvailable() {
+            // should return a MediaRenderView for rendering 
+            return mediaRenderView;
+        }
+
+        @Override
+        public View onAuxStreamUnavailable() {
+	    // should return a MediaRenderView to stop rendering or return null to let SDK handle it
+            return null;
+        }
+    });
+    ```
+
 ## Migrating from Cisco Spark Android SDK
 
 The purpose of this guide is to help you to migrate from Cisco Spark Android SDK to Cisco Webex Android SDK.
