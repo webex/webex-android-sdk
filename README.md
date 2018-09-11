@@ -344,22 +344,22 @@ Here are some examples of how to use the Android SDK in your app.
         @Override
         public void onAuxStreamChanged(AuxStreamChangedEvent event) {
             if (event instanceof MultiStreamObserver.AuxStreamOpenedEvent) {
-		if ((MultiStreamObserver.AuxStreamOpenedEvent)event.isSuccessful()) {
-		    // success to open a stream
-		    ...
-		} else {
-		    // fail to open a stream
-		    ...
-		}
+                if ((MultiStreamObserver.AuxStreamOpenedEvent)event.isSuccessful()) {
+                    // success to open a stream
+                    ...
+                } else {
+                    // fail to open a stream
+                    ...
+                }
             } else if (event instanceof MultiStreamObserver.AuxStreamClosedEvent) {
-		if ((MultiStreamObserver.AuxStreamClosedEvent)event.isSuccessful()) {
-		    // success to close a stream
-		    ...
-		} else {
-		    // fail to close a stream
-		    ...
-		}
-	    } else if (event instanceof MultiStreamObserver.AuxStreamSendingVideoEvent) {
+                if ((MultiStreamObserver.AuxStreamClosedEvent)event.isSuccessful()) {
+                    // success to close a stream
+                    ...
+                } else {
+                    // fail to close a stream
+                    ...
+                }
+            } else if (event instanceof MultiStreamObserver.AuxStreamSendingVideoEvent) {
 	        ...
             } else if (event instanceof MultiStreamObserver.AuxStreamPersonChangedEvent) {
 		...
