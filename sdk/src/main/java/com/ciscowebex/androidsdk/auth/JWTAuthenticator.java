@@ -33,6 +33,7 @@ import android.support.annotation.Nullable;
 import android.util.Base64;
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
+import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.model.AuthenticatedUser;
 import com.cisco.spark.android.model.conversation.ActorRecord;
 import com.ciscowebex.androidsdk.CompletionHandler;
@@ -69,6 +70,8 @@ public class JWTAuthenticator implements Authenticator {
     @Inject
     ApiTokenProvider _provider;
 
+    @Inject
+    ApplicationController _applicationController;
     /**
      * Creates a new JWT authentication strategy
      *
@@ -104,8 +107,9 @@ public class JWTAuthenticator implements Authenticator {
     public void deauthorize() {
         _jwt = null;
         _token = null;
-        if (_provider != null) {
-            _provider.clearAccount();
+        if (_applicationController != null) {
+            Ln.d("deauthorize() clear all!");
+            _applicationController.clear();
         }
     }
 
