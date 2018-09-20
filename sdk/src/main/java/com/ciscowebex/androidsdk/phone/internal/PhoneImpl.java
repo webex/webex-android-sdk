@@ -1110,7 +1110,7 @@ public class PhoneImpl implements Phone {
         if (_activeCallLocusKey == null)
             return;
         CallImpl activeCall = _calls.get(_activeCallLocusKey);
-        if (activeCall != null && activeCall.isGroup()) {
+        if (activeCall != null) {
             int vid = event.getVideoId();
             switch (event.getMediaId()) {
                 case MediaEngine.VIDEO_MID:
@@ -1123,7 +1123,7 @@ public class PhoneImpl implements Phone {
                             observer.onMediaChanged(new CallObserver.RemoteSendingVideoEvent(activeCall, isSending));
                         }
                         _isRemoteSendingVideo = isSending;
-                    } else if (vid > 0) {
+                    } else if (vid > 0 && activeCall.isGroup()) {
                         AuxStreamImpl auxStream = activeCall.getAuxStream(vid);
                         if (auxStream != null && auxStream.isSendingVideo() == event.isBlocked()) {
                             auxStream.setSendingVideo(!event.isBlocked());
@@ -1472,7 +1472,7 @@ public class PhoneImpl implements Phone {
         } else {
             Ln.d("call observer is null");
         }
-	    _isRemoteSendingVideo = true;
+	    _isRemoteSendingVideo = false;
 	    _isRemoteSendingAudio = call.isRemoteSendingAudio();
         _activeCallLocusKey = key;
     }
