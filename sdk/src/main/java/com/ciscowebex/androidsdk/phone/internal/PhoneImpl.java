@@ -1081,7 +1081,7 @@ public class PhoneImpl implements Phone {
 			for (CallMembership membership : call.getMemberships()) {
 				if (beneficiary.getPerson() != null
 					&& beneficiary.getPerson().getId() != null
-					&& membership.getPersonId().equalsIgnoreCase(beneficiary.getPerson().getId())) {
+					&& membership.getPersonId().equalsIgnoreCase(Utils.encode(beneficiary.getPerson().getId()))) {
 					events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
 					break;
 				}
@@ -1197,7 +1197,7 @@ public class PhoneImpl implements Phone {
             return;
 
         for (CallMembership membership : call.getMemberships()){
-            if (membership.getPersonId().equals(participant.getPerson().getId())) {
+            if (membership.getPersonId().equals(Utils.encode(participant.getPerson().getId()))) {
                 if (vid == 0) {
                     CallMembership old = call.getActiveSpeaker();
                     if (old == null || !old.getPersonId().equals(membership.getPersonId())) {
@@ -1232,7 +1232,7 @@ public class PhoneImpl implements Phone {
             return;
 
         int oldCount = call.getAvailableAuxStreamCount();
-        int newCount = Math.min(_callControlService.getLocus(call.getKey()).getFullState().getCount() - 3, _availableMediaCount - 1);
+        int newCount = Math.min(call.getJoinedMemberships().size() - 2, _availableMediaCount - 1);
         Ln.d("sendJoinedParticipantCountChanged old: " + oldCount + "  new: " + newCount);
         newCount = Math.min(newCount, MediaEngine.MAX_NUMBER_STREAMS);
         if (newCount >= 0 && oldCount != newCount) {

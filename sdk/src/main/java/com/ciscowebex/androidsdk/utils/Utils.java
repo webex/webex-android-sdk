@@ -24,6 +24,7 @@ package com.ciscowebex.androidsdk.utils;
 
 import android.os.Build;
 import android.support.annotation.Nullable;
+import android.util.Base64;
 
 import com.cisco.spark.android.util.Strings;
 import com.ciscowebex.androidsdk.Webex;
@@ -64,4 +65,12 @@ public class Utils {
         return Strings.stripInvalidHeaderChars(tempUserAgent);
     }
 
+    public static String encode(String id) {
+        if (id == null || id.isEmpty())
+            return id;
+
+        String encodeString = "ciscospark://us/PEOPLE/" + id;
+        return new String(Base64.encode(encodeString.getBytes(),
+                Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP));
+    }
 }

@@ -248,6 +248,16 @@ public class CallImpl implements Call {
         return memberships;
     }
 
+    public List<CallMembership> getJoinedMemberships() {
+        List<LocusParticipant> participants = getParticipants();
+        List<CallMembership> memberships = new ArrayList<>(participants.size());
+        for (LocusParticipant p : participants) {
+            if (p.getState() == LocusParticipant.State.JOINED)
+                memberships.add(new CallMembershipImpl(p, this));
+        }
+        return memberships;
+    }
+
     public CallMembership getFrom() {
         for (CallMembership membership : getMemberships()) {
             if (membership.isInitiator()) {
