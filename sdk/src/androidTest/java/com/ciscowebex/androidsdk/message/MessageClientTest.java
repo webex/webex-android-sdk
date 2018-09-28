@@ -13,7 +13,7 @@ import org.junit.runners.MethodSorters;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static com.ciscowebex.androidsdk.WebexTestRunner.getSpark;
+import static com.ciscowebex.androidsdk.WebexTestRunner.getWebex;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -31,9 +31,10 @@ public class MessageClientTest {
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
-        webex = getSpark();
-        messageClient = getSpark().messages();
-        createRoom();
+        webex = getWebex();
+        System.out.println("is Authorized " + webex.getAuthenticator().isAuthorized());
+        messageClient = webex.messages();
+        createSpace();
     }
 
     @AfterClass
@@ -41,15 +42,16 @@ public class MessageClientTest {
         removeRoom();
     }
 
-    private static void createRoom() throws InterruptedException {
+    private static void createSpace() throws InterruptedException {
+        System.out.println(":::: create room");
         final CountDownLatch signal = new CountDownLatch(1);
-        SpaceClient roomClient = webex.spaces();
-        roomClient.create("message test room", null, result -> {
+        SpaceClient spaceClient = webex.spaces();
+        spaceClient.create("message test room", null, result -> {
             if (result.isSuccessful()) {
-                System.out.println(result.getData());
+                System.out.println(":::: create room success " + result.getData());
                 room = result.getData();
             } else {
-                System.out.println(result.getError());
+                System.out.println(":::: create room failed " + result.getError());
             }
             signal.countDown();
         });

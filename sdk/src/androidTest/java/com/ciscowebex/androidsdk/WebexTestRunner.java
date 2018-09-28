@@ -25,6 +25,7 @@ package com.ciscowebex.androidsdk;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.test.runner.AndroidJUnitRunner;
 
@@ -52,7 +53,7 @@ public class WebexTestRunner extends AndroidJUnitRunner {
     static Application application;
     static Webex webex;
 
-    public static Webex getSpark() {
+    public static Webex getWebex() {
         return webex;
     }
 
@@ -60,13 +61,18 @@ public class WebexTestRunner extends AndroidJUnitRunner {
     public Application newApplication(ClassLoader cl, String className, Context context) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         System.out.println("!!! newApplication !!!");
         application = super.newApplication(cl, Application.class.getName(), context);
+        System.out.println("login");
         new Handler().post(() -> loginBySparkId());
+        System.out.println("logined");
         return application;
     }
 
     private void loginBySparkId() {
         System.out.println("!!! loginBySparkId !!!");
-        File file = new File(application.getExternalFilesDir("login"), "login.txt");
+        String path = Environment.getExternalStorageDirectory().getPath();
+        //String path = application.getExternalFilesDir("login");
+
+        File file = new File(path, "login.txt");
         if (file.exists()) {
             HashMap map = readKeyValueTxtToMap(file);
             SparkUserEmail = (String) map.get("SparkUserEmail");
@@ -80,25 +86,29 @@ public class WebexTestRunner extends AndroidJUnitRunner {
             System.out.println("!!! login file is not exist !!!");
         }
 
-        final CountDownLatch signal = new CountDownLatch(1);
         OAuthTestUserAuthenticator auth = new OAuthTestUserAuthenticator(CLIENT_ID, CLIENT_SEC, SCOPE, REDIRECT_URL,
                 SparkUserEmail, SparkUserName, SparkUserPwd);
         webex = new Webex(application, auth);
-        auth.authorize(result -> {
-            if (result.isSuccessful()) {
-                System.out.println("loginBySparkId isSuccessful!");
-            } else {
-                System.out.println("loginBySparkId failed!");
-                System.exit(-1);
-            }
-            signal.countDown();
-        });
+        /*
+        if (!auth.isAuthorized()) {
+            final CountDownLatch signal = new CountDownLatch(1);
+            auth.authorize(result -> {
+                if (result.isSuccessful()) {
+                    System.out.println("loginBySparkId isSuccessful!");
+                } else {
+                    System.out.println("loginBySparkId failed!");
+                    System.exit(-1);
+                }
+                signal.countDown();
+            });
 
-        try {
-            signal.await(60, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            try {
+                signal.await(60, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+        */
     }
 
     private HashMap readKeyValueTxtToMap(File file) {

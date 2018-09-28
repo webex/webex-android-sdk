@@ -29,7 +29,7 @@ jacoco {
     toolVersion = "0.7.6+"
 }
 
-task jacocoTestReport(type:JacocoReport, dependsOn: "testDebugUnitTest") {
+task jacocoTestReport(type: JacocoReport, dependsOn: "testDebugUnitTest") {
     group = "Reporting"
     description = "Generate Jacoco coverage reports"
 
@@ -42,12 +42,12 @@ task jacocoTestReport(type:JacocoReport, dependsOn: "testDebugUnitTest") {
                        '**/Manifest*.*']
     )
 
-    def coverageSourceDirs = [ '../sdk/src/main/java' ]
+    def coverageSourceDirs = ['../sdk/src/main/java']
     additionalSourceDirs = files(coverageSourceDirs)
     sourceDirectories = files(coverageSourceDirs)
     executionData = fileTree(dir: "../sdk", includes: [
             "jacoco/testDebugUnitTest.exec",
-            "outputs/code-coverage/connected/*coverage.ec"
+            "outputs/code-coverage/connected/*.ec"
     ])
 
     reports {
@@ -76,7 +76,7 @@ android {
             minifyEnabled false
         }
         debug {
-//            testCoverageEnabled true
+//          testCoverageEnabled true
             buildConfigField "String", "CLIENT_ID", getPropertyOrDefault('CLIENT_ID')
             buildConfigField "String", "CLIENT_SEC", getPropertyOrDefault('CLIENT_SEC')
             buildConfigField "String", "REDIRECT_URL", getPropertyOrDefault('REDIRECT_URL')
@@ -88,6 +88,10 @@ android {
         jenkins {
             initWith debug
             testCoverageEnabled true
+
+            ndk {
+                abiFilters "armeabi-v7a", "x86"
+            }
         }
     }
 
@@ -108,7 +112,7 @@ android {
         unitTests.all {
             testLogging {
                 events "passed", "skipped", "failed", "standardOut", "standardError"
-                outputs.upToDateWhen {false}
+                outputs.upToDateWhen { false }
                 showStandardStreams = true
             }
             jacoco.includeNoLocationClasses = true
@@ -221,7 +225,7 @@ publishing {
         }
     }
 
-    repositories{
+    repositories {
         maven {
             name 'DevSnapshot'
             url "http://engci-maven.cisco.com/artifactory/webexsdk-SNAPSHOT/"
@@ -273,7 +277,7 @@ def revision() {
     return code.toString().replaceAll("\n", "")
 }
 
-def getPropertyOrDefault(prop, defaultValue='') {
+def getPropertyOrDefault(prop, defaultValue = '') {
     def value = System.getProperty(prop)
     return value ? '\"' + value + '\"' : '\"' + defaultValue + '\"'
 }
