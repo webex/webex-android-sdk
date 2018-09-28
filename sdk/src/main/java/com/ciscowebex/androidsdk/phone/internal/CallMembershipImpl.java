@@ -22,11 +22,15 @@
 
 package com.ciscowebex.androidsdk.phone.internal;
 
+import android.util.Base64;
+
 import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.cisco.spark.android.locus.model.LocusParticipantInfo;
 import com.cisco.spark.android.locus.model.MediaDirection;
+import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
 import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.phone.CallMembership;
+import com.ciscowebex.androidsdk.utils.Utils;
 
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
@@ -84,7 +88,7 @@ public class CallMembershipImpl implements CallMembership {
 
     CallMembershipImpl(LocusParticipant participant, Call call) {
         LocusParticipantInfo person = participant.getPerson();
-        _personId = person.getId();
+        _personId = Utils.encode(person.getId());
         _email = person.getEmail();
         _phoneNumber = person.getPhoneNumber();
         _sipUrl = person.getPhoneNumber();

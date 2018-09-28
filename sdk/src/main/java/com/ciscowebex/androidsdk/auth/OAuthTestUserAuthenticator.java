@@ -88,6 +88,7 @@ public class OAuthTestUserAuthenticator extends OAuthAuthenticator {
     public void authorize(@NonNull CompletionHandler<Void> handler) {
         Ln.d("authorize: " + _provider + "   apiClientProvider: " + apiClientProvider + "  applicationController: " + applicationController);
         if (_provider != null && apiClientProvider != null && applicationController != null) {
+            deauthorize();
             new AsyncTask() {
                 @Override
                 protected Object doInBackground(Object[] objects) {

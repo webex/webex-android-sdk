@@ -29,6 +29,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
+import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.model.AuthenticatedUser;
 import com.cisco.spark.android.model.conversation.ActorRecord;
 import com.ciscowebex.androidsdk.CompletionHandler;
@@ -67,6 +68,8 @@ public class OAuthAuthenticator implements Authenticator {
     @Inject
     ApiTokenProvider _provider;
 
+    @Inject
+    ApplicationController _applicationController;
     /**
      * Creates a new OAuth authentication strategy
      *
@@ -99,8 +102,9 @@ public class OAuthAuthenticator implements Authenticator {
     @Override
     public void deauthorize() {
         _token = null;
-        if (_provider != null) {
-            _provider.clearAccount();
+        if (_applicationController != null) {
+            Ln.d("deauthorize() clear all!");
+            _applicationController.clear();
         }
     }
 
@@ -113,6 +117,7 @@ public class OAuthAuthenticator implements Authenticator {
      */
     public void authorize(@NonNull String code, @NonNull CompletionHandler<Void> handler) {
         checkNotNull(handler, "CompletionHandler is null");
+        deauthorize();
         Ln.d("Authorize: " + code);
         _authService.getToken(_clientId, _clientSecret, _redirectUri, "authorization_code", code).enqueue(new Callback<OAuth2Tokens>() {
             @Override
