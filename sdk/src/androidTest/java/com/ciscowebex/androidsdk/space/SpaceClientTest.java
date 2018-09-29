@@ -1,19 +1,24 @@
 package com.ciscowebex.androidsdk.space;
 
 import com.ciscowebex.androidsdk.Webex;
-import com.ciscowebex.androidsdk.membership.MembershipClient;
 
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static com.ciscowebex.androidsdk.WebexTestRunner.getWebex;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SpaceClientTest {
     static Webex webex;
     static SpaceClient client;
+    static String spaceId;
 
     @BeforeClass
     public static void setUpBeforeClass() {
@@ -24,48 +29,78 @@ public class SpaceClientTest {
     @Test
     public void list() throws InterruptedException {
         final CountDownLatch signal = new CountDownLatch(1);
-        client.list("", 10, Space.SpaceType.GROUP, SpaceClient.SortBy.CREATED, result -> {
-            System.out.println(result);
+        client.list(null, 10, null, null, result -> {
+            if (result.isSuccessful()) {
+                System.out.println(result.getData());
+            } else {
+                System.out.println(result.getError());
+            }
             signal.countDown();
         });
         signal.await(30, TimeUnit.SECONDS);
     }
 
     @Test
-    public void create() throws InterruptedException {
+    public void testA_create() throws InterruptedException {
         final CountDownLatch signal = new CountDownLatch(1);
-        client.create("", "", result -> {
-            System.out.println(result);
+        String title = "test space create";
+        client.create(title, null, result -> {
+            if (result.isSuccessful()) {
+                System.out.println(result.getData());
+                spaceId = result.getData().getId();
+                assertNotNull(spaceId);
+                assertEquals(title, result.getData().getTitle());
+            } else {
+                System.out.println(result.getError());
+            }
+            signal.countDown();
+        });
+        signal.await(30, TimeUnit.SECONDS);
+    }
+
+
+    @Test
+    public void testB_get() throws InterruptedException {
+        final CountDownLatch signal = new CountDownLatch(1);
+        assertNotNull(spaceId);
+        client.get(spaceId, result -> {
+            if (result.isSuccessful()) {
+                System.out.println(result.getData());
+            } else {
+                System.out.println(result.getError());
+            }
             signal.countDown();
         });
         signal.await(30, TimeUnit.SECONDS);
     }
 
     @Test
-    public void get() throws InterruptedException {
+    public void testC_update() throws InterruptedException {
         final CountDownLatch signal = new CountDownLatch(1);
-        client.get("", result -> {
-            System.out.println(result);
+        assertNotNull(spaceId);
+        String newTitle = "test update space";
+        client.update(spaceId, newTitle, result -> {
+            if (result.isSuccessful()) {
+                System.out.println(result.getData());
+                assertEquals(newTitle, result.getData().getTitle());
+            } else {
+                System.out.println(result.getError());
+            }
             signal.countDown();
         });
         signal.await(30, TimeUnit.SECONDS);
     }
 
     @Test
-    public void update() throws InterruptedException {
+    public void testD_delete() throws InterruptedException {
         final CountDownLatch signal = new CountDownLatch(1);
-        client.update("", "", result -> {
-            System.out.println(result);
-            signal.countDown();
-        });
-        signal.await(30, TimeUnit.SECONDS);
-    }
-
-    @Test
-    public void delete() throws InterruptedException {
-        final CountDownLatch signal = new CountDownLatch(1);
-        client.delete("", result -> {
-            System.out.println(result);
+        assertNotNull(spaceId);
+        client.delete(spaceId, result -> {
+            if (result.isSuccessful()) {
+                System.out.println(result.getData());
+            } else {
+                System.out.println(result.getError());
+            }
             signal.countDown();
         });
         signal.await(30, TimeUnit.SECONDS);

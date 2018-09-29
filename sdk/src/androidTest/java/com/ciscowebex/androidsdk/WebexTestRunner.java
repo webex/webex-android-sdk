@@ -61,9 +61,7 @@ public class WebexTestRunner extends AndroidJUnitRunner {
     public Application newApplication(ClassLoader cl, String className, Context context) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         System.out.println("!!! newApplication !!!");
         application = super.newApplication(cl, Application.class.getName(), context);
-        System.out.println("login");
-        new Handler().post(() -> loginBySparkId());
-        System.out.println("logined");
+        new Handler().post(this::loginBySparkId);
         return application;
     }
 
@@ -89,7 +87,6 @@ public class WebexTestRunner extends AndroidJUnitRunner {
         OAuthTestUserAuthenticator auth = new OAuthTestUserAuthenticator(CLIENT_ID, CLIENT_SEC, SCOPE, REDIRECT_URL,
                 SparkUserEmail, SparkUserName, SparkUserPwd);
         webex = new Webex(application, auth);
-        /*
         if (!auth.isAuthorized()) {
             final CountDownLatch signal = new CountDownLatch(1);
             auth.authorize(result -> {
@@ -108,7 +105,6 @@ public class WebexTestRunner extends AndroidJUnitRunner {
                 e.printStackTrace();
             }
         }
-        */
     }
 
     private HashMap readKeyValueTxtToMap(File file) {

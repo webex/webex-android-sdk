@@ -14,6 +14,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static com.ciscowebex.androidsdk.WebexTestRunner.getWebex;
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -39,7 +40,7 @@ public class MessageClientTest {
 
     @AfterClass
     public static void tearDownAfterClass() throws Exception {
-        removeRoom();
+        removeSpace();
     }
 
     private static void createSpace() throws InterruptedException {
@@ -58,7 +59,7 @@ public class MessageClientTest {
         signal.await(30, TimeUnit.SECONDS);
     }
 
-    private static void removeRoom() throws InterruptedException {
+    private static void removeSpace() throws InterruptedException {
         System.out.println(":::: remove room");
         final CountDownLatch signal = new CountDownLatch(1);
         SpaceClient roomClient = webex.spaces();
@@ -89,6 +90,8 @@ public class MessageClientTest {
         });
         waitForMessage(signal, text);
         signal.await(30, TimeUnit.SECONDS);
+        assertNotNull(msg);
+        assertEquals(msg.getText(), text);
     }
 
     @Test
@@ -103,6 +106,8 @@ public class MessageClientTest {
         });
         waitForMessage(signal, text);
         signal.await(30, TimeUnit.SECONDS);
+        assertNotNull(msg);
+        assertEquals(msg.getText(), text);
     }
 
 
