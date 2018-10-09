@@ -1472,7 +1472,7 @@ public class PhoneImpl implements Phone {
         } else {
             Ln.d("call observer is null");
         }
-	    _isRemoteSendingVideo = false;
+	    _isRemoteSendingVideo = true;
 	    _isRemoteSendingAudio = call.isRemoteSendingAudio();
         _activeCallLocusKey = key;
     }
