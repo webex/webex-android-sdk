@@ -1017,6 +1017,17 @@ public class PhoneImpl implements Phone {
 		CallImpl call = _calls.get(event.getLocusKey());
 		if (call != null) {
 			Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
+            LocusSelfRepresentation self = call.getSelf();
+            if (!call.isGroup() && (self == null || !self.getUrl().equals(event.getParticipant().getUrl()))) {
+                CallObserver observer = call.getObserver();
+                boolean isSending = !event.isMuted();
+                Ln.d("_isRemoteSendingVideo: " + _isRemoteSendingVideo + "  isSending: " + isSending);
+                if (observer != null && _isRemoteSendingVideo != isSending) {
+                    observer.onMediaChanged(new CallObserver.RemoteSendingVideoEvent(call, isSending));
+                }
+                _isRemoteSendingVideo = isSending;
+            }
+
 			List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
 			events.add(new CallObserver.MembershipSendingVideoEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
 			sendCallMembershipChanged(call, events);
@@ -1081,7 +1092,7 @@ public class PhoneImpl implements Phone {
 			for (CallMembership membership : call.getMemberships()) {
 				if (beneficiary.getPerson() != null
 					&& beneficiary.getPerson().getId() != null
-					&& membership.getPersonId().equalsIgnoreCase(Utils.encode(beneficiary.getPerson().getId()))) {
+					&& membership.getPersonId().equals(Utils.encode(beneficiary.getPerson().getId()))) {
 					events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
 					break;
 				}
@@ -1110,7 +1121,7 @@ public class PhoneImpl implements Phone {
         if (_activeCallLocusKey == null)
             return;
         CallImpl activeCall = _calls.get(_activeCallLocusKey);
-        if (activeCall != null) {
+        if (activeCall != null && activeCall.isGroup()) {
             int vid = event.getVideoId();
             switch (event.getMediaId()) {
                 case MediaEngine.VIDEO_MID:
@@ -1123,7 +1134,7 @@ public class PhoneImpl implements Phone {
                             observer.onMediaChanged(new CallObserver.RemoteSendingVideoEvent(activeCall, isSending));
                         }
                         _isRemoteSendingVideo = isSending;
-                    } else if (vid > 0 && activeCall.isGroup()) {
+                    } else if (vid > 0) {
                         AuxStreamImpl auxStream = activeCall.getAuxStream(vid);
                         if (auxStream != null && auxStream.isSendingVideo() == event.isBlocked()) {
                             auxStream.setSendingVideo(!event.isBlocked());
@@ -1161,7 +1172,7 @@ public class PhoneImpl implements Phone {
         if (_activeCallLocusKey == null)
             return;
         CallImpl activeCall = _calls.get(_activeCallLocusKey);
-        if (activeCall != null && activeCall.isGroup() && event.getMediaId() == MediaEngine.VIDEO_MID) {
+        if (activeCall != null && event.getMediaId() == MediaEngine.VIDEO_MID) {
             _availableMediaCount = event.getCount();
             onJoinedParticipantCountChanged(activeCall);
         }
