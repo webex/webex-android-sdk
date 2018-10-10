@@ -640,6 +640,8 @@ public class CallImpl implements Call {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlMediaDecodeSizeChangedEvent event) {
         Ln.d("CallControlMediaDecodeSizeChangedEvent is received");
+        if (event.getVideoId() != 0)
+            return;
         CallObserver.MediaChangedEvent mediaEvent = null;
         if (event.getVideoId() == MediaEngine.SHARE_MID) {
             _sharingViewSize = event.getSize();
