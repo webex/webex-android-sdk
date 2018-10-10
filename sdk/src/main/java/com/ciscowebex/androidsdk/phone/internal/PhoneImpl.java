@@ -1163,11 +1163,7 @@ public class PhoneImpl implements Phone {
     public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
         Ln.d("CallControlParticipantVideoMutedEvent is received  participant: " + event.getParticipant().getPerson().getDisplayName() +
                 "  vid: " + event.getVid() + "  mute: " + event.isMuted());
-        CallImpl call = _calls.get(event.getLocusKey());
-        LocusSelfRepresentation self = call.getSelf();
-        if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
-            onParticipantChanged(_calls.get(event.getLocusKey()), event.getParticipant(), event.getVid());
-        }
+        onParticipantChanged(_calls.get(event.getLocusKey()), event.getParticipant(), event.getVid());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
