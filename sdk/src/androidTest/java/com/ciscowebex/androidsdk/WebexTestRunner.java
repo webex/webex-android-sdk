@@ -30,6 +30,7 @@ import android.os.Handler;
 import android.support.test.runner.AndroidJUnitRunner;
 
 import com.ciscowebex.androidsdk.auth.OAuthTestUserAuthenticator;
+import com.facebook.drawee.backends.pipeline.Fresco;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,8 +62,14 @@ public class WebexTestRunner extends AndroidJUnitRunner {
     public Application newApplication(ClassLoader cl, String className, Context context) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         System.out.println("!!! newApplication !!!");
         application = super.newApplication(cl, Application.class.getName(), context);
-        new Handler().post(this::loginBySparkId);
         return application;
+    }
+
+    @Override
+    public void callApplicationOnCreate(Application app) {
+        super.callApplicationOnCreate(app);
+        Fresco.initialize(app.getApplicationContext());
+        new Handler().post(this::loginBySparkId);
     }
 
     private void loginBySparkId() {
@@ -83,6 +90,7 @@ public class WebexTestRunner extends AndroidJUnitRunner {
         } else {
             System.out.println("!!! login file is not exist !!!");
         }
+        System.out.println("Test User:" + SparkUserEmail);
 
         OAuthTestUserAuthenticator auth = new OAuthTestUserAuthenticator(CLIENT_ID, CLIENT_SEC, SCOPE, REDIRECT_URL,
                 SparkUserEmail, SparkUserName, SparkUserPwd);
@@ -93,7 +101,7 @@ public class WebexTestRunner extends AndroidJUnitRunner {
                 if (result.isSuccessful()) {
                     System.out.println("loginBySparkId isSuccessful!");
                 } else {
-                    System.out.println("loginBySparkId failed!");
+                    System.out.println("loginBySparkId failed! " + result.getError().toString());
                     System.exit(-1);
                 }
                 signal.countDown();
