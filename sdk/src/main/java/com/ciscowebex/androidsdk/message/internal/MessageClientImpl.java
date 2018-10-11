@@ -292,17 +292,19 @@ public class MessageClientImpl implements MessageClient {
                              @Nullable String text,
                              @Nullable LocalFile[] files,
                              @NonNull CompletionHandler<Message> handler) {
+        Ln.d("postToPerson： " + personIdOrEmail);
         Comment comment = new Comment(text);
         comment.setContent(text);
 
-        EnumSet<NewConversationOperation.CreateFlags> createFlags = EnumSet.noneOf(NewConversationOperation.CreateFlags.class);
-        createFlags.addAll(Collections.singletonList(NewConversationOperation.CreateFlags.ONE_ON_ONE));
-
+        EnumSet<NewConversationOperation.CreateFlags> createFlags = EnumSet.of(
+                NewConversationOperation.CreateFlags.ONE_ON_ONE,
+                NewConversationOperation.CreateFlags.PERSIST_WITHOUT_MESSAGES);
         operations.createConversationWithCallBack(
                 Collections.singletonList(personIdOrEmail), null, createFlags,
                 new Action<NewConversationOperation>() {
                     @Override
                     public void call(NewConversationOperation item) {
+                        Ln.d("createConversationWithCallBack: " + item.getConversationId());
                         String conversationId = item.getConversationId();
                         postContentOrComment(conversationId, files, comment, handler);
                     }
