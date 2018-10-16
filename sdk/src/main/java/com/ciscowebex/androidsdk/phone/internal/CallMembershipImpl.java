@@ -31,6 +31,7 @@ import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
 import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.utils.Utils;
+import com.github.benoitdion.ln.Ln;
 
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
@@ -94,8 +95,11 @@ public class CallMembershipImpl implements CallMembership {
         _sipUrl = person.getPhoneNumber();
         _isInitiator = participant.isCreator();
         _state = fromLocusState(participant.getState());
-        _sendingVideo = MediaDirection.SENDRECV.equals(participant.getStatus().getVideoStatus());
-        _sendingAudio = MediaDirection.SENDRECV.equals(participant.getStatus().getAudioStatus());
+        Ln.d("person: " + _email + "  video: " + participant.getStatus().getVideoStatus() + "   audio: " + participant.getStatus().getAudioStatus());
+        MediaDirection videoStatus = participant.getStatus().getVideoStatus();
+        MediaDirection audioStatus = participant.getStatus().getAudioStatus();
+        _sendingVideo = videoStatus == null || MediaDirection.SENDRECV.equals(videoStatus) || MediaDirection.SENDONLY.equals(videoStatus);
+        _sendingAudio = audioStatus == null || MediaDirection.SENDRECV.equals(audioStatus) || MediaDirection.SENDONLY.equals(audioStatus);
         _sendingSharing = false;
         if (call instanceof CallImpl && ((CallImpl) call).getSharingSender() != null) {
             _sendingSharing = ((CallImpl) call).getSharingSender().getPerson().getId().equalsIgnoreCase(person.getId());
