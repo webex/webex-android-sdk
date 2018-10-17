@@ -95,23 +95,21 @@ public class WebexTestRunner extends AndroidJUnitRunner {
         OAuthTestUserAuthenticator auth = new OAuthTestUserAuthenticator(CLIENT_ID, CLIENT_SEC, SCOPE, REDIRECT_URL,
                 SparkUserEmail, SparkUserName, SparkUserPwd);
         webex = new Webex(application, auth);
-        if (!auth.isAuthorized()) {
-            final CountDownLatch signal = new CountDownLatch(1);
-            auth.authorize(result -> {
-                if (result.isSuccessful()) {
-                    System.out.println("loginBySparkId isSuccessful!");
-                } else {
-                    System.out.println("loginBySparkId failed! " + result.getError().toString());
-                    System.exit(-1);
-                }
-                signal.countDown();
-            });
-
-            try {
-                signal.await(60, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        final CountDownLatch signal = new CountDownLatch(1);
+        auth.authorize(result -> {
+            if (result.isSuccessful()) {
+                System.out.println("loginBySparkId isSuccessful!");
+            } else {
+                System.out.println("loginBySparkId failed! " + result.getError().toString());
+                System.exit(-1);
             }
+            signal.countDown();
+        });
+
+        try {
+            signal.await(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
