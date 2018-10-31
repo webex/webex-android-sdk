@@ -27,10 +27,7 @@ allprojects {
         jcenter()
         google()
         maven {
-            url 'http://engci-maven.cisco.com/artifactory/webexsdk-SNAPSHOT/'
-        }
-        maven {
-            url 'http://engci-maven.cisco.com/artifactory/webexsdk/'
+            url 'https://devhub.cisco.com/artifactory/webexsdk/'
         }
     }
 }
