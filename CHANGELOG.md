@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 2.0.0 Releases
+- `2.0.0` Releases - [2.0.0](#200)
+ 
 #### 1.4.0 Releases
 - `1.4.0` Releases - [1.4.0](#140)
 
@@ -12,6 +15,19 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
+## [2.0.0](https://github.com/webex/webex-android-sdk/releases/tag/2.0.0)
+Released on 2018-10-31.
+#### Added
+- SDK rebranding.
+- Support multi stream in space call.
+- Add active speaker related API and event.
+
+#### Updated
+- Upgrade to latest media engine.
+- Rename room to space.
+- Update PersonId in CallMemberShip to be the same as participant's id.
+- Fixed sending message error if login with different user account.
+
 ## [1.4.0](https://github.com/ciscospark/spark-android-sdk/releases/tag/1.4.0)
 Released on 2018-08-23.
 
