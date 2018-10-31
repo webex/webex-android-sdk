@@ -61,6 +61,19 @@ Assuming you already have an Android project, e.g. _MyWebexApp_, for your Androi
         exclude 'META-INF/rxjava.properties'
     }
     ```
+        
+5. Use ABI Filters and APK split :
+
+    ```groovy
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi-v7a'
+            universalApk false
+        }
+    }
+    ```
 
 ## Usage
 
