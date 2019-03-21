@@ -1,5 +1,7 @@
 package com.ciscowebex.androidsdk.message;
 
+import com.ciscowebex.androidsdk.people.Person;
+
 /**
  * The struct of a message event
  * @since 1.4.0
@@ -44,6 +46,80 @@ public interface MessageObserver {
 
         public String getMessageId() {
             return messageId;
+        }
+    }
+
+    /**
+     * Added by Orel Abutbul
+     *
+     */
+    class MembershipsDeleted implements MessageEvent {
+
+        private Person person;
+        private String spaceId;
+
+        public MembershipsDeleted(Person person, String spaceId) {
+            this.spaceId = spaceId;
+            this.person = person;
+        }
+
+        public String getMessageId() {
+            return spaceId;
+        }
+
+        public Person getMembership() { return person; }
+    }
+
+    /**
+     * Added by Orel Abutbul
+     *
+     */
+    class MembershipsAdded implements MessageEvent {
+
+        private Person person;
+        private String spaceId;
+
+        public MembershipsAdded(Person person, String spaceId) {
+            this.spaceId = spaceId;
+            this.person = person;
+        }
+
+        public Person getMembership() {
+            return this.person;
+        }
+
+        public String getSpaceId() {
+            return spaceId;
+        }
+    }
+
+    /**
+     * Added by Orel Abutbul
+     *
+     */
+    class MembershipsUpdated implements MessageEvent {
+
+        private Message message;
+        private String spaceId;
+        private Person person;
+
+
+        public MembershipsUpdated(Message message, String spaceId, Person person) {
+            this.message = message;
+            this.spaceId = spaceId;
+            this.person = person;
+        }
+
+        public Message getMessage() {
+            return message;
+        }
+
+        public String getSpaceId() {
+            return spaceId;
+        }
+
+        public Person getPerson() {
+            return person;
         }
     }
 
