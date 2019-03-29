@@ -70,6 +70,10 @@ public class Person {
     @SerializedName("type")
     private String _type;          // bot/person
 
+    public String get_lastActivity() {
+        return _lastActivity;
+    }
+
     /**
      * @return The id of this person.
      * @since 0.1
@@ -154,5 +158,53 @@ public class Person {
      */
     public String getType() {
         return _type;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
+    }
+
+    public void set_emails(String[] _emails) {
+        this._emails = _emails;
+    }
+
+    public void set_displayName(String _displayName) {
+        this._displayName = _displayName;
+    }
+
+    public void set_nickName(String _nickName) {
+        this._nickName = _nickName;
+    }
+
+    public void set_firstName(String _firstName) {
+        this._firstName = _firstName;
+    }
+
+    public void set_lastName(String _lastName) {
+        this._lastName = _lastName;
+    }
+
+    public void set_avatar(String _avatar) {
+        this._avatar = _avatar;
+    }
+
+    public void set_orgId(String _orgId) {
+        this._orgId = _orgId;
+    }
+
+    public void set_created(Date _created) {
+        this._created = _created;
+    }
+
+    public void set_lastActivity(String _lastActivity) {
+        this._lastActivity = _lastActivity;
+    }
+
+    public void set_status(String _status) {
+        this._status = _status;
+    }
+
+    public void set_type(String _type) {
+        this._type = _type;
     }
 }
