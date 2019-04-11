@@ -248,9 +248,9 @@ publishing {
 
 dependencies {
     //compile fileTree(dir: 'libs', include: ['*.jar'])
-    compileOnly 'com.squareup.dagger:dagger-compiler:1.2.2'
-    kapt 'com.squareup.dagger:dagger-compiler:1.2.2'
-    annotationProcessor 'com.squareup.dagger:dagger-compiler:1.2.2'
+    compileOnly 'com.google.dagger:dagger-compiler:2.22.1'
+    kapt 'com.google.dagger:dagger-compiler:2.22.1'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.22.1'
 
     implementation('com.ciscowebex:androidsdk_commlib:2.0.0@aar', {
         transitive = true
