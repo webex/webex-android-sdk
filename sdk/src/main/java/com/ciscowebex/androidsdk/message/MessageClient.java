@@ -128,6 +128,14 @@ public interface MessageClient {
      */
     void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler);
 
+
+    /**
+     * Progress indicator interface
+     * @since 1.4.0
+     */
+
+    public void postWithLocalFile(@NonNull String spaceId,@NonNull String text,@NonNull java.io.File file,  @NonNull CompletionHandler<Message> handler);
+
     /**
      * Progress indicator interface
      * @since 1.4.0

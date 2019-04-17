@@ -25,6 +25,7 @@ package com.ciscowebex.androidsdk.message.internal;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -89,12 +90,18 @@ import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.collection.Maps;
 import org.greenrobot.eventbus.EventBus;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -162,6 +169,21 @@ public class MessageClientImpl implements MessageClient {
     public void post(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
             _service.post(s, Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "toPersonId", personId, "toPersonEmail", personEmail, "text", text, "markdown", markdown, "files", files)), new ObjectCallback<>(handler));
+    }
+
+    @Override
+    public void postWithLocalFile(@NonNull String spaceId,@NonNull String text,@NonNull java.io.File file,  @NonNull CompletionHandler<Message> handler) {
+
+        RequestBody id = RequestBody.create(MediaType.parse("text/plain"), spaceId);
+        RequestBody _text = RequestBody.create(MediaType.parse("text/plain"), text);
+
+        // create RequestBody instance from file
+        String mimeType= URLConnection.guessContentTypeFromName(file.getName());
+        MultipartBody.Part filePart = MultipartBody.Part.createFormData("files", file.getName(), RequestBody.create(MediaType.parse(mimeType), file));
+
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _service.postWithLocalFile(s, id, _text,  filePart) , new ObjectCallback<>(handler) );
+
     }
 
     @Override
@@ -568,6 +590,11 @@ public class MessageClientImpl implements MessageClient {
 
         @DELETE("messages/{messageId}")
         Call<Void> delete(@Header("Authorization") String authorization, @Path("messageId") String messageId);
+
+        @POST("messages")
+        @Multipart
+        Call<Message> postWithLocalFile(@Header("Authorization") String authorization, @Part("roomId") RequestBody roomId, @Part("text") RequestBody text, @Part MultipartBody.Part filePart );
+
     }
 
 }
