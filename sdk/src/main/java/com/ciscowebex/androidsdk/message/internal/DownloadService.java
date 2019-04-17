@@ -1,6 +1,5 @@
 package com.ciscowebex.androidsdk.message.internal;
 
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -51,9 +50,11 @@ public class DownloadService {
 
                             @Override
                             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                                String fileName =  StringUtils.substringBetween(response.headers().get("Content-Disposition"), "\"", "\"");
-                                writeResponseBodyToDisk(response.body(),path,fileName);
-                                handler.onComplete(ResultImpl.success("File has been downloaded"));
+                                if (response!=null) {
+                                    String fileName = StringUtils.substringBetween(response.headers().get("Content-Disposition"), "\"", "\"");
+                                    writeResponseBodyToDisk(response.body(), path, fileName);
+                                    handler.onComplete(ResultImpl.success("File has been downloaded"));
+                                }
                             }
 
                             @Override
@@ -100,6 +101,7 @@ public class DownloadService {
 
 
     private boolean writeResponseBodyToDisk(ResponseBody body,String path, String fileName) {
+
 
         File file = new File(path,fileName);
         InputStream inputStream = null;
