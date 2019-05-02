@@ -9,8 +9,8 @@ buildscript {
             url 'https://maven.fabric.io/public'
         }
     }
-    ext.kotlin_version = "1.1.51"
-    ext.gradleVersion = System.env.GRADLE_VERSION == null ? '3.0.1' : System.env.GRADLE_VERSION
+    ext.kotlin_version = "1.3.21"
+    ext.gradleVersion = "3.3.2"
 
     dependencies {
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.6.1"

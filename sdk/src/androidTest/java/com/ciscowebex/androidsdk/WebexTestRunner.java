@@ -27,8 +27,8 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Environment;
 import android.os.Handler;
-import android.support.test.runner.AndroidJUnitRunner;
 
+import android.support.test.runner.AndroidJUnitRunner;
 import com.ciscowebex.androidsdk.auth.OAuthTestUserAuthenticator;
 import com.facebook.drawee.backends.pipeline.Fresco;
 
@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+
 
 
 public class WebexTestRunner extends AndroidJUnitRunner {

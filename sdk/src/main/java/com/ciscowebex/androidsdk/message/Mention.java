@@ -20,10 +20,6 @@ public interface Mention {
         public String getPersonId() {
             return personId;
         }
-
-        public void setPersonId(String personId) {
-            this.personId = personId;
-        }
     }
 
     /**

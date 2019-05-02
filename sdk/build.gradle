@@ -9,7 +9,7 @@ ext {
     moduleName = 'Cisco Webex Android SDK'
     moduleGroupId = 'com.ciscowebex'
     moduleArtifactId = 'androidsdk'
-    moduleVersion = '2.0.0'
+    moduleVersion = '2.1.0-SNAPSHOT'
     moduleDescription = 'Cisco Webex SDK for Android'
     moduleSiteUrl = 'https://developer.webex.com/getting-started.html'
     moduleProjectUrl = 'https://github.com/webex/webex-android-sdk'
@@ -58,7 +58,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "testDebugUnitTest") {
 
 android {
     compileSdkVersion 27
-    buildToolsVersion "27.0.2"
+    buildToolsVersion "28.0.3"
 
     defaultConfig {
         minSdkVersion 21
@@ -162,8 +162,8 @@ android {
     }
 
     afterEvaluate {
-        bundleRelease.finalizedBy(reZipAar)
-        bundleDebug.finalizedBy(reZipAar)
+        bundleReleaseAar.finalizedBy(reZipAar)
+        bundleDebugAar.finalizedBy(reZipAar)
     }
 
     packagingOptions {
@@ -256,12 +256,17 @@ dependencies {
         transitive = true
         changing = true
     })
-    testCompile 'com.squareup.okhttp3:okhttp:3.9.0'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.9.0'
-    testCompile 'junit:junit:4.12'
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    androidTestImplementation 'com.squareup.okhttp3:okhttp:3.8.0'
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.8.0'
+    androidTestImplementation 'junit:junit:4.12'
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+    androidTestImplementation 'org.testng:testng:6.9.6'
+
+//    androidTestImplementation 'androidx.test:runner:1.1.1'
+//    androidTestImplementation 'androidx.test:rules:1.1.1'
+//    androidTestImplementation 'org.hamcrest:hamcrest-library:1.3'
 }
 
 static def buildTime() {
@@ -290,11 +295,13 @@ task sourcesJar(type: Jar) {
 }
 
 task javadoc(type: Javadoc) {
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    android.libraryVariants.all { variant ->
-        description "Generates Javadoc for $variant.name."
-        ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
-        owner.classpath += files(variant.javaCompiler.classpath.files) + files(ext.androidJar)
+    doFirst {
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        android.libraryVariants.all { variant ->
+            description "Generates Javadoc for $variant.name."
+            ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+            owner.classpath += files(variant.javaCompiler.classpath.files) + files(ext.androidJar)
+        }
     }
     source = android.sourceSets.main.java.srcDirs
     options.encoding('UTF-8')

@@ -48,6 +48,35 @@ public interface MessageObserver {
     }
 
     /**
+     * The struct of a message read event
+     * @since 2.1.0
+     */
+    class MessageRead implements MessageEvent {
+
+        private String spaceId;
+        private String messageId;
+        private String personId;
+
+        public MessageRead(String spaceId, String messageId, String personId) {
+            this.spaceId = spaceId;
+            this.messageId = messageId;
+            this.personId = personId;
+        }
+
+        public String getSpaceId() {
+            return spaceId;
+        }
+
+        public String getMessageId() {
+            return messageId;
+        }
+
+        public String getPersonId() {
+            return personId;
+        }
+    }
+
+    /**
      * Call back when message arrived.
      * @param event     Message event
      */

@@ -37,16 +37,30 @@ import com.google.gson.annotations.SerializedName;
  */
 public class Message {
 
+    private String _id;
+
+    private String _spaceId;
+
+    private Space.SpaceType _spaceType;
+
+    private String _personId;
+
+    private String _personEmail;
+
+    private String _toPersonId;
+
+    private String _toPersonEmail;
+
+    private Date _created;
+
+    private String _text;
+
+    private transient List<RemoteFile> _remoteFiles;
+
+    private boolean isSelfMentioned;
+
     public void setId(String id) {
         this._id = id;
-    }
-
-    public void setPersonId(String personId) {
-        this._personId = personId;
-    }
-
-    public void setPersonEmail(String personEmail) {
-        this._personEmail = personEmail;
     }
 
     public void setSpaceId(String spaceId) {
@@ -57,12 +71,16 @@ public class Message {
         this._spaceType = spaceType;
     }
 
-    public void setText(String text) {
-        this._text = text;
+    public void setPersonId(String personId) {
+        this._personId = personId;
     }
 
-    public void setMarkdown(String markdown) {
-        this._markdown = markdown;
+    public void setPersonEmail(String personEmail) {
+        this._personEmail = personEmail;
+    }
+
+    public void setText(String text) {
+        this._text = text;
     }
 
     public void setToPersonId(String toPersonId) {
@@ -73,57 +91,9 @@ public class Message {
         this._toPersonEmail = toPersonEmail;
     }
 
-    public void setMentionedPeople(String[] mentionedPeople) {
-        this._mentionedPeople = mentionedPeople;
-    }
-
-    public void setFiles(String[] files) {
-        this._files = files;
-    }
-
     public void setCreated(Date created) {
         this._created = created;
     }
-
-    @SerializedName("id")
-    private String _id;
-
-    @SerializedName("personId")
-    private String _personId;
-
-    @SerializedName("personEmail")
-    private String _personEmail;
-
-    @SerializedName(value = "roomId", alternate = {"spaceId"})
-    private String _spaceId;
-
-    @SerializedName(value = "roomType", alternate = {"spaceType"})
-    private Space.SpaceType _spaceType;
-
-    @SerializedName("text")
-    private String _text;
-
-    @SerializedName("markdown")
-    private String _markdown;
-
-    @SerializedName("toPersonId")
-    private String _toPersonId;
-
-    @SerializedName("toPersonEmail")
-    private String _toPersonEmail;
-
-    @SerializedName("mentionedPeople")
-    private String[] _mentionedPeople;
-
-    @SerializedName("files")
-    private String[] _files;
-
-    @SerializedName("created")
-    private Date _created;
-
-    private transient List<RemoteFile> _remoteFiles;
-
-    private boolean isSelfMentioned;
 
     public List<RemoteFile> getRemoteFiles() {
         return _remoteFiles;
@@ -182,14 +152,6 @@ public class Message {
     }
 
     /**
-     * @return The content of the message in markdown.
-     * @since 0.1
-     */
-    public String getMarkdown() {
-        return _markdown;
-    }
-
-    /**
      * @return The identifier of the recipient when sending a private 1:1 message.
      * @since 0.1
      */
@@ -203,22 +165,6 @@ public class Message {
      */
     public String getToPersonEmail() {
         return _toPersonEmail;
-    }
-
-    /**
-     * @return The array of mentioned peoples in the message.
-     * @since 0.1
-     */
-    public String[] getMentionedPeople() {
-        return _mentionedPeople;
-    }
-
-    /**
-     * @return A array of public URLs of the attachments in the message.
-     * @since 0.1
-     */
-    public String[] getFiles() {
-        return _files;
     }
 
     /**

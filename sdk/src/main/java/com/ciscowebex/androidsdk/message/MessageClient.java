@@ -22,6 +22,7 @@
 
 package com.ciscowebex.androidsdk.message;
 
+import java.util.Date;
 import java.util.List;
 
 import android.net.Uri;
@@ -49,8 +50,24 @@ public interface MessageClient {
      * @param max             The maximum number of messages in the response.
      * @param handler         A closure to be executed once the request has finished.
      * @since 0.1
+     * @deprecated
      */
+    @Deprecated
     void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler);
+
+    /**
+     * Lists all messages in a space by space Id. If present, it includes the associated media content attachment for each message.
+     * <p>
+     * The list sorts the messages in descending order by creation date.
+     *
+     * @param spaceId         The identifier of the space.
+     * @param before          If not nil, only list messages sent only before this date and time, in ISO8601 format or list messages sent only before this message by id.
+     * @param max             The maximum number of messages in the response.
+     * @param mentions        If not nil, only list messages metion people.
+     * @param handler         A closure to be executed once the request has finished.
+     * @since 2.1
+     */
+    void list(@NonNull String spaceId, @Nullable Before before, int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler);
 
     /**
      * Posts a plain text message, and optionally, a media content attachment, to a space by space Id.
@@ -63,7 +80,9 @@ public interface MessageClient {
      * @param files       A public URL that Cisco Webex can use to fetch attachments. Currently supports only a single URL. Cisco Webex downloads the content from the URL one time shortly after the message is created and automatically converts it to a format that all Cisco Webex clients can render.
      * @param handler     A closure to be executed once the request has finished.
      * @since 0.1
+     * @deprecated
      */
+    @Deprecated
     void post(@Nullable String spaceId,
               @Nullable String personId,
               @Nullable String personEmail,
@@ -87,6 +106,14 @@ public interface MessageClient {
               @NonNull CompletionHandler<Message> handler);
 
     /**
+     * Mark all messages in the space have been read.
+     *
+     * @param spaceId         The identifier of the space.
+     * @since 2.1
+     */
+    void markRead(@NonNull String spaceId);
+
+    /**
      * @param observer
      * @since 1.4.0
      */
@@ -94,21 +121,21 @@ public interface MessageClient {
 
     /**
      * @param remoteFile        The RemoteFile object need to be downloaded.
-     * @param to                The local file directory for saving downloaded file.
+     * @param path              The local file directory for saving downloaded file.
      * @param progressHandler   The download progress indicator.
      * @param completionHandler A closure to be executed when download completed.
      * @since 1.4.0
      */
-    void downloadFile(RemoteFile remoteFile, String to, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
+    void downloadFile(RemoteFile remoteFile, java.io.File path, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
 
     /**
      * @param remoteFile        The RemoteFile object need to be downloaded.
-     * @param to                The local file directory for saving downloaded file.
+     * @param path              The local file directory for saving downloaded file.
      * @param progressHandler   The download progress indicator.
      * @param completionHandler A closure to be executed when download completed.
      * @since 1.4.0
      */
-    void downloadThumbnail(RemoteFile remoteFile, String to, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
+    void downloadThumbnail(RemoteFile remoteFile, java.io.File path, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
 
     /**
      * Retrieves the details for a message by message Id.
