@@ -182,7 +182,7 @@ public class MessageClientImpl implements MessageClient {
         MultipartBody.Part filePart = MultipartBody.Part.createFormData("files", file.getName(), RequestBody.create(MediaType.parse(mimeType), file));
 
         ServiceBuilder.async(_authenticator, handler, s ->
-                _service.postWithLocalFile(s, id, _text,  filePart) , new ObjectCallback<>(handler) );
+                _service.postWithLocalFile(s, id, _text,  filePart) , new ObjectCallback<>(handler));
 
     }
 
@@ -468,6 +468,9 @@ public class MessageClientImpl implements MessageClient {
     }
 
     private void processorActivity(Activity activity) {
+
+        String spaceId ="";
+        String messageId = "";
         Ln.v("activity processed: " + activity.toString());
         MessageObserver.MessageEvent event;
         switch (activity.getVerb()) {
@@ -477,8 +480,21 @@ public class MessageClientImpl implements MessageClient {
                 event = new MessageObserver.MessageArrived(message);
                 break;
             case "delete":
-                String messageId = HydraId.encode(activity.getId(), HydraId.HydraIdType.MESSAGE_ID);
+                messageId = HydraId.encode(activity.getId(), HydraId.HydraIdType.MESSAGE_ID);
                 event = new MessageObserver.MessageDeleted(messageId);
+                break;
+            case "add":
+                spaceId = HydraId.encode(activity.getTarget().getId(), HydraId.HydraIdType.ROOM_ID);
+                event = new MessageObserver.MembershipsAdded(formPerson(activity), spaceId);
+                break;
+            case "leave":
+                spaceId = HydraId.encode(activity.getTarget().getId(), HydraId.HydraIdType.ROOM_ID);
+                event = new MessageObserver.MembershipsDeleted(formPerson(activity), spaceId);
+                break;
+            case "acknowledge":
+                spaceId = HydraId.encode(activity.getTarget().getId(), HydraId.HydraIdType.ROOM_ID);
+                messageId = HydraId.encode(activity.getObject().getId(), HydraId.HydraIdType.MESSAGE_ID);
+                event = new MessageObserver.MembershipsUpdated(messageId,spaceId,acknowledgeGetPerson(activity));
                 break;
             default:
                 Ln.e("unknown verb " + activity.getVerb());
@@ -486,6 +502,33 @@ public class MessageClientImpl implements MessageClient {
         }
         runOnUiThread(() -> _observer.onEvent(event), _observer);
     }
+    private com.ciscowebex.androidsdk.people.Person acknowledgeGetPerson(Activity activity) {
+
+        if (activity == null) {
+            return null;
+        }
+        com.ciscowebex.androidsdk.people.Person _person = new com.ciscowebex.androidsdk.people.Person();
+        _person.set_displayName(activity.getActor().getDisplayName());
+        _person.set_emails(new String[] {activity.getActor().getEmail()});
+        _person.set_id(HydraId.encode(activity.getActor().getUuid(), HydraId.HydraIdType.PEOPLE_ID));
+        _person.set_type(activity.getActor().getType());
+        _person.set_lastActivity(activity.getPublished().toString());
+        return _person;
+    }
+
+
+    private com.ciscowebex.androidsdk.people.Person formPerson(Activity activity) {
+
+        if (activity == null) {
+            return null;
+        }
+        com.ciscowebex.androidsdk.people.Person person = new com.ciscowebex.androidsdk.people.Person();
+        person.set_displayName(activity.getObject().getDisplayName());
+        person.set_type(activity.getObject().getObjectType());
+        person.set_id(HydraId.encode(activity.getObject().getId(), HydraId.HydraIdType.PEOPLE_ID));
+        return person;
+    }
+
 
     private void runOnUiThread(Runnable r, Object conditioner) {
         if (conditioner == null) return;
@@ -596,5 +639,4 @@ public class MessageClientImpl implements MessageClient {
         Call<Message> postWithLocalFile(@Header("Authorization") String authorization, @Part("roomId") RequestBody roomId, @Part("text") RequestBody text, @Part MultipartBody.Part filePart );
 
     }
-
 }
