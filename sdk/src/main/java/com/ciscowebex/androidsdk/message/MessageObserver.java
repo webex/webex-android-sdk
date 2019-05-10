@@ -63,7 +63,7 @@ public interface MessageObserver {
             this.person = person;
         }
 
-        public String getMessageId() {
+        public String getSpaceId() {
             return spaceId;
         }
 
@@ -99,27 +99,27 @@ public interface MessageObserver {
      */
     class MembershipsUpdated implements MessageEvent {
 
-        private Message message;
+        private String messageId;
         private String spaceId;
         private Person person;
 
 
-        public MembershipsUpdated(Message message, String spaceId, Person person) {
-            this.message = message;
+        public MembershipsUpdated(String messageId, String spaceId, Person person) {
+            this.messageId = messageId;
             this.spaceId = spaceId;
             this.person = person;
         }
 
-        public Message getMessage() {
-            return message;
+        public String  getMessage() {
+            return this.messageId;
         }
 
         public String getSpaceId() {
-            return spaceId;
+            return this.spaceId;
         }
 
         public Person getPerson() {
-            return person;
+            return this.person;
         }
     }
 
