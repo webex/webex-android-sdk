@@ -1,19 +1,21 @@
 package com.ciscowebex.androidsdk.message;
 
 /**
- * The struct of a message event
+ * Callback to receive the events from a {@linke MessageClient}.
+ *
  * @since 1.4.0
  */
 public interface MessageObserver {
 
     /**
-     *
+     * Mark interface for all message events.
      */
     interface MessageEvent {
     }
 
     /**
-     * The struct of a new message received event
+     * The event when a new message has arrived.
+     *
      * @since 1.4.0
      */
     class MessageArrived implements MessageEvent {
@@ -22,6 +24,10 @@ public interface MessageObserver {
         public MessageArrived(Message message) {
             this.message = message;
         }
+
+        /**
+         * @return the message arrived
+         */
         public Message getMessage() {
             return message;
         }
@@ -32,7 +38,7 @@ public interface MessageObserver {
     }
 
     /**
-     * The struct of a message delete event
+     * The event when a message has been deleted.
      * @since 1.4.0
      */
     class MessageDeleted implements MessageEvent {
@@ -42,13 +48,16 @@ public interface MessageObserver {
             this.messageId = messageId;
         }
 
+        /**
+         * @return the id of the deleted message
+         */
         public String getMessageId() {
             return messageId;
         }
     }
 
     /**
-     * The struct of a message read event
+     * The event when a message has been read.
      * @since 2.1.0
      */
     class MessageRead implements MessageEvent {
@@ -63,21 +72,30 @@ public interface MessageObserver {
             this.personId = personId;
         }
 
+        /**
+         * @return the id of the space where the message is read.
+         */
         public String getSpaceId() {
             return spaceId;
         }
 
+        /**
+         * @return the id of the message that has been read.
+         */
         public String getMessageId() {
             return messageId;
         }
 
+        /**
+         * @return the id the person who read the message.
+         */
         public String getPersonId() {
             return personId;
         }
     }
 
     /**
-     * Call back when message arrived.
+     * Invoked when there is a new {@link MessageEvent}.
      * @param event     Message event
      */
     void onEvent(MessageEvent event);

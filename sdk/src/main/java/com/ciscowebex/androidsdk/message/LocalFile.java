@@ -70,6 +70,11 @@ public class LocalFile {
     private MessageClient.ProgressHandler progressHandler;
     private Thumbnail thumbnail;
 
+    /**
+     * Constructor to create a LocalFile based on a {@link java.io.File} pointing to a file on the Android device.
+     *
+     * @param file It must be an existing file (not a directory) on the device.
+     */
     public LocalFile(File file) {
         this.file = file;
         if (this.file.exists() && this.file.isFile()) {
@@ -79,6 +84,9 @@ public class LocalFile {
         }
     }
 
+    /**
+     * @return the {@link java.io.File} object passed from {@link LocalFile}.
+     */
     public File getFile() {
         return file;
     }
@@ -87,6 +95,9 @@ public class LocalFile {
         this.file = file;
     }
 
+    /**
+     * @return the path to the file on the device.
+     */
     public String getPath() {
         return path;
     }
@@ -95,6 +106,9 @@ public class LocalFile {
         this.path = path;
     }
 
+    /**
+     * @return the name of the file on the device.
+     */
     public String getName() {
         return name;
     }
@@ -103,6 +117,9 @@ public class LocalFile {
         this.name = name;
     }
 
+    /**
+     * @return the size of the file on the deivce
+     */
     public long getSize() {
         return size;
     }
@@ -111,18 +128,32 @@ public class LocalFile {
         this.size = size;
     }
 
+    /**
+     * @return the MIME type of this file. Null if no MIME type is set.
+     */
     public String getMimeType() {
         return mimeType;
     }
 
+    /**
+     * Set the MIME type of this file, according to {@link RFC6838 https://tools.ietf.org/html/rfc6838}.
+     * @param mimeType the MIME type string
+     */
     public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
     }
 
+    /**
+     * @return the {@link ProgressHandler} for uploading this file. Null if no {@link ProgressHandler} is set.
+     */
     public MessageClient.ProgressHandler getProgressHandler() {
         return progressHandler;
     }
 
+    /**
+     * Set the {@link ProgressHandler} to get uploading progress of this file.
+     * @param progressHandler the handler to get uploading progress.
+     */
     public void setProgressHandler(MessageClient.ProgressHandler progressHandler) {
         this.progressHandler = progressHandler;
     }

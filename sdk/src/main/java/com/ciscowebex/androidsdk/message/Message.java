@@ -95,6 +95,9 @@ public class Message {
         this._created = created;
     }
 
+    /**
+     * @return a list of remote files attached to this message.
+     */
     public List<RemoteFile> getRemoteFiles() {
         return _remoteFiles;
     }
@@ -175,6 +178,9 @@ public class Message {
         return _created;
     }
 
+    /**
+     * @return return true if the message is the recepient of the message is mentioned.
+     */
     public boolean isSelfMentioned() {
         return isSelfMentioned;
     }
@@ -183,6 +189,9 @@ public class Message {
         isSelfMentioned = selfMentioned;
     }
 
+    /**
+     * @return the message in JSON string format.
+     */
     @Override
     public String toString() {
         Gson gson = new Gson();

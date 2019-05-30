@@ -2,6 +2,10 @@ package com.ciscowebex.androidsdk.message;
 
 import android.support.annotation.NonNull;
 
+/**
+ * Marker interface. Use either {@link Before.Message} or {@link Before.Date}.
+ * @since 2.1.0
+ */
 public interface Before {
 
     /**
