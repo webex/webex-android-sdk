@@ -1,7 +1,7 @@
 package com.ciscowebex.androidsdk.message;
 
 /**
- * Callback to receive the events from a {@linke MessageClient}.
+ * Callback to receive the events from a {@link MessageClient}.
  *
  * @since 1.4.0
  */
@@ -26,7 +26,8 @@ public interface MessageObserver {
         }
 
         /**
-         * @return the message arrived
+         * Return the message arrived.
+         * @return The message arrived.
          */
         public Message getMessage() {
             return message;
@@ -49,7 +50,8 @@ public interface MessageObserver {
         }
 
         /**
-         * @return the id of the deleted message
+         * Return the id of the deleted message
+         * @return The id of the deleted message
          */
         public String getMessageId() {
             return messageId;
@@ -73,21 +75,24 @@ public interface MessageObserver {
         }
 
         /**
-         * @return the id of the space where the message is read.
+         * Return the id of the space where the message is read.
+         * @return The id of the space where the message is read.
          */
         public String getSpaceId() {
             return spaceId;
         }
 
         /**
-         * @return the id of the message that has been read.
+         * Return the id of the message that has been read.
+         * @return The id of the message that has been read.
          */
         public String getMessageId() {
             return messageId;
         }
 
         /**
-         * @return the id the person who read the message.
+         * Return the id the person who read the message
+         * @return The id the person who read the message.
          */
         public String getPersonId() {
             return personId;

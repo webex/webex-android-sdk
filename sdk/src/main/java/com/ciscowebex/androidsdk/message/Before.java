@@ -15,10 +15,18 @@ public interface Before {
     class Message implements Before {
         private String id;
 
+        /**
+         * Create a {@link Before.Message} with a message id.
+         * @param Id the identifier of the message.
+         */
         public Message(@NonNull String id) {
             this.id = id;
         }
 
+        /**
+         * Return the identifier of the message.
+         * @return The identifier of the message.
+         */
         public String getMessage() {
             return id;
         }
@@ -31,10 +39,18 @@ public interface Before {
     class Date implements Before {
         private java.util.Date date;
 
+        /**
+         * Create a {@link Message.Date} with a {@link java.util.Date}.
+         * @param date the date.
+         */
         public Date(@NonNull java.util.Date date) {
             this.date = date;
         }
 
+        /**
+         * Return the date.
+         * @return the date.
+         */
         public java.util.Date getDate() {
             return date;
         }

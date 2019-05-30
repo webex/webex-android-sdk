@@ -2,6 +2,8 @@ package com.ciscowebex.androidsdk.message;
 
 /**
  * A data type represents mention.
+ * <p>
+ * Mention is the way to send specific notification to the people mentioned.
  * @since 1.4.0
  */
 public interface Mention {

@@ -71,7 +71,7 @@ public class LocalFile {
     private Thumbnail thumbnail;
 
     /**
-     * Constructor to create a LocalFile based on a {@link java.io.File} pointing to a file on the Android device.
+     * Constructor to create a {@link LocalFile} based on a {@link java.io.File} pointing to a file on the Android device.
      *
      * @param file It must be an existing file (not a directory) on the device.
      */
@@ -85,7 +85,8 @@ public class LocalFile {
     }
 
     /**
-     * @return the {@link java.io.File} object passed from {@link LocalFile}.
+     * Return the local {@link java.io.File} object.
+     * @return The local {@link java.io.File} object.
      */
     public File getFile() {
         return file;
@@ -96,7 +97,8 @@ public class LocalFile {
     }
 
     /**
-     * @return the path to the file on the device.
+     * Return the path to the file on the device.
+     * @return The path to the file on the device.
      */
     public String getPath() {
         return path;
@@ -107,7 +109,8 @@ public class LocalFile {
     }
 
     /**
-     * @return the name of the file on the device.
+     * Return the name of the file on the device.
+     * @return The name of the file on the device.
      */
     public String getName() {
         return name;
@@ -118,7 +121,8 @@ public class LocalFile {
     }
 
     /**
-     * @return the size of the file on the deivce
+     * Return the size of the file on the deivce.
+     * @return The size of the file on the deivce, in bytes.
      */
     public long getSize() {
         return size;
@@ -129,7 +133,8 @@ public class LocalFile {
     }
 
     /**
-     * @return the MIME type of this file. Null if no MIME type is set.
+     * Return the MIME type of this file.
+     * @return The MIME type of this file. Null if no MIME type is set.
      */
     public String getMimeType() {
         return mimeType;
@@ -144,7 +149,8 @@ public class LocalFile {
     }
 
     /**
-     * @return the {@link ProgressHandler} for uploading this file. Null if no {@link ProgressHandler} is set.
+     * Return the {@link ProgressHandler} used when uploading this file.
+     * @return The {@link ProgressHandler}. Null if no {@link ProgressHandler} is set.
      */
     public MessageClient.ProgressHandler getProgressHandler() {
         return progressHandler;

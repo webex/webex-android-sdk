@@ -96,7 +96,8 @@ public class Message {
     }
 
     /**
-     * @return a list of remote files attached to this message.
+     * Return a list of remote files attached to this message.
+     * @return A list of remote files attached to this message.
      */
     public List<RemoteFile> getRemoteFiles() {
         return _remoteFiles;
@@ -107,6 +108,7 @@ public class Message {
     }
 
     /**
+     * Return The identifier of this message.
      * @return The identifier of this message.
      * @since 0.1
      */
@@ -115,6 +117,7 @@ public class Message {
     }
 
     /**
+     * Return the identifier of the person who sent this message.
      * @return The identifier of the person who sent this message.
      * @since 0.1
      */
@@ -131,6 +134,7 @@ public class Message {
     }
 
     /**
+     * Return the identifier of the space where this message was posted.
      * @return The identifier of the space where this message was posted.
      * @since 0.1
      */
@@ -147,6 +151,7 @@ public class Message {
     }
 
     /**
+     * Return the content of the message in plain text.
      * @return The content of the message in plain text.
      * @since 0.1
      */
@@ -155,6 +160,7 @@ public class Message {
     }
 
     /**
+     * Return the identifier of the recipient when sending a private 1:1 message.
      * @return The identifier of the recipient when sending a private 1:1 message.
      * @since 0.1
      */
@@ -163,6 +169,7 @@ public class Message {
     }
 
     /**
+     * Return the email address of the recipient when sending a private 1:1 message
      * @return The email address of the recipient when sending a private 1:1 message.
      * @since 0.1
      */
@@ -171,7 +178,8 @@ public class Message {
     }
 
     /**
-     * @return The timestamp that the message being created.
+     * Return the {@link java.util.Date} that the message being created.
+     * @return The {@link java.util.Date} that the message being created.
      * @since 0.1
      */
     public Date getCreated() {
@@ -179,7 +187,8 @@ public class Message {
     }
 
     /**
-     * @return return true if the message is the recepient of the message is mentioned.
+     * Return true if the message is the recepient of the message is mentioned.
+     * @return true if the message is the recepient of the message is mentioned.
      */
     public boolean isSelfMentioned() {
         return isSelfMentioned;

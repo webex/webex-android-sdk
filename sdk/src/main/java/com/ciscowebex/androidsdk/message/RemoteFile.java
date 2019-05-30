@@ -56,7 +56,8 @@ public class RemoteFile {
     protected Thumbnail thumbnail;
 
     /**
-     * @return the display name of this remote file.
+     * Return the display name of this remote file.
+     * @return The display name of this remote file.
      */
     public String getDisplayName() {
         return displayName;
@@ -71,7 +72,8 @@ public class RemoteFile {
     }
 
     /**
-     * @return the MIME type of this remote file.
+     * Return the MIME type of this remote file.
+     * @return The MIME type of this remote file.
      */
     public String getMimeType() {
         return mimeType;
@@ -86,6 +88,7 @@ public class RemoteFile {
     }
 
     /**
+     * Return the size of this remote file.
      * @return the size of this remote file, in bytes.
      */
     public Long getSize() {
@@ -101,21 +104,23 @@ public class RemoteFile {
     }
 
     /**
-     * @return the URL for this remote file.
+     * Return the URL string for this remote file.
+     * @return The URL string for this remote file.
      */
     public String getUrl() {
         return url;
     }
 
     /**
-     * Set the url of this remote file.
-     * @param url
+     * Set the URL string of this remote file.
+     * @param url the URL string of this remote file.
      */
     public void setUrl(String url) {
         this.url = url;
     }
 
     /**
+     * Return the thumbnail of this remote file.
      * @return the thumbnail of this remote file.
      */
     public Thumbnail getThumbnail() {
@@ -123,8 +128,8 @@ public class RemoteFile {
     }
 
     /**
-     * set the thumbnail of this remote file.
-     * @param thumbnail the thumbnail of this remote file.
+     * Set the thumbnail of this remote file.
+     * @param thumbnail The thumbnail of this remote file.
      */
     public void setThumbnail(Thumbnail thumbnail) {
         this.thumbnail = thumbnail;

@@ -63,8 +63,8 @@ public interface MessageClient {
      * The list sorts the messages in descending order by creation date.
      *
      * @param spaceId         The identifier of a space.
-     * @param before          If not nil, only list messages sent only before a {@link Before.Message} or {@link Before.Date}.
-     * @param max             The maximum number of messages in the response.
+     * @param before          If not nil, list messages sent only before a {@link Before.Message} or {@link Before.Date}.
+     * @param max             The maximum number of messages to be listed in the response.
      * @param mentions        If not nil, only list messages with any mention listed in this array of {@link Mention}.
      * @param handler         A closure to be executed once the request has finished with a list of messages based on the above criteria.
      * @since 2.1
@@ -98,7 +98,7 @@ public interface MessageClient {
      *
      * The content of the message can be plain text, html, or markdown.
      * To notify specific person or everyone in a space, mentions should be used.
-     * Having <code>@john</code> does not generate notification.
+     * Having <code>@johndoe</code> in the content of the message does not generate notification.
      *
      * @param idOrEmail     The identifier of a space or a person or an email address to which the message is to be posted.
      * @param text          The content of message to be posted to the space. The content can be plain text, html, or markdown.
@@ -124,7 +124,7 @@ public interface MessageClient {
     /**
      * Set a {@link MessageObserver} in this client.
      *
-     * @param observer
+     * @param observer the observer object.
      * @since 1.4.0
      * @see MessageObserver
      */
@@ -145,7 +145,7 @@ public interface MessageClient {
      * Download the thumbnail (preview image) of a file attachment asynchronously.
      *
      * @param remoteFile        The remote file whose thumbnail to be downloaded.
-     * @param path              The local file directory to the thumbnail.
+     * @param path              The local file directory to save the thumbnail.
      * @param progressHandler   The download progress indicator.
      * @param completionHandler A closure to be executed when the download has completed.
      * @since 1.4.0
@@ -153,7 +153,7 @@ public interface MessageClient {
     void downloadThumbnail(RemoteFile remoteFile, java.io.File path, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
 
     /**
-     * Retrieves a message by message Id.
+     * Retrieve a message asynchronously by message Id.
      *
      * @param messageId The identifier of the message.
      * @param handler   A closure to be executed once the message has been retrieved.
@@ -162,7 +162,7 @@ public interface MessageClient {
     void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler);
 
     /**
-     * Deletes a message by message id.
+     * Delete a message asynchronously by message id.
      *
      * @param messageId The identifier of the message.
      * @param handler   A closure to be executed once the request has finished.
