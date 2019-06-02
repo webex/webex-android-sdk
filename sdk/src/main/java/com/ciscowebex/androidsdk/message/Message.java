@@ -103,7 +103,7 @@ public class Message {
     }
 
     /**
-     * Return The identifier of this message.
+     * Returns The identifier of this message.
      * @return The identifier of this message.
      * @since 0.1
      */
@@ -112,7 +112,7 @@ public class Message {
     }
 
     /**
-     * Return the identifier of the person who sent this message.
+     * Returns the identifier of the person who sent this message.
      * @return The identifier of the person who sent this message.
      * @since 0.1
      */
@@ -121,7 +121,7 @@ public class Message {
     }
 
     /**
-     * Return the email address of the person who sent this message.
+     * Returns the email address of the person who sent this message.
      * @return The email address of the person who sent this message.
      * @since 0.1
      */
@@ -130,7 +130,7 @@ public class Message {
     }
 
     /**
-     * Return the identifier of the space where this message was posted.
+     * Returns the identifier of the space where this message was posted.
      * @return The identifier of the space where this message was posted.
      * @since 0.1
      */
@@ -139,7 +139,7 @@ public class Message {
     }
 
     /**
-     * @return The type of the space where this message was posted.
+     * @returns The type of the space where this message was posted.
      * @since 0.1
      */
     public Space.SpaceType getSpaceType() {
@@ -147,8 +147,8 @@ public class Message {
     }
 
     /**
-     * Return the content of the message in plain text.
-     * @return The content of the message in plain text.
+     * Returns the content of the message.
+     * @return The content of the message.
      * @since 0.1
      */
     public String getText() {
@@ -162,7 +162,7 @@ public class Message {
     }
 
     /**
-     * Return the identifier of the recipient when sending a private 1:1 message.
+     * Returns the identifier of the recipient when sending a private 1:1 message.
      * @return The identifier of the recipient when sending a private 1:1 message.
      * @since 0.1
      */
@@ -171,7 +171,7 @@ public class Message {
     }
 
     /**
-     * Return the email address of the recipient when sending a private 1:1 message
+     * Returns the email address of the recipient when sending a private 1:1 message
      * @return The email address of the recipient when sending a private 1:1 message.
      * @since 0.1
      */
@@ -180,7 +180,7 @@ public class Message {
     }
 
     /**
-     * Return the {@link java.util.Date} that the message being created.
+     * Returns the {@link java.util.Date} that the message being created.
      * @return The {@link java.util.Date} that the message being created.
      * @since 0.1
      */
@@ -189,15 +189,15 @@ public class Message {
     }
 
     /**
-     * Return true if the message is the recepient of the message is mentioned.
-     * @return true if the message is the recepient of the message is mentioned.
+     * Returns true if the message is the recepient of the message is included in message's mention list
+     * @return True if the message is the recepient of the message is included in message's mention list
      */
     public boolean isSelfMentioned() {
         return this.isSelfMentioned;
     }
 
     /**
-     * Return a list of files attached to this message.
+     * Returns a list of files attached to this message.
      * @return A list of files attached to this message.
      *
      * @Deprecated
@@ -218,6 +218,7 @@ public class Message {
     }
 
     /**
+     * Returns the message in JSON string format.
      * @return the message in JSON string format.
      */
     @Override

@@ -33,6 +33,7 @@ public class RemoteFileImpl implements RemoteFile {
             return mimeType;
         }
 
+        @Deprecated
         public String getUrl() {
             return image.getUrl().toString();
         }
@@ -75,7 +76,7 @@ public class RemoteFileImpl implements RemoteFile {
     }
 
     @Override
-    public Long getSize() {
+    public long getSize() {
         return file.getFileSize();
     }
 

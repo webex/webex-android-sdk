@@ -14,7 +14,9 @@ import java.net.URLConnection;
 public class LocalFile {
 
     /**
-     * A data type represents a local file thumbnail.
+     * A data type represents a thumbnail of this local file.
+     *
+     * The thumbnail typically is an image file to provide preview of the local file without opening.
      *
      * @since 1.4.0
      */
@@ -43,22 +45,42 @@ public class LocalFile {
             this.height = height;
         }
 
+        /**
+         * Returns the local thumbnail file to be uploaded.
+         * @return The local thumbnail file to be uploaded.
+         */
         public java.io.File getFile() {
             return this.file;
         }
 
+        /**
+         * Returns the width of the thumbnail.
+         * @return The width of the thumbnail.
+         */
         public int getWidth() {
             return width;
         }
 
+        /**
+         * Returns the height of the thumbnail.
+         * @return The height of the thumbnail.
+         */
         public int getHeight() {
             return height;
         }
 
+        /**
+         * Returns the size in bytes of the thumbnail.
+         * @return The size in bytes of the thumbnail.
+         */
         public long getSize() {
             return getFile().length();
         }
 
+        /**
+         * Returns the MIME type of thumbnail.
+         * @return The MIME type of thumbnail.
+         */
         public String getMimeType() {
             return mimeType;
         }
@@ -109,18 +131,18 @@ public class LocalFile {
     private Thumbnail thumbnail;
 
     /**
-     * Constructor to create a {@link LocalFile} based on a {@link java.io.File} pointing to a file on the Android device.
+     * Constructs a {@link LocalFile} object out of a local {@link java.io.File}.
      *
-     * @param file It must be an existing file (not a directory) on the device.
+     * @param file An existing local file.
      */
     public LocalFile(@NonNull File file) {
         this(file, null, null, null);
     }
 
     /**
-     * Constructor to create a {@link LocalFile} based on a {@link java.io.File} pointing to a file on the Android device.
+     * Constructs a {@link LocalFile} object out of a local {@link java.io.File}.
      *
-     * @param file It must be an existing file (not a directory) on the device.
+     * @param file An existing local file.
      * @param mime The MIME type of the file, according to {@link RFC6838 https://tools.ietf.org/html/rfc6838}.
      * @param thumbnail The thumbnail for the local file. If not null, the thumbnail will be uploaded with the local file.
      * @param progressHandler The progress indicator callback for uploading progresses.
@@ -141,39 +163,39 @@ public class LocalFile {
     }
 
     /**
-     * Return the local {@link java.io.File} object.
-     * @return The local {@link java.io.File} object.
+     * Returns the local {@link java.io.File} object to be uploaded.
+     * @return The local {@link java.io.File} object to be uploaded.
      */
     public File getFile() {
         return file;
     }
 
     /**
-     * Return the path to the file on the device.
-     * @return The path to the file on the device.
+     * Returns the local path to the file to be uploaded..
+     * @return The local path to the file.
      */
     public String getPath() {
         return getFile().getPath();
     }
 
     /**
-     * Return the name of the file on the device.
-     * @return The name of the file on the device.
+     * Returns the display name of the uploaded file.
+     * @return The display name of the uploaded file.
      */
     public String getName() {
         return getFile().getName();
     }
 
     /**
-     * Return the size of the file on the deivce.
-     * @return The size of the file on the deivce, in bytes.
+     * Returns the size in bytes of the file.
+     * @return The size in bytes of the file
      */
     public long getSize() {
         return getFile().length();
     }
 
     /**
-     * Return the MIME type of this file.
+     * Returns the MIME type of this file.
      * @return The MIME type of this file. Null if no MIME type is unavailable.
      */
     public String getMimeType() {
@@ -181,7 +203,7 @@ public class LocalFile {
     }
 
     /**
-     * Return the {@link MessageClient.ProgressHandler} used when uploading this file.
+     * Returns the {@link MessageClient.ProgressHandler} used when uploading this file.
      * @return The {@link MessageClient.ProgressHandler}. Null if no {@link MessageClient.ProgressHandler} is set.
      */
     public MessageClient.ProgressHandler getProgressHandler() {

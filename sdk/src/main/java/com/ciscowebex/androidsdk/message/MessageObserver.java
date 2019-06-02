@@ -16,8 +16,8 @@ public interface MessageObserver {
     /**
      * The event when a new message has arrived.
      *
-     * @since 1.4.0
      * @Deprecated
+     * @since 1.4.0
      */
     @Deprecated
     class MessageArrived implements MessageEvent {
@@ -28,7 +28,8 @@ public interface MessageObserver {
         }
 
         /**
-         * Return the message arrived.
+         * Returns the message arrived.
+         *
          * @return The message arrived.
          */
         public Message getMessage() {
@@ -53,7 +54,8 @@ public interface MessageObserver {
         }
 
         /**
-         * Return the message arrived.
+         * Returns the message arrived.
+         *
          * @return The message arrived.
          */
         public Message getMessage() {
@@ -64,6 +66,7 @@ public interface MessageObserver {
 
     /**
      * The event when a message has been deleted.
+     *
      * @since 1.4.0
      */
     class MessageDeleted implements MessageEvent {
@@ -74,7 +77,8 @@ public interface MessageObserver {
         }
 
         /**
-         * Return the id of the deleted message
+         * Returns the id of the deleted message
+         *
          * @return The id of the deleted message
          */
         public String getMessageId() {
@@ -84,7 +88,8 @@ public interface MessageObserver {
 
     /**
      * Invoked when there is a new {@link MessageEvent}.
-     * @param event     Message event
+     *
+     * @param event Message event
      */
     void onEvent(MessageEvent event);
 }

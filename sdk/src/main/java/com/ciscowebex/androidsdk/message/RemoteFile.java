@@ -1,23 +1,41 @@
 package com.ciscowebex.androidsdk.message;
 
 /**
- * A data type represents a remote file on the Cisco Webex cloud.
+ * A data type represents a remote file on the Cisco Webex.
+ * The content of the remote file can be downloaded via {@link MessageClient#downloadFile}.
+ *
  * @since 1.4.0
  */
 public interface RemoteFile {
 
     /**
      * A data type represents a thumbnail file.
+     * The thumbnail typically is an image file which provides preview of the remote file without downloading.
+     * The content of the thumbnail can be downloaded via {@link MessageClient#downloadThumbnail}.
+     *
      * @since 1.4.0
      */
     interface Thumbnail {
 
+        /**
+         * Returns the width of the thumbnail.
+         * @return The width of the thumbnail.
+         */
         int getWidth();
 
+        /**
+         * Returns the height of the thumbnail.
+         * @return The height of the thumbnail.
+         */
         int getHeight();
 
+        /**
+         * Returns the MIME type of the thumbnail.
+         * @return The MIME type of the thumbnail.
+         */
         String getMimeType();
 
+        @Deprecated
         String getUrl();
 
         @Deprecated
@@ -34,32 +52,26 @@ public interface RemoteFile {
     }
 
     /**
-     * Return the display name of this remote file.
+     * Returns the display name of this remote file.
      * @return The display name of this remote file.
      */
     String getDisplayName();
 
     /**
-     * Return the size of this remote file.
-     * @return the size of this remote file, in bytes.
+     * Returns the size in bytes of this remote file.
+     * @return the size in bytes of this remote file.
      */
-    Long getSize();
+    long getSize();
 
     /**
-     * Return the MIME type of this remote file.
+     * Returns the MIME type of this remote file.
      * @return The MIME type of this remote file.
      */
     String getMimeType();
 
     /**
-     * Return the URL string for this remote file.
-     * @return The URL string for this remote file.
-     */
-    String getUrl();
-
-    /**
-     * Return the thumbnail of this remote file.
-     * @return the thumbnail of this remote file.
+     * Returns the thumbnail of this remote file.
+     * @return The thumbnail of this remote file.
      */
     Thumbnail getThumbnail();
 
@@ -85,6 +97,15 @@ public interface RemoteFile {
      */
     @Deprecated
     void setMimeType(String mimeType);
+
+    /**
+     * Returns the URL string for this remote file.
+     * @return The URL string for this remote file.
+     *
+     * @Deprecated
+     */
+    @Deprecated
+    String getUrl();
 
     /**
      * Set the URL string of this remote file.
