@@ -32,9 +32,11 @@ import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.CompletionHandler;
 
 /**
- * MessageClient represents a client to the Webex Teams messaging platform.
+ * MessageClient represents a client to the Webex Teams platform.
+ * It can send and receive messages.
  * <p>
- * MessageClient can send and receive messages or otherwise manage messages.
+ *Use {@link com.ciscowebex.androidsdk.Webex#messages()} to get an instance of MessageClient.
+ *
  *
  * @since 0.1
  */
@@ -63,9 +65,9 @@ public interface MessageClient {
      * The list sorts the messages in descending order by creation date.
      *
      * @param spaceId         The identifier of a space.
-     * @param before          If not nil, list messages sent only before a {@link Before.Message} or {@link Before.Date}.
+     * @param before          If not nil, list messages sent only before this condition.
      * @param max             The maximum number of messages to be listed in the response.
-     * @param mentions        If not nil, only list messages with any mention listed in this array of {@link Mention}.
+     * @param mentions        If not nil, only list messages with any mention listed here.
      * @param handler         A closure to be executed once the request has finished with a list of messages based on the above criteria.
      * @since 2.1
      */
@@ -94,7 +96,7 @@ public interface MessageClient {
               @NonNull CompletionHandler<Message> handler);
 
     /**
-     * Post a message with optional file attachments to a space or a person asynchronously.
+     * Posts a message with optional file attachments to a space or a person asynchronously.
      *
      * The content of the message can be plain text, html, or markdown.
      * To notify specific person or everyone in a space, mentions should be used.
@@ -122,7 +124,7 @@ public interface MessageClient {
     void markRead(@NonNull String spaceId);
 
     /**
-     * Set a {@link MessageObserver} in this client.
+     * Sets a {@link MessageObserver} in this client.
      *
      * @param observer the observer object.
      * @since 1.4.0
@@ -131,12 +133,12 @@ public interface MessageClient {
     void setMessageObserver(MessageObserver observer);
 
     /**
-     * Download a file attachement asynchronously.
+     * Downloads a file attachement asynchronously.
      *
-     * @param remoteFile        The remote file attachment to be downloaded.
+     * @param remoteFile        The reference to the file attachment to be downloaded. Use @{link Message#getRemoteFiles()} to get the references.
      * @param path              The local file directory to save the remote file.
      * @param progressHandler   The download progress indicator.
-     * @param completionHandler A closure to be executed when the download has completed.
+     * @param completionHandler A closure to be executed when the download has completed. The URI contains the path to the downloaded file.
      * @since 1.4.0
      */
     void downloadFile(RemoteFile remoteFile, java.io.File path, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
@@ -147,13 +149,13 @@ public interface MessageClient {
      * @param remoteFile        The remote file whose thumbnail to be downloaded.
      * @param path              The local file directory to save the thumbnail.
      * @param progressHandler   The download progress indicator.
-     * @param completionHandler A closure to be executed when the download has completed.
+     * @param completionHandler A closure to be executed when the download has completed. The URI contains the path to the downloaded thumbnail.
      * @since 1.4.0
      */
     void downloadThumbnail(RemoteFile remoteFile, java.io.File path, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
 
     /**
-     * Retrieve a message asynchronously by message Id.
+     * Retrieves a message asynchronously by message Id.
      *
      * @param messageId The identifier of the message.
      * @param handler   A closure to be executed once the message has been retrieved.
@@ -162,7 +164,7 @@ public interface MessageClient {
     void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler);
 
     /**
-     * Delete a message asynchronously by message id.
+     * Deletes a message asynchronously by message id.
      *
      * @param messageId The identifier of the message.
      * @param handler   A closure to be executed once the request has finished.

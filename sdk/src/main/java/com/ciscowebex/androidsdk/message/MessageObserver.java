@@ -26,7 +26,7 @@ public interface MessageObserver {
         }
 
         /**
-         * Return the message arrived.
+         * Returns the message arrived.
          * @return The message arrived.
          */
         public Message getMessage() {
@@ -50,7 +50,7 @@ public interface MessageObserver {
         }
 
         /**
-         * Return the id of the deleted message
+         * Returns the id of the deleted message
          * @return The id of the deleted message
          */
         public String getMessageId() {
