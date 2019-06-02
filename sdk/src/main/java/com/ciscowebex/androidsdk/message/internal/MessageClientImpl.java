@@ -39,15 +39,8 @@ import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.content.ContentUploadMonitor;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.Injector;
-import com.cisco.spark.android.events.ActivityDecryptedEvent;
-import com.cisco.spark.android.mercury.events.ConversationActivityEvent;
 import com.cisco.spark.android.model.*;
-import com.cisco.spark.android.model.conversation.Activity;
-import com.cisco.spark.android.model.conversation.Comment;
-import com.cisco.spark.android.model.conversation.Content;
-import com.cisco.spark.android.model.conversation.File;
-import com.cisco.spark.android.model.conversation.GroupMention;
-import com.cisco.spark.android.model.conversation.Image;
+import com.cisco.spark.android.model.conversation.*;
 import com.cisco.spark.android.model.crypto.scr.ContentReference;
 import com.cisco.spark.android.processing.ActivityListener;
 import com.cisco.spark.android.sync.ContentDataCacheRecord;
@@ -55,6 +48,7 @@ import com.cisco.spark.android.sync.ContentDownloadMonitor;
 import com.cisco.spark.android.sync.ContentManager;
 import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.DatabaseProvider;
+import com.cisco.spark.android.sync.operationqueue.ActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.NewConversationOperation;
 import com.cisco.spark.android.sync.operationqueue.PostCommentOperation;
 import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation;
@@ -67,7 +61,9 @@ import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.message.*;
+import com.ciscowebex.androidsdk.message.Message;
 import com.ciscowebex.androidsdk.space.Space;
+import com.ciscowebex.androidsdk.utils.EmailAddress;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.http.ListBody;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
@@ -76,8 +72,6 @@ import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Strings;
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -150,43 +144,14 @@ public class MessageClientImpl implements MessageClient {
         });
     }
 
-    @Override
-    public void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
-        List<Mention> mentions = null;
-        if (mentionedPeople != null) {
-            List<String> peoples = Strings.split(mentionedPeople, ",", false);
-            if (peoples != null && peoples.size() != 0) {
-                mentions = new ArrayList<>(peoples.size());
-                for (String people : peoples) {
-                    mentions.add(new Mention.MentionPerson(people));
-                }
-            }
-        }
-        Before b = null;
-        if (before != null) {
-            try {
-                Date date = DateUtils.buildIso8601Format().parse(before);
-                if (date != null) {
-                    b = new Before.Date(date);
-                }
-            } catch (Exception ignored) {
-
-            }
-        }
-        else  if (beforeMessage != null) {
-            b = new Before.Message(beforeMessage);
-        }
-        list(spaceId, b, max, mentions == null ? null : mentions.toArray(new Mention[mentions.size()]), handler);
-    }
-
     public void list(@NonNull String spaceId, @Nullable Before before, int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler) {
-        String id = InternalId.translate(spaceId);
+        String id = WebexId.translate(spaceId);
         if (max == 0) {
             runOnUiThread(() -> handler.onComplete(ResultImpl.success(Collections.emptyList())), handler);
             return;
         }
         if (before == null) {
-            list(id,null, mentions, max, new ArrayList<>(), handler);
+            list(id, null, mentions, max, new ArrayList<>(), handler);
         }
         else if (before instanceof Before.Date) {
             list(id, ((Before.Date) before).getDate(), mentions, max, new ArrayList<>(), handler);
@@ -225,7 +190,7 @@ public class MessageClientImpl implements MessageClient {
                                 decryptActivity(activity, new Action<Activity>() {
                                     @Override
                                     public void call(Activity activity) {
-                                        Message message = createMessage(activity);
+                                        Message message = createMessage(activity, false);
                                         if (message != null) {
                                             messages.add(message);
                                         }
@@ -273,8 +238,8 @@ public class MessageClientImpl implements MessageClient {
     }
 
     private void get(@NonNull String messageId, boolean decrypt, @NonNull CompletionHandler<Message> handler) {
-        InternalId internalId = InternalId.from(messageId);
-        _client.getConversationClient().getActivity("activities/" + internalId.getId()).enqueue(new Callback<Activity>() {
+        WebexId webexId = WebexId.from(messageId);
+        _client.getConversationClient().getActivity("activities/" + webexId.getId()).enqueue(new Callback<Activity>() {
             @Override
             public void onResponse(Call<Activity> call, Response<Activity> response) {
                 if (response.isSuccessful()) {
@@ -283,12 +248,12 @@ public class MessageClientImpl implements MessageClient {
                         decryptActivity(activity, new Action<Activity>() {
                             @Override
                             public void call(Activity activity) {
-                                runOnUiThread(() -> handler.onComplete(ResultImpl.success(createMessage(activity))), handler);
+                                runOnUiThread(() -> handler.onComplete(ResultImpl.success(createMessage(activity, false))), handler);
                             }
                         });
                     }
                     else {
-                        handler.onComplete(ResultImpl.success(createMessage(activity)));
+                        handler.onComplete(ResultImpl.success(createMessage(activity, false)));
                     }
                 }
                 else {
@@ -304,61 +269,13 @@ public class MessageClientImpl implements MessageClient {
     }
 
     @Override
-    @Deprecated
-    public void post(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler) {
-        String idOrEmail = (spaceId == null ? (personId == null ? personEmail : personId) : spaceId);
-        List<LocalFile> localFiles = null;
-        if (files != null && files.length > 0) {
-            localFiles = new ArrayList<>(files.length);
-            for (String file : files){
-                java.io.File f = new java.io.File(file);
-                if (f.exists()) {
-                    localFiles.add(new LocalFile(f));
-                }
-            }
-        }
-        post(idOrEmail, text, null, localFiles == null ? null : localFiles.toArray(new LocalFile[localFiles.size()]), handler);
-    }
-
-    @Override
-    public void post(@NonNull String idOrEmail, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        InternalId internalId = InternalId.from(idOrEmail);
-        if (internalId == null) {
-            postToPerson(idOrEmail, text, files, handler);
-        }
-        else if (internalId.is(InternalId.Type.ROOM_ID)) {
-            postToSpace(internalId.getId(), text, mentions, files, handler);
-        }
-        else if (internalId.is(InternalId.Type.PEOPLE_ID)) {
-            postToPerson(internalId.getId(), text, files, handler);
-        }
-    }
-
-    @Override
-    public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> _service.delete(s, messageId), new ObjectCallback<>(handler));
-    }
-
-    public void markRead(@NonNull String spaceId) {
-        operations.markConversationRead(InternalId.translate(spaceId));
-    }
-
-    @Override
-    public void downloadFile(RemoteFile file, java.io.File path, ProgressHandler progressHandler, CompletionHandler<Uri> handler) {
-        download(((RemoteFileImpl) file).getFile(), file.getDisplayName(), false, path , progressHandler, handler);
-    }
-
-    @Override
-    public void downloadThumbnail(RemoteFile file, java.io.File path, ProgressHandler progressHandler, CompletionHandler<Uri> handler) {
-        download(((RemoteFileImpl) file).getFile().getImage(), file.getDisplayName(), true, path, progressHandler, handler);
-    }
-
-    private void postToPerson(@NonNull String personIdOrEmail, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        Ln.d("postToPerson： " + personIdOrEmail);
+    public void postToPerson(@NonNull String personId, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
+        WebexId webexId = WebexId.from(personId);
+        Ln.d("postToPerson： " + personId);
         Comment comment = new Comment(text);
         comment.setContent(text);
         EnumSet<NewConversationOperation.CreateFlags> createFlags = EnumSet.of(NewConversationOperation.CreateFlags.ONE_ON_ONE, NewConversationOperation.CreateFlags.PERSIST_WITHOUT_MESSAGES);
-        operations.createConversationWithCallBack(Collections.singletonList(personIdOrEmail), null, createFlags,
+        operations.createConversationWithCallBack(Collections.singletonList(webexId == null ? personId : webexId.getId()), null, createFlags,
                 new Action<NewConversationOperation>() {
                     @Override
                     public void call(NewConversationOperation item) {
@@ -368,21 +285,27 @@ public class MessageClientImpl implements MessageClient {
                 });
     }
 
+    @Override
+    public void postToPerson(@NonNull EmailAddress personEmail, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
+        postToPerson(personEmail.toString(), text, files, handler);
+    }
+
+    @Override
     public void postToSpace(@NonNull String spaceId, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
+        WebexId webexId = WebexId.from(spaceId);
         Comment comment = new Comment(text);
         comment.setContent(text);
-
         if (mentions != null && mentions.length > 0) {
             ItemCollection<Person> mentionedPersons = new ItemCollection<>();
             ItemCollection<GroupMention> mentionAll = new ItemCollection<>();
             for (Mention mention : mentions) {
-                if (mention instanceof Mention.MentionPerson) {
-                    InternalId personId = InternalId.from(((Mention.MentionPerson) mention).getPersonId());
+                if (mention instanceof Mention.Person) {
+                    WebexId personId = WebexId.from(((Mention.Person) mention).getPersonId());
                     if (personId != null) {
                         Person person = new Person(personId.getId());
                         mentionedPersons.addItem(person);
                     }
-                } else if (mention instanceof Mention.MentionAll) {
+                } else if (mention instanceof Mention.All) {
                     mentionAll.addItem(new GroupMention(GroupMention.GroupType.ALL));
                 }
             }
@@ -393,7 +316,7 @@ public class MessageClientImpl implements MessageClient {
                 comment.setMentions(mentionedPersons);
             }
         }
-        post(spaceId, comment, files, handler);
+        post(webexId == null ? spaceId : webexId.getId(), comment, files, handler);
     }
 
     private void post(String conversationId, Comment comment, LocalFile[] localFiles, CompletionHandler<Message> handler) {
@@ -401,6 +324,23 @@ public class MessageClientImpl implements MessageClient {
             handler.onComplete(ResultImpl.error("Invalid person or id!"));
             return;
         }
+        Action<ActivityOperation> callback = new Action<ActivityOperation>() {
+            @Override
+            public void call(ActivityOperation item) {
+                Activity activity = item.getResult();
+                if (activity == null) {
+                    runOnUiThread(() -> handler.onComplete(ResultImpl.error(item.getErrorMessage())), handler);
+                }
+                else  {
+                    decryptActivity(activity, new Action<Activity>() {
+                        @Override
+                        public void call(Activity activity) {
+                            runOnUiThread(() -> handler.onComplete(ResultImpl.success(createMessage(activity, false))), handler);
+                        }
+                    });
+                }
+            }
+        };
         if (localFiles != null && localFiles.length > 0) {
             ShareContentData shareContentData = new ShareContentData();
             for (LocalFile localFile : localFiles) {
@@ -414,24 +354,52 @@ public class MessageClientImpl implements MessageClient {
                     executor.scheduleAtFixedRate(new CheckUploadProgressTask(localFile), 0, 1, TimeUnit.SECONDS);
                 }
             }
-            PostContentActivityOperation postContent = new PostContentActivityOperation(injector, conversationId,
+            CallbackablePostContentActivityOperation postContent = new CallbackablePostContentActivityOperation(injector, conversationId,
                     shareContentData,
                     comment,
                     shareContentData.getContentFiles(),
-                    shareContentData.getOperationIds()
-            );
+                    shareContentData.getOperationIds(),
+                    callback);
             operations.submit(postContent);
-            runOnUiThread(() -> handler.onComplete(ResultImpl.success(null)), handler);
         } else {
-            PostCommentOperation postCommentOperation = new PostCommentOperation(injector, conversationId, comment);
+            CallbackablePostCommentOperation postCommentOperation = new CallbackablePostCommentOperation(injector, conversationId, comment, callback);
             operations.submit(postCommentOperation);
-            runOnUiThread(() -> handler.onComplete(ResultImpl.success(null)), handler);
         }
-        // TODO CompletionHandler doesn't contain message
     }
 
-    private void download(ContentReference reference, String displayName, boolean thnumnail, java.io.File path, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler) {
-        Action<Long> callback = new Action<Long>() {
+    @Override
+    public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
+        ServiceBuilder.async(_authenticator, handler, s -> _service.delete(s, messageId), new ObjectCallback<>(handler));
+    }
+
+    @Override
+    public void downloadFile(@NonNull RemoteFile file,
+                             @Nullable java.io.File path,
+                             @Nullable ProgressHandler progressHandler,
+                             @NonNull CompletionHandler<Uri> handler) {
+        download(((RemoteFileImpl) file).getFile(), file.getDisplayName(), false, path , progressHandler, handler);
+    }
+
+    @Override
+    public void downloadThumbnail(@NonNull RemoteFile file,
+                                  @Nullable java.io.File path,
+                                  @Nullable ProgressHandler progressHandler,
+                                  @NonNull CompletionHandler<Uri> handler) {
+        RemoteFileImpl.ThumbnailImpl thumbnail = (RemoteFileImpl.ThumbnailImpl) file.getThumbnail();
+        if (thumbnail == null || thumbnail.getImage() == null) {
+            handler.onComplete(ResultImpl.error("No thumbnail for this remote file."));
+            return;
+        }
+        download(thumbnail.getImage(), file.getDisplayName(), true, path, progressHandler, handler);
+    }
+
+    private void download(@NonNull ContentReference reference,
+                          @Nullable String displayName,
+                          boolean thnumnail,
+                          @Nullable java.io.File path,
+                          @Nullable ProgressHandler progressHandler,
+                          @NonNull CompletionHandler<Uri> completionHandler) {
+        Action<Long> callback = progressHandler == null ? null : new Action<Long>() {
             @Override
             public void call(Long item) {
                 runOnUiThread(() -> progressHandler.onProgress(item), progressHandler);
@@ -441,7 +409,9 @@ public class MessageClientImpl implements MessageClient {
         Action<ContentDataCacheRecord> action = new Action<ContentDataCacheRecord>() {
             @Override
             public void call(ContentDataCacheRecord item) {
-                runOnUiThread(() -> progressHandler.onProgress(item.getDataSize()), progressHandler);
+                if (progressHandler != null) {
+                    runOnUiThread(() -> progressHandler.onProgress(item.getDataSize()), progressHandler);
+                }
                 java.io.File target = path;
                 if (target == null) {
                     target = new java.io.File(_context.getCacheDir(), "com.ciscowebex.sdk.downloads");
@@ -487,39 +457,28 @@ public class MessageClientImpl implements MessageClient {
         _observer = observer;
     }
 
-    @Subscribe(threadMode = ThreadMode.ASYNC)
-    public void onEventAsync(ConversationActivityEvent event) {
-        Activity activity = event.getActivity();
-        if (activity.getVerb().equals(Verb.acknowledge)) {
-            String spaceId = new InternalId(InternalId.Type.ROOM_ID, activity.getConversationId()).toHydraId();
-            String messageId = new InternalId(InternalId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId();
-            String personId = new InternalId(InternalId.Type.PEOPLE_ID, activity.getActor().getId()).toHydraId();
-            MessageObserver.MessageEvent read = new MessageObserver.MessageRead(spaceId, messageId, personId);
-            runOnUiThread(() -> _observer.onEvent(read), _observer);
-        }
-    }
-
     private void processorActivity(Activity activity) {
+        if (_observer == null) {
+            return;
+        }
         MessageObserver.MessageEvent event;
         switch (activity.getVerb()) {
             case Verb.post:
             case Verb.share:
-                event = new MessageObserver.MessageArrived(createMessage(activity));
+                event = new MessageObserver.MessageReceived(createMessage(activity, true));
                 break;
             case Verb.delete:
-                event = new MessageObserver.MessageDeleted(new InternalId(InternalId.Type.MESSAGE_ID, activity.getId()).toHydraId());
+                event = new MessageObserver.MessageDeleted(new WebexId(WebexId.Type.MESSAGE_ID, activity.getId()).toHydraId());
                 break;
-//            case Verb.acknowledge:
-//                String spaceId = new InternalId(InternalId.Type.ROOM_ID, activity.getConversationId()).toHydraId();
-//                String messageId = new InternalId(InternalId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId();
-//                String personId = new InternalId(InternalId.Type.PEOPLE_ID, activity.getActor().getId()).toHydraId();
-//                event = new MessageObserver.MessageRead(spaceId, messageId, personId);
-//                break;
             default:
                 Ln.e("unknown verb " + activity.getVerb());
                 return;
         }
         runOnUiThread(() -> _observer.onEvent(event), _observer);
+        // TODO Remove the deprecated event in next big release
+        if (event instanceof MessageObserver.MessageReceived) {
+            runOnUiThread(() -> _observer.onEvent(new MessageObserver.MessageArrived(((MessageObserver.MessageReceived) event).getMessage())), _observer);
+        }
     }
 
     private void decryptActivity(Activity activity, Action<Activity> callback) {
@@ -537,41 +496,8 @@ public class MessageClientImpl implements MessageClient {
         });
     }
 
-    private Message createMessage(Activity activity) {
-        if (activity == null) {
-            return null;
-        }
-        Message message = new Message();
-        message.setCreated(activity.getPublished());
-        message.setId(new InternalId(InternalId.Type.MESSAGE_ID, activity.getId()).toHydraId());
-        message.setSpaceId(new InternalId(InternalId.Type.ROOM_ID, activity.getConversationId()).toHydraId());
-        if (activity.getTarget() instanceof SpaceProperty) {
-            message.setSpaceId(new InternalId(InternalId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId());
-            message.setSpaceType(((SpaceProperty)activity.getTarget()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP);
-        }
-        message.setPersonId(new InternalId(InternalId.Type.PEOPLE_ID, activity.getActor().getId()).toHydraId());
-        message.setPersonEmail(activity.getActor().getEmail());
-        if (activity.getObject().getDisplayName() != null) {
-            message.setText(activity.getObject().getDisplayName());
-        }
-        if (activity.getObject().getContent() != null) {
-            message.setText(activity.getObject().getContent());
-        }
-        if (activity.isSelfMention(_provider.getAuthenticatedUser(), 0)) {
-            message.setSelfMentioned(true);
-        }
-        if (activity.getObject().isContent()) {
-            Content content = (Content) activity.getObject();
-            ItemCollection<File> files = content.getContentFiles();
-            ArrayList<RemoteFile> remoteFiles = new ArrayList<>();
-            for (File file : files.getItems()) {
-                RemoteFile remoteFile = new RemoteFileImpl(file);
-                remoteFiles.add(remoteFile);
-            }
-            message.setRemoteFiles(remoteFiles);
-        }
-
-        return message;
+    private Message createMessage(Activity activity, boolean received) {
+        return activity == null ? null : new MessageImpl(activity, _provider.getAuthenticatedUserOrNull(), received);
     }
 
     private void runOnUiThread(Runnable r, Object conditioner) {
@@ -621,7 +547,7 @@ public class MessageClientImpl implements MessageClient {
             modelFile.setMimeType(MimeUtils.getMimeType(contentUri.toString()));
             modelFile.setDisplayName(contentUri.getLastPathSegment());
             if (localFile.getThumbnail() != null) {
-                java.io.File thumbFile = new java.io.File(localFile.getThumbnail().getPath());
+                java.io.File thumbFile = localFile.getThumbnail().getFile();
                 if (thumbFile.exists() && thumbFile.isFile()) {
                     Image newThumb = new Image(Uri.fromFile(thumbFile), localFile.getThumbnail().getWidth(), localFile.getThumbnail().getHeight(), true);
                     modelFile.setImage(newThumb);
@@ -658,4 +584,74 @@ public class MessageClientImpl implements MessageClient {
         Call<Void> delete(@Header("Authorization") String authorization, @Path("messageId") String messageId);
     }
 
+    @Override
+    @Deprecated
+    public void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
+        List<Mention> mentions = null;
+        if (mentionedPeople != null) {
+            List<String> peoples = Strings.split(mentionedPeople, ",", false);
+            if (peoples != null && peoples.size() != 0) {
+                mentions = new ArrayList<>(peoples.size());
+                for (String people : peoples) {
+                    mentions.add(new Mention.Person(people));
+                }
+            }
+        }
+        Before b = null;
+        if (before != null) {
+            try {
+                Date date = DateUtils.buildIso8601Format().parse(before);
+                if (date != null) {
+                    b = new Before.Date(date);
+                }
+            } catch (Exception ignored) {
+
+            }
+        }
+        else  if (beforeMessage != null) {
+            b = new Before.Message(beforeMessage);
+        }
+        list(spaceId, b, max, mentions == null ? null : mentions.toArray(new Mention[mentions.size()]), handler);
+    }
+
+    @Override
+    @Deprecated
+    public void post(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler) {
+        String idOrEmail = (spaceId == null ? (personId == null ? personEmail : personId) : spaceId);
+        List<LocalFile> localFiles = null;
+        if (files != null && files.length > 0) {
+            localFiles = new ArrayList<>(files.length);
+            for (String file : files){
+                java.io.File f = new java.io.File(file);
+                try {
+                    localFiles.add(new LocalFile(f));
+                }
+                catch (Exception e) {
+                    Ln.e(e);
+                }
+            }
+        }
+        post(idOrEmail, text, null, localFiles == null ? null : localFiles.toArray(new LocalFile[0]), handler);
+    }
+
+    @Override
+    @Deprecated
+    public void post(@NonNull String idOrEmail, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
+        WebexId webexId = WebexId.from(idOrEmail);
+        if (webexId == null) {
+            EmailAddress email = EmailAddress.fromString(idOrEmail);
+            if (email == null) {
+                postToPerson(idOrEmail, text, files, handler);
+            }
+            else {
+                postToPerson(email, text, files, handler);
+            }
+        }
+        else if (webexId.is(WebexId.Type.ROOM_ID)) {
+            postToSpace(idOrEmail, text, mentions, files, handler);
+        }
+        else if (webexId.is(WebexId.Type.PEOPLE_ID)) {
+            postToPerson(idOrEmail, text, files, handler);
+        }
+    }
 }

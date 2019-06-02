@@ -69,8 +69,8 @@ public class MessageClientTest {
 
     private void waitForMessage(CountDownLatch signal, String text) {
         messageClient.setMessageObserver(event -> {
-            assertThat(event, instanceOf(MessageObserver.MessageArrived.class));
-            msg = ((MessageObserver.MessageArrived) event).getMessage();
+            assertThat(event, instanceOf(MessageObserver.MessageReceived.class));
+            msg = ((MessageObserver.MessageReceived) event).getMessage();
             assertNotNull(msg);
             assertThat(msg.getText(), is(equalTo(text)));
             messageClient.setMessageObserver(null);

@@ -22,13 +22,21 @@
 
 package com.ciscowebex.androidsdk.message;
 
-
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.cisco.spark.android.model.AuthenticatedUser;
+import com.cisco.spark.android.model.ItemCollection;
+import com.cisco.spark.android.model.Person;
+import com.cisco.spark.android.model.SpaceProperty;
+import com.cisco.spark.android.model.conversation.Activity;
+import com.cisco.spark.android.model.conversation.Content;
+import com.cisco.spark.android.model.conversation.File;
+import com.ciscowebex.androidsdk.message.internal.RemoteFileImpl;
+import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.ciscowebex.androidsdk.space.Space;
 import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
 
 /**
  * This class represents a Message on Cisco Webex.
@@ -37,74 +45,61 @@ import com.google.gson.annotations.SerializedName;
  */
 public class Message {
 
-    private String _id;
+    protected Activity activity;
 
-    private String _spaceId;
+    private String id;
 
-    private Space.SpaceType _spaceType;
+    private String personId;
 
-    private String _personId;
+    private String spaceId;
 
-    private String _personEmail;
+    private Space.SpaceType spaceType;
 
-    private String _toPersonId;
+    private String toPersonId;
 
-    private String _toPersonEmail;
-
-    private Date _created;
-
-    private String _text;
-
-    private transient List<RemoteFile> _remoteFiles;
+    private String toPersonEmail;
 
     private boolean isSelfMentioned;
 
-    public void setId(String id) {
-        this._id = id;
-    }
+    private List<RemoteFile> remoteFiles;
 
-    public void setSpaceId(String spaceId) {
-        this._spaceId = spaceId;
-    }
+    protected Message(Activity activity, AuthenticatedUser user, boolean received) {
+        this.activity = activity;
+        this.id = new WebexId(WebexId.Type.MESSAGE_ID, activity.getId()).toHydraId();
+        if (activity.getActor() != null) {
+            this.personId = new WebexId(WebexId.Type.PEOPLE_ID, activity.getActor().getId()).toHydraId();
+        }
+        if (activity.getTarget() instanceof SpaceProperty) {
+            this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
+            this.spaceType = ((SpaceProperty)activity.getTarget()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+        }
+        else if (activity.getTarget() instanceof Person) {
+            this.toPersonId = new WebexId(WebexId.Type.PEOPLE_ID, activity.getTarget().getId()).toHydraId();
+            this.toPersonEmail = ((Person) activity.getTarget()).getEmail();
+        }
+        if (this.spaceId == null) {
+            this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getConversationId()).toHydraId();
+        }
+        if (user != null) {
+            if (this.toPersonId == null && received) {
+                this.toPersonId = new WebexId(WebexId.Type.PEOPLE_ID, user.getUserId()).toHydraId();
+            }
+            if (this.toPersonEmail == null && received) {
+                this.toPersonEmail = user.getEmail();
+            }
+            this.isSelfMentioned = activity.isSelfMention(user, 0);
+        }
 
-    public void setSpaceType(Space.SpaceType spaceType) {
-        this._spaceType = spaceType;
-    }
-
-    public void setPersonId(String personId) {
-        this._personId = personId;
-    }
-
-    public void setPersonEmail(String personEmail) {
-        this._personEmail = personEmail;
-    }
-
-    public void setText(String text) {
-        this._text = text;
-    }
-
-    public void setToPersonId(String toPersonId) {
-        this._toPersonId = toPersonId;
-    }
-
-    public void setToPersonEmail(String toPersonEmail) {
-        this._toPersonEmail = toPersonEmail;
-    }
-
-    public void setCreated(Date created) {
-        this._created = created;
-    }
-
-    /**
-     * Return a list of remote files attached to this message.
-     * @return A list of remote files attached to this message.
-     */
-    public List<RemoteFile> getRemoteFiles() {
-        return _remoteFiles;
-    }
-
-    public void setRemoteFiles(List<RemoteFile> remoteFiles) {
-        this._remoteFiles = remoteFiles;
+        ArrayList<RemoteFile> remoteFiles = new ArrayList<>();
+        if (activity.getObject().isContent()) {
+            Content content = (Content) activity.getObject();
+            ItemCollection<File> files = content.getContentFiles();
+            for (File file : files.getItems()) {
+                RemoteFile remoteFile = new RemoteFileImpl(file);
+                remoteFiles.add(remoteFile);
+            }
+        }
+        this.remoteFiles = remoteFiles;
     }
 
     /**
@@ -113,7 +108,7 @@ public class Message {
      * @since 0.1
      */
     public String getId() {
-        return _id;
+        return id;
     }
 
     /**
@@ -122,15 +117,16 @@ public class Message {
      * @since 0.1
      */
     public String getPersonId() {
-        return _personId;
+        return personId;
     }
 
     /**
+     * Return the email address of the person who sent this message.
      * @return The email address of the person who sent this message.
      * @since 0.1
      */
     public String getPersonEmail() {
-        return _personEmail;
+        return activity.getActor() != null ? activity.getActor().getEmail() : null;
     }
 
     /**
@@ -139,7 +135,7 @@ public class Message {
      * @since 0.1
      */
     public String getSpaceId() {
-        return _spaceId;
+        return spaceId;
     }
 
     /**
@@ -147,7 +143,7 @@ public class Message {
      * @since 0.1
      */
     public Space.SpaceType getSpaceType() {
-        return _spaceType;
+        return spaceType;
     }
 
     /**
@@ -156,7 +152,13 @@ public class Message {
      * @since 0.1
      */
     public String getText() {
-        return _text;
+        if (activity.getObject().getContent() != null) {
+            return activity.getObject().getContent();
+        }
+        else if (activity.getObject().getDisplayName() != null) {
+            return activity.getObject().getDisplayName();
+        }
+        return null;
     }
 
     /**
@@ -165,7 +167,7 @@ public class Message {
      * @since 0.1
      */
     public String getToPersonId() {
-        return _toPersonId;
+        return toPersonId;
     }
 
     /**
@@ -174,7 +176,7 @@ public class Message {
      * @since 0.1
      */
     public String getToPersonEmail() {
-        return _toPersonEmail;
+        return toPersonEmail;
     }
 
     /**
@@ -183,7 +185,7 @@ public class Message {
      * @since 0.1
      */
     public Date getCreated() {
-        return _created;
+        return activity.getPublished();
     }
 
     /**
@@ -191,11 +193,28 @@ public class Message {
      * @return true if the message is the recepient of the message is mentioned.
      */
     public boolean isSelfMentioned() {
-        return isSelfMentioned;
+        return this.isSelfMentioned;
     }
 
-    public void setSelfMentioned(boolean selfMentioned) {
-        isSelfMentioned = selfMentioned;
+    /**
+     * Return a list of files attached to this message.
+     * @return A list of files attached to this message.
+     *
+     * @Deprecated
+     */
+    @Deprecated
+    public List<RemoteFile> getRemoteFiles() {
+        return getFiles();
+    }
+
+    /**
+     * Return a list of files attached to this message.
+     * @return A list of files attached to this message.
+     *
+     * @since 2.1.0
+     */
+    public List<RemoteFile> getFiles() {
+        return this.remoteFiles;
     }
 
     /**

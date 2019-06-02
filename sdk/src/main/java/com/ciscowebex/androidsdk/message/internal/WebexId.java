@@ -1,16 +1,14 @@
 package com.ciscowebex.androidsdk.message.internal;
 
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Base64;
 import com.github.benoitdion.ln.Ln;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Objects;
 
-public class InternalId {
+public class WebexId {
 
-    enum Type {
+    public enum Type {
 
         MESSAGE_ID("MESSAGE"),
         PEOPLE_ID("PEOPLE"),
@@ -45,24 +43,24 @@ public class InternalId {
 
     private Type type;
 
-    public InternalId(Type type, String id) {
+    public WebexId(Type type, String id) {
         this.type = type;
         this.id = id;
     }
 
     public static String translate(String hydraId) {
-        InternalId id = from(hydraId);
+        WebexId id = from(hydraId);
         return id == null ? hydraId : id.getId();
     }
 
-    public static InternalId from(String hydraId) {
+    public static WebexId from(String hydraId) {
         try {
             String decodeStr = new String(Base64.decode(hydraId, Base64.URL_SAFE), "UTF-8");
             if (TextUtils.isEmpty(decodeStr)) {
                 return null;
             }
             String[] subs = decodeStr.split("/");
-            return new InternalId(Type.getEnum(subs[subs.length - 2]), subs[subs.length - 1]);
+            return new WebexId(Type.getEnum(subs[subs.length - 2]), subs[subs.length - 1]);
         } catch (Exception e) {
             Ln.d(e, "can't decode hydra id : " + hydraId);
         }
@@ -80,5 +78,29 @@ public class InternalId {
 
     public boolean is(Type type) {
         return this.type == type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        else if (o instanceof WebexId) {
+            return getId().equals(((WebexId) o).getId());
+        }
+        else if (o instanceof String) {
+            if (getId().equals(o)) {
+                return true;
+            }
+            else {
+                return this.equals(WebexId.from((String) o));
+            }
+        }
+        return false;
     }
 }

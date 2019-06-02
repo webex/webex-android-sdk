@@ -316,8 +316,12 @@ task javadoc(type: Javadoc) {
     exclude '**/BuildConfig.java'
     exclude '**/R.java'
     exclude '**/internal/*.java'
-    exclude '**/utils/**'
+    exclude '**/utils/http/**'
+    exclude '**/utils/log/**'
+    exclude '**/utils/Lists.*'
+    exclude '**/utils/Utils.*'
     exclude '**/OAuthTestUserAuthenticator.java'
+
     failOnError false
 }
 

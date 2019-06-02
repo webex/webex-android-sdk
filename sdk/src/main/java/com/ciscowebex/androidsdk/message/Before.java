@@ -17,7 +17,7 @@ public interface Before {
 
         /**
          * Create a {@link Before.Message} with a message id.
-         * @param Id the identifier of the message.
+         * @param id the identifier of the message.
          */
         public Message(@NonNull String id) {
             this.id = id;
