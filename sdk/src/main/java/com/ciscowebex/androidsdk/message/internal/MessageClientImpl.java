@@ -137,7 +137,7 @@ public class MessageClientImpl implements MessageClient {
         _service = new ServiceBuilder().build(MessageService.class);
         _context = context;
         common.inject(this);
-        _bus.register(this);
+        //_bus.register(this);
         activityListener.register(activity -> {
             processorActivity(activity);
             return null;

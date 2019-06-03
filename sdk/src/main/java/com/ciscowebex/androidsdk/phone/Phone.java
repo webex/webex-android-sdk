@@ -292,4 +292,12 @@ public interface Phone {
      */
     int getSharingMaxBandwidth();
 
+    boolean isEnableHardwareAcceleration();
+
+    void setEnableHardwareAcceleration(boolean enable);
+
+    String getHardwareVideoSettings();
+
+    void setHardwareVideoSettings(String settings);
+
 }

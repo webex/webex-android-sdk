@@ -209,6 +209,10 @@ public class PhoneImpl implements Phone {
 
     private int sharingMaxBandwidth = DefaultBandwidth.MAX_BANDWIDTH_SESSION.getValue();
 
+    private boolean isEnableHardwareAcceleration = true;
+
+    private String hardwareVideoSettings = null;
+
     private static final String STR_PERMISSION_DENIED = "permission deined";
     private static final String STR_OTHER_ACTIVE_CALLS = "There are other active calls";
     private static final String STR_UNSUPPORTED_FOR_OUTGOING_CALL = "Unsupport function for outgoing call";
@@ -380,6 +384,26 @@ public class PhoneImpl implements Phone {
         return sharingMaxBandwidth;
     }
 
+    @Override
+    public boolean isEnableHardwareAcceleration() {
+        return isEnableHardwareAcceleration;
+    }
+
+    @Override
+    public void setEnableHardwareAcceleration(boolean enable) {
+        isEnableHardwareAcceleration = enable;
+    }
+
+    @Override
+    public String getHardwareVideoSettings() {
+        return hardwareVideoSettings;
+    }
+
+    @Override
+    public void setHardwareVideoSettings(String settings) {
+        hardwareVideoSettings = settings;
+    }
+
     public void disableVideoCodecActivation() {
         _prompter.setVideoLicenseActivationDisabled(true);
     }
@@ -461,8 +485,7 @@ public class PhoneImpl implements Phone {
 			if (permission && call != null) {
 				CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
 				builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
-				_mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
-				_callControlService.joinCall(builder.build(), false);
+				doDial(builder.build());
 			}
 			else if (call != null && call.getAnswerCallback() != null) {
 				Ln.w(STR_PERMISSION_DENIED);
@@ -1527,8 +1550,7 @@ public class PhoneImpl implements Phone {
         Ln.d("Dial " + target);
         CallContext.Builder builder = new CallContext.Builder(target);
         builder = builder.setMediaDirection(mediaOptionToMediaDirection(option));
-        _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
-        _callControlService.joinCall(builder.build(), false);
+        doDial(builder.build());
     }
 
     private void doDialSpaceID(String target, MediaOption option) {
@@ -1540,8 +1562,7 @@ public class PhoneImpl implements Phone {
                     LocusKey key = LocusKey.fromUri(response.body().getLocusUrl());
                     CallContext.Builder builder = new CallContext.Builder(key);
                     builder = builder.setMediaDirection(mediaOptionToMediaDirection(option));
-                    _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
-                    _callControlService.joinCall(builder.build(), false);
+                    doDial(builder.build());
                 } else {
                     Ln.w(STR_FAILURE_CALL + response.errorBody().toString());
                     clearCallback(ResultImpl.error(STR_FAILURE_CALL + response.errorBody().toString()));
@@ -1553,6 +1574,14 @@ public class PhoneImpl implements Phone {
                 clearCallback(ResultImpl.error(STR_FAILURE_CALL + t.getMessage()));
             }
         });
+    }
+
+    private void doDial(CallContext context) {
+        MediaCapabilityConfig config = new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth);
+        config.setHardwareCodecEnable(isEnableHardwareAcceleration);
+        config.setHwVideoSetting(hardwareVideoSettings);
+        _mediaEngine.setMediaConfig(config);
+        _callControlService.joinCall(context, false);
     }
 
     private boolean isJoinedFromThisDevice(List<LocusParticipantDevice> devices) {
