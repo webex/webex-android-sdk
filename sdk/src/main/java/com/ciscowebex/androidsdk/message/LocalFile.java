@@ -143,7 +143,7 @@ public class LocalFile {
      * Constructs a {@link LocalFile} object out of a local {@link java.io.File}.
      *
      * @param file An existing local file.
-     * @param mime The MIME type of the file, according to {@link RFC6838 https://tools.ietf.org/html/rfc6838}.
+     * @param mime The MIME type of the file, according to <a href="https://tools.ietf.org/html/rfc6838">RFC6838</a>.
      * @param thumbnail The thumbnail for the local file. If not null, the thumbnail will be uploaded with the local file.
      * @param progressHandler The progress indicator callback for uploading progresses.
      *

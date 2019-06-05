@@ -336,13 +336,13 @@ public interface Call {
     void sendFeedback(int rating, @Nullable String comment);
 
     /**
-     * @return start content sharing.
+     * Start content sharing.
      * @since 1.4
      */
     void startSharing(@NonNull CompletionHandler<Void> callback);
 
     /**
-     * @return stop content sharing.
+     * Stop content sharing.
      * @since 1.4
      */
     void stopSharing(@NonNull CompletionHandler<Void> callback);

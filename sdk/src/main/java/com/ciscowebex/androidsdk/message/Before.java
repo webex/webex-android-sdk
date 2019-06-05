@@ -40,7 +40,7 @@ public interface Before {
         private java.util.Date date;
 
         /**
-         * Create a {@link Message.Date} with a {@link java.util.Date}.
+         * Create a {@link Before.Date} with a {@link java.util.Date}.
          * @param date the date.
          */
         public Date(@NonNull java.util.Date date) {

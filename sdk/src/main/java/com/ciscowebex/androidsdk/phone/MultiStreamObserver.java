@@ -212,7 +212,7 @@ public interface MultiStreamObserver {
 
     /**
      * This will be triggered when the auxiliary stream view size is changed, and client can get the detail from the property
-     * @see {@link AuxStream#getSize}
+     * @see AuxStream#getSize()
      * @since 2.0.0
      */
     class AuxStreamSizeChangedEvent extends AbstractAuxStreamChangedEvent {
@@ -225,7 +225,7 @@ public interface MultiStreamObserver {
     /**
      * This will be triggered when the network is unstable or the represented person muted or unmuted his video,
      * and client can get the detail from the property
-     * @see {@link AuxStream#isSendingVideo}
+     * @see AuxStream#isSendingVideo()
      * @since 2.0.0
      */
     class AuxStreamSendingVideoEvent extends AbstractAuxStreamChangedEvent {

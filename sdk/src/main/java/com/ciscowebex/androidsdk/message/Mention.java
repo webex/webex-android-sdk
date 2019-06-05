@@ -41,7 +41,7 @@ public interface Mention {
      * Mention one particular person by person Id.
      *
      * @since 1.4.0
-     * @Deprecated
+     * @deprecated
      */
     @Deprecated
     class MentionPerson implements Mention {
@@ -60,7 +60,7 @@ public interface Mention {
      * Mention all people in a space.
      *
      * @since 1.4.0
-     * @Deprecated
+     * @deprecated
      */
     @Deprecated
     class MentionAll implements Mention {

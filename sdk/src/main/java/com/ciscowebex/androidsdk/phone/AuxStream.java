@@ -46,7 +46,7 @@ public interface AuxStream {
     /**
      * Close this auxiliary stream. Client can manually invoke this API to close stream or SDK will automatically
      * close the last opened stream if needed.
-     * @see {@link Call#closeAuxStream}
+     * @see Call#closeAuxStream(View view)
      * @since 2.0.0
      */
     void close();

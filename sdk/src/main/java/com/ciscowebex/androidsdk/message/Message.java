@@ -139,7 +139,7 @@ public class Message {
     }
 
     /**
-     * @returns The type of the space where this message was posted.
+     * @return The type of the space where this message was posted.
      * @since 0.1
      */
     public Space.SpaceType getSpaceType() {
@@ -200,7 +200,7 @@ public class Message {
      * Returns a list of files attached to this message.
      * @return A list of files attached to this message.
      *
-     * @Deprecated
+     * @deprecated
      */
     @Deprecated
     public List<RemoteFile> getRemoteFiles() {

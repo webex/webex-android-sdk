@@ -213,7 +213,7 @@ public interface MessageClient {
      * @param mentions  Notify either one or all in a space about this message. Ignored if post to a person or an email.
      * @param files     Local files to be attached with the message. Nil if no files to be attached.
      * @param handler   A closure to be executed once the message has posted.
-     * @Deprecated
+     * @deprecated
      * @since 1.4.0
      */
     @Deprecated
