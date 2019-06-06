@@ -16,4 +16,4 @@ before_install:
     - sudo apt-get install -y sendemail libnet-ssleay-perl libcrypt-ssleay-perl libnet-https-any-perl libio-socket-ssl-perl
 script:
     - ./gradlew clean sdk:testDebugUnitTest
-    - travis_wait 50 bash IntegrationTesting.sh
+    # - travis_wait 50 bash IntegrationTesting.sh
