@@ -172,6 +172,10 @@ android {
 }
 
 publishing {
+
+    def repo_username = project.properties.CEC_Username
+    def repo_password = project.properties.ArtifactoryApiKey
+
     publications {
         maven(MavenPublication) {
             groupId moduleGroupId
@@ -230,8 +234,8 @@ publishing {
             name 'DevSnapshot'
             url "http://engci-maven.cisco.com/artifactory/webexsdk-SNAPSHOT/"
             credentials {
-                username "$CEC_Username"
-                password "$ArtifactoryApiKey"
+                username repo_username
+                password repo_password
             }
         }
 
@@ -239,8 +243,8 @@ publishing {
             name 'Release'
             url "http://engci-maven.cisco.com/artifactory/webexsdk/"
             credentials {
-                username "$CEC_Username"
-                password "$ArtifactoryApiKey"
+                username repo_username
+                password repo_password
             }
         }
     }
