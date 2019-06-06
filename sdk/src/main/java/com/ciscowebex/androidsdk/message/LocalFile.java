@@ -131,7 +131,7 @@ public class LocalFile {
     private Thumbnail thumbnail;
 
     /**
-     * Constructs a {@link LocalFile} object out of a local {@link java.io.File}.
+     * Constructs a {@link LocalFile} object out of a local {@link File file}.
      *
      * @param file An existing local file.
      */
