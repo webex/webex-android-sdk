@@ -249,7 +249,7 @@ publishing {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    // implementation fileTree(dir: 'libs', include: ['*.jar'])
     compileOnly 'com.squareup.dagger:dagger-compiler:1.2.2'
     kapt 'com.squareup.dagger:dagger-compiler:1.2.2'
     annotationProcessor 'com.squareup.dagger:dagger-compiler:1.2.2'
