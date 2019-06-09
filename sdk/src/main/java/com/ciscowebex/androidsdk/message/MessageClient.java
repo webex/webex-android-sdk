@@ -127,7 +127,7 @@ public interface MessageClient {
 
     /**
      * Downloads a file attachement asynchronously.
-     * See {@link https://help.webex.com/en-us/yuwad5/Share-Files-with-Others-in-Cisco-Webex-Teams File Sharing} for more details.
+     * See <a href="https://help.webex.com/en-us/yuwad5/Share-Files-with-Others-in-Cisco-Webex-Teams">File Sharing</a> for more details.
      *
      * @param remoteFile        The reference to the file attachment to be downloaded. Use @{link Message#getRemoteFiles()} to get the references.
      * @param path              The local file directory to save the remote file.
@@ -143,7 +143,7 @@ public interface MessageClient {
     /**
      * Downloads the thumbnail (preview image) of a file attachment asynchronously.
      * Note Cisco Webex doesn't generate thumbnail for all files.
-     * See {@link https://help.webex.com/en-us/yuwad5/Share-Files-with-Others-in-Cisco-Webex-Teams File Sharing} for more details.
+     * See <a href="https://help.webex.com/en-us/yuwad5/Share-Files-with-Others-in-Cisco-Webex-Teams">File Sharing</a> for more details.
      *
      * @param remoteFile        The remote file whose thumbnail to be downloaded.
      * @param path              The local file directory to save the thumbnail.
@@ -227,11 +227,11 @@ public interface MessageClient {
               @NonNull CompletionHandler<Message> handler);
 
     /**
-     * A callback to indicate the progress of an action in percentage of the completion.
+     * A callback to indicate the progress of an action in already processed size (bytes).
      *
      * @since 1.4.0
      */
     interface ProgressHandler {
-        void onProgress(double percentage);
+        void onProgress(double bytes);
     }
 }

@@ -61,8 +61,7 @@ public class WebexId {
             }
             String[] subs = decodeStr.split("/");
             return new WebexId(Type.getEnum(subs[subs.length - 2]), subs[subs.length - 1]);
-        } catch (Exception e) {
-            Ln.d(e, "can't decode hydra id : " + hydraId);
+        } catch (Exception ignored) {
         }
         return null;
     }

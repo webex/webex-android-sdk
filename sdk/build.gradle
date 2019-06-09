@@ -76,7 +76,6 @@ android {
             minifyEnabled false
         }
         debug {
-//          testCoverageEnabled true
             buildConfigField "String", "CLIENT_ID", getPropertyOrDefault('CLIENT_ID')
             buildConfigField "String", "CLIENT_SEC", getPropertyOrDefault('CLIENT_SEC')
             buildConfigField "String", "REDIRECT_URL", getPropertyOrDefault('REDIRECT_URL')
@@ -88,7 +87,6 @@ android {
         jenkins {
             initWith debug
             testCoverageEnabled true
-
             ndk {
                 abiFilters "armeabi-v7a", "x86"
             }
@@ -181,7 +179,7 @@ publishing {
             groupId moduleGroupId
             artifactId moduleArtifactId
             version moduleVersion
-            artifact "$buildDir/outputs/aar/sdk-debug.aar" //aar artifact you want to publish
+            artifact "$buildDir/outputs/aar/sdk-debug.aar"
 
             artifact javadocJar
             artifact sourcesJar
@@ -251,12 +249,11 @@ publishing {
 }
 
 dependencies {
-    //compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     compileOnly 'com.squareup.dagger:dagger-compiler:1.2.2'
     kapt 'com.squareup.dagger:dagger-compiler:1.2.2'
     annotationProcessor 'com.squareup.dagger:dagger-compiler:1.2.2'
-
-    implementation('com.ciscowebex:androidsdk_commlib:2.0.0@aar', {
+    implementation('com.ciscowebex:androidsdk_commlib:2.1.0@aar', {
         transitive = true
         changing = true
     })
@@ -267,10 +264,6 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     androidTestImplementation 'org.testng:testng:6.9.6'
-
-//    androidTestImplementation 'androidx.test:runner:1.1.1'
-//    androidTestImplementation 'androidx.test:rules:1.1.1'
-//    androidTestImplementation 'org.hamcrest:hamcrest-library:1.3'
 }
 
 static def buildTime() {

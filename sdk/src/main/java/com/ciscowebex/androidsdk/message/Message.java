@@ -45,7 +45,7 @@ import com.google.gson.Gson;
  */
 public class Message {
 
-    protected Activity activity;
+    protected transient Activity activity;
 
     private String id;
 
@@ -61,7 +61,7 @@ public class Message {
 
     private boolean isSelfMentioned;
 
-    private List<RemoteFile> remoteFiles;
+    private transient List<RemoteFile> remoteFiles;
 
     protected Message(Activity activity, AuthenticatedUser user, boolean received) {
         this.activity = activity;
