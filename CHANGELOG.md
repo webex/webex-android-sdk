@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 2.1.0 Releases
+- `2.1.0` Releases - [2.1.0](#210)
+
 #### 2.0.0 Releases
 - `2.0.0` Releases - [2.0.0](#200)
  
@@ -15,6 +18,15 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
+## [2.1.0](https://github.com/webex/webex-android-sdk/releases/tag/2.1.0)
+Released on 2019-06-09.
+#### Updated
+- Fixed download remote file issue.
+- Fixed sending file issue.
+- Fixed event returned after posting a file.
+- Improve APIs of message.
+- Improve API docs.
+
 ## [2.0.0](https://github.com/webex/webex-android-sdk/releases/tag/2.0.0)
 Released on 2018-10-31.
 #### Added
