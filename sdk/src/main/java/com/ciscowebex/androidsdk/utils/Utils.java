@@ -32,6 +32,10 @@ import com.ciscowebex.androidsdk.Webex;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * An utility class.
  *
@@ -72,5 +76,34 @@ public class Utils {
         String encodeString = "ciscospark://us/PEOPLE/" + id;
         return new String(Base64.encode(encodeString.getBytes(),
                 Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP));
+    }
+
+    public static Map<String, Object> toMap(Object o) {
+        Map<String, Object> result = new HashMap<>();
+        if (o != null) {
+            try {
+                Field[] declaredFields = o.getClass().getDeclaredFields();
+                for (Field field : declaredFields) {
+                    String name = field.getName();
+                    Object value = "@ERROR";
+                    boolean accessible = field.isAccessible();
+                    try {
+                        field.setAccessible(true);
+                        value = field.get(o);
+                    } catch (Throwable ignored) {
+                    } finally {
+                        try {
+                            field.setAccessible(accessible);
+                        } catch (Throwable ignored1) {
+                        }
+                    }
+                    result.put(name, value);
+                }
+            }
+            catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
+        return result;
     }
 }

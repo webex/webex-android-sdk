@@ -71,16 +71,7 @@ import com.cisco.spark.android.events.CallNotificationEvent;
 import com.cisco.spark.android.events.CallNotificationType;
 import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.cisco.spark.android.events.RequestCallingPermissions;
-import com.cisco.spark.android.locus.events.FloorLostEvent;
-import com.cisco.spark.android.locus.events.FloorReleasedAcceptedEvent;
-import com.cisco.spark.android.locus.events.FloorReleasedDeniedEvent;
-import com.cisco.spark.android.locus.events.FloorRequestAcceptedEvent;
-import com.cisco.spark.android.locus.events.FloorRequestDeniedEvent;
-import com.cisco.spark.android.locus.events.LocusDeclinedEvent;
-import com.cisco.spark.android.locus.events.ParticipantNotifiedEvent;
-import com.cisco.spark.android.locus.events.ParticipantRoomDeclinedEvent;
-import com.cisco.spark.android.locus.events.ParticipantSelfChangedEvent;
-import com.cisco.spark.android.locus.events.RetrofitErrorEvent;
+import com.cisco.spark.android.locus.events.*;
 import com.cisco.spark.android.locus.model.Locus;
 import com.cisco.spark.android.locus.model.LocusData;
 import com.cisco.spark.android.locus.model.LocusKey;
@@ -96,6 +87,7 @@ import com.cisco.spark.android.media.events.MediaBlockedChangeEvent;
 import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.sync.operationqueue.core.Operations;
 import com.cisco.spark.android.sync.queue.ConversationSyncQueue;
+import com.cisco.spark.android.util.Strings;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.wme.appshare.ScreenShareContext;
 import com.ciscowebex.androidsdk.CompletionHandler;
@@ -781,14 +773,50 @@ public class PhoneImpl implements Phone {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(RetrofitErrorEvent event) {
-        Ln.e("RetrofitErrorEvent is received ");
-        clearCallback(ResultImpl.error("Error"));
+        Ln.e("RetrofitErrorEvent is received");
+        clearCallback(ResultImpl.error("Retrofit error: " + Utils.toMap(event)));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlCallJoinErrorEvent event) {
         Ln.e("CallControlCallJoinErrorEvent is received ");
-        clearCallback(ResultImpl.error("Join Error"));
+        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(ConflictErrorJoiningLocusEvent event) {
+        Ln.e("ConflictErrorJoiningLocusEvent is received ");
+        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(HighVolumeErrorJoiningLocusEvent event) {
+        Ln.e("HighVolumeErrorJoiningLocusEvent is received ");
+        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(LocusUserIsNotAuthorized event) {
+        Ln.e("LocusUserIsNotAuthorized is received ");
+        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(LocusInviteesExceedMaxSizeEvent event) {
+        Ln.e("LocusInviteesExceedMaxSizeEvent is received ");
+        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(LocusMeetingLockedEvent event) {
+        Ln.e("LocusMeetingLockedEvent is received ");
+        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(InvalidLocusEvent event) {
+        Ln.e("InvalidLocusEvent is received ");
+        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
     }
 
     // Local hangup
