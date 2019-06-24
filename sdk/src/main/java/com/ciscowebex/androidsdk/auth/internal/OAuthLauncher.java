@@ -103,7 +103,8 @@ public class OAuthLauncher {
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             Ln.e("Receive: " + errorCode + ", " + description);
-            handleResult(ResultImpl.error(errorCode + " " + description));
+            if (!description.toUpperCase().contains("ERR_BLOCKED_BY_CLIENT"))
+                handleResult(ResultImpl.error(errorCode + " " + description));
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
