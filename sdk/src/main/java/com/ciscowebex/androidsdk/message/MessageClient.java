@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2019 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -127,6 +127,7 @@ public interface MessageClient {
 
     /**
      * Downloads a file attachement asynchronously.
+     * See <a href="https://help.webex.com/en-us/yuwad5/Share-Files-with-Others-in-Cisco-Webex-Teams">File Sharing</a> for more details.
      *
      * @param remoteFile        The reference to the file attachment to be downloaded. Use @{link Message#getRemoteFiles()} to get the references.
      * @param path              The local file directory to save the remote file.
@@ -141,6 +142,8 @@ public interface MessageClient {
 
     /**
      * Downloads the thumbnail (preview image) of a file attachment asynchronously.
+     * Note Cisco Webex doesn't generate thumbnail for all files.
+     * See <a href="https://help.webex.com/en-us/yuwad5/Share-Files-with-Others-in-Cisco-Webex-Teams">File Sharing</a> for more details.
      *
      * @param remoteFile        The remote file whose thumbnail to be downloaded.
      * @param path              The local file directory to save the thumbnail.
@@ -213,7 +216,7 @@ public interface MessageClient {
      * @param mentions  Notify either one or all in a space about this message. Ignored if post to a person or an email.
      * @param files     Local files to be attached with the message. Nil if no files to be attached.
      * @param handler   A closure to be executed once the message has posted.
-     * @Deprecated
+     * @deprecated
      * @since 1.4.0
      */
     @Deprecated
@@ -224,11 +227,11 @@ public interface MessageClient {
               @NonNull CompletionHandler<Message> handler);
 
     /**
-     * A callback to indicate the progress of an action in percentage of the completion.
+     * A callback to indicate the progress of an action in already processed size (bytes).
      *
      * @since 1.4.0
      */
     interface ProgressHandler {
-        void onProgress(double percentage);
+        void onProgress(double bytes);
     }
 }

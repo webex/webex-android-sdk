@@ -324,8 +324,8 @@ Here are some examples of how to use the Android SDK in your app.
 10. Post a message
 
     ```java
-    webex.message().post(
-        idOrEmail,  // person id, email or space id
+    webex.message().postToSpace(
+        id,          // space id
         message,    // text message to be sent
         mentions,   // list of Mention object
         files,      // list of files to be sent
@@ -347,7 +347,7 @@ Here are some examples of how to use the Android SDK in your app.
     webex.message().setMessageObserver(
         new MessageObserver() {
             void onEvent(MessageEvent event) {
-                if (event instanceof MessageArrived) {
+                if (event instanceof MessageReceived) {
                     Message message = event.getMessage();
                     // new message arrived
                 } else if (event instanceof MessageDeleted) {
@@ -455,6 +455,6 @@ Pull requests welcome. To suggest changes to the SDK, please fork this repositor
 
 ## License
 
-&copy; 2016-2018 Cisco Systems, Inc. and/or its affiliates. All Rights Reserved.
+&copy; 2016-2019 Cisco Systems, Inc. and/or its affiliates. All Rights Reserved.
 
 See [LICENSE](https://github.com/webex/webex-android-sdk/blob/master/LICENSE) for details.

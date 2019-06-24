@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2019 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,8 @@ import com.ciscowebex.androidsdk.auth.OAuthAuthenticator;
 import com.ciscowebex.androidsdk.membership.MembershipClient;
 import com.ciscowebex.androidsdk.membership.internal.MembershipClientImpl;
 import com.ciscowebex.androidsdk.message.MessageClient;
+import com.ciscowebex.androidsdk.message.internal.CallbackablePostCommentOperation;
+import com.ciscowebex.androidsdk.message.internal.CallbackablePostContentActivityOperation;
 import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
 import com.ciscowebex.androidsdk.people.PersonClient;
 import com.ciscowebex.androidsdk.people.internal.PersonClientImpl;
@@ -106,7 +108,10 @@ public class Webex {
     public Webex(Application application, Authenticator authenticator) {
         _authenticator = authenticator;
         _common = new SDKCommon(application, APP_NAME, APP_VERSION);
-        _common.addInjectable(this.getClass(), authenticator.getClass(), OAuthAuthenticator.class, PhoneImpl.class, Call.class, MessageClientImpl.class);
+        _common.addInjectable(this.getClass(), authenticator.getClass(), 
+            OAuthAuthenticator.class, 
+            PhoneImpl.class, Call.class, 
+            MessageClientImpl.class, CallbackablePostCommentOperation.class, CallbackablePostContentActivityOperation.class);
         _common.create();
         _common.inject(this);
         _common.inject(_authenticator);

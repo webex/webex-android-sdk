@@ -16,7 +16,7 @@ public interface MessageObserver {
     /**
      * The event when a new message has arrived.
      *
-     * @Deprecated
+     * @deprecated
      * @since 1.4.0
      */
     @Deprecated

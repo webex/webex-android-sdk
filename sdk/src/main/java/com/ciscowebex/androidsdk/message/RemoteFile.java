@@ -78,7 +78,7 @@ public interface RemoteFile {
     /**
      * Set the display name of this remote file.
      * @param displayName the display name of this remote file.
-     * @Deprecated
+     * @deprecated
      */
     @Deprecated
     void setDisplayName(String displayName);
@@ -86,13 +86,13 @@ public interface RemoteFile {
     /**
      * Set the size of this remote file, in bytes.
      * @param size the size of the file
-     * @Deprecated
+     * @deprecated
      */
     @Deprecated
     void setSize(Long size);
 
     /**
-     * Set the MIME type string of this remote file, according to {@link RFC6838 https://tools.ietf.org/html/rfc6838}.
+     * Set the MIME type string of this remote file, according to <a href="https://tools.ietf.org/html/rfc6838">RFC6838</a>.
      * @param mimeType the MIME type string
      */
     @Deprecated
@@ -102,7 +102,7 @@ public interface RemoteFile {
      * Returns the URL string for this remote file.
      * @return The URL string for this remote file.
      *
-     * @Deprecated
+     * @deprecated
      */
     @Deprecated
     String getUrl();
@@ -110,7 +110,7 @@ public interface RemoteFile {
     /**
      * Set the URL string of this remote file.
      * @param url the URL string of this remote file.
-     * @Deprecated
+     * @deprecated
      */
     @Deprecated
     void setUrl(String url);
@@ -118,7 +118,7 @@ public interface RemoteFile {
     /**
      * Set the thumbnail of this remote file.
      * @param thumbnail The thumbnail of this remote file.
-     * @Deprecated
+     * @deprecated
      */
     @Deprecated
     void setThumbnail(Thumbnail thumbnail);

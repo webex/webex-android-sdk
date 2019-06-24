@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2019 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,6 +58,7 @@ import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.cisco.spark.android.sync.operationqueue.core.Operations;
 import com.cisco.spark.android.util.*;
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.message.*;
@@ -270,56 +271,56 @@ public class MessageClientImpl implements MessageClient {
 
     @Override
     public void postToPerson(@NonNull String personId, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        WebexId webexId = WebexId.from(personId);
-        Ln.d("postToPerson： " + personId);
-        Comment comment = new Comment(text);
-        comment.setContent(text);
-        EnumSet<NewConversationOperation.CreateFlags> createFlags = EnumSet.of(NewConversationOperation.CreateFlags.ONE_ON_ONE, NewConversationOperation.CreateFlags.PERSIST_WITHOUT_MESSAGES);
-        operations.createConversationWithCallBack(Collections.singletonList(webexId == null ? personId : webexId.getId()), null, createFlags,
-                new Action<NewConversationOperation>() {
-                    @Override
-                    public void call(NewConversationOperation item) {
-                        Ln.d("createConversationWithCallBack: " + item.getConversationId());
-                        post(item.getConversationId(), comment, files, handler);
-                    }
-                });
+        post(personId, createComment(text, null), files, handler);
     }
 
     @Override
     public void postToPerson(@NonNull EmailAddress personEmail, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        postToPerson(personEmail.toString(), text, files, handler);
+        post(personEmail.toString(), createComment(text, null), files, handler);
     }
 
     @Override
     public void postToSpace(@NonNull String spaceId, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        WebexId webexId = WebexId.from(spaceId);
-        Comment comment = new Comment(text);
-        comment.setContent(text);
-        if (mentions != null && mentions.length > 0) {
-            ItemCollection<Person> mentionedPersons = new ItemCollection<>();
-            ItemCollection<GroupMention> mentionAll = new ItemCollection<>();
-            for (Mention mention : mentions) {
-                if (mention instanceof Mention.Person) {
-                    WebexId personId = WebexId.from(((Mention.Person) mention).getPersonId());
-                    if (personId != null) {
-                        Person person = new Person(personId.getId());
-                        mentionedPersons.addItem(person);
-                    }
-                } else if (mention instanceof Mention.All) {
-                    mentionAll.addItem(new GroupMention(GroupMention.GroupType.ALL));
-                }
-            }
-            if (mentionAll.size() > 0) {
-                comment.setGroupMentions(mentionAll);
-            }
-            else if (mentionedPersons.size() > 0) {
-                comment.setMentions(mentionedPersons);
-            }
-        }
-        post(webexId == null ? spaceId : webexId.getId(), comment, files, handler);
+        post(spaceId, createComment(text, mentions), files, handler);
     }
 
-    private void post(String conversationId, Comment comment, LocalFile[] localFiles, CompletionHandler<Message> handler) {
+    private void post(String personOrSpace, Comment comment, LocalFile[] localFiles, CompletionHandler<Message> handler) {
+        Ln.d("Post to： " + personOrSpace);
+        WebexId webexId = WebexId.from(personOrSpace);
+        if (webexId == null) {
+            if (EmailAddress.fromString(personOrSpace) == null) {
+                doPost(personOrSpace, comment, localFiles, handler);
+            }
+            else {
+                this.createSpaceWithPerson(personOrSpace, result -> {
+                    if (result.getData() != null) {
+                        doPost(result.getData(), comment, localFiles, handler);
+                    }
+                    else {
+                        handler.onComplete(ResultImpl.error(result.getError()));
+                    }
+                });
+            }
+        }
+        else if (webexId.is(WebexId.Type.ROOM_ID)) {
+            doPost(webexId.getId(), comment, localFiles, handler);
+        }
+        else if (webexId.is(WebexId.Type.PEOPLE_ID)) {
+            this.createSpaceWithPerson(webexId.getId(), result -> {
+                if (result.getData() != null) {
+                    doPost(result.getData(), comment, localFiles, handler);
+                }
+                else {
+                    handler.onComplete(ResultImpl.error(result.getError()));
+                }
+            });
+        }
+        else {
+            handler.onComplete(ResultImpl.error("Unknown target: " + personOrSpace));
+        }
+    }
+
+    private void doPost(String conversationId, Comment comment, LocalFile[] localFiles, CompletionHandler<Message> handler) {
         if (TextUtils.isEmpty(conversationId)) {
             handler.onComplete(ResultImpl.error("Invalid person or id!"));
             return;
@@ -345,7 +346,7 @@ public class MessageClientImpl implements MessageClient {
             ShareContentData shareContentData = new ShareContentData();
             for (LocalFile localFile : localFiles) {
                 ContentItem item = new ContentItem(localFile.getFile(), FILE_PICKER.toString());
-                File modleFile = toModleFile(localFile, conversationId, contentManager, db);
+                File modleFile = createModleFile(localFile, conversationId, contentManager, db);
                 if (modleFile != null) {
                     Operation uploadContent = operations.uploadContent(conversationId, modleFile);
                     item.setContentFile(modleFile);
@@ -496,10 +497,6 @@ public class MessageClientImpl implements MessageClient {
         });
     }
 
-    private Message createMessage(Activity activity, boolean received) {
-        return activity == null ? null : new MessageImpl(activity, _provider.getAuthenticatedUserOrNull(), received);
-    }
-
     private void runOnUiThread(Runnable r, Object conditioner) {
         if (conditioner == null) return;
         Handler handler = new Handler(_context.getMainLooper());
@@ -536,8 +533,57 @@ public class MessageClientImpl implements MessageClient {
         }
     }
 
+    private void createSpaceWithPerson(String person, CompletionHandler<String> action) {
+        EnumSet<NewConversationOperation.CreateFlags> createFlags = EnumSet.of(NewConversationOperation.CreateFlags.ONE_ON_ONE, NewConversationOperation.CreateFlags.PERSIST_WITHOUT_MESSAGES);
+        operations.createConversationWithCallBack(Collections.singletonList(person), null, createFlags,
+                new Action<NewConversationOperation>() {
+                    @Override
+                    public void call(NewConversationOperation item) {
+                        Ln.d("createConversationWithCallBack: " + item.getConversationId());
+                        action.onComplete(ResultImpl.success(item.getConversationId()));
+                    }
+
+                    @Override
+                    public void onException(Exception e) {
+                        super.onException(e);
+                        action.onComplete(ResultImpl.error(e));
+                    }
+                });
+    }
+
+    private Message createMessage(Activity activity, boolean received) {
+        return activity == null ? null : new MessageImpl(activity, _provider.getAuthenticatedUserOrNull(), received);
+    }
+
+    private static Comment createComment(@Nullable String text, @Nullable Mention[] mentions) {
+        Comment comment = new Comment(text);
+        comment.setContent(text);
+        if (mentions != null && mentions.length > 0) {
+            ItemCollection<Person> mentionedPersons = new ItemCollection<>();
+            ItemCollection<GroupMention> mentionAll = new ItemCollection<>();
+            for (Mention mention : mentions) {
+                if (mention instanceof Mention.Person) {
+                    WebexId personId = WebexId.from(((Mention.Person) mention).getPersonId());
+                    if (personId != null) {
+                        Person person = new Person(personId.getId());
+                        mentionedPersons.addItem(person);
+                    }
+                } else if (mention instanceof Mention.All) {
+                    mentionAll.addItem(new GroupMention(GroupMention.GroupType.ALL));
+                }
+            }
+            if (mentionAll.size() > 0) {
+                comment.setGroupMentions(mentionAll);
+            }
+            else if (mentionedPersons.size() > 0) {
+                comment.setMentions(mentionedPersons);
+            }
+        }
+        return comment;
+    }
+
     // TODO use info in local file
-    private static File toModleFile(LocalFile localFile, String conversationId, ContentManager contentManager, DatabaseProvider db) {
+    private static File createModleFile(LocalFile localFile, String conversationId, ContentManager contentManager, DatabaseProvider db) {
         try {
             Uri contentUri = Uri.fromFile(localFile.getFile());
             contentManager.addUploadedContent(new java.io.File(new URI(contentUri.toString())), contentUri, ConversationContract.ContentDataCacheEntry.Cache.MEDIA);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2019 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ import com.google.gson.Gson;
  */
 public class Message {
 
-    protected Activity activity;
+    protected transient Activity activity;
 
     private String id;
 
@@ -61,7 +61,7 @@ public class Message {
 
     private boolean isSelfMentioned;
 
-    private List<RemoteFile> remoteFiles;
+    private transient List<RemoteFile> remoteFiles;
 
     protected Message(Activity activity, AuthenticatedUser user, boolean received) {
         this.activity = activity;
@@ -139,7 +139,7 @@ public class Message {
     }
 
     /**
-     * @returns The type of the space where this message was posted.
+     * @return The type of the space where this message was posted.
      * @since 0.1
      */
     public Space.SpaceType getSpaceType() {
@@ -200,7 +200,7 @@ public class Message {
      * Returns a list of files attached to this message.
      * @return A list of files attached to this message.
      *
-     * @Deprecated
+     * @deprecated
      */
     @Deprecated
     public List<RemoteFile> getRemoteFiles() {
