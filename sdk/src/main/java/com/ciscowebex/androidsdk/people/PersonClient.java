@@ -48,6 +48,20 @@ public interface PersonClient {
     void list(@NonNull String email, @Nullable String displayName, int max, @NonNull CompletionHandler<List<Person>> handler);
 
     /**
+     * Lists people in the authenticated user's organization.
+     * Admin users can omit these fields and list all users in their organization.
+     *
+     * @param email       If not nil, only list people with this email address.
+     * @param displayName If not nil, only list people whose name starts with this string.
+     * @param id          List people by ID. Accepts up to 85 person IDs separated by commas.
+     * @param orgId       List people in this organization.
+     * @param max         The maximum number of people in the response.
+     * @param handler     A closure to be executed once the request has finished.
+     * @since 2.2.0
+     */
+    void list(@NonNull String email, @Nullable String displayName, @Nullable String id, @Nullable String orgId, int max, @NonNull CompletionHandler<List<Person>> handler);
+
+    /**
      * Retrieves the details for a person by person id.
      *
      * @param personId The identifier of the person.

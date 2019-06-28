@@ -37,6 +37,8 @@ import com.ciscowebex.androidsdk.utils.http.ListCallback;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 
+import org.jetbrains.annotations.NotNull;
+
 import me.helloworld.utils.collection.Maps;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -59,17 +61,22 @@ public class PersonClientImpl implements PersonClient {
         _service = new ServiceBuilder().build(PersonService.class);
     }
 
-    public void list(String email, String displayName, int max, CompletionHandler<List<Person>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.list(s, email, displayName, null, null, max <= 0 ? null : max), new ListCallback<>(handler));
+    public void list(@NotNull String email, String displayName, int max, @NotNull CompletionHandler<List<Person>> handler) {
+        this.list(email, displayName, null, null, max, handler);
     }
 
-    public void get(String personId, CompletionHandler<Person> handler) {
+    @Override
+    public void list(@NonNull String email, @Nullable String displayName, @Nullable String id, @Nullable String orgId, int max, @NonNull CompletionHandler<List<Person>> handler) {
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _service.list(s, email, displayName, id, orgId, max <= 0 ? null : max), new ListCallback<>(handler));
+    }
+
+    public void get(@NotNull String personId, @NotNull CompletionHandler<Person> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
             _service.get(s, personId), new ObjectCallback<>(handler));
     }
 
-    public void getMe(CompletionHandler<Person> handler) {
+    public void getMe(@NotNull CompletionHandler<Person> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
             _service.getMe(s), new ObjectCallback<>(handler));
     }
