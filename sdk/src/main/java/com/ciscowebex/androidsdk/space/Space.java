@@ -56,7 +56,17 @@ public class Space {
          * @since 0.1
          */
         @SerializedName("direct")
-        DIRECT
+        DIRECT;
+
+        /**
+         * Return enum name all in lower case
+         *
+         * @since 2.2
+         */
+        @Override
+        public String toString() {
+            return super.name().toLowerCase();
+        }
     }
 
     @SerializedName("id")

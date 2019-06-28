@@ -62,7 +62,7 @@ public class SpaceClientImpl implements SpaceClient {
 
     public void list(@Nullable String teamId, int max, @Nullable Space.SpaceType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Space>> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-                _service.list(s, teamId, type != null ? type.name() : null, sortBy != null ? sortBy.name().toLowerCase() : null, max <= 0 ? null : max), new ListCallback<Space>(handler));
+                _service.list(s, teamId, type != null ? type.toString() : null, sortBy != null ? sortBy.name().toLowerCase() : null, max <= 0 ? null : max), new ListCallback<Space>(handler));
     }
 
     public void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Space> handler) {
