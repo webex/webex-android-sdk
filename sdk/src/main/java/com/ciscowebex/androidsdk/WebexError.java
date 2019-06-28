@@ -85,15 +85,15 @@ public class WebexError<T> {
         _data = data;
     }
 
-    ErrorCode getErrorCode() {
+    public ErrorCode getErrorCode() {
         return _code;
     }
 
-    String getErrorMessage() {
+    public String getErrorMessage() {
         return _message;
     }
 
-    T getData() {
+    public T getData() {
         return _data;
     }
 
