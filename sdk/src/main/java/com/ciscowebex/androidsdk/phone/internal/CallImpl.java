@@ -213,11 +213,11 @@ public class CallImpl implements Call {
         return _hangupCallback;
     }
 
-    CompletionHandler<Void> getshareRequestCallback() {
+    CompletionHandler<Void> getShareRequestCallback() {
         return _shareRequestCallback;
     }
 
-    CompletionHandler<Void> getshareReleaseCallback() {
+    CompletionHandler<Void> getShareReleaseCallback() {
         return _shareReleaseCallback;
     }
     
@@ -294,9 +294,11 @@ public class CallImpl implements Call {
 
     public boolean isRemoteSendingAudio() {
         for (LocusParticipant p : getRemoteParticipants()) {
-            if (p.getState() == LocusParticipant.State.JOINED
-                    && p.getStatus().getAudioStatus().equals(MediaDirection.SENDONLY) || p.getStatus().getAudioStatus().equals(MediaDirection.SENDRECV)) {
-                return true;
+            if (p.getState() == LocusParticipant.State.JOINED && p.getStatus() != null) {
+                MediaDirection direction = p.getStatus().getAudioStatus();
+                if (direction == null || direction == MediaDirection.SENDONLY || direction == MediaDirection.SENDRECV) {
+                    return true;
+                }
             }
         }
         return false;

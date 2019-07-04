@@ -87,7 +87,6 @@ import com.cisco.spark.android.media.events.MediaBlockedChangeEvent;
 import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.sync.operationqueue.core.Operations;
 import com.cisco.spark.android.sync.queue.ConversationSyncQueue;
-import com.cisco.spark.android.util.Strings;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.wme.appshare.ScreenShareContext;
 import com.ciscowebex.androidsdk.CompletionHandler;
@@ -488,7 +487,7 @@ public class PhoneImpl implements Phone {
 			}
 			else {
 				Ln.w(STR_PERMISSION_DENIED);
-				clearCallback(ResultImpl.error(STR_PERMISSION_DENIED));
+				resetDialStatus(ResultImpl.error(STR_PERMISSION_DENIED));
 			}
 		}
 	}
@@ -600,6 +599,7 @@ public class PhoneImpl implements Phone {
 
     void hangup(@NonNull CallImpl call) {
         Ln.i("Hangup " + call);
+        resetDialStatus(null);
         if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
             Ln.e(STR_ALREADY_DISCONNECTED);
             if (call.getHangupCallback() != null) {
@@ -774,49 +774,49 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(RetrofitErrorEvent event) {
         Ln.e("RetrofitErrorEvent is received");
-        clearCallback(ResultImpl.error("Retrofit error: " + Utils.toMap(event)));
+        resetDialStatus(ResultImpl.error("Retrofit error: " + Utils.toMap(event)));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlCallJoinErrorEvent event) {
         Ln.e("CallControlCallJoinErrorEvent is received ");
-        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+        resetDialStatus(ResultImpl.error("Join Error: " + Utils.toMap(event)));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ConflictErrorJoiningLocusEvent event) {
         Ln.e("ConflictErrorJoiningLocusEvent is received ");
-        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+        resetDialStatus(ResultImpl.error("Join Error: " + Utils.toMap(event)));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(HighVolumeErrorJoiningLocusEvent event) {
         Ln.e("HighVolumeErrorJoiningLocusEvent is received ");
-        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+        resetDialStatus(ResultImpl.error("Join Error: " + Utils.toMap(event)));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(LocusUserIsNotAuthorized event) {
         Ln.e("LocusUserIsNotAuthorized is received ");
-        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+        resetDialStatus(ResultImpl.error("Join Error: " + Utils.toMap(event)));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(LocusInviteesExceedMaxSizeEvent event) {
         Ln.e("LocusInviteesExceedMaxSizeEvent is received ");
-        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+        resetDialStatus(ResultImpl.error("Join Error: " + Utils.toMap(event)));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(LocusMeetingLockedEvent event) {
         Ln.e("LocusMeetingLockedEvent is received ");
-        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+        resetDialStatus(ResultImpl.error("Join Error: " + Utils.toMap(event)));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(InvalidLocusEvent event) {
         Ln.e("InvalidLocusEvent is received ");
-        clearCallback(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+        resetDialStatus(ResultImpl.error("Join Error: " + Utils.toMap(event)));
     }
 
     // Local hangup
@@ -1073,7 +1073,7 @@ public class PhoneImpl implements Phone {
         List<String> permissions = new ArrayList<>();
         permissions.add(Manifest.permission.RECORD_AUDIO);
         permissions.add(Manifest.permission.CAMERA);
-        clearCallback(ResultImpl.error(new WebexError<>(WebexError.ErrorCode.PERMISSION_ERROR, "Permissions Error", permissions)));
+        resetDialStatus(ResultImpl.error(new WebexError<>(WebexError.ErrorCode.PERMISSION_ERROR, "Permissions Error", permissions)));
     }
 
 	@Subscribe(threadMode = ThreadMode.MAIN)
@@ -1314,8 +1314,8 @@ public class PhoneImpl implements Phone {
 		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
 			ScreenShareContext.getInstance().init(_context, Activity.RESULT_OK, _screenSharingIntent);
 			CallImpl call = _calls.get(_screenSharingKey);
-			if (call != null && call.getshareRequestCallback() != null){
-				call.getshareRequestCallback().onComplete(ResultImpl.success(null));
+			if (call != null && call.getShareRequestCallback() != null){
+				call.getShareRequestCallback().onComplete(ResultImpl.success(null));
 			}
 		}
 	}
@@ -1325,8 +1325,8 @@ public class PhoneImpl implements Phone {
 		Ln.d("FloorRequestDeniedEvent is received: " + event.isContent());
 		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
 			CallImpl call = _calls.get(_screenSharingKey);
-			if (call != null && call.getshareRequestCallback() != null){
-				call.getshareRequestCallback().onComplete(ResultImpl.error("Share request is deined"));
+			if (call != null && call.getShareRequestCallback() != null){
+				call.getShareRequestCallback().onComplete(ResultImpl.error("Share request is deined"));
 			}
 		}
 	}
@@ -1336,8 +1336,8 @@ public class PhoneImpl implements Phone {
 		Ln.d("FloorReleasedAcceptedEvent is received: " + event.isContent());
 		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
 			CallImpl call = _calls.get(_screenSharingKey);
-			if (call != null && call.getshareReleaseCallback() != null){
-				call.getshareReleaseCallback().onComplete(ResultImpl.success(null));
+			if (call != null && call.getShareReleaseCallback() != null){
+				call.getShareReleaseCallback().onComplete(ResultImpl.success(null));
 			}
 		}
 	}
@@ -1347,8 +1347,8 @@ public class PhoneImpl implements Phone {
 		Ln.d("FloorReleasedDeniedEvent is received: " + event.isContent());
 		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
 			CallImpl call = _calls.get(_screenSharingKey);
-			if (call != null && call.getshareReleaseCallback() != null){
-				call.getshareReleaseCallback().onComplete(ResultImpl.error("Share release is deined"));
+			if (call != null && call.getShareReleaseCallback() != null){
+				call.getShareReleaseCallback().onComplete(ResultImpl.error("Share release is deined"));
 			}
 		}
 	}
@@ -1379,8 +1379,8 @@ public class PhoneImpl implements Phone {
 		}else{
 			Ln.w("permission for sharing screen is deined");
 			CallImpl call = _calls.get(_screenSharingKey);
-			if (call != null && call.getshareRequestCallback() != null){
-				call.getshareRequestCallback().onComplete(ResultImpl.error(STR_PERMISSION_DENIED));
+			if (call != null && call.getShareRequestCallback() != null){
+				call.getShareRequestCallback().onComplete(ResultImpl.error(STR_PERMISSION_DENIED));
 			}
 		}
 	}
@@ -1421,6 +1421,7 @@ public class PhoneImpl implements Phone {
                 _availableMediaCount = 0;
             }
         }
+        resetDialStatus(null);
     }
 
     private void setCallOnConnected(@NonNull CallImpl call, @NonNull LocusKey key) {
@@ -1543,10 +1544,12 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    private void clearCallback(Result result) {
+    private void resetDialStatus(Result result) {
         _dialOption = null;
         if (_dialCallback != null) {
-            _dialCallback.onComplete(result);
+            if (result != null) {
+                _dialCallback.onComplete(result);
+            }
             _dialCallback = null;
         }
     }
@@ -1572,13 +1575,13 @@ public class PhoneImpl implements Phone {
                     _callControlService.joinCall(builder.build(), false);
                 } else {
                     Ln.w(STR_FAILURE_CALL + response.errorBody().toString());
-                    clearCallback(ResultImpl.error(STR_FAILURE_CALL + response.errorBody().toString()));
+                    resetDialStatus(ResultImpl.error(STR_FAILURE_CALL + response.errorBody().toString()));
                 }
             }
 
             @Override
             public void onFailure(retrofit2.Call<LocusUrlResponse> call, Throwable t) {
-                clearCallback(ResultImpl.error(STR_FAILURE_CALL + t.getMessage()));
+                resetDialStatus(ResultImpl.error(STR_FAILURE_CALL + t.getMessage()));
             }
         });
     }

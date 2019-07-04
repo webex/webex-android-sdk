@@ -95,11 +95,11 @@ public class CallMembershipImpl implements CallMembership {
         _sipUrl = person.getPhoneNumber();
         _isInitiator = participant.isCreator();
         _state = fromLocusState(participant.getState());
-        Ln.d("person: " + _email + "  video: " + participant.getStatus().getVideoStatus() + "   audio: " + participant.getStatus().getAudioStatus());
         MediaDirection videoStatus = participant.getStatus().getVideoStatus();
         MediaDirection audioStatus = participant.getStatus().getAudioStatus();
-        _sendingVideo = videoStatus == null || MediaDirection.SENDRECV.equals(videoStatus) || MediaDirection.SENDONLY.equals(videoStatus);
-        _sendingAudio = audioStatus == null || MediaDirection.SENDRECV.equals(audioStatus) || MediaDirection.SENDONLY.equals(audioStatus);
+        Ln.d("person: " + person.getId() + " email: " + _email + "  video: " +videoStatus + "   audio: " + audioStatus);
+        _sendingVideo = videoStatus == null || videoStatus == MediaDirection.SENDRECV || videoStatus == MediaDirection.SENDONLY;
+        _sendingAudio = audioStatus == null || audioStatus == MediaDirection.SENDRECV || audioStatus == MediaDirection.SENDONLY;
         _sendingSharing = false;
         if (call instanceof CallImpl && ((CallImpl) call).getSharingSender() != null) {
             _sendingSharing = ((CallImpl) call).getSharingSender().getPerson().getId().equalsIgnoreCase(person.getId());
