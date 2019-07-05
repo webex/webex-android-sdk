@@ -155,4 +155,20 @@ public class Person {
     public String getType() {
         return _type;
     }
+
+    /**
+     * @return The date and time of the person's last activity within Webex Teams.
+     * @since 2.1.1
+     */
+    public String getLastActivity() {
+        return _lastActivity;
+    }
+
+    /**
+     * @return The current presence status of the person.
+     * @since 2.1.1
+     */
+    public String getStatus() {
+        return _status;
+    }
 }
