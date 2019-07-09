@@ -26,11 +26,18 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+
 import javax.inject.Inject;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Base64;
+import android.util.Log;
+
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
 import com.cisco.spark.android.core.ApplicationController;
@@ -67,6 +74,7 @@ public class JWTAuthenticator implements Authenticator {
 
     private AuthService _authService;
 
+    private Context context;
     @Inject
     ApiTokenProvider _provider;
 
@@ -77,8 +85,9 @@ public class JWTAuthenticator implements Authenticator {
      *
      * @since 0.1
      */
-    public JWTAuthenticator() {
+    public JWTAuthenticator(Context context) {
         _authService = new ServiceBuilder().build(AuthService.class);
+        this.context = context;
     }
 
     /**
@@ -96,7 +105,34 @@ public class JWTAuthenticator implements Authenticator {
      * @since 0.1
      */
     public void authorize(@NonNull String jwt) {
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        Map<String,?> keys = sharedPreferences.getAll();
+
         deauthorize();
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        for(Map.Entry<String,?> entry : keys.entrySet()){
+
+            Object value = entry.getValue();
+
+            if (value instanceof Integer)
+                editor.putInt(entry.getKey(),((Integer) value));
+            else if (value instanceof String)
+                editor.putString(entry.getKey(),((String) value));
+            else if (value instanceof Boolean)
+               editor.putBoolean(entry.getKey(),(Boolean)value);
+            else if (value instanceof Float)
+                editor.putFloat(entry.getKey(),(Float)value);
+            else if (value instanceof Long)
+                editor.putLong(entry.getKey(),(Long) value);
+            else if (value instanceof Set<?>)
+                editor.putStringSet(entry.getKey(),(Set<String>)value);
+
+        }
+        editor.commit();
         _jwt = jwt;
     }
 
