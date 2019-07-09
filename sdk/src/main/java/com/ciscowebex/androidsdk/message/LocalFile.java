@@ -21,28 +21,16 @@ public class LocalFile {
      * @since 1.4.0
      */
     public static class Thumbnail {
+        private final java.io.File file;
+        private final String mimeType;
+        private final int width;
+        private final int height;
 
-        private java.io.File file;
-        private String mimeType;
-        private int width;
-        private int height;
-
-        @Deprecated
-        public Thumbnail() {
-
-        }
-
-        public Thumbnail(@NonNull java.io.File file, @Nullable String mime, int width, int height) {
-            if (width <= 0 || height <= 0) {
-                throw new IllegalArgumentException("Width and height must > 0");
-            }
-            if (!file.exists() && !file.isFile()) {
-                throw new IllegalArgumentException("File isn't exist");
-            }
-            this.file = file;
-            this.mimeType = mime != null ? mime : URLConnection.guessContentTypeFromName(file.getName());
-            this.width = width;
-            this.height = height;
+        private Thumbnail(Builder builder) {
+            this.file = builder.file;
+            this.mimeType = builder.mimeType;
+            this.width = builder.width;
+            this.height = builder.height;
         }
 
         /**
@@ -90,38 +78,50 @@ public class LocalFile {
             return getFile().getAbsolutePath();
         }
 
-        @Deprecated
-        public void setPath(String path) {
-            this.file = new File(path);
-            if (!file.exists() && !file.isFile()) {
-                throw new IllegalArgumentException("File isn't exist");
+        public static class Builder {
+            private java.io.File file;
+            private String mimeType;
+            private int width;
+            private int height;
+
+            public Builder(@NonNull java.io.File file) {
+                this.file = file;
             }
-            this.mimeType = URLConnection.guessContentTypeFromName(file.getName());
-        }
 
-        @Deprecated
-        public void setMimeType(String mimeType) {
-            this.mimeType = mimeType;
-        }
-
-        @Deprecated
-        public void setSize(long size) {
-        }
-
-        @Deprecated
-        public void setWidth(int width) {
-            if (width <= 0 ) {
-                throw new IllegalArgumentException("Width must > 0");
+            public Builder setPath(String path) {
+                this.file = new File(path);
+                return this;
             }
-            this.width = width;
-        }
 
-        @Deprecated
-        public void setHeight(int height) {
-            if (height <= 0 ) {
-                throw new IllegalArgumentException("Height must > 0");
+            public Builder setMimeType(String mimeType) {
+                this.mimeType = mimeType;
+                return this;
             }
-            this.height = height;
+
+            public Builder setWidth(int width) {
+                this.width = width;
+                return this;
+            }
+
+            public Builder setHeight(int height) {
+                this.height = height;
+                return this;
+            }
+
+            public Thumbnail build() {
+                if (this.file == null) {
+                    throw new NullPointerException();
+                }
+
+                this.mimeType = this.mimeType != null ? this.mimeType : URLConnection.guessContentTypeFromName(file.getName());
+                Thumbnail thumbnail = new Thumbnail(this);
+
+                if (!thumbnail.getFile().exists() && !thumbnail.getFile().isFile()) {
+                    throw new IllegalArgumentException("File isn't exist");
+                }
+
+                return thumbnail;
+            }
         }
     }
 
