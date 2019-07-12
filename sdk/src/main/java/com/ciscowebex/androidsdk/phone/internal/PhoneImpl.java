@@ -115,6 +115,7 @@ import com.ciscowebex.androidsdk.phone.CallObserver;
 import com.ciscowebex.androidsdk.phone.MediaOption;
 import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
 import com.ciscowebex.androidsdk.phone.Phone;
+import com.ciscowebex.androidsdk.phone.PhoneObserver;
 import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
@@ -153,6 +154,10 @@ public class PhoneImpl implements Phone {
 
     @Inject
     volatile Settings settings;
+
+    private PhoneStatus _status;
+
+    private PhoneObserver _phoneObserver;
 
     private IncomingCallListener _incomingCallListener;
 
@@ -313,7 +318,26 @@ public class PhoneImpl implements Phone {
         _bus.register(this);
         _registerTimer = new Handler();
         _context = context;
+        _status = PhoneStatus.INITIATED;
         _prompter = new H264LicensePrompter(context.getSharedPreferences(Webex.class.getPackage().getName(), Context.MODE_PRIVATE));
+    }
+
+    public void setStatus(PhoneStatus _status) {
+        this._status = _status;
+    }
+
+    public PhoneStatus getStatus() {
+        return _status;
+    }
+
+    @Override
+    public void setPhoneObserver(PhoneObserver observer) {
+        _phoneObserver = observer;
+    }
+
+    @Override
+    public PhoneObserver getPhoneObserver() {
+        return _phoneObserver;
     }
 
     public IncomingCallListener getIncomingCallListener() {
@@ -386,6 +410,7 @@ public class PhoneImpl implements Phone {
 
     public void register(@NonNull CompletionHandler<Void> callback) {
         Ln.i("Registering");
+        _status = PhoneStatus.REGISTERING;
         if (_registerCallback != null) {
             Ln.w("Already registering");
             callback.onComplete(ResultImpl.error("Already registering"));
@@ -398,6 +423,7 @@ public class PhoneImpl implements Phone {
             _registerTimeoutTask = () -> {
                 Ln.i("Register timeout");
                 if (_device == null && _registerCallback != null) {
+                    _status = PhoneStatus.INITIATED;
                     _registerCallback.onComplete(ResultImpl.error("Register timeout"));
                 }
             };
@@ -409,12 +435,14 @@ public class PhoneImpl implements Phone {
 
     public void deregister(@NonNull CompletionHandler<Void> callback) {
         Ln.i("Deregistering");
+        _status = PhoneStatus.DEREGISTERING;
         RotationHandler.unregisterRotationReceiver(_context);
         _applicationController.logout(null, false, false, false);
         _mediaEngine.uninitialize();
         _device = null;
         _registerCallback = null;
         _registerTimer.removeCallbacks(_registerTimeoutTask);
+        _status = PhoneStatus.DEREGISTERED;
         callback.onComplete(ResultImpl.success(null));
         Ln.i("Deregistered");
     }
@@ -657,6 +685,7 @@ public class PhoneImpl implements Phone {
             Ln.w("Register callback is null ");
             return;
         }
+        _status = PhoneStatus.REGISTERED;
         _registerCallback.onComplete(ResultImpl.success(null));
         _registerCallback = null;
         _registerTimer.removeCallbacks(_registerTimeoutTask);
@@ -909,6 +938,7 @@ public class PhoneImpl implements Phone {
                 listener.onIncomingCall(call);
             }
         }
+        // TODO: CallNotificationType.ONGOING, when jumping into voicemail service
     }
 
     // mutiple device hangup
@@ -1612,6 +1642,15 @@ public class PhoneImpl implements Phone {
     
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ApplicationControllerStateChangedEvent event) {
-        // -- Ignore Event
+        // TODO: ApplicationControllerStateChangedEvent has no input data
+        if ( _applicationController.getState() == ApplicationController.State.REGISTERING) {
+            _phoneObserver.onRegistering();
+        } else if (_applicationController.getState() == ApplicationController.State.STARTED) {
+            _phoneObserver.onRegistered();
+        } else if (_applicationController.getState() == ApplicationController.State.STOPPING) {
+            _phoneObserver.onDeregistering();
+        } else if (_applicationController.getState() == ApplicationController.State.STOPPED) {
+            _phoneObserver.onDeregistered();
+        }
     }
 }

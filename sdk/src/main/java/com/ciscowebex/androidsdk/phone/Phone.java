@@ -120,6 +120,63 @@ public interface Phone {
     }
 
     /**
+     * The enumeration of Phone Status
+     *
+     * @since 2.2.0
+     */
+    enum PhoneStatus {
+
+        /**
+         * The phone for device has been initiated, waiting for device registration
+         *
+         * @since 2.2.0
+         */
+        INITIATED,
+
+        /**
+         * The device is registering
+         *
+         * @since 2.2.0
+         */
+        REGISTERING,
+
+        /**
+         * The device has registered
+         *
+         * @since 2.2.0
+         */
+        REGISTERED,
+
+        /**
+         * The device is deregistering
+         *
+         * @since 2.2.0
+         */
+        DEREGISTERING,
+
+        /**
+         * The device is logout by user or WIFI disconnection
+         *
+         * @since 2.2.0
+         */
+        DEREGISTERED
+    }
+
+    /**
+     *
+     * @param observer phone observer to listen the phone status
+     * @since 0.1
+     */
+    void setPhoneObserver(PhoneObserver observer);
+
+    /**
+     *
+     * @return Observer for the status of this phone
+     * @since 0.1
+     */
+    PhoneObserver getPhoneObserver();
+
+    /**
      * The interface for a listener for incoming call
      *
      * @since 0.1
