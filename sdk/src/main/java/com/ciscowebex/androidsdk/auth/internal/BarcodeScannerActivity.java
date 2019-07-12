@@ -9,6 +9,8 @@ import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.auth.OAuthQRCodeAuthenticator;
 import com.github.benoitdion.ln.Ln;
 
+
+// TODO: decoupling this Activity with AndroidManifest.xml
 public class BarcodeScannerActivity extends Activity {
     public static final String BARCODE_REQUEST_CODE = "barcode_request_code";
     public static final String BARCODE_SCAN_ACTION = "barcode_scan_action";
