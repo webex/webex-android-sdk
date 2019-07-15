@@ -10,7 +10,11 @@
                         android:exported="false"
                         android:name=".internal.AcquirePermissionActivity"
                         android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+                <activity
+                    android:exported="false"
+                    android:name=".auth.internal.BarcodeScannerActivity" />
         </application>
-        
+
 </manifest>
 

@@ -13,6 +13,10 @@ import com.ciscowebex.androidsdk_commlib.AfterInjected;
 
 import javax.inject.Inject;
 
+/**
+ * An <a href="https://oauth.net/2/">OAuth</a> based authentication with a barcode scanner application
+ * Note: require a third party barcode scanner application
+ */
 public class OAuthQRCodeAuthenticator implements Authenticator {
     private static final String TAG = OAuthQRCodeAuthenticator.class.getSimpleName();
 
