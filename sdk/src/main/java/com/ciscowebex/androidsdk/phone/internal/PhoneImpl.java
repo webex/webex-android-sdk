@@ -663,7 +663,11 @@ public class PhoneImpl implements Phone {
         CallImpl call = _calls.get(key);
         if (call == null) {
             com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(key);
-            if (locus != null) {
+            if (locus == null) {
+                Ln.e("Internal callImpl isn't exist " + event.getLocusKey());
+                resetDialStatus(ResultImpl.error("Internal callImpl isn't exist"));
+            }
+            else {
                 call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, key, locus.getLocusData().isMeeting());
                 _bus.register(call);
                 _calls.put(key, call);
@@ -674,14 +678,8 @@ public class PhoneImpl implements Phone {
                     setCallOnRinging(call);
                     setCallOnConnected(call, event.getLocusKey());
                 }
-            } else {
-                Ln.e("Internal callImpl isn't exist " + event.getLocusKey());
-                if (_dialCallback != null) {
-                    _dialCallback.onComplete(ResultImpl.error("Internal callImpl isn't exist"));
-                }
-                _dialOption = null;
+                _dialCallback = null;
             }
-            _dialCallback = null;
         }
     }
 
@@ -733,12 +731,12 @@ public class PhoneImpl implements Phone {
                         if (_dialCallback != null) {
                             _dialCallback.onComplete(ResultImpl.success(call));
                             setCallOnRinging(call);
-                            _dialCallback = null;
                         }
                         if (call.getOption() == null && _dialOption != null) {
                             call.setMediaOption(_dialOption);
                         }
                         setCallOnConnected(call, event.getLocusKey());
+                        _dialCallback = null;
                     }
                 }
             }
@@ -826,6 +824,7 @@ public class PhoneImpl implements Phone {
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
+            resetDialStatus(null);
             if (call.getHangupCallback() != null) {
                 call.getHangupCallback().onComplete(ResultImpl.success(null));
             }
@@ -839,10 +838,11 @@ public class PhoneImpl implements Phone {
         Ln.i("LocusDeclinedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
+            resetDialStatus(null);
             if (call.getRejectCallback() != null) {
                 call.getRejectCallback().onComplete(ResultImpl.success(null));
             }
-            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             removeCall(new CallObserver.LocalDecline(call));
         }
     }
@@ -854,6 +854,7 @@ public class PhoneImpl implements Phone {
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
+            resetDialStatus(null);
             if (event.getReason() == CallControlService.CancelReason.REMOTE_CANCELLED) {
                 removeCall(new CallObserver.RemoteCancel(call));
             } else {
@@ -873,6 +874,7 @@ public class PhoneImpl implements Phone {
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (!call.isGroup()) {
+                resetDialStatus(null);
                 removeCall(new CallObserver.RemoteLeft(call));
             } else if (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING) {
                 boolean meetingIsOpen = false;
@@ -882,6 +884,7 @@ public class PhoneImpl implements Phone {
                     }
                 }
                 if (!meetingIsOpen) {
+                    resetDialStatus(null);
                     removeCall(new CallObserver.RemoteCancel(call));
                 }
             }
@@ -901,6 +904,7 @@ public class PhoneImpl implements Phone {
 	    CallImpl call = _calls.get(event.locusData().getKey());
 	    if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
 		    Ln.d(STR_FIND_CALLIMPL + event.locusData().getKey());
+            resetDialStatus(null);
 		    removeCall(new CallObserver.RemoteDecline(call));
 	    }
     }
@@ -947,10 +951,10 @@ public class PhoneImpl implements Phone {
 	    Locus locus = event.getLocus();
 	    if (call != null && locus != null && locus.getSelf() != null) {
             Uri deviceUrl = locus.getSelf().getDeviceUrl();
-            Ln.d("ParticipantSelfChangedEvent device url: " + deviceUrl + "  self: " + _device.getUrl()
-                + "  state: " + locus.getSelf().getState());
+            Ln.d("ParticipantSelfChangedEvent device url: " + deviceUrl + "  self: " + _device.getUrl() + "  state: " + locus.getSelf().getState());
 		    if (call.getStatus() == Call.CallStatus.CONNECTED && !isJoinedFromThisDevice(locus.getSelf().getDevices())) {
 			    Ln.d("Local device left locusKey: " + event.getLocusKey());
+                resetDialStatus(null);
 			    if (call.getHangupCallback() != null) {
 				    call.getHangupCallback().onComplete(ResultImpl.success(null));
 			    }
@@ -961,6 +965,7 @@ public class PhoneImpl implements Phone {
 			    com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
 			    if (aCall == null || !aCall.isActive()) {
 				    Ln.d("other device connected locusKey: " + event.getLocusKey());
+                    resetDialStatus(null);
 				    removeCall(new CallObserver.OtherConnected(call));
 			    }else{
 				    Ln.d("Self device has already connected, ignore other device connect");
@@ -971,6 +976,7 @@ public class PhoneImpl implements Phone {
 			    com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
 			    if (aCall == null || !aCall.isActive()) {
 				    Ln.d("other device declined locusKey: " + event.getLocusKey());
+                    resetDialStatus(null);
 				    removeCall(new CallObserver.OtherDeclined(call));
 			    }else{
 				    Ln.d("Self device has already connected, ignore other device decline");
@@ -1421,7 +1427,6 @@ public class PhoneImpl implements Phone {
                 _availableMediaCount = 0;
             }
         }
-        resetDialStatus(null);
     }
 
     private void setCallOnConnected(@NonNull CallImpl call, @NonNull LocusKey key) {
@@ -1547,10 +1552,11 @@ public class PhoneImpl implements Phone {
     private void resetDialStatus(Result result) {
         _dialOption = null;
         if (_dialCallback != null) {
-            if (result != null) {
-                _dialCallback.onComplete(result);
-            }
+            CompletionHandler<Call> callback = _dialCallback;
             _dialCallback = null;
+            if (result != null) {
+                callback.onComplete(result);
+            }
         }
     }
 
