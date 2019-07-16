@@ -673,13 +673,17 @@ public class PhoneImpl implements Phone {
                 _calls.put(key, call);
                 if (_dialCallback != null) {
                     _dialCallback.onComplete(ResultImpl.success(call));
+                    _dialCallback = null;
                 }
                 if (call.isGroup()) {
                     setCallOnRinging(call);
                     setCallOnConnected(call, event.getLocusKey());
                 }
-                _dialCallback = null;
             }
+        }
+        else {
+            Ln.e("Internal callImpl is exist " + call);
+            resetDialStatus(null);
         }
     }
 
@@ -715,32 +719,7 @@ public class PhoneImpl implements Phone {
     public void onEventMainThread(CallControlParticipantJoinedEvent event) {
         Ln.i("CallControlParticipantJoinedEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
-        if (call != null) {
-            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
-            if (!call.isGroup()) {
-                if (call.getAnswerCallback() != null && (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING)) {
-                    call.getAnswerCallback().onComplete(ResultImpl.success(null));
-                }
-                setCallOnConnected(call, event.getLocusKey());
-            } else if (call.getStatus() != Call.CallStatus.CONNECTED) {
-                for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
-                    if (locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
-                        if (call.getAnswerCallback() != null) {
-                            call.getAnswerCallback().onComplete(ResultImpl.success(null));
-                        }
-                        if (_dialCallback != null) {
-                            _dialCallback.onComplete(ResultImpl.success(call));
-                            setCallOnRinging(call);
-                        }
-                        if (call.getOption() == null && _dialOption != null) {
-                            call.setMediaOption(_dialOption);
-                        }
-                        setCallOnConnected(call, event.getLocusKey());
-                        _dialCallback = null;
-                    }
-                }
-            }
-        } else {
+        if (call == null) {
             //group call self join.
             com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
             for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
@@ -752,18 +731,50 @@ public class PhoneImpl implements Phone {
                     _calls.put(call.getKey(), call);
                     if (_dialCallback != null) {
                         _dialCallback.onComplete(ResultImpl.success(call));
+                        _dialCallback = null;
                     }
                     setCallOnRinging(call);
                     setCallOnConnected(call, event.getLocusKey());
-                    _dialCallback = null;
                 }
+            }
+        }
+        else {
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
+            if (!call.isGroup()) {
+                resetDialStatus(null);
+                if (call.getAnswerCallback() != null && (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING)) {
+                    call.getAnswerCallback().onComplete(ResultImpl.success(null));
+                }
+                setCallOnConnected(call, event.getLocusKey());
+            } else if (call.getStatus() != Call.CallStatus.CONNECTED) {
+                for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
+                    if (locusParticipant != null && locusParticipant.getDeviceUrl() != null && locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
+                        if (call.getAnswerCallback() != null) {
+                            call.getAnswerCallback().onComplete(ResultImpl.success(null));
+                        }
+                        if (_dialCallback != null) {
+                            _dialCallback.onComplete(ResultImpl.success(call));
+                            _dialCallback = null;
+                        }
+                        setCallOnRinging(call);
+                        if (call.getOption() == null && _dialOption != null) {
+                            call.setMediaOption(_dialOption);
+                        }
+                        setCallOnConnected(call, event.getLocusKey());
+                    }
+                }
+                resetDialStatus(null);
+            }
+            else {
+                resetDialStatus(null);
             }
         }
         //call membership changed
         List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
         for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
-            if (!locusParticipant.getDeviceUrl().equals(_device.getUrl()))
+            if (locusParticipant != null && locusParticipant.getDeviceUrl() != null && !locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
                 events.add(new CallObserver.MembershipJoinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
+            }
         }
         sendCallMembershipChanged(call, events);
         onJoinedParticipantCountChanged(call);
@@ -821,10 +832,10 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlSelfParticipantLeftEvent event) {
         Ln.i("CallControlSelfParticipantLeftEvent is received " + event.getLocusKey());
+        resetDialStatus(null);
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
-            resetDialStatus(null);
             if (call.getHangupCallback() != null) {
                 call.getHangupCallback().onComplete(ResultImpl.success(null));
             }
@@ -836,10 +847,10 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(LocusDeclinedEvent event) {
         Ln.i("LocusDeclinedEvent is received " + event.getLocusKey());
+        resetDialStatus(null);
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
-            resetDialStatus(null);
             if (call.getRejectCallback() != null) {
                 call.getRejectCallback().onComplete(ResultImpl.success(null));
             }
@@ -851,10 +862,10 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlCallCancelledEvent event) {
         Ln.i("CallControlCallCancelledEvent is received " + event.getLocusKey());
+        resetDialStatus(null);
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
-            resetDialStatus(null);
             if (event.getReason() == CallControlService.CancelReason.REMOTE_CANCELLED) {
                 removeCall(new CallObserver.RemoteCancel(call));
             } else {
@@ -870,11 +881,11 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlParticipantLeftEvent event) {
         Ln.i("CallControlParticipantLeftEvent is received " + event.getLocusKey());
+        resetDialStatus(null);
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (!call.isGroup()) {
-                resetDialStatus(null);
                 removeCall(new CallObserver.RemoteLeft(call));
             } else if (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING) {
                 boolean meetingIsOpen = false;
@@ -884,7 +895,6 @@ public class PhoneImpl implements Phone {
                     }
                 }
                 if (!meetingIsOpen) {
-                    resetDialStatus(null);
                     removeCall(new CallObserver.RemoteCancel(call));
                 }
             }
@@ -901,10 +911,10 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLeaveLocusEvent event) {
 	    Ln.i("CallControlLeaveLocusEvent is received " + event.locusData().getKey());
+        resetDialStatus(null);
 	    CallImpl call = _calls.get(event.locusData().getKey());
 	    if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
 		    Ln.d(STR_FIND_CALLIMPL + event.locusData().getKey());
-            resetDialStatus(null);
 		    removeCall(new CallObserver.RemoteDecline(call));
 	    }
     }
@@ -913,6 +923,7 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ParticipantRoomDeclinedEvent event) {
         Ln.i("ParticipantRoomDeclinedEvent is received " + event.getLocusKey());
+        resetDialStatus(null);
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
@@ -947,6 +958,7 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ParticipantSelfChangedEvent event) {
 	    Ln.i("ParticipantSelfChangedEvent is received " + event.getLocusKey());
+        resetDialStatus(null);
 	    CallImpl call = _calls.get(event.getLocusKey());
 	    Locus locus = event.getLocus();
 	    if (call != null && locus != null && locus.getSelf() != null) {
@@ -954,7 +966,6 @@ public class PhoneImpl implements Phone {
             Ln.d("ParticipantSelfChangedEvent device url: " + deviceUrl + "  self: " + _device.getUrl() + "  state: " + locus.getSelf().getState());
 		    if (call.getStatus() == Call.CallStatus.CONNECTED && !isJoinedFromThisDevice(locus.getSelf().getDevices())) {
 			    Ln.d("Local device left locusKey: " + event.getLocusKey());
-                resetDialStatus(null);
 			    if (call.getHangupCallback() != null) {
 				    call.getHangupCallback().onComplete(ResultImpl.success(null));
 			    }
@@ -965,7 +976,6 @@ public class PhoneImpl implements Phone {
 			    com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
 			    if (aCall == null || !aCall.isActive()) {
 				    Ln.d("other device connected locusKey: " + event.getLocusKey());
-                    resetDialStatus(null);
 				    removeCall(new CallObserver.OtherConnected(call));
 			    }else{
 				    Ln.d("Self device has already connected, ignore other device connect");
@@ -976,7 +986,6 @@ public class PhoneImpl implements Phone {
 			    com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
 			    if (aCall == null || !aCall.isActive()) {
 				    Ln.d("other device declined locusKey: " + event.getLocusKey());
-                    resetDialStatus(null);
 				    removeCall(new CallObserver.OtherDeclined(call));
 			    }else{
 				    Ln.d("Self device has already connected, ignore other device decline");
@@ -1070,6 +1079,7 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLocusChangedEvent event) {
         Ln.i("CallControlLocusChangedEvent is received ");
+        resetDialStatus(null);
         // TODO DO THIS FOR PSTN/SIP
     }
 
@@ -1192,7 +1202,6 @@ public class PhoneImpl implements Phone {
         onParticipantChanged(_calls.get(event.getCall().getKey()), event.getParticipant(), event.getVid());
     }
 
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
         Ln.d("CallControlParticipantVideoMutedEvent is received  participant: " + event.getParticipant().getPerson().getDisplayName() +
@@ -1203,12 +1212,12 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(AvailableMediaChangeEvent event) {
         Ln.d("AvailableMediaChangeEvent is received  mid: " + event.getMediaId() + "  count: " + event.getCount());
-        if (_activeCallLocusKey == null)
-            return;
-        CallImpl activeCall = _calls.get(_activeCallLocusKey);
-        if (activeCall != null && event.getMediaId() == MediaEngine.VIDEO_MID) {
-            _availableMediaCount = event.getCount();
-            onJoinedParticipantCountChanged(activeCall);
+        if (_activeCallLocusKey != null) {
+            CallImpl activeCall = _calls.get(_activeCallLocusKey);
+            if (activeCall != null && event.getMediaId() == MediaEngine.VIDEO_MID) {
+                _availableMediaCount = event.getCount();
+                onJoinedParticipantCountChanged(activeCall);
+            }
         }
     }
 
@@ -1263,19 +1272,21 @@ public class PhoneImpl implements Phone {
     }
 
     private void sendActiveSpeakerChanged(CallImpl call, CallMembership callMembership){
-        if (call != null && call.getObserver() != null)
+        if (call != null && call.getObserver() != null) {
             call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, callMembership, call.getActiveSpeaker()));
+        }
     }
 
     private void sendAuxStreamPersonChanged(CallImpl call, AuxStreamImpl auxStream, CallMembership callMembership){
-        if (call != null && call.getMultiStreamObserver() != null && auxStream != null)
+        if (call != null && call.getMultiStreamObserver() != null && auxStream != null) {
             call.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamPersonChangedEvent(call, auxStream, callMembership, auxStream.getPerson()));
+        }
     }
 
     private void onJoinedParticipantCountChanged(CallImpl call){
-        if (call == null || !call.getKey().equals(_activeCallLocusKey) || !call.isGroup())
+        if (call == null || !call.getKey().equals(_activeCallLocusKey) || !call.isGroup()) {
             return;
-
+        }
         int oldCount = call.getAvailableAuxStreamCount();
         int newCount = Math.min(call.getJoinedMemberships().size() - 2, _availableMediaCount - 1);
         Ln.d("sendJoinedParticipantCountChanged old: " + oldCount + "  new: " + newCount);
