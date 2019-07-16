@@ -669,6 +669,7 @@ public class PhoneImpl implements Phone {
             }
             else {
                 call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, key, locus.getLocusData().isMeeting());
+                Ln.d("Call is created: " + call);
                 _bus.register(call);
                 _calls.put(key, call);
                 if (_dialCallback != null) {
@@ -958,7 +959,6 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ParticipantSelfChangedEvent event) {
 	    Ln.i("ParticipantSelfChangedEvent is received " + event.getLocusKey());
-        resetDialStatus(null);
 	    CallImpl call = _calls.get(event.getLocusKey());
 	    Locus locus = event.getLocus();
 	    if (call != null && locus != null && locus.getSelf() != null) {
@@ -966,6 +966,7 @@ public class PhoneImpl implements Phone {
             Ln.d("ParticipantSelfChangedEvent device url: " + deviceUrl + "  self: " + _device.getUrl() + "  state: " + locus.getSelf().getState());
 		    if (call.getStatus() == Call.CallStatus.CONNECTED && !isJoinedFromThisDevice(locus.getSelf().getDevices())) {
 			    Ln.d("Local device left locusKey: " + event.getLocusKey());
+                resetDialStatus(null);
 			    if (call.getHangupCallback() != null) {
 				    call.getHangupCallback().onComplete(ResultImpl.success(null));
 			    }
@@ -976,6 +977,7 @@ public class PhoneImpl implements Phone {
 			    com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
 			    if (aCall == null || !aCall.isActive()) {
 				    Ln.d("other device connected locusKey: " + event.getLocusKey());
+                    resetDialStatus(null);
 				    removeCall(new CallObserver.OtherConnected(call));
 			    }else{
 				    Ln.d("Self device has already connected, ignore other device connect");
@@ -986,6 +988,7 @@ public class PhoneImpl implements Phone {
 			    com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
 			    if (aCall == null || !aCall.isActive()) {
 				    Ln.d("other device declined locusKey: " + event.getLocusKey());
+                    resetDialStatus(null);
 				    removeCall(new CallObserver.OtherDeclined(call));
 			    }else{
 				    Ln.d("Self device has already connected, ignore other device decline");
@@ -1079,7 +1082,6 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLocusChangedEvent event) {
         Ln.i("CallControlLocusChangedEvent is received ");
-        resetDialStatus(null);
         // TODO DO THIS FOR PSTN/SIP
     }
 
@@ -1561,6 +1563,7 @@ public class PhoneImpl implements Phone {
     }
 
     private void resetDialStatus(Result result) {
+        Ln.d("Try to reset dial status for " + result + ", callback " + _dialCallback);
         _dialOption = null;
         if (_dialCallback != null) {
             CompletionHandler<Call> callback = _dialCallback;
