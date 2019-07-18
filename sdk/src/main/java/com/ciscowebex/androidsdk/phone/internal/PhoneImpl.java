@@ -45,24 +45,7 @@ import android.view.View;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
-import com.cisco.spark.android.callcontrol.events.CallControlActiveSpeakerChangedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlCallCancelledEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlCallJoinErrorEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlFloorGrantedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlFloorReleasedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlLeaveLocusEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlLocalAudioMutedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlLocalVideoMutedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlLocusChangedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlLocusCreatedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlMediaDecodeSizeChangedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlParticipantAudioMuteEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlParticipantJoinedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlParticipantLeftEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlParticipantVideoMutedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlRemoteVideoMutedEvent;
-import com.cisco.spark.android.callcontrol.events.CallControlSelfParticipantLeftEvent;
-import com.cisco.spark.android.callcontrol.events.DismissCallNotificationEvent;
+import com.cisco.spark.android.callcontrol.events.*;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.ApplicationController;
 import com.cisco.spark.android.core.Settings;
@@ -82,7 +65,7 @@ import com.cisco.spark.android.locus.responses.LocusUrlResponse;
 import com.cisco.spark.android.media.MediaCapabilityConfig;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaSession;
-import com.cisco.spark.android.media.events.AvailableMediaChangeEvent;
+import com.cisco.spark.android.media.events.MediaAvailabilityChangeEvent;
 import com.cisco.spark.android.media.events.MediaBlockedChangeEvent;
 import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.sync.operationqueue.core.Operations;
@@ -1058,7 +1041,7 @@ public class PhoneImpl implements Phone {
 	}
 
 	@Subscribe(threadMode = ThreadMode.MAIN)
-	public void onEventMainThread(CallControlRemoteVideoMutedEvent event) {
+	public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
 		Ln.i("CallControlRemoteVideoMutedEvent is received " + event.getLocusKey());
 		CallImpl call = _calls.get(event.getLocusKey());
 		if (call != null) {
@@ -1200,19 +1183,18 @@ public class PhoneImpl implements Phone {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlActiveSpeakerChangedEvent event) {
-        Ln.d("CallControlActiveSpeakerChangedEvent is received vid: " + event.getVid() + "   participant: " + event.getParticipant());
-        onParticipantChanged(_calls.get(event.getCall().getKey()), event.getParticipant(), event.getVid());
+        Ln.d("CallControlActiveSpeakerChangedEvent is received vid: " + event.getVideoId() + "   participant: " + event.getParticipant());
+        onParticipantChanged(_calls.get(event.getLocusKey()), event.getParticipant(), event.getVideoId());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
-        Ln.d("CallControlParticipantVideoMutedEvent is received  participant: " + event.getParticipant().getPerson().getDisplayName() +
-                "  vid: " + event.getVid() + "  mute: " + event.isMuted());
-        onParticipantChanged(_calls.get(event.getLocusKey()), event.getParticipant(), event.getVid());
+    public void onEventMainThread(CallControlMediaVideoMutedEvent event) {
+        Ln.d("CallControlMediaVideoMutedEvent is received  participant: " + event.getLocusParticipant().getPerson().getDisplayName() + "  vid: " + event.getVid() + "  mute: " + event.isMuted());
+        onParticipantChanged(_calls.get(event.getLocusKey()), event.getLocusParticipant(), event.getVid());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(AvailableMediaChangeEvent event) {
+    public void onEventMainThread(MediaAvailabilityChangeEvent event) {
         Ln.d("AvailableMediaChangeEvent is received  mid: " + event.getMediaId() + "  count: " + event.getCount());
         if (_activeCallLocusKey != null) {
             CallImpl activeCall = _calls.get(_activeCallLocusKey);
@@ -1513,7 +1495,7 @@ public class PhoneImpl implements Phone {
                         @Override
                         public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                             Ln.d("share surfaceDestroyed !!!");
-                            if (_callControlService.isShareRendered()) {
+                            if (_callControlService.isShareRendering()) {
                                 _registerTimer.post(() -> _callControlService.removeShareWindow(key));
                             }
                         }

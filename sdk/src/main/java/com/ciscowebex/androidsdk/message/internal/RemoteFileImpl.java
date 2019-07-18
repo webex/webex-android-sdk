@@ -121,7 +121,7 @@ public class RemoteFileImpl implements RemoteFile {
     @Override
     @Deprecated
     public void setUrl(String url) {
-        file.setUri(Uri.parse(url));
+        file.setUrl(Uri.parse(url));
     }
 
     @Override

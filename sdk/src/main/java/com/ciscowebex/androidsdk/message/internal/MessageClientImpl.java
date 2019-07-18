@@ -589,13 +589,13 @@ public class MessageClientImpl implements MessageClient {
             contentManager.addUploadedContent(new java.io.File(new URI(contentUri.toString())), contentUri, ConversationContract.ContentDataCacheEntry.Cache.MEDIA);
 
             File modelFile = new File();
-            modelFile.setUri(contentUri);
+            modelFile.setUrl(contentUri);
             modelFile.setMimeType(MimeUtils.getMimeType(contentUri.toString()));
             modelFile.setDisplayName(contentUri.getLastPathSegment());
             if (localFile.getThumbnail() != null) {
                 java.io.File thumbFile = localFile.getThumbnail().getFile();
                 if (thumbFile.exists() && thumbFile.isFile()) {
-                    Image newThumb = new Image(Uri.fromFile(thumbFile), localFile.getThumbnail().getWidth(), localFile.getThumbnail().getHeight(), true);
+                    Image newThumb = new Image(Uri.fromFile(thumbFile), localFile.getThumbnail().getWidth(), localFile.getThumbnail().getHeight(), null, true);
                     modelFile.setImage(newThumb);
                 }
             }
