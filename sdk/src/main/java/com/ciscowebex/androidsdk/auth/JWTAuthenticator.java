@@ -95,7 +95,8 @@ public class JWTAuthenticator implements Authenticator {
      */
     @Override
     public boolean isAuthorized() {
-        return getUnexpiredJwt() != null;
+        // Changed by Orel
+        return getUnexpiredAccessToken() != null;
     }
 
     /**
@@ -149,22 +150,25 @@ public class JWTAuthenticator implements Authenticator {
         }
     }
 
+
     /**
      * @see Authenticator
      */
     @Override
     public void getToken(@NonNull CompletionHandler<String> handler) {
         checkNotNull(handler, "getToken: CompletionHandler should not be null");
-        String jwt = getUnexpiredJwt();
-        if (jwt == null) {
-            handler.onComplete(ResultImpl.error("JWT is null"));
-            return;
-        }
         String token = getUnexpiredAccessToken();
         if (token != null) {
             handler.onComplete(ResultImpl.success(token));
             return;
         }
+
+        String jwt = getUnexpiredJwt();
+        if (jwt == null) {
+            handler.onComplete(ResultImpl.error("JWT is null"));
+            return;
+        }
+
         refreshToken(handler);
     }
 
@@ -229,9 +233,11 @@ public class JWTAuthenticator implements Authenticator {
     }
 
     private @Nullable String getUnexpiredAccessToken() {
-        if (!isAuthorized()) {
-            return null;
-        }
+
+      //  if (!isAuthorized()) {
+        //    return null;
+       // }
+
         if (_token == null && _provider != null) {
             AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
             if (user != null) {
