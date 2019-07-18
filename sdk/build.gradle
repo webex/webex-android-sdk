@@ -5,6 +5,48 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'maven-publish'
 apply plugin: 'jacoco'
 
+
+
+apply plugin: "com.github.johnrengelman.shadow"
+
+
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:4.0.4"
+    }
+}
+
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+task shadowJar(type: ShadowJar) {
+    configurations = [project.configurations.shadow]
+}
+tasks.withType(JavaCompile) {
+    compileTask -> compileTask.dependsOn shadowJar
+}
+
+shadowJar {
+    relocate 'javax.inject.Inject', 'javax.inject.Inject2'
+    relocate 'javax.inject.Named', 'javax.inject.Named2'
+    relocate 'javax.inject.Provider', 'javax.inject.Provider2'
+    relocate 'javax.inject.Qualifier', 'javax.inject.Qualifier2'
+    relocate 'javax.inject.Scope', 'javax.inject.Scope2'
+    relocate 'javax.inject.Singleton', 'javax.inject.Singleton2'
+    relocate 'dagger.Lazy', 'dagger.Lazy2'
+    relocate 'dagger.MembersInjector', 'dagger.MembersInjector2'
+    relocate 'dagger.Module', 'dagger.Module2'
+    relocate 'dagger.Provides', 'dagger.Provides2'
+    relocate 'dagger.Provides$Type', 'dagger.Provides$Type2'
+    relocate 'dagger.internal', 'dagger.internal2'
+    relocate 'dagger.producers', 'dagger.producers2'
+}
+
+
+
 ext {
     moduleName = 'Cisco Webex Android SDK'
     moduleGroupId = 'com.ciscowebex'
@@ -171,86 +213,19 @@ android {
     }
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId moduleGroupId
-            artifactId moduleArtifactId
-            version moduleVersion
-            artifact "$buildDir/outputs/aar/sdk-debug.aar" //aar artifact you want to publish
 
-            artifact javadocJar
-            artifact sourcesJar
-
-            pom.withXml {
-                def dependenciesNode = asNode().appendNode('dependencies')
-                configurations.implementation.allDependencies.each { dependency ->
-                    if (dependency.group?.trim()) {
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-                        dependencyNode.appendNode('groupId', dependency.group)
-                        dependencyNode.appendNode('artifactId', dependency.name)
-                        dependencyNode.appendNode('version', dependency.version)
-                        if (!dependency.transitive || dependency.name == 'androidsdk_commlib') {
-                            dependencyNode.appendNode('type', 'aar')
-                        }
-                    }
-                }
-                asNode().children().last() + {
-                    resolveStrategy = Closure.DELEGATE_FIRST
-                    name moduleName
-                    description moduleDescription
-                    url moduleSiteUrl
-                    scm {
-                        url moduleGitUrl
-                        connection moduleConnectionUrl
-                        developerConnection moduleDeveloperConnectionUrl
-                    }
-                    licenses {
-                        license {
-                            name moduleLicenseName
-                            url moduleLicenseURL
-                        }
-                    }
-                    developers {
-                        developer {
-                            id moduleDeveloperId
-                            name moduleDeveloperName
-                            email moduleDeveloperEmail
-                            organization moduleDeveloperOrganization
-                            organizationUrl moduleDeveloperOrganizationURL
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            name 'DevSnapshot'
-            url "http://engci-maven.cisco.com/artifactory/webexsdk-SNAPSHOT/"
-            credentials {
-                username "$CEC_Username"
-                password "$ArtifactoryApiKey"
-            }
-        }
-
-        maven {
-            name 'Release'
-            url "http://engci-maven.cisco.com/artifactory/webexsdk/"
-            credentials {
-                username "$CEC_Username"
-                password "$ArtifactoryApiKey"
-            }
-        }
-    }
-}
 
 dependencies {
+
+    // Update dagger for intesa - changed by Orel
     //compile fileTree(dir: 'libs', include: ['*.jar'])
-    compileOnly 'com.squareup.dagger:dagger-compiler:1.2.2'
-    kapt 'com.squareup.dagger:dagger-compiler:1.2.2'
-    annotationProcessor 'com.squareup.dagger:dagger-compiler:1.2.2'
+    compile 'com.google.dagger:dagger-android:2.19'
+    compile 'com.google.dagger:dagger-android-support:2.19' // if you use the support libraries
+    annotationProcessor 'com.google.dagger:dagger-android-processor:2.19'
+
+  //  compileOnly 'com.squareup.dagger:dagger-compiler:1.2.2'
+  //  kapt 'com.squareup.dagger:dagger-compiler:1.2.2'
+  //  annotationProcessor 'com.squareup.dagger:dagger-compiler:1.2.2'
 
     implementation('com.ciscowebex:androidsdk_commlib:2.0.0@aar', {
         transitive = true

@@ -172,6 +172,19 @@ public class JWTAuthenticator implements Authenticator {
         refreshToken(handler);
     }
 
+    public void getTokenExpiresIn(@NonNull CompletionHandler<Long> handler) {
+
+        checkNotNull(handler, "getToken: CompletionHandler should not be null");
+        long expiresIn = getUnexpiredInAccessToken();
+        if (expiresIn!=0) {
+            handler.onComplete(ResultImpl.success(expiresIn));
+            return;
+        }
+
+        handler.onComplete(ResultImpl.error("token is expired"));
+
+    }
+
     @Override
     public void refreshToken(CompletionHandler<String> handler) {
         checkNotNull(handler, "refreshToken: CompletionHandler should not be null");
@@ -230,6 +243,20 @@ public class JWTAuthenticator implements Authenticator {
             Ln.e(ignored);
         }
         return _jwt;
+    }
+
+    private  @Nullable long getUnexpiredInAccessToken() {
+
+        if (_token == null && _provider != null) {
+            AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
+            if (user != null) {
+                _token = user.getOAuth2Tokens();
+            }
+        }
+        if (_token == null || _token.getExpiresIn() <= (System.currentTimeMillis() / 1000) + (15 * 60)) {
+            return 0;
+        }
+        return _token.getExpiresIn();
     }
 
     private @Nullable String getUnexpiredAccessToken() {
