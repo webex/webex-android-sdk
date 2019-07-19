@@ -135,14 +135,18 @@ public class PhoneImpl implements Phone {
     private DeviceRegistration _device;
 
     private Handler _registerTimer;
-    public Handler getHandler(){return _registerTimer;}
+
+    public Handler getHandler() {
+        return _registerTimer;
+    }
 
     private Runnable _registerTimeoutTask;
 
     private CompletionHandler<Void> _registerCallback;
 
     private Map<LocusKey, CallImpl> _calls = new HashMap<>();
-    public CallImpl getCall(LocusKey key){
+
+    public CallImpl getCall(LocusKey key) {
         return _calls.get(key);
     }
 
@@ -167,7 +171,8 @@ public class PhoneImpl implements Phone {
     private Uri _currentSharingUri;
 
     private boolean _isRemoteSendingVideo;
-    public boolean getRemoteSendingVideo(){
+
+    public boolean getRemoteSendingVideo() {
         return _isRemoteSendingVideo;
     }
 
@@ -194,7 +199,6 @@ public class PhoneImpl implements Phone {
     private static final String STR_ALREADY_DISCONNECTED = "Already disconnected";
     private static final String STR_FIND_CALLIMPL = "Find callImpl ";
     private static final String STR_FAILURE_CALL = "Failure call: ";
-
 
 
     private static class DialTarget {
@@ -447,56 +451,50 @@ public class PhoneImpl implements Phone {
         }
     }
 
-	void makeCall(Bundle data, boolean permission) {
-		if (data == null) {
-			Ln.e("makeCall data is null!");
-			return;
-		}
-		int direction = data.getInt(AcquirePermissionActivity.CALL_DIRECTION);
-		if (direction == Call.Direction.INCOMING.ordinal()) {
-			Ln.d("make incoming call");
-			CallImpl call = _calls.get(data.getParcelable(AcquirePermissionActivity.CALL_KEY));
-			if (permission && call != null) {
-				CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
-				builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
-				doDial(builder.build());
-			}
-			else if (call != null && call.getAnswerCallback() != null) {
-				Ln.w(STR_PERMISSION_DENIED);
-				call.getAnswerCallback().onComplete(ResultImpl.error(STR_PERMISSION_DENIED));
-			}
-		}
-		else if (direction == Call.Direction.OUTGOING.ordinal()) {
-			Ln.d("make outgoing call");
-			String dialString = data.getString(AcquirePermissionActivity.CALL_STRING);
-			if (permission && dialString != null) {
-				DialTarget target = new DialTarget(dialString);
-				if (target.type == DialTarget.AddressType.PEOPLE_MAIL) {
-					new PersonClientImpl(_authenticator).list(dialString, null, 1, result -> {
+    void makeCall(Bundle data, boolean permission) {
+        if (data == null) {
+            Ln.e("makeCall data is null!");
+            return;
+        }
+        int direction = data.getInt(AcquirePermissionActivity.CALL_DIRECTION);
+        if (direction == Call.Direction.INCOMING.ordinal()) {
+            Ln.d("make incoming call");
+            CallImpl call = _calls.get(data.getParcelable(AcquirePermissionActivity.CALL_KEY));
+            if (permission && call != null) {
+                CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
+                builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
+                doDial(builder.build());
+            } else if (call != null && call.getAnswerCallback() != null) {
+                Ln.w(STR_PERMISSION_DENIED);
+                call.getAnswerCallback().onComplete(ResultImpl.error(STR_PERMISSION_DENIED));
+            }
+        } else if (direction == Call.Direction.OUTGOING.ordinal()) {
+            Ln.d("make outgoing call");
+            String dialString = data.getString(AcquirePermissionActivity.CALL_STRING);
+            if (permission && dialString != null) {
+                DialTarget target = new DialTarget(dialString);
+                if (target.type == DialTarget.AddressType.PEOPLE_MAIL) {
+                    new PersonClientImpl(_authenticator).list(dialString, null, 1, result -> {
                         List<Person> persons = result.getData();
                         if (!Checker.isEmpty(persons)) {
                             Person person = persons.get(0);
                             Ln.d("Lookup target: " + person.getId());
                             doDial(new DialTarget(person.getId()).address, _dialOption);
-                        }
-                        else {
+                        } else {
                             doDial(target.address, _dialOption);
                         }
                     });
-				}
-				else if (target.isEndpoint()) {
-					doDial(target.address, _dialOption);
-				}
-				else {
-					doDialSpaceID(target.address, _dialOption);
-				}
-			}
-			else {
-				Ln.w(STR_PERMISSION_DENIED);
-				resetDialStatus(ResultImpl.error(STR_PERMISSION_DENIED));
-			}
-		}
-	}
+                } else if (target.isEndpoint()) {
+                    doDial(target.address, _dialOption);
+                } else {
+                    doDialSpaceID(target.address, _dialOption);
+                }
+            } else {
+                Ln.w(STR_PERMISSION_DENIED);
+                resetDialStatus(ResultImpl.error(STR_PERMISSION_DENIED));
+            }
+        }
+    }
 
     public void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
         Ln.i("Dialing: " + dialString + ", " + option.hasVideo());
@@ -521,14 +519,14 @@ public class PhoneImpl implements Phone {
         _dialOption = option;
         _dialCallback = callback;
 
-	    final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
-	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	    intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
-	    Bundle bundle = new Bundle();
-	    bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.OUTGOING.ordinal());
-	    bundle.putString(AcquirePermissionActivity.CALL_STRING, dialString);
-	    intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
-	    _context.startActivity(intent);
+        final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
+        Bundle bundle = new Bundle();
+        bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.OUTGOING.ordinal());
+        bundle.putString(AcquirePermissionActivity.CALL_STRING, dialString);
+        intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
+        _context.startActivity(intent);
     }
 
     void answer(@NonNull CallImpl call) {
@@ -566,14 +564,14 @@ public class PhoneImpl implements Phone {
             }
         }
         stopPreview();
-	    final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
-	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	    intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
-	    Bundle bundle = new Bundle();
-	    bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.INCOMING.ordinal());
-	    bundle.putParcelable(AcquirePermissionActivity.CALL_KEY, call.getKey());
-	    intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
-	    _context.startActivity(intent);
+        final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
+        Bundle bundle = new Bundle();
+        bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.INCOMING.ordinal());
+        bundle.putParcelable(AcquirePermissionActivity.CALL_KEY, call.getKey());
+        intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
+        _context.startActivity(intent);
     }
 
     void reject(@NonNull CallImpl call) {
@@ -672,8 +670,7 @@ public class PhoneImpl implements Phone {
             if (locus == null) {
                 Ln.e("Internal callImpl isn't exist " + event.getLocusKey());
                 resetDialStatus(ResultImpl.error("Internal callImpl isn't exist"));
-            }
-            else {
+            } else {
                 call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, key, locus.getLocusData().isMeeting());
                 Ln.d("Call is created: " + call);
                 _bus.register(call);
@@ -687,8 +684,7 @@ public class PhoneImpl implements Phone {
                     setCallOnConnected(call, event.getLocusKey());
                 }
             }
-        }
-        else {
+        } else {
             Ln.e("Internal callImpl is exist " + call);
             resetDialStatus(null);
         }
@@ -705,7 +701,7 @@ public class PhoneImpl implements Phone {
                 if (call.getDirection() == Call.Direction.INCOMING) {
                     setCallOnRinging(call);
                 }
-            }else{
+            } else {
                 if (call.getDirection() == Call.Direction.INCOMING) {
                     for (LocusParticipant participant : call.getRemoteParticipants()) {
                         Ln.d("participant State: " + participant.getState());
@@ -714,7 +710,7 @@ public class PhoneImpl implements Phone {
                             break;
                         }
                     }
-                }else{
+                } else {
                     setCallOnRinging(call);
                 }
             }
@@ -744,8 +740,7 @@ public class PhoneImpl implements Phone {
                     setCallOnConnected(call, event.getLocusKey());
                 }
             }
-        }
-        else {
+        } else {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (!call.isGroup()) {
                 resetDialStatus(null);
@@ -771,8 +766,7 @@ public class PhoneImpl implements Phone {
                     }
                 }
                 resetDialStatus(null);
-            }
-            else {
+            } else {
                 resetDialStatus(null);
             }
         }
@@ -783,8 +777,8 @@ public class PhoneImpl implements Phone {
                 events.add(new CallObserver.MembershipJoinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
             }
         }
-        sendCallMembershipChanged(call, events);
-        onJoinedParticipantCountChanged(call);
+        doCallMembershipChanged(call, events);
+        doParticipantCountChanged(call);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -909,21 +903,21 @@ public class PhoneImpl implements Phone {
             for (LocusParticipant locusParticipant : event.getLeftParticipants()) {
                 events.add(new CallObserver.MembershipLeftEvent(call, new CallMembershipImpl(locusParticipant, call)));
             }
-            sendCallMembershipChanged(call, events);
-            onJoinedParticipantCountChanged(call);
+            doCallMembershipChanged(call, events);
+            doParticipantCountChanged(call);
         }
     }
 
     // Remote declined
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLeaveLocusEvent event) {
-	    Ln.i("CallControlLeaveLocusEvent is received " + event.locusData().getKey());
+        Ln.i("CallControlLeaveLocusEvent is received " + event.locusData().getKey());
         resetDialStatus(null);
-	    CallImpl call = _calls.get(event.locusData().getKey());
-	    if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
-		    Ln.d(STR_FIND_CALLIMPL + event.locusData().getKey());
-		    removeCall(new CallObserver.RemoteDecline(call));
-	    }
+        CallImpl call = _calls.get(event.locusData().getKey());
+        if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
+            Ln.d(STR_FIND_CALLIMPL + event.locusData().getKey());
+            removeCall(new CallObserver.RemoteDecline(call));
+        }
     }
 
     // Space remote declined
@@ -938,7 +932,7 @@ public class PhoneImpl implements Phone {
             for (LocusParticipant locusParticipant : event.getDeclinedParticipants()) {
                 events.add(new CallObserver.MembershipDeclinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
             }
-            sendCallMembershipChanged(call, events);
+            doCallMembershipChanged(call, events);
         }
 
     }
@@ -964,43 +958,43 @@ public class PhoneImpl implements Phone {
     // mutiple device hangup
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ParticipantSelfChangedEvent event) {
-	    Ln.i("ParticipantSelfChangedEvent is received " + event.getLocusKey());
-	    CallImpl call = _calls.get(event.getLocusKey());
-	    Locus locus = event.getLocus();
-	    if (call != null && locus != null && locus.getSelf() != null) {
+        Ln.i("ParticipantSelfChangedEvent is received " + event.getLocusKey());
+        CallImpl call = _calls.get(event.getLocusKey());
+        Locus locus = event.getLocus();
+        if (call != null && locus != null && locus.getSelf() != null) {
             Uri deviceUrl = locus.getSelf().getDeviceUrl();
             Ln.d("ParticipantSelfChangedEvent device url: " + deviceUrl + "  self: " + _device.getUrl() + "  state: " + locus.getSelf().getState());
-		    if (call.getStatus() == Call.CallStatus.CONNECTED && !isJoinedFromThisDevice(locus.getSelf().getDevices())) {
-			    Ln.d("Local device left locusKey: " + event.getLocusKey());
+            if (call.getStatus() == Call.CallStatus.CONNECTED && !isJoinedFromThisDevice(locus.getSelf().getDevices())) {
+                Ln.d("Local device left locusKey: " + event.getLocusKey());
                 resetDialStatus(null);
-			    if (call.getHangupCallback() != null) {
-				    call.getHangupCallback().onComplete(ResultImpl.success(null));
-			    }
-			    removeCall(new CallObserver.LocalLeft(call));
-		    } else if (call.getStatus() != Call.CallStatus.CONNECTED
-			    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
-                && locus.getSelf().getState() == LocusParticipant.State.JOINED) {
-			    com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
-			    if (aCall == null || !aCall.isActive()) {
-				    Ln.d("other device connected locusKey: " + event.getLocusKey());
+                if (call.getHangupCallback() != null) {
+                    call.getHangupCallback().onComplete(ResultImpl.success(null));
+                }
+                removeCall(new CallObserver.LocalLeft(call));
+            } else if (call.getStatus() != Call.CallStatus.CONNECTED
+                    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
+                    && locus.getSelf().getState() == LocusParticipant.State.JOINED) {
+                com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
+                if (aCall == null || !aCall.isActive()) {
+                    Ln.d("other device connected locusKey: " + event.getLocusKey());
                     resetDialStatus(null);
-				    removeCall(new CallObserver.OtherConnected(call));
-			    }else{
-				    Ln.d("Self device has already connected, ignore other device connect");
-			    }
-		    } else if (call.getStatus() != Call.CallStatus.CONNECTED
-			    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
-                && locus.getSelf().getState() == LocusParticipant.State.DECLINED) {
-			    com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
-			    if (aCall == null || !aCall.isActive()) {
-				    Ln.d("other device declined locusKey: " + event.getLocusKey());
+                    removeCall(new CallObserver.OtherConnected(call));
+                } else {
+                    Ln.d("Self device has already connected, ignore other device connect");
+                }
+            } else if (call.getStatus() != Call.CallStatus.CONNECTED
+                    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
+                    && locus.getSelf().getState() == LocusParticipant.State.DECLINED) {
+                com.cisco.spark.android.callcontrol.model.Call aCall = _callControlService.getCall(event.getLocusKey());
+                if (aCall == null || !aCall.isActive()) {
+                    Ln.d("other device declined locusKey: " + event.getLocusKey());
                     resetDialStatus(null);
-				    removeCall(new CallObserver.OtherDeclined(call));
-			    }else{
-				    Ln.d("Self device has already connected, ignore other device decline");
-			    }
-		    }
-	    }
+                    removeCall(new CallObserver.OtherDeclined(call));
+                } else {
+                    Ln.d("Self device has already connected, ignore other device decline");
+                }
+            }
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1039,36 +1033,36 @@ public class PhoneImpl implements Phone {
         }
     }
 
-	@Subscribe(threadMode = ThreadMode.MAIN)
-	public void onEventMainThread(CallControlParticipantAudioMuteEvent event) {
-		Ln.i("CallControlParticipantAudioMuteEvent is received " + event.getLocusKey());
-		CallImpl call = _calls.get(event.getLocusKey());
-		if (call != null) {
-			Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
-			LocusSelfRepresentation self = call.getSelf();
-			if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
-				CallObserver observer = call.getObserver();
-				boolean isSending = call.isRemoteSendingAudio();
-				Ln.d("_isRemoteSendingAudio: " + _isRemoteSendingAudio + "  isSending: " + isSending);
-				if (observer != null && _isRemoteSendingAudio != isSending) {
-					observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(call, isSending));
-					_isRemoteSendingAudio = isSending;
-				}
-			} else {
-				// TODO for local ??
-			}
-			List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
-			events.add(new CallObserver.MembershipSendingAudioEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
-			sendCallMembershipChanged(call, events);
-		}
-	}
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlParticipantAudioMuteEvent event) {
+        Ln.i("CallControlParticipantAudioMuteEvent is received " + event.getLocusKey());
+        CallImpl call = _calls.get(event.getLocusKey());
+        if (call != null) {
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
+            LocusSelfRepresentation self = call.getSelf();
+            if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
+                CallObserver observer = call.getObserver();
+                boolean isSending = call.isRemoteSendingAudio();
+                Ln.d("_isRemoteSendingAudio: " + _isRemoteSendingAudio + "  isSending: " + isSending);
+                if (observer != null && _isRemoteSendingAudio != isSending) {
+                    observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(call, isSending));
+                    _isRemoteSendingAudio = isSending;
+                }
+            } else {
+                // TODO for local ??
+            }
+            List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+            events.add(new CallObserver.MembershipSendingAudioEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
+            doCallMembershipChanged(call, events);
+        }
+    }
 
-	@Subscribe(threadMode = ThreadMode.MAIN)
-	public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
-		Ln.i("CallControlRemoteVideoMutedEvent is received " + event.getLocusKey());
-		CallImpl call = _calls.get(event.getLocusKey());
-		if (call != null) {
-			Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlParticipantVideoMutedEvent event) {
+        Ln.i("CallControlRemoteVideoMutedEvent is received " + event.getLocusKey());
+        CallImpl call = _calls.get(event.getLocusKey());
+        if (call != null) {
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             LocusSelfRepresentation self = call.getSelf();
             if (!call.isGroup() && (self == null || !self.getUrl().equals(event.getParticipant().getUrl()))) {
                 CallObserver observer = call.getObserver();
@@ -1080,11 +1074,12 @@ public class PhoneImpl implements Phone {
                 _isRemoteSendingVideo = isSending;
             }
 
-			List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
-			events.add(new CallObserver.MembershipSendingVideoEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
-			sendCallMembershipChanged(call, events);
-		}
-	}
+            List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+            events.add(new CallObserver.MembershipSendingVideoEvent(call, new CallMembershipImpl(event.getParticipant(), call)));
+            doCallMembershipChanged(call, events);
+        }
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLocusChangedEvent event) {
         Ln.i("CallControlLocusChangedEvent is received ");
@@ -1100,69 +1095,69 @@ public class PhoneImpl implements Phone {
         resetDialStatus(ResultImpl.error(new WebexError<>(WebexError.ErrorCode.PERMISSION_ERROR, "Permissions Error", permissions)));
     }
 
-	@Subscribe(threadMode = ThreadMode.MAIN)
-	public void onEventMainThread(CallControlFloorGrantedEvent event) {
-		Ln.i("CallControlFloorGrantedEvent is received ");
-		List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
-		CallImpl call = _calls.get(event.getLocusKey());
-		if (call != null) {
-			LocusParticipant beneficiary = _callControlService.getLocus(event.getLocusKey()).getFloorBeneficiary();
-			if (beneficiary != null) {
-				_currentSharingUri = beneficiary.getDeviceUrl();
-			}
-			for (CallMembership membership : call.getMemberships()) {
-				if (membership.isSendingSharing()) {
-					events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
-					break;
-				}
-			}
-			sendCallMembershipChanged(call, events);
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlFloorGrantedEvent event) {
+        Ln.i("CallControlFloorGrantedEvent is received ");
+        List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+        CallImpl call = _calls.get(event.getLocusKey());
+        if (call != null) {
+            LocusParticipant beneficiary = _callControlService.getLocus(event.getLocusKey()).getFloorBeneficiary();
+            if (beneficiary != null) {
+                _currentSharingUri = beneficiary.getDeviceUrl();
+            }
+            for (CallMembership membership : call.getMemberships()) {
+                if (membership.isSendingSharing()) {
+                    events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
+                    break;
+                }
+            }
+            doCallMembershipChanged(call, events);
 
-			CallObserver observer = call.getObserver();
-			if (observer != null) {
-				if (call.isSendingSharing()) {
-					observer.onMediaChanged(new CallObserver.SendingSharingEvent(call, true));
-				} else if (call.isRemoteSendingSharing() && _lostSharingParticipant == null) {
-					observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, true));
-				}
-			}
-		}
-	}
+            CallObserver observer = call.getObserver();
+            if (observer != null) {
+                if (call.isSendingSharing()) {
+                    observer.onMediaChanged(new CallObserver.SendingSharingEvent(call, true));
+                } else if (call.isRemoteSendingSharing() && _lostSharingParticipant == null) {
+                    observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, true));
+                }
+            }
+        }
+    }
 
-	@Subscribe(threadMode = ThreadMode.MAIN)
-	public void onEventMainThread(CallControlFloorReleasedEvent event) {
-		Ln.i("CallControlFloorReleasedEvent is received ");
-		List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
-		CallImpl call = _calls.get(event.getLocusKey());
-		LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
-		LocusParticipant beneficiary = locusData.getReleasedParticipantSharing();
-		if (beneficiary == null){
-			Ln.w("getReleasedParticipantSharing is null!");
-			beneficiary = _lostSharingParticipant;
-		}
-		if (call != null && locusData != null && beneficiary != null) {
-			for (CallMembership membership : call.getMemberships()) {
-				if (beneficiary.getPerson() != null
-					&& beneficiary.getPerson().getId() != null
-					&& membership.getPersonId().equals(Utils.encode(beneficiary.getPerson().getId()))) {
-					events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
-					break;
-				}
-			}
-			sendCallMembershipChanged(call, events);
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlFloorReleasedEvent event) {
+        Ln.i("CallControlFloorReleasedEvent is received ");
+        List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+        CallImpl call = _calls.get(event.getLocusKey());
+        LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
+        LocusParticipant beneficiary = locusData.getReleasedParticipantSharing();
+        if (beneficiary == null) {
+            Ln.w("getReleasedParticipantSharing is null!");
+            beneficiary = _lostSharingParticipant;
+        }
+        if (call != null && locusData != null && beneficiary != null) {
+            for (CallMembership membership : call.getMemberships()) {
+                if (beneficiary.getPerson() != null
+                        && beneficiary.getPerson().getId() != null
+                        && membership.getPersonId().equals(Utils.encode(beneficiary.getPerson().getId()))) {
+                    events.add(new CallObserver.MembershipSendingSharingEvent(call, membership));
+                    break;
+                }
+            }
+            doCallMembershipChanged(call, events);
 
-			CallObserver observer = call.getObserver();
-			if (observer != null) {
-				if (_currentSharingUri != null && _currentSharingUri.equals(_device.getUrl())) {
-					observer.onMediaChanged(new CallObserver.SendingSharingEvent(call, false));
-					_lostSharingParticipant = null;
-				}else if (!locusData.isFloorGranted() || isSharingFromThisDevice(locusData)){
-					observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, false));
-					_lostSharingParticipant = null;
-				}
-			}
-		}
-	}
+            CallObserver observer = call.getObserver();
+            if (observer != null) {
+                if (_currentSharingUri != null && _currentSharingUri.equals(_device.getUrl())) {
+                    observer.onMediaChanged(new CallObserver.SendingSharingEvent(call, false));
+                    _lostSharingParticipant = null;
+                } else if (!locusData.isFloorGranted() || isSharingFromThisDevice(locusData)) {
+                    observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, false));
+                    _lostSharingParticipant = null;
+                }
+            }
+        }
+    }
 
     // ------------------------------------------------------------------------
     // MultiStream
@@ -1170,15 +1165,16 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(MediaBlockedChangeEvent event) {
         Ln.d("MediaBlockedChangeEvent is received  mid: " + event.getMediaId() + "  vid: " + event.getVideoId() + "  isBlocked: " + event.isBlocked());
-        if (_activeCallLocusKey == null)
+        if (_activeCallLocusKey == null) {
             return;
+        }
         CallImpl activeCall = _calls.get(_activeCallLocusKey);
         if (activeCall != null && activeCall.isGroup()) {
             int vid = event.getVideoId();
             switch (event.getMediaId()) {
                 case MediaEngine.VIDEO_MID:
                     // If 'blocked' is changed, publish blocked change event.
-                    if (vid == 0){
+                    if (vid == 0) {
                         CallObserver observer = activeCall.getObserver();
                         boolean isSending = !event.isBlocked();
                         Ln.d("_isRemoteSendingVideo: " + _isRemoteSendingVideo + "  isSending: " + isSending);
@@ -1190,8 +1186,9 @@ public class PhoneImpl implements Phone {
                         AuxStreamImpl auxStream = activeCall.getAuxStream(vid);
                         if (auxStream != null && auxStream.isSendingVideo() == event.isBlocked()) {
                             auxStream.setSendingVideo(!event.isBlocked());
-                            if (activeCall.getMultiStreamObserver() != null)
+                            if (activeCall.getMultiStreamObserver() != null) {
                                 activeCall.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamSendingVideoEvent(activeCall, auxStream));
+                            }
                         }
                     }
                     break;
@@ -1207,13 +1204,13 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlActiveSpeakerChangedEvent event) {
         Ln.d("CallControlActiveSpeakerChangedEvent is received vid: " + event.getVideoId() + "   participant: " + event.getParticipant());
-        onParticipantChanged(_calls.get(event.getLocusKey()), event.getParticipant(), event.getVideoId());
+        doActiveSpeakerChanged(_calls.get(event.getLocusKey()), event.getParticipant(), event.getVideoId());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlMediaVideoMutedEvent event) {
         Ln.d("CallControlMediaVideoMutedEvent is received  participant: " + event.getLocusParticipant().getPerson().getDisplayName() + "  vid: " + event.getVid() + "  mute: " + event.isMuted());
-        onParticipantChanged(_calls.get(event.getLocusKey()), event.getLocusParticipant(), event.getVid());
+        doActiveSpeakerChanged(_calls.get(event.getLocusKey()), event.getLocusParticipant(), event.getVid());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1223,7 +1220,7 @@ public class PhoneImpl implements Phone {
             CallImpl activeCall = _calls.get(_activeCallLocusKey);
             if (activeCall != null && event.getMediaId() == MediaEngine.VIDEO_MID) {
                 _availableMediaCount = event.getCount();
-                onJoinedParticipantCountChanged(activeCall);
+                doParticipantCountChanged(activeCall);
             }
         }
     }
@@ -1252,25 +1249,29 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    private void onParticipantChanged(CallImpl call, LocusParticipant participant, long vid){
-        Ln.d("sendParticipantChanged: " + call + "  person: " + participant);
-        if (call == null)
+    private void doActiveSpeakerChanged(CallImpl call, LocusParticipant participant, long vid) {
+        Ln.d("doActiveSpeakerChanged: " + call + "  person: " + participant);
+        if (call == null) {
             return;
-
-        for (CallMembership membership : call.getMemberships()){
+        }
+        for (CallMembership membership : call.getMemberships()) {
             if (membership.getPersonId().equals(Utils.encode(participant.getPerson().getId()))) {
                 if (vid == 0) {
                     CallMembership old = call.getActiveSpeaker();
                     if (old == null || !old.getPersonId().equals(membership.getPersonId())) {
                         call.setActiveSpeaker(membership);
-                        sendActiveSpeakerChanged(call, old);
+                        if (call.getObserver() != null) {
+                            call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, old, call.getActiveSpeaker()));
+                        }
                     }
-                } else if (vid > 0 && call.isGroup()){
+                } else if (vid > 0 && call.isGroup()) {
                     AuxStreamImpl auxStream = call.getAuxStream(vid);
                     if (auxStream != null && (auxStream.getPerson() == null || !auxStream.getPerson().getPersonId().equals(membership.getPersonId()))) {
                         CallMembership old = auxStream.getPerson();
                         auxStream.setPerson(membership);
-                        sendAuxStreamPersonChanged(call, auxStream, old);
+                        if (call.getMultiStreamObserver() != null) {
+                            call.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamPersonChangedEvent(call, auxStream, old, auxStream.getPerson()));
+                        }
                     }
                 }
                 break;
@@ -1278,25 +1279,13 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    private void sendActiveSpeakerChanged(CallImpl call, CallMembership callMembership){
-        if (call != null && call.getObserver() != null) {
-            call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, callMembership, call.getActiveSpeaker()));
-        }
-    }
-
-    private void sendAuxStreamPersonChanged(CallImpl call, AuxStreamImpl auxStream, CallMembership callMembership){
-        if (call != null && call.getMultiStreamObserver() != null && auxStream != null) {
-            call.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamPersonChangedEvent(call, auxStream, callMembership, auxStream.getPerson()));
-        }
-    }
-
-    private void onJoinedParticipantCountChanged(CallImpl call){
+    private void doParticipantCountChanged(CallImpl call) {
         if (call == null || !call.getKey().equals(_activeCallLocusKey) || !call.isGroup()) {
             return;
         }
         int oldCount = call.getAvailableAuxStreamCount();
         int newCount = Math.min(call.getJoinedMemberships().size() - 2, _availableMediaCount - 1);
-        Ln.d("sendJoinedParticipantCountChanged old: " + oldCount + "  new: " + newCount);
+        Ln.d("doParticipantCountChanged old: " + oldCount + "  new: " + newCount);
         newCount = Math.min(newCount, MediaEngine.MAX_NUMBER_STREAMS);
         if (newCount >= 0 && oldCount != newCount) {
             call.setAvailableAuxStreamCount(newCount);
@@ -1322,111 +1311,113 @@ public class PhoneImpl implements Phone {
                     }
                 }
             }
-        } else if (_availableMediaCount == 0 && call.getActiveSpeaker() != null){
+        } else if (_availableMediaCount == 0 && call.getActiveSpeaker() != null) {
             CallMembership old = call.getActiveSpeaker();
             call.setActiveSpeaker(null);
-            sendActiveSpeakerChanged(call, old);
+            if (call.getObserver() != null) {
+                call.getObserver().onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(call, old, call.getActiveSpeaker()));
+            }
         }
     }
-	// ------------------------------------------------------------------------
-	// Screen Sharing
-	// ------------------------------------------------------------------------
 
-	@Subscribe(threadMode = ThreadMode.MAIN)
-	public void onEventMainThread(FloorRequestAcceptedEvent event) {
-		Ln.d("FloorRequestAcceptedEvent is received: " + event.isContent());
-		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
-			ScreenShareContext.getInstance().init(_context, Activity.RESULT_OK, _screenSharingIntent);
-			CallImpl call = _calls.get(_screenSharingKey);
-			if (call != null && call.getShareRequestCallback() != null){
-				call.getShareRequestCallback().onComplete(ResultImpl.success(null));
-			}
-		}
-	}
+    // ------------------------------------------------------------------------
+    // Screen Sharing
+    // ------------------------------------------------------------------------
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(FloorRequestAcceptedEvent event) {
+        Ln.d("FloorRequestAcceptedEvent is received: " + event.isContent());
+        if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
+            ScreenShareContext.getInstance().init(_context, Activity.RESULT_OK, _screenSharingIntent);
+            CallImpl call = _calls.get(_screenSharingKey);
+            if (call != null && call.getShareRequestCallback() != null) {
+                call.getShareRequestCallback().onComplete(ResultImpl.success(null));
+            }
+        }
+    }
 
-	@Subscribe(threadMode = ThreadMode.MAIN)
-	public void onEventMainThread(FloorRequestDeniedEvent event) {
-		Ln.d("FloorRequestDeniedEvent is received: " + event.isContent());
-		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
-			CallImpl call = _calls.get(_screenSharingKey);
-			if (call != null && call.getShareRequestCallback() != null){
-				call.getShareRequestCallback().onComplete(ResultImpl.error("Share request is deined"));
-			}
-		}
-	}
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(FloorRequestDeniedEvent event) {
+        Ln.d("FloorRequestDeniedEvent is received: " + event.isContent());
+        if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
+            CallImpl call = _calls.get(_screenSharingKey);
+            if (call != null && call.getShareRequestCallback() != null) {
+                call.getShareRequestCallback().onComplete(ResultImpl.error("Share request is deined"));
+            }
+        }
+    }
 
-	@Subscribe(threadMode = ThreadMode.MAIN)
-	public void onEventMainThread(FloorReleasedAcceptedEvent event) {
-		Ln.d("FloorReleasedAcceptedEvent is received: " + event.isContent());
-		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
-			CallImpl call = _calls.get(_screenSharingKey);
-			if (call != null && call.getShareReleaseCallback() != null){
-				call.getShareReleaseCallback().onComplete(ResultImpl.success(null));
-			}
-		}
-	}
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(FloorReleasedAcceptedEvent event) {
+        Ln.d("FloorReleasedAcceptedEvent is received: " + event.isContent());
+        if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
+            CallImpl call = _calls.get(_screenSharingKey);
+            if (call != null && call.getShareReleaseCallback() != null) {
+                call.getShareReleaseCallback().onComplete(ResultImpl.success(null));
+            }
+        }
+    }
 
-	@Subscribe(threadMode = ThreadMode.MAIN)
-	public void onEventMainThread(FloorReleasedDeniedEvent event) {
-		Ln.d("FloorReleasedDeniedEvent is received: " + event.isContent());
-		if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
-			CallImpl call = _calls.get(_screenSharingKey);
-			if (call != null && call.getShareReleaseCallback() != null){
-				call.getShareReleaseCallback().onComplete(ResultImpl.error("Share release is deined"));
-			}
-		}
-	}
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(FloorReleasedDeniedEvent event) {
+        Ln.d("FloorReleasedDeniedEvent is received: " + event.isContent());
+        if (event.isContent() && event.getLocusKey().equals(_screenSharingKey)) {
+            CallImpl call = _calls.get(_screenSharingKey);
+            if (call != null && call.getShareReleaseCallback() != null) {
+                call.getShareReleaseCallback().onComplete(ResultImpl.error("Share release is deined"));
+            }
+        }
+    }
 
-	@Subscribe(threadMode = ThreadMode.MAIN)
-	public void onEventMainThread(FloorLostEvent event) {
-		Ln.d("FloorLostEvent is received");
-		CallImpl call = _calls.get(event.getLocusKey());
-		if (call != null && call.getStatus() == Call.CallStatus.CONNECTED) {
-			LocusParticipant beneficiary = event.getLocalMediaShare().getFloor().getBeneficiary();
-			if (beneficiary != null) {
-				LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
-				if (locusData != null){
-					_lostSharingParticipant = locusData.getParticipant(beneficiary.getUrl());
-					if (_lostSharingParticipant.getPerson() == null)
-						Ln.w("_lostSharingParticipant getPerson is null");
-					else
-						Ln.d("_lostSharingParticipant email: " + _lostSharingParticipant.getPerson().getEmail());
-				}
-			}
-		}
-	}
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(FloorLostEvent event) {
+        Ln.d("FloorLostEvent is received");
+        CallImpl call = _calls.get(event.getLocusKey());
+        if (call != null && call.getStatus() == Call.CallStatus.CONNECTED) {
+            LocusParticipant beneficiary = event.getLocalMediaShare().getFloor().getBeneficiary();
+            if (beneficiary != null) {
+                LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
+                if (locusData != null) {
+                    _lostSharingParticipant = locusData.getParticipant(beneficiary.getUrl());
+                    if (_lostSharingParticipant.getPerson() == null)
+                        Ln.w("_lostSharingParticipant getPerson is null");
+                    else
+                        Ln.d("_lostSharingParticipant email: " + _lostSharingParticipant.getPerson().getEmail());
+                }
+            }
+        }
+    }
 
-	public void setScreenshotPermission(final Intent permissionIntent) {
-		if (permissionIntent != null) {
-			_screenSharingIntent = permissionIntent;
-			_callControlService.shareScreen(_screenSharingKey);
-		}else{
-			Ln.w("permission for sharing screen is deined");
-			CallImpl call = _calls.get(_screenSharingKey);
-			if (call != null && call.getShareRequestCallback() != null){
-				call.getShareRequestCallback().onComplete(ResultImpl.error(STR_PERMISSION_DENIED));
-			}
-		}
-	}
+    public void setScreenshotPermission(final Intent permissionIntent) {
+        if (permissionIntent != null) {
+            _screenSharingIntent = permissionIntent;
+            _callControlService.shareScreen(_screenSharingKey);
+        } else {
+            Ln.w("permission for sharing screen is deined");
+            CallImpl call = _calls.get(_screenSharingKey);
+            if (call != null && call.getShareRequestCallback() != null) {
+                call.getShareRequestCallback().onComplete(ResultImpl.error(STR_PERMISSION_DENIED));
+            }
+        }
+    }
 
-	public void startSharing(LocusKey key) {
-		Ln.d("startSharing: " + key);
-		_screenSharingKey = key;
-		final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_SCREEN_SHOT);
-		_context.startActivity(intent);
-	}
+    public void startSharing(LocusKey key) {
+        Ln.d("startSharing: " + key);
+        _screenSharingKey = key;
+        final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_SCREEN_SHOT);
+        _context.startActivity(intent);
+    }
 
-	public void stopSharing(LocusKey key) {
-		_callControlService.unshareScreen(key);
-	}
+    public void stopSharing(LocusKey key) {
+        _callControlService.unshareScreen(key);
+    }
 
-	protected boolean isSharingFromThisDevice(LocusData locusData) {
-		return locusData != null && locusData.isFloorMineThisDevice(_device.getUrl());
-	}
-	
-	private void removeCall(@NonNull CallObserver.CallDisconnectedEvent event) {
+    protected boolean isSharingFromThisDevice(LocusData locusData) {
+        return locusData != null && locusData.isFloorMineThisDevice(_device.getUrl());
+    }
+
+    private void removeCall(@NonNull CallObserver.CallDisconnectedEvent event) {
         CallImpl call = (CallImpl) event.getCall();
         Ln.i("Remove " + call);
         if (call != null) {
@@ -1455,8 +1446,8 @@ public class PhoneImpl implements Phone {
         if (call.getOption() != null) {
             if (call.getOption().hasVideo() && call.getVideoRenderViews() != null) {
                 _callControlService.setPreviewWindow(key, call.getVideoRenderViews().first);
-                if (call.getVideoRenderViews().first instanceof SurfaceView){
-                    ((SurfaceView)call.getVideoRenderViews().first).getHolder().addCallback(new SurfaceHolder.Callback() {
+                if (call.getVideoRenderViews().first instanceof SurfaceView) {
+                    ((SurfaceView) call.getVideoRenderViews().first).getHolder().addCallback(new SurfaceHolder.Callback() {
                         @Override
                         public void surfaceCreated(SurfaceHolder surfaceHolder) {
                             Ln.d("preview surfaceCreated !!!");
@@ -1478,8 +1469,8 @@ public class PhoneImpl implements Phone {
                 }
 
                 _callControlService.setRemoteWindow(key, call.getVideoRenderViews().second);
-                if (call.getVideoRenderViews().second instanceof SurfaceView){
-                    ((SurfaceView)call.getVideoRenderViews().second).getHolder().addCallback(new SurfaceHolder.Callback() {
+                if (call.getVideoRenderViews().second instanceof SurfaceView) {
+                    ((SurfaceView) call.getVideoRenderViews().second).getHolder().addCallback(new SurfaceHolder.Callback() {
                         @Override
                         public void surfaceCreated(SurfaceHolder surfaceHolder) {
                             Ln.d("remote surfaceCreated !!!");
@@ -1502,8 +1493,8 @@ public class PhoneImpl implements Phone {
             }
             if (call.getOption().hasSharing() && call.getSharingRenderView() != null) {
                 _callControlService.setShareWindow(key, call.getSharingRenderView());
-                if (call.getSharingRenderView() instanceof SurfaceView){
-                    ((SurfaceView)call.getSharingRenderView()).getHolder().addCallback(new SurfaceHolder.Callback() {
+                if (call.getSharingRenderView() instanceof SurfaceView) {
+                    ((SurfaceView) call.getSharingRenderView()).getHolder().addCallback(new SurfaceHolder.Callback() {
                         @Override
                         public void surfaceCreated(SurfaceHolder surfaceHolder) {
                             Ln.d("share surfaceCreated !!!");
@@ -1535,8 +1526,8 @@ public class PhoneImpl implements Phone {
         } else {
             Ln.d("call observer is null");
         }
-	    _isRemoteSendingVideo = true;
-	    _isRemoteSendingAudio = call.isRemoteSendingAudio();
+        _isRemoteSendingVideo = true;
+        _isRemoteSendingAudio = call.isRemoteSendingAudio();
         _activeCallLocusKey = key;
     }
 
@@ -1552,11 +1543,10 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    private void sendCallMembershipChanged(CallImpl call, @NonNull List<CallObserver.CallMembershipChangedEvent> events) {
+    private void doCallMembershipChanged(CallImpl call, @NonNull List<CallObserver.CallMembershipChangedEvent> events) {
         if (call == null) {
             return;
         }
-
         CallObserver observer = call.getObserver();
         if (observer != null) {
             for (CallObserver.CallMembershipChangedEvent event : events) {
@@ -1632,8 +1622,8 @@ public class PhoneImpl implements Phone {
 
         return false;
     }
-	
-	static FacingMode toFacingMode(String s) {
+
+    static FacingMode toFacingMode(String s) {
         if (MediaEngine.WME_BACK_CAMERA.equals(s)) {
             return FacingMode.ENVIROMENT;
         }
@@ -1671,7 +1661,7 @@ public class PhoneImpl implements Phone {
     public void onEventMainThread(ConversationSyncQueue.ConversationSyncStartedEvent event) {
         // -- Ignore Event
     }
-    
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ApplicationControllerStateChangedEvent event) {
         // -- Ignore Event

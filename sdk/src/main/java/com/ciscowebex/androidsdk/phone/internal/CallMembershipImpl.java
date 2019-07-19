@@ -97,7 +97,7 @@ public class CallMembershipImpl implements CallMembership {
         _state = fromLocusState(participant.getState());
         MediaDirection videoStatus = participant.getStatus().getVideoStatus();
         MediaDirection audioStatus = participant.getStatus().getAudioStatus();
-        Ln.d("person: " + person.getId() + " email: " + _email + "  video: " +videoStatus + "   audio: " + audioStatus);
+        Ln.d("CallMembership: " + person.getId() + " email: " + _email + "  video: " +videoStatus + "   audio: " + audioStatus);
         _sendingVideo = videoStatus == null || videoStatus == MediaDirection.SENDRECV || videoStatus == MediaDirection.SENDONLY;
         _sendingAudio = audioStatus == null || audioStatus == MediaDirection.SENDRECV || audioStatus == MediaDirection.SENDONLY;
         _sendingSharing = false;

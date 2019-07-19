@@ -94,7 +94,9 @@ public class CallImpl implements Call {
     private CompletionHandler<Void> _shareReleaseCallback;
 
     private Rect _localVideoViewSize = new Rect(0, 0, 0, 0);
+
     private Rect _remoteVideoViewSize = new Rect(0, 0, 0, 0);
+
     private Rect _sharingViewSize = new Rect(0, 0, 0, 0);
 
     private Map<SendDtmfOperation, CompletionHandler<Void>> _dtmfOperations = new HashMap<>(1);
@@ -106,57 +108,12 @@ public class CallImpl implements Call {
     private Pair<View, View> _videoRenderViews;
 
     private List<AuxStreamImpl> _openedAuxStreamList = new ArrayList<>();
-    @Override
-    public int getOpenedAuxStreamCount() {
-        return _openedAuxStreamList.size();
-    }
 
-    public AuxStreamImpl getAuxStream(long vid){
-        for (AuxStreamImpl auxStream : _openedAuxStreamList){
-            if (auxStream.getVid() == vid)
-                return auxStream;
-        }
-        return null;
-    }
-
-    @Override
-    public AuxStream getAuxStream(View view){
-        for (AuxStreamImpl auxStream : _openedAuxStreamList){
-            if (auxStream.getRenderView() == view)
-                return auxStream;
-        }
-        return null;
-    }
-
-    private int availableAuxStreamCount;
-    public void setAvailableAuxStreamCount(int count){
-        availableAuxStreamCount = count;
-    }
-    @Override
-    public int getAvailableAuxStreamCount() {
-        return availableAuxStreamCount;
-    }
+    private int _availableAuxStreamCount;
 
     private CallMembership _activeSpeaker;
-    @Override
-    public CallMembership getActiveSpeaker(){
-        return _activeSpeaker;
-    }
 
     private MultiStreamObserver _multiStreamObserver;
-    @Override
-    public void setMultiStreamObserver(MultiStreamObserver observer) {
-        _multiStreamObserver = observer;
-    }
-
-    @Override
-    public MultiStreamObserver getMultiStreamObserver() {
-        return _multiStreamObserver;
-    }
-
-    public void setActiveSpeaker(CallMembership person){
-        _activeSpeaker = person;
-    }
 
     CallImpl(@NonNull PhoneImpl phone, @Nullable MediaOption option, @NonNull Direction direction, @NonNull LocusKey key, boolean group) {
         _phone = phone;
@@ -316,10 +273,60 @@ public class CallImpl implements Call {
     }
 
     @Override
+    public int getOpenedAuxStreamCount() {
+        return _openedAuxStreamList.size();
+    }
+
+    public void setAvailableAuxStreamCount(int count){
+        _availableAuxStreamCount = count;
+    }
+
+    @Override
+    public int getAvailableAuxStreamCount() {
+        return _availableAuxStreamCount;
+    }
+
+    public void setActiveSpeaker(CallMembership person){
+        _activeSpeaker = person;
+    }
+
+    @Override
+    public CallMembership getActiveSpeaker(){
+        return _activeSpeaker;
+    }
+
+    @Override
+    public void setMultiStreamObserver(MultiStreamObserver observer) {
+        _multiStreamObserver = observer;
+    }
+
+    @Override
+    public MultiStreamObserver getMultiStreamObserver() {
+        return _multiStreamObserver;
+    }
+
+    public AuxStreamImpl getAuxStream(long vid){
+        for (AuxStreamImpl auxStream : _openedAuxStreamList){
+            if (auxStream.getVid() == vid)
+                return auxStream;
+        }
+        return null;
+    }
+
+    @Override
+    public AuxStream getAuxStream(View view){
+        for (AuxStreamImpl auxStream : _openedAuxStreamList){
+            if (auxStream.getRenderView() == view)
+                return auxStream;
+        }
+        return null;
+    }
+
+    @Override
     public void openAuxStream(@NonNull View view) {
         Ln.d("openAuxStream: " + view);
         String error = null;
-        if (getOpenedAuxStreamCount() >= availableAuxStreamCount || getOpenedAuxStreamCount() >= MediaEngine.MAX_NUMBER_STREAMS){
+        if (getOpenedAuxStreamCount() >= _availableAuxStreamCount || getOpenedAuxStreamCount() >= MediaEngine.MAX_NUMBER_STREAMS){
             error = "Reach maximum count";
         }
 
@@ -363,8 +370,9 @@ public class CallImpl implements Call {
             }
         }
 
-        if (_multiStreamObserver != null)
+        if (_multiStreamObserver != null) {
             _multiStreamObserver.onAuxStreamChanged(new MultiStreamObserver.AuxStreamOpenedEvent(this, view, error));
+        }
     }
 
     @Override
@@ -382,12 +390,13 @@ public class CallImpl implements Call {
             error = "Close aux stream error";
         }
 
-        if (_multiStreamObserver != null)
+        if (_multiStreamObserver != null) {
             _multiStreamObserver.onAuxStreamChanged(new MultiStreamObserver.AuxStreamClosedEvent(this, view, error));
+        }
     }
 
     public void closeAuxStream(){
-        if (getOpenedAuxStreamCount() > availableAuxStreamCount) {
+        if (getOpenedAuxStreamCount() > _availableAuxStreamCount) {
             AuxStream auxStream = _openedAuxStreamList.get(_openedAuxStreamList.size() - 1);
             closeAuxStream(auxStream, auxStream.getRenderView());
         }
