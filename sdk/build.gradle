@@ -69,6 +69,9 @@ android {
         versionName moduleVersion
         buildConfigField "String", "BUILD_TIME", "\"${buildTime()}\""
         buildConfigField "String", "BUILD_REVISION", "\"${revision()}\""
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
     }
 
     buildTypes {
@@ -87,9 +90,6 @@ android {
         jenkins {
             initWith debug
             testCoverageEnabled true
-            ndk {
-                abiFilters "armeabi-v7a", "x86"
-            }
         }
     }
 
@@ -116,16 +116,7 @@ android {
             jacoco.includeNoLocationClasses = true
         }
     }
-
-    splits {
-        abi {
-            enable true
-            reset()
-            include 'armeabi-v7a'
-            universalApk false
-        }
-    }
-
+    
     if (JavaVersion.current().isJava8Compatible()) {
         tasks.withType(Javadoc) {
             options.addStringOption('Xdoclint:none', '-quiet')
