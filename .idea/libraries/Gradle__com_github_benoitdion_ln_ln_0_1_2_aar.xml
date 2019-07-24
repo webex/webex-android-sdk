@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.github.benoitdion.ln:ln:0.1.2@aar">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/ln-0.1.2.aar/b645b878f4579c6fec9a39742b692b7e/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/ln-0.1.2.aar/b645b878f4579c6fec9a39742b692b7e/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.benoitdion.ln/ln/0.1.2/4c07107566aedd4f69867f46c55ede9e4809f60/ln-0.1.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

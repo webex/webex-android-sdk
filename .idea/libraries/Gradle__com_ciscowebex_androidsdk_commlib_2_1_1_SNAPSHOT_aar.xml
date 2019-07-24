@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.ciscowebex:androidsdk_commlib:2.1.1-SNAPSHOT@aar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidsdk_commlib-2.1.1-SNAPSHOT.aar/893ec3bbc420df602a2cee736c67f541/jars/libs/utils-1.0.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidsdk_commlib-2.1.1-SNAPSHOT.aar/893ec3bbc420df602a2cee736c67f541/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidsdk_commlib-2.1.1-SNAPSHOT.aar/893ec3bbc420df602a2cee736c67f541/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

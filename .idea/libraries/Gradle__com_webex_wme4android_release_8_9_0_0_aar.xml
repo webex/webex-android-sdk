@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Gradle: com.webex:wme4android-release:8.9.0.0@aar">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/wme4android-release-8.9.0.0.aar/2c93507222b1ee951ee527b1889af6d9/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/wme4android-release-8.9.0.0.aar/2c93507222b1ee951ee527b1889af6d9/jars/libs/appshare.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/wme4android-release-8.9.0.0.aar/2c93507222b1ee951ee527b1889af6d9/jars/libs/wseclient.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/wme4android-release-8.9.0.0.aar/2c93507222b1ee951ee527b1889af6d9/jars/libs/wmeclient.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/wme4android-release-8.9.0.0.aar/2c93507222b1ee951ee527b1889af6d9/jars/classes.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/wme4android-release-8.9.0.0.aar/2c93507222b1ee951ee527b1889af6d9/jars/libs/wmeaudiohwlibrary.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
