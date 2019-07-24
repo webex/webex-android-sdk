@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 2.1.1 Releases
+- `2.1.1` Releases - [2.1.1](#211)
+
 #### 2.1.0 Releases
 - `2.1.0` Releases - [2.1.0](#210)
 
@@ -18,6 +21,18 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
+## [2.1.1](https://github.com/webex/webex-android-sdk/releases/tag/2.1.1)
+Released on 2019-07-24.
+#### Added
+- Supoort 64bits.
+- Support Google hardware media codec for video.
+- Add API to list person by person IDs and Org ID.
+- Add API to get the person's last activity.
+- Add API to get the person's presence status.
+
+#### Updated
+- Fixed call disconnected after waiting in lobby.
+
 ## [2.1.0](https://github.com/webex/webex-android-sdk/releases/tag/2.1.0)
 Released on 2019-06-09.
 #### Updated

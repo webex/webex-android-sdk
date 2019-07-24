@@ -375,7 +375,7 @@ public class PhoneImpl implements Phone {
     public String getHardwareVideoSettings() {
         return hardwareVideoSettings;
     }
-    
+
     public void setHardwareVideoSettings(String settings) {
         hardwareVideoSettings = settings;
     }
