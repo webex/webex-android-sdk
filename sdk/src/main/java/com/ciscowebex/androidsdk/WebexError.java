@@ -85,15 +85,27 @@ public class WebexError<T> {
         _data = data;
     }
 
-    ErrorCode getErrorCode() {
+    /**
+     * @return The code of this error.
+     * @since 0.1
+     */
+    public ErrorCode getErrorCode() {
         return _code;
     }
 
-    String getErrorMessage() {
+    /**
+     * @return The message of this error.
+     * @since 0.1
+     */
+    public String getErrorMessage() {
         return _message;
     }
 
-    T getData() {
+    /**
+     * @return The data of this error.
+     * @since 0.1
+     */
+    public T getData() {
         return _data;
     }
 

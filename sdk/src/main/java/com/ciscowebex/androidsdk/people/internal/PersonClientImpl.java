@@ -60,8 +60,11 @@ public class PersonClientImpl implements PersonClient {
     }
 
     public void list(String email, String displayName, int max, CompletionHandler<List<Person>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.list(s, email, displayName, null, null, max <= 0 ? null : max), new ListCallback<>(handler));
+        this.list(email, displayName, null, null, max, handler);
+    }
+
+    public void list(String email, String displayName, String id, String orgId, int max, CompletionHandler<List<Person>> handler) {
+        ServiceBuilder.async(_authenticator, handler, s -> _service.list(s, email, displayName, id, orgId, max <= 0 ? null : max), new ListCallback<>(handler));
     }
 
     public void get(String personId, CompletionHandler<Person> handler) {

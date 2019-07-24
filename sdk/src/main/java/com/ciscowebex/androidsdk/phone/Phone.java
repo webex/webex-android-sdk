@@ -292,12 +292,22 @@ public interface Phone {
      */
     int getSharingMaxBandwidth();
 
-    boolean isEnableHardwareAcceleration();
+    /**
+     * Return True if Google hardware media codec is turned on for video. Otherwise, false.
+     *
+     * @since 2.1.1
+     */
+    boolean isHardwareAccelerationEnabled();
 
-    void setEnableHardwareAcceleration(boolean enable);
-
-    String getHardwareVideoSettings();
-
-    void setHardwareVideoSettings(String settings);
+    /**
+     * Turn on/off Google hardware media codec for video. By doing hardware codec,
+     * android devices can do high definition (720p@30fps) video calls, but please note,
+     * since the hardware codec is high depend on android devices, some devices support hardware codec not very well.
+     *
+     * @param enable True to turn on Google hardware media codec. Otherwise, use OpenH264 software codec.
+     *
+     * @since 2.1.1
+     */
+    void setHardwareAccelerationEnabled(boolean enable);
 
 }

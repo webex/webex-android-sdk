@@ -363,21 +363,19 @@ public class PhoneImpl implements Phone {
     }
 
     @Override
-    public boolean isEnableHardwareAcceleration() {
+    public boolean isHardwareAccelerationEnabled() {
         return isEnableHardwareAcceleration;
     }
 
     @Override
-    public void setEnableHardwareAcceleration(boolean enable) {
+    public void setHardwareAccelerationEnabled(boolean enable) {
         isEnableHardwareAcceleration = enable;
     }
 
-    @Override
     public String getHardwareVideoSettings() {
         return hardwareVideoSettings;
     }
-
-    @Override
+    
     public void setHardwareVideoSettings(String settings) {
         hardwareVideoSettings = settings;
     }

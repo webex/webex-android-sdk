@@ -56,7 +56,16 @@ public class Space {
          * @since 0.1
          */
         @SerializedName("direct")
-        DIRECT
+        DIRECT;
+
+        /**
+         * Return serialized name
+         *
+         * @since 2.1.1
+         */
+        public String serializedName() {
+            return super.name().toLowerCase();
+        }
     }
 
     @SerializedName("id")
