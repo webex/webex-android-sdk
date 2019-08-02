@@ -22,8 +22,6 @@
 
 package com.ciscowebex.androidsdk;
 
-import javax.inject.Inject;
-
 import android.app.Application;
 
 import com.cisco.spark.android.callcontrol.model.Call;
@@ -61,6 +59,8 @@ import com.github.benoitdion.ln.NaturalLog;
 import com.github.benoitdion.ln.ReleaseLn;
 import com.webex.wme.MediaSessionAPI;
 
+import javax.inject.Inject;
+
 /**
  * Webex object is the entry point to use this Cisco Webex Android SDK.
  *
@@ -71,7 +71,7 @@ public class Webex {
     public static final String APP_NAME = "webex_android_sdk";
 
     public static final String APP_VERSION = BuildConfig.VERSION_NAME + "(" + BuildConfig.BUILD_TIME + "_" + BuildConfig.BUILD_REVISION + ")";
-    
+
     /**
      * The enumeration of log message level
      *
@@ -89,12 +89,14 @@ public class Webex {
 
     private MessageClientImpl _message;
 
+    private MembershipClientImpl _membership;
+
     @Inject
     MediaEngine _mediaEngine;
 
     @Inject
     BackgroundCheck _backgroundCheck;
-    
+
     @Inject
     UserAgentProvider _userAgentProvider;
 
@@ -108,15 +110,19 @@ public class Webex {
     public Webex(Application application, Authenticator authenticator) {
         _authenticator = authenticator;
         _common = new SDKCommon(application, APP_NAME, APP_VERSION);
-        _common.addInjectable(this.getClass(), authenticator.getClass(), 
-            OAuthAuthenticator.class, 
-            PhoneImpl.class, Call.class, 
-            MessageClientImpl.class, CallbackablePostCommentOperation.class, CallbackablePostContentActivityOperation.class);
+        _common.addInjectable(this.getClass(), authenticator.getClass(),
+                OAuthAuthenticator.class,
+                PhoneImpl.class, Call.class,
+                MessageClientImpl.class,
+                MembershipClientImpl.class,
+                CallbackablePostCommentOperation.class,
+                CallbackablePostContentActivityOperation.class);
         _common.create();
         _common.inject(this);
         _common.inject(_authenticator);
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _common);
         _message = new MessageClientImpl(application.getApplicationContext(), _authenticator, _common);
+        _membership = new MembershipClientImpl(application.getApplicationContext(), _authenticator, _common);
         setLogLevel(LogLevel.DEBUG);
         Ln.i(_userAgentProvider.get());
         Ln.i(Utils.versionInfo());
@@ -198,7 +204,7 @@ public class Webex {
      * @since 0.1
      */
     public MembershipClient memberships() {
-        return new MembershipClientImpl(this._authenticator);
+        return _membership;
     }
 
     /**
@@ -291,5 +297,5 @@ public class Webex {
             _mediaEngine.setLoggingLevel(mask);
         }
     }
-    
+
 }

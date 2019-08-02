@@ -22,20 +22,34 @@
 
 package com.ciscowebex.androidsdk.membership.internal;
 
-import java.util.List;
-import java.util.Map;
-
+import android.content.Context;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.cisco.spark.android.authenticator.ApiTokenProvider;
+import com.cisco.spark.android.model.Verb;
+import com.cisco.spark.android.model.conversation.Activity;
+import com.cisco.spark.android.processing.ActivityListener;
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.WebexEventPayload;
 import com.ciscowebex.androidsdk.auth.Authenticator;
+import com.ciscowebex.androidsdk.internal.WebexEventPayloadImpl;
 import com.ciscowebex.androidsdk.membership.Membership;
 import com.ciscowebex.androidsdk.membership.MembershipClient;
+import com.ciscowebex.androidsdk.membership.MembershipObserver;
+import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.ciscowebex.androidsdk.utils.http.ListBody;
 import com.ciscowebex.androidsdk.utils.http.ListCallback;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
+import com.ciscowebex.androidsdk_commlib.SDKCommon;
+import com.github.benoitdion.ln.Ln;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
 
 import me.helloworld.utils.collection.Maps;
 import retrofit2.Call;
@@ -54,37 +68,65 @@ public class MembershipClientImpl implements MembershipClient {
 
     private MembershipService _service;
 
+    private MembershipObserver _observer;
+
+    private Context _context;
+
+    @Inject
+    ActivityListener activityListener;
+
+    @Inject
+    ApiTokenProvider _provider;
+
+    @Deprecated
     public MembershipClientImpl(Authenticator authenticator) {
         _authenticator = authenticator;
         _service = new ServiceBuilder().build(MembershipService.class);
     }
 
+    public MembershipClientImpl(Context context, Authenticator authenticator, SDKCommon common) {
+        _authenticator = authenticator;
+        _service = new ServiceBuilder().build(MembershipService.class);
+        _context = context;
+        common.inject(this);
+        activityListener.register(activity -> {
+            processorActivity(activity);
+            return null;
+        });
+    }
+
+    @Override
+    public void setMembershipObserver(MembershipObserver observer) {
+        _observer = observer;
+    }
+
     public void list(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.list(s, spaceId, spaceId, personId, personEmail, max <= 0 ? null : max), new ListCallback<>(handler));
+                _service.list(s, spaceId, spaceId, personId, personEmail, max <= 0 ? null : max), new ListCallback<>(handler));
     }
 
     public void create(@NonNull String spaceId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.create(s, Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)), new ObjectCallback<>(handler));
+                _service.create(s, Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)), new ObjectCallback<>(handler));
     }
 
     public void get(@NonNull String membershipId, @NonNull CompletionHandler<Membership> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.get(s, membershipId), new ObjectCallback<>(handler));
+                _service.get(s, membershipId), new ObjectCallback<>(handler));
     }
 
     public void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.update(s, membershipId, Maps.makeMap("isModerator", isModerator)), new ObjectCallback<>(handler));
+                _service.update(s, membershipId, Maps.makeMap("isModerator", isModerator)), new ObjectCallback<>(handler));
     }
 
     public void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.delete(s, membershipId), new ObjectCallback<>(handler));
+                _service.delete(s, membershipId), new ObjectCallback<>(handler));
     }
 
     private interface MembershipService {
+
         @GET("memberships")
         Call<ListBody<Membership>> list(@Header("Authorization") String authorization,
                                         @Query("roomId") String roomId,
@@ -104,5 +146,40 @@ public class MembershipClientImpl implements MembershipClient {
 
         @DELETE("memberships/{membershipId}")
         Call<Void> delete(@Header("Authorization") String authorization, @Path("membershipId") String membershipId);
+    }
+
+    private void runOnUiThread(Runnable r, Object conditioner) {
+        if (conditioner == null) return;
+        Handler handler = new Handler(_context.getMainLooper());
+        handler.post(r);
+    }
+
+    private void processorActivity(Activity activity) {
+        if (null == _observer)
+            return;
+        if (null == activity) {
+            Ln.e("MembershipClientImpl.processorActivity() activity is null");
+            return;
+        }
+        WebexEventPayload eventPayload = new WebexEventPayloadImpl(activity, _provider.getAuthenticatedUserOrNull(), "membership");
+        MembershipObserver.MembershipEvent event;
+        switch (activity.getVerb()) {
+            case Verb.add:
+                event = new MembershipObserver.MembershipCreated(eventPayload, new MembershipImpl(activity));
+                break;
+            case Verb.leave:
+                event = new MembershipObserver.MembershipDeleted(eventPayload, new MembershipImpl(activity));
+                break;
+            case Verb.assignModerator:
+            case Verb.unassignModerator:
+                event = new MembershipObserver.MembershipUpdated(eventPayload, new MembershipImpl(activity));
+                break;
+            case Verb.acknowledge:
+                event = new MembershipObserver.MembershipSeen(eventPayload, new MembershipImpl(activity), new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
+                break;
+            default:
+                return;
+        }
+        runOnUiThread(() -> _observer.onEvent(event), _observer);
     }
 }

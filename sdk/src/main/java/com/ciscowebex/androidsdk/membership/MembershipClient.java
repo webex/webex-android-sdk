@@ -37,6 +37,15 @@ import com.ciscowebex.androidsdk.CompletionHandler;
 public interface MembershipClient {
 
     /**
+     * Sets a {@link MembershipObserver} in this client.
+     *
+     * @param observer the observer object.
+     * @see MembershipObserver
+     * @since 2.2.0
+     */
+    void setMembershipObserver(MembershipObserver observer);
+
+    /**
      * Lists all space memberships where the authenticated user belongs.
      *
      * @param spaceId      The identifier of the space where the membership belongs.

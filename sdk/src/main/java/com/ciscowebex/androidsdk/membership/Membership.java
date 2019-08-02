@@ -24,6 +24,13 @@ package com.ciscowebex.androidsdk.membership;
 
 import java.util.Date;
 
+import com.cisco.spark.android.model.Person;
+import com.cisco.spark.android.model.SpaceProperty;
+import com.cisco.spark.android.model.Verb;
+import com.cisco.spark.android.model.conversation.Activity;
+import com.cisco.spark.android.model.conversation.Conversation;
+import com.ciscowebex.androidsdk.message.internal.WebexId;
+import com.ciscowebex.androidsdk.space.Space;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
@@ -60,6 +67,35 @@ public class Membership {
 
     @SerializedName("created")
     private Date _created;
+
+    @Deprecated
+    public Membership() {
+    }
+
+    protected Membership(Activity activity) {
+        if (null == activity)
+            return;
+        this._created = activity.getPublished();
+        if (activity.getVerb().equals(Verb.hide)) {
+            this._spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getObject().getId()).toHydraId();
+        } else {
+            this._spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
+        }
+        Person person = null;
+        if (activity.getVerb().equals(Verb.acknowledge))
+            person = activity.getActor();
+        else if (activity.getObject() instanceof Person)
+            person = (Person) activity.getObject();
+        if (null != person){
+            this._id = new WebexId(WebexId.Type.MEMBERSHIP_ID, person.getId() + ":" + WebexId.translate(this._spaceId)).toHydraId();
+            this._personId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
+            this._personEmail = person.getEmail();
+            this._personDisplayName = person.getDisplayName();
+            this._personOrgId = person.getOrgId();
+            this._isModerator = person.getRoomProperties() != null && person.getRoomProperties().isModerator();
+            this._isMonitor = false;
+        }
+    }
 
     /**
      * @return The id of this membership.
@@ -124,7 +160,7 @@ public class Membership {
     public Date getCreated() {
         return _created;
     }
-    
+
     /**
      * @return The personOrgId name of the person
      * @since 1.4
@@ -132,7 +168,7 @@ public class Membership {
     public String getPersonOrgId() {
         return _personOrgId;
     }
-    
+
     @Override
     public String toString() {
         Gson gson = new Gson();

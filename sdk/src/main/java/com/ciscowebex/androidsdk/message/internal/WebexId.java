@@ -2,6 +2,7 @@ package com.ciscowebex.androidsdk.message.internal;
 
 import android.text.TextUtils;
 import android.util.Base64;
+
 import com.github.benoitdion.ln.Ln;
 
 import java.util.Objects;
@@ -9,10 +10,12 @@ import java.util.Objects;
 public class WebexId {
 
     public enum Type {
-
         MESSAGE_ID("MESSAGE"),
         PEOPLE_ID("PEOPLE"),
-        ROOM_ID("ROOM");
+        ROOM_ID("ROOM"),
+        MEMBERSHIP_ID("MEMBERSHIP"),
+        CONTENT_ID("CONTENT"),
+        ORGANIZATION_ID("ORGANIZATION");
 
         private String keyword;
 
@@ -30,7 +33,7 @@ public class WebexId {
         }
 
         public static Type getEnum(String value) {
-            for(Type v : values()) {
+            for (Type v : values()) {
                 if (v.getKeyword().equalsIgnoreCase(value)) {
                     return v;
                 }
@@ -68,7 +71,7 @@ public class WebexId {
 
     public String toHydraId() {
         String string = "ciscospark://us/" + type.getKeyword() + "/" + id;
-        return new String(Base64.encode(string.getBytes(),Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP));
+        return new String(Base64.encode(string.getBytes(), Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP));
     }
 
     public String getId() {
@@ -88,15 +91,12 @@ public class WebexId {
     public boolean equals(Object o) {
         if (this == o) {
             return true;
-        }
-        else if (o instanceof WebexId) {
+        } else if (o instanceof WebexId) {
             return getId().equals(((WebexId) o).getId());
-        }
-        else if (o instanceof String) {
+        } else if (o instanceof String) {
             if (getId().equals(o)) {
                 return true;
-            }
-            else {
+            } else {
                 return this.equals(WebexId.from((String) o));
             }
         }
