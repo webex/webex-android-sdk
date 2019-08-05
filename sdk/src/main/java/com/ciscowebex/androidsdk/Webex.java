@@ -32,6 +32,8 @@ import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.auth.OAuthAuthenticator;
+import com.ciscowebex.androidsdk.conversation.ConversationClient;
+import com.ciscowebex.androidsdk.conversation.internal.ConversationClientImpl;
 import com.ciscowebex.androidsdk.membership.MembershipClient;
 import com.ciscowebex.androidsdk.membership.internal.MembershipClientImpl;
 import com.ciscowebex.androidsdk.message.MessageClient;
@@ -246,6 +248,11 @@ public class Webex {
     public SpaceClient spaces() {
         return new SpaceClientImpl(this._authenticator);
     }
+
+
+    // Adding by Orel
+    public ConversationClient conversation() { return  new ConversationClientImpl(this._authenticator); }
+
 
     /**
      * Set the log level of the logging.

@@ -39,6 +39,7 @@ import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.content.ContentUploadMonitor;
 import com.cisco.spark.android.core.ApiClientProvider;
 import com.cisco.spark.android.core.Injector;
+import com.cisco.spark.android.mercury.events.ConversationActivityEvent;
 import com.cisco.spark.android.model.*;
 import com.cisco.spark.android.model.conversation.*;
 import com.cisco.spark.android.model.crypto.scr.ContentReference;
@@ -63,6 +64,7 @@ import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.message.*;
 import com.ciscowebex.androidsdk.message.Message;
+import com.ciscowebex.androidsdk.people.internal.PersonImpl;
 import com.ciscowebex.androidsdk.space.Space;
 import com.ciscowebex.androidsdk.utils.EmailAddress;
 import com.ciscowebex.androidsdk.utils.Lists;
@@ -73,6 +75,9 @@ import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Strings;
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -138,7 +143,7 @@ public class MessageClientImpl implements MessageClient {
         _service = new ServiceBuilder().build(MessageService.class);
         _context = context;
         common.inject(this);
-        //_bus.register(this);
+        _bus.register(this);
         activityListener.register(activity -> {
             processorActivity(activity);
             return null;
@@ -453,9 +458,33 @@ public class MessageClientImpl implements MessageClient {
         contentManager.getCacheRecord(ConversationContract.ContentDataCacheEntry.Cache.MEDIA, uri, reference.getSecureContentReference(), filename, action, new ContentDownloadMonitor(), callback);
     }
 
+    @Subscribe(threadMode = ThreadMode.ASYNC)
+    public void onEventAsync(ConversationActivityEvent event) {
+        Activity activity = event.getActivity();
+        if (activity.getVerb().equals(Verb.acknowledge)) {
+
+            String spaceId = new WebexId(WebexId.Type.ROOM_ID,activity.getTarget().getId()).toHydraId();
+            String messageId = new WebexId(WebexId.Type.MESSAGE_ID,activity.getObject().getId()).toHydraId();
+            MessageObserver.MessageEvent read = new MessageObserver.MessageRead(spaceId, messageId, createPerson(activity.getActor()));
+            runOnUiThread(() -> _observer.onEvent(read), _observer);
+        }
+    }
+
+
     @Override
     public void setMessageObserver(MessageObserver observer) {
         _observer = observer;
+    }
+
+
+    private com.ciscowebex.androidsdk.people.Person createPerson(Person actor) {
+
+        return actor == null ? null : new PersonImpl(actor);
+    }
+
+    private com.ciscowebex.androidsdk.people.Person createPerson(Activity activity) {
+
+        return activity == null ? null : new PersonImpl(activity);
     }
 
     private void processorActivity(Activity activity) {
@@ -463,6 +492,7 @@ public class MessageClientImpl implements MessageClient {
             return;
         }
         MessageObserver.MessageEvent event;
+        String spaceId ="";
         switch (activity.getVerb()) {
             case Verb.post:
             case Verb.share:
@@ -470,6 +500,15 @@ public class MessageClientImpl implements MessageClient {
                 break;
             case Verb.delete:
                 event = new MessageObserver.MessageDeleted(new WebexId(WebexId.Type.MESSAGE_ID, activity.getId()).toHydraId());
+                break;
+            // Added by Orel
+            case Verb.add:
+                spaceId = new WebexId(WebexId.Type.ROOM_ID,activity.getTarget().getId()).toHydraId();
+                event = new MessageObserver.MembershipsAdded(createPerson(activity), spaceId);
+                break;
+            case "leave":
+                spaceId = new WebexId(WebexId.Type.ROOM_ID,activity.getTarget().getId()).toHydraId();
+                event = new MessageObserver.MembershipsDeleted(createPerson(activity), spaceId);
                 break;
             default:
                 Ln.e("unknown verb " + activity.getVerb());

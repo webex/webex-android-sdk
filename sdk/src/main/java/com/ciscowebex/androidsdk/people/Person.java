@@ -24,6 +24,9 @@ package com.ciscowebex.androidsdk.people;
 
 import java.util.Date;
 
+import com.cisco.spark.android.model.conversation.Activity;
+import com.cisco.spark.android.model.conversation.Actor;
+import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
@@ -33,6 +36,21 @@ import com.google.gson.annotations.SerializedName;
  * @since 0.1
  */
 public class Person {
+
+    protected Person(Activity activity) {
+
+        this._displayName = activity.getObject().getDisplayName();
+        this._type = activity.getObject().getObjectType();
+        this._id = new WebexId(WebexId.Type.PEOPLE_ID,activity.getObject().getId()).toHydraId() ;
+    }
+
+    protected Person(com.cisco.spark.android.model.Person actor) {
+
+        this._displayName = actor.getDisplayName();
+        this._emails = new String[] {actor.getEmail()};
+        this._id = new WebexId(WebexId.Type.PEOPLE_ID,actor.getUuid()).toHydraId() ;
+        this._type = actor.getType();
+    }
 
     @SerializedName("id")
     private String _id;
