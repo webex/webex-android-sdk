@@ -29,6 +29,7 @@ import android.app.Application;
 import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.core.BackgroundCheck;
 import com.cisco.spark.android.media.MediaEngine;
+import com.cisco.spark.android.ui.conversation.ConversationResolver;
 import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.auth.OAuthAuthenticator;
@@ -37,6 +38,7 @@ import com.ciscowebex.androidsdk.membership.internal.MembershipClientImpl;
 import com.ciscowebex.androidsdk.message.MessageClient;
 import com.ciscowebex.androidsdk.message.internal.CallbackablePostCommentOperation;
 import com.ciscowebex.androidsdk.message.internal.CallbackablePostContentActivityOperation;
+import com.ciscowebex.androidsdk.message.internal.MarkMessageReadOption;
 import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
 import com.ciscowebex.androidsdk.people.PersonClient;
 import com.ciscowebex.androidsdk.people.internal.PersonClientImpl;
@@ -71,7 +73,7 @@ public class Webex {
     public static final String APP_NAME = "webex_android_sdk";
 
     public static final String APP_VERSION = BuildConfig.VERSION_NAME + "(" + BuildConfig.BUILD_TIME + "_" + BuildConfig.BUILD_REVISION + ")";
-    
+
     /**
      * The enumeration of log message level
      *
@@ -94,7 +96,7 @@ public class Webex {
 
     @Inject
     BackgroundCheck _backgroundCheck;
-    
+
     @Inject
     UserAgentProvider _userAgentProvider;
 
@@ -108,10 +110,13 @@ public class Webex {
     public Webex(Application application, Authenticator authenticator) {
         _authenticator = authenticator;
         _common = new SDKCommon(application, APP_NAME, APP_VERSION);
-        _common.addInjectable(this.getClass(), authenticator.getClass(), 
-            OAuthAuthenticator.class, 
-            PhoneImpl.class, Call.class, 
-            MessageClientImpl.class, CallbackablePostCommentOperation.class, CallbackablePostContentActivityOperation.class);
+        _common.addInjectable(this.getClass(), authenticator.getClass(),
+                OAuthAuthenticator.class,
+                PhoneImpl.class, Call.class,
+                SpaceClientImpl.class,
+                MessageClientImpl.class,
+                MarkMessageReadOption.class,
+                CallbackablePostCommentOperation.class, CallbackablePostContentActivityOperation.class);
         _common.create();
         _common.inject(this);
         _common.inject(_authenticator);
@@ -244,7 +249,7 @@ public class Webex {
      * @since 0.1
      */
     public SpaceClient spaces() {
-        return new SpaceClientImpl(this._authenticator);
+        return new SpaceClientImpl(this._authenticator, this._common);
     }
 
     /**
@@ -291,5 +296,5 @@ public class Webex {
             _mediaEngine.setLoggingLevel(mask);
         }
     }
-    
+
 }

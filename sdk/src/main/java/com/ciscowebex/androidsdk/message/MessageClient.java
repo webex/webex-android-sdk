@@ -227,6 +227,24 @@ public interface MessageClient {
               @NonNull CompletionHandler<Message> handler);
 
     /**
+     * Send an acknowledge in space, to mark all the exist messages in space has read.
+     * <P>
+     *
+     * @param spaceId the id of space.
+     * @since 2.2.0
+     */
+    void markAsRead(@NonNull String spaceId);
+
+    /**
+     * Send an acknowledge in space, to mark the message before lastSeenTimestamp has read.
+     * <P>
+     *
+     * @param spaceId the id of space.
+     * @param messageId the id of seen message, won't send out ack if message timestamp is before last seen ack.
+     */
+    void markAsRead(@NonNull String spaceId, String messageId);
+
+    /**
      * A callback to indicate the progress of an action in already processed size (bytes).
      *
      * @since 1.4.0

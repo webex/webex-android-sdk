@@ -100,10 +100,28 @@ public interface SpaceClient {
     /**
      * Deletes a space by id.
      *
-     * @param spaceId  The identifier of the space.
+     * @param spaceId The identifier of the space.
      * @param handler A closure to be executed once the request has finished.
      * @since 0.1
      */
     void delete(@NonNull String spaceId, @NonNull CompletionHandler<Void> handler);
 
+    /**
+     * Get space meeting details.
+     * @param spaceId The identifier of the space.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 2.2.0
+     */
+    void getMeeting(@NonNull String spaceId, @NonNull CompletionHandler<SpaceMeeting> handler);
+
+    /**
+     * Returns a single space object with details about the data of the last
+     * activity in the space, and the date of the users last presence in the space.
+     * For spaces where lastActivityDate > lastSeenDate the room can be considered to be "unread"
+     *
+     * @param spaceId The identifier of the space.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 2.2.0
+     */
+    void getWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<SpaceReadStatus> handler);
 }
