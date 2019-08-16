@@ -26,17 +26,33 @@ package com.ciscowebex.androidsdk.space.internal;
 import java.util.List;
 import java.util.Map;
 
+import android.content.Context;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.cisco.spark.android.authenticator.ApiTokenProvider;
+import com.cisco.spark.android.model.Verb;
+import com.cisco.spark.android.model.conversation.Activity;
+import com.cisco.spark.android.processing.ActivityListener;
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.WebexEventPayload;
 import com.ciscowebex.androidsdk.auth.Authenticator;
+import com.ciscowebex.androidsdk.internal.WebexEventPayloadImpl;
+import com.ciscowebex.androidsdk.membership.MembershipObserver;
+import com.ciscowebex.androidsdk.membership.internal.MembershipImpl;
+import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.ciscowebex.androidsdk.space.Space;
 import com.ciscowebex.androidsdk.space.SpaceClient;
+import com.ciscowebex.androidsdk.space.SpaceObserver;
 import com.ciscowebex.androidsdk.utils.http.ListBody;
 import com.ciscowebex.androidsdk.utils.http.ListCallback;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
+import com.ciscowebex.androidsdk_commlib.SDKCommon;
+import com.github.benoitdion.ln.Ln;
+
+import javax.inject.Inject;
 
 import me.helloworld.utils.collection.Maps;
 import retrofit2.Call;
@@ -55,9 +71,36 @@ public class SpaceClientImpl implements SpaceClient {
 
     private SpaceService _service;
 
+    private SpaceObserver _observer;
+
+    private Context _context;
+
+    @Inject
+    ActivityListener activityListener;
+
+    @Inject
+    ApiTokenProvider _provider;
+
+    @Deprecated
     public SpaceClientImpl(Authenticator authenticator) {
         _authenticator = authenticator;
         _service = new ServiceBuilder().build(SpaceService.class);
+    }
+
+    public SpaceClientImpl(Context context, Authenticator authenticator, SDKCommon common) {
+        _authenticator = authenticator;
+        _service = new ServiceBuilder().build(SpaceService.class);
+        _context = context;
+        common.inject(this);
+        activityListener.register(activity -> {
+            processorActivity(activity);
+            return null;
+        });
+    }
+
+    @Override
+    public void setSpaceObserver(SpaceObserver observer) {
+        _observer = observer;
     }
 
     public void list(@Nullable String teamId, int max, @Nullable Space.SpaceType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Space>> handler) {
@@ -104,5 +147,36 @@ public class SpaceClientImpl implements SpaceClient {
 
         @DELETE("rooms/{spaceId}")
         Call<Void> delete(@Header("Authorization") String authorization, @Path("spaceId") String spaceId);
+    }
+
+    private void runOnUiThread(Runnable r, Object conditioner) {
+        if (conditioner == null) return;
+        Handler handler = new Handler(_context.getMainLooper());
+        handler.post(r);
+    }
+
+    private void processorActivity(Activity activity) {
+        if (null == _observer)
+            return;
+        if (null == activity) {
+            Ln.e("SpaceClientImpl.processorActivity() activity is null");
+            return;
+        }
+        WebexEventPayload eventPayload = new WebexEventPayloadImpl(activity, _provider.getAuthenticatedUserOrNull(), "rooms");
+        SpaceObserver.SpaceEvent event;
+        switch (activity.getVerb()) {
+            case Verb.create:
+                event = new SpaceObserver.SpaceCreated(eventPayload,
+                        new WebexId(WebexId.Type.ROOM_ID, activity.getObject().getId()).toHydraId(),
+                        new WebexId(WebexId.Type.PEOPLE_ID, activity.getActor().getId()).toHydraId());
+
+                break;
+            case Verb.update:
+                event = new SpaceObserver.SpaceUpdated(eventPayload, new WebexId(WebexId.Type.ROOM_ID, activity.getObject().getId()).toHydraId());
+                break;
+            default:
+                return;
+        }
+        runOnUiThread(() -> _observer.onEvent(event), _observer);
     }
 }

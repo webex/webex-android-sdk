@@ -91,6 +91,8 @@ public class Webex {
 
     private MembershipClientImpl _membership;
 
+    private SpaceClientImpl _space;
+
     @Inject
     MediaEngine _mediaEngine;
 
@@ -115,6 +117,7 @@ public class Webex {
                 PhoneImpl.class, Call.class,
                 MessageClientImpl.class,
                 MembershipClientImpl.class,
+                SpaceClientImpl.class,
                 CallbackablePostCommentOperation.class,
                 CallbackablePostContentActivityOperation.class);
         _common.create();
@@ -123,6 +126,7 @@ public class Webex {
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _common);
         _message = new MessageClientImpl(application.getApplicationContext(), _authenticator, _common);
         _membership = new MembershipClientImpl(application.getApplicationContext(), _authenticator, _common);
+        _space = new SpaceClientImpl(application.getApplicationContext(), _authenticator, _common);
         setLogLevel(LogLevel.DEBUG);
         Ln.i(_userAgentProvider.get());
         Ln.i(Utils.versionInfo());
@@ -250,7 +254,7 @@ public class Webex {
      * @since 0.1
      */
     public SpaceClient spaces() {
-        return new SpaceClientImpl(this._authenticator);
+        return _space;
     }
 
     /**

@@ -180,6 +180,15 @@ public class WebexEventPayloadImpl implements WebexEventPayload {
         @SerializedName("lastSeenId")
         private String _lastSeenId;
 
+        @SerializedName("isLocked")
+        private boolean _isLocked;
+
+        @SerializedName("creatorId")
+        private String _creatorId;
+
+        @SerializedName("lastActivity")
+        private Date _lastActivity;
+
         public PayloadDataImpl(Activity activity) {
             ActivityObject activityObject = activity.getObject();
             if (null == activityObject) {
@@ -237,6 +246,22 @@ public class WebexEventPayloadImpl implements WebexEventPayload {
                             }
                         }
                     }
+                    break;
+                case "rooms":
+                    if (activity.getVerb().equals(Verb.create)) {
+                        this._spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getObject().getId()).toHydraId();
+                        this._spaceType = ((Conversation) activity.getObject()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+                        this._isLocked = ((Conversation) activity.getObject()).getTags().contains("LOCKED");
+                        if (null != activity.getActor())
+                            this._creatorId = new WebexId(WebexId.Type.PEOPLE_ID, activity.getActor().getId()).toHydraId();
+                        this._lastActivity = activity.getPublished();
+                    } else if (activity.getVerb().equals(Verb.update)) {
+                        this._spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
+                        this._spaceType = ((Conversation) activity.getTarget()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+                        this._isLocked = ((Conversation) activity.getTarget()).getTags().contains("LOCKED");
+                    }
+                    break;
+                default:
                     break;
             }
         }
