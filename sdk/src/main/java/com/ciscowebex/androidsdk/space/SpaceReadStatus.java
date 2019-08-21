@@ -1,6 +1,5 @@
 package com.ciscowebex.androidsdk.space;
 
-import com.cisco.spark.android.model.SpaceProperty;
 import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;

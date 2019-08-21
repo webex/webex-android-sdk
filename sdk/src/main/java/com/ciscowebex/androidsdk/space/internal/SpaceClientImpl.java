@@ -135,6 +135,17 @@ public class SpaceClientImpl implements SpaceClient {
                 _cService.getWithReadStatus(s, spaceId, false, true, true, 0, false), new ObjectCallback<>(handler));
     }
 
+    @Override
+    public void listWithReadStatus(@NonNull CompletionHandler<List<SpaceReadStatus>> handler) {
+        if (null == _cService) {
+            handler.onComplete(ResultImpl.error("Device not registered."));
+            return;
+        }
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _cService.listWithReadStatus(s, false, true, true, 0, false), new ListCallback<>(handler));
+
+    }
+
     private interface SpaceService {
         @GET("rooms")
         Call<ListBody<Space>> list(@Header("Authorization") String authorization,
@@ -161,11 +172,19 @@ public class SpaceClientImpl implements SpaceClient {
 
     private interface ConversationService {
         @GET("conversations/{spaceId}")
-        Call<SpaceReadStatus> getWithReadStatus(@Header("Authorization") String authorization, @Path("spaceId") String spaceId,
+        Call<SpaceReadStatus> getWithReadStatus(@Header("Authorization") String authorization, @Nullable @Path("spaceId") String spaceId,
                                                 @Query("includeParticipants") boolean includeParticipants,
                                                 @Query("uuidEntryFormat") boolean uuidEntryFormat,
                                                 @Query("personRefresh") boolean personRefresh,
                                                 @Query("activitiesLimit") int activitiesLimit,
                                                 @Query("includeConvWithDeletedUserUUID") boolean includeConvWithDeletedUserUUID);
+
+        @GET("conversations")
+        Call<ListBody<SpaceReadStatus>> listWithReadStatus(@Header("Authorization") String authorization,
+                                                 @Query("includeParticipants") boolean includeParticipants,
+                                                 @Query("uuidEntryFormat") boolean uuidEntryFormat,
+                                                 @Query("personRefresh") boolean personRefresh,
+                                                 @Query("activitiesLimit") int activitiesLimit,
+                                                 @Query("includeConvWithDeletedUserUUID") boolean includeConvWithDeletedUserUUID);
     }
 }
