@@ -86,7 +86,6 @@ public class SpaceClientImpl implements SpaceClient {
                 _cService = new ServiceBuilder().baseURL(url).build(ConversationService.class);
             }
         }
-
     }
 
     @Override
@@ -143,7 +142,6 @@ public class SpaceClientImpl implements SpaceClient {
         }
         ServiceBuilder.async(_authenticator, handler, s ->
                 _cService.listWithReadStatus(s, false, true, true, 0, false), new ListCallback<>(handler));
-
     }
 
     private interface SpaceService {

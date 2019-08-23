@@ -114,6 +114,7 @@ public class Webex {
                 OAuthAuthenticator.class,
                 PhoneImpl.class, Call.class,
                 SpaceClientImpl.class,
+                MembershipClientImpl.class,
                 MessageClientImpl.class,
                 MarkMessageReadOption.class,
                 CallbackablePostCommentOperation.class, CallbackablePostContentActivityOperation.class);
@@ -203,7 +204,7 @@ public class Webex {
      * @since 0.1
      */
     public MembershipClient memberships() {
-        return new MembershipClientImpl(this._authenticator);
+        return new MembershipClientImpl(this._authenticator, this._common);
     }
 
     /**
