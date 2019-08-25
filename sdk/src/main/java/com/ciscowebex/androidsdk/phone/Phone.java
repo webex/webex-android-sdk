@@ -28,6 +28,8 @@ import android.view.View;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
 
+import java.util.List;
+
 /**
  * Phone represents a Cisco Webex calling device.
  * <p>
@@ -309,5 +311,15 @@ public interface Phone {
      * @since 2.1.1
      */
     void setHardwareAccelerationEnabled(boolean enable);
+
+    /**
+     * Turn on audio enhancement for the specified device models. By default,
+     * the audio enhancement is enable for Samsung S7/S7Edge/S8/S8+/S9/S9+/S10/S10+/S10e/Note8/Note9.
+     *
+     * @param models the list of device models, if the list is null or empty, turn off the audio enhancement.
+     *
+     * @since 2.1.2
+     */
+    void enableAudioEnhancementForModels(List<String> models);
 
 }

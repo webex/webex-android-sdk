@@ -117,20 +117,11 @@ public class CallImpl implements Call {
 
     CallImpl(@NonNull PhoneImpl phone, @Nullable MediaOption option, @NonNull Direction direction, @NonNull LocusKey key, boolean group) {
         _phone = phone;
-        _option = option;
         _direction = direction;
         _key = key;
         _status = CallStatus.INITIATED;
         _isGroup = group;
-
-        if (option != null) {
-            if (option.getLocalView() != null && option.getRemoteView() != null) {
-                _videoRenderViews = new Pair<>(option.getLocalView(), option.getRemoteView());
-            } else {
-                _videoRenderViews = null;
-            }
-            _sharingRenderView = option.getSharingView();
-        }
+        setMediaOption(option);
     }
 
     @NonNull
@@ -147,7 +138,7 @@ public class CallImpl implements Call {
         return _option;
     }
 
-    void setMediaOption(@NonNull MediaOption option) {
+    void setMediaOption(@Nullable MediaOption option) {
         _option = option;
         if (option != null) {
             if (option.getLocalView() != null && option.getRemoteView() != null) {
@@ -499,14 +490,15 @@ public class CallImpl implements Call {
 
     @Override
     public void setVideoRenderViews(@Nullable Pair<View, View> videoRenderViews) {
-        if (_videoRenderViews != videoRenderViews) {
-            _videoRenderViews = videoRenderViews;
-        } else if (videoRenderViews != null && _videoRenderViews != null
-                && (videoRenderViews.first != _videoRenderViews.first || videoRenderViews.second != _videoRenderViews.second)) {
-            _videoRenderViews = videoRenderViews;
-        } else {
+        if (videoRenderViews == _videoRenderViews) {
+            Ln.d("Same render views");
             return;
         }
+        if (videoRenderViews != null && _videoRenderViews != null && videoRenderViews.first == _videoRenderViews.first && videoRenderViews.second == _videoRenderViews.second) {
+            Ln.d("Same render views");
+            return;
+        }
+        _videoRenderViews = videoRenderViews;
         updateMedia();
     }
 
@@ -518,10 +510,8 @@ public class CallImpl implements Call {
     public void setSharingRenderView(View view) {
         if (view != _sharingRenderView) {
             _sharingRenderView = view;
-        } else {
-            return;
+            updateMedia();
         }
-        updateMedia();
     }
 
     public void acknowledge(@NonNull CompletionHandler<Void> callback) {
@@ -531,16 +521,7 @@ public class CallImpl implements Call {
     }
 
     public void answer(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
-        _option = option;
-        if (option != null) {
-            if (option.getLocalView() != null && option.getRemoteView() != null) {
-                _videoRenderViews = new Pair<>(option.getLocalView(), option.getRemoteView());
-            } else {
-                _videoRenderViews = null;
-            }
-            _sharingRenderView = option.getSharingView();
-        }
-
+        setMediaOption(option);
         _answerCallback = callback;
         _phone.answer(this);
     }

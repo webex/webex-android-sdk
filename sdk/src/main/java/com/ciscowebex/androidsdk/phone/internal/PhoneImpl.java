@@ -22,11 +22,7 @@
 
 package com.ciscowebex.androidsdk.phone.internal;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import javax.inject.Inject;
 
 import android.Manifest;
@@ -94,6 +90,7 @@ import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.Ln;
 
+import com.google.common.collect.Lists;
 import me.helloworld.utils.Checker;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.NoSubscriberEvent;
@@ -199,7 +196,6 @@ public class PhoneImpl implements Phone {
     private static final String STR_ALREADY_DISCONNECTED = "Already disconnected";
     private static final String STR_FIND_CALLIMPL = "Find callImpl ";
     private static final String STR_FAILURE_CALL = "Failure call: ";
-
 
     private static class DialTarget {
         private String address;
@@ -380,6 +376,13 @@ public class PhoneImpl implements Phone {
         hardwareVideoSettings = settings;
     }
 
+    @Override
+    public void enableAudioEnhancementForModels(List<String> models) {
+        if (_callControlService != null) {
+            _callControlService.setAudioEnhancementModels(models);
+        }
+    }
+
     public void disableVideoCodecActivation() {
         _prompter.setVideoLicenseActivationDisabled(true);
     }
@@ -409,6 +412,7 @@ public class PhoneImpl implements Phone {
 
     public void deregister(@NonNull CompletionHandler<Void> callback) {
         Ln.i("Deregistering");
+        resetDialStatus(null);
         RotationHandler.unregisterRotationReceiver(_context);
         _applicationController.logout(null, false, false, false);
         _mediaEngine.uninitialize();
@@ -457,14 +461,26 @@ public class PhoneImpl implements Phone {
         int direction = data.getInt(AcquirePermissionActivity.CALL_DIRECTION);
         if (direction == Call.Direction.INCOMING.ordinal()) {
             Ln.d("make incoming call");
-            CallImpl call = _calls.get(data.getParcelable(AcquirePermissionActivity.CALL_KEY));
-            if (permission && call != null) {
+            LocusKey key = data.getParcelable(AcquirePermissionActivity.CALL_KEY);
+            CallImpl call = _calls.get(key);
+            if (call == null) {
+                Ln.d("Cannot find call for key: " + key);
+                return;
+            }
+            Result<Void> result = null;
+            if (permission) {
                 CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
                 builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
-                doDial(builder.build());
-            } else if (call != null && call.getAnswerCallback() != null) {
+                if (!doDial(builder.build())) {
+                    result = ResultImpl.error(STR_FAILURE_CALL + "cannot dial");
+                }
+            } else {
                 Ln.w(STR_PERMISSION_DENIED);
-                call.getAnswerCallback().onComplete(ResultImpl.error(STR_PERMISSION_DENIED));
+                result = ResultImpl.error(STR_PERMISSION_DENIED);
+            }
+            CompletionHandler<Void> handler = call.getAnswerCallback();
+            if (handler != null && result != null) {
+                handler.onComplete(result);
             }
         } else if (direction == Call.Direction.OUTGOING.ordinal()) {
             Ln.d("make outgoing call");
@@ -1597,12 +1613,16 @@ public class PhoneImpl implements Phone {
         });
     }
 
-    private void doDial(CallContext context) {
+    private boolean doDial(CallContext context) {
         MediaCapabilityConfig config = new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth);
         config.setHardwareCodecEnable(isEnableHardwareAcceleration);
         config.setHwVideoSetting(hardwareVideoSettings);
         _mediaEngine.setMediaConfig(config);
-        _callControlService.joinCall(context, false);
+        if (_callControlService.joinCall(context, false) == null) {
+            resetDialStatus(ResultImpl.error(STR_FAILURE_CALL + "cannot dial"));
+            return false;
+        }
+        return true;
     }
 
     private boolean isJoinedFromThisDevice(List<LocusParticipantDevice> devices) {
