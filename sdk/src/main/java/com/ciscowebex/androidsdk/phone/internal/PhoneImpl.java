@@ -458,6 +458,10 @@ public class PhoneImpl implements Phone {
             Ln.e("makeCall data is null!");
             return;
         }
+        if (_dialCallback != null) {
+            Ln.w("Duplicated call, ignore it");
+            return;
+        }
         int direction = data.getInt(AcquirePermissionActivity.CALL_DIRECTION);
         if (direction == Call.Direction.INCOMING.ordinal()) {
             Ln.d("make incoming call");
