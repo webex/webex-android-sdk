@@ -900,11 +900,11 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlParticipantLeftEvent event) {
         Ln.i("CallControlParticipantLeftEvent is received " + event.getLocusKey());
-        resetDialStatus(null);
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (!call.isGroup()) {
+                resetDialStatus(null);
                 removeCall(new CallObserver.RemoteLeft(call));
             } else if (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING) {
                 boolean meetingIsOpen = false;
@@ -914,6 +914,7 @@ public class PhoneImpl implements Phone {
                     }
                 }
                 if (!meetingIsOpen) {
+                    resetDialStatus(null);
                     removeCall(new CallObserver.RemoteCancel(call));
                 }
             }
