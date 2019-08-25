@@ -33,6 +33,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.util.Base64;
 import android.view.SurfaceHolder;
@@ -142,6 +143,8 @@ public class PhoneImpl implements Phone {
     private CompletionHandler<Void> _registerCallback;
 
     private Map<LocusKey, CallImpl> _calls = new HashMap<>();
+
+    private Map<String, String> _callTags = new HashMap<>();
 
     public CallImpl getCall(LocusKey key) {
         return _calls.get(key);
@@ -458,8 +461,13 @@ public class PhoneImpl implements Phone {
             Ln.e("makeCall data is null!");
             return;
         }
-        if (_dialCallback != null) {
+        String tag = data.getString(AcquirePermissionActivity.CALL_TAG);
+        if (tag == null) {
             Ln.w("Duplicated call, ignore it");
+            return;
+        }
+        if (!_callTags.containsKey(tag)) {
+            Ln.w("Not found call tag, ignore it");
             return;
         }
         int direction = data.getInt(AcquirePermissionActivity.CALL_DIRECTION);
@@ -467,24 +475,25 @@ public class PhoneImpl implements Phone {
             Ln.d("make incoming call");
             LocusKey key = data.getParcelable(AcquirePermissionActivity.CALL_KEY);
             CallImpl call = _calls.get(key);
-            if (call == null) {
-                Ln.d("Cannot find call for key: " + key);
-                return;
-            }
-            Result<Void> result = null;
-            if (permission) {
-                CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
-                builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
-                if (!doDial(builder.build())) {
-                    result = ResultImpl.error(STR_FAILURE_CALL + "cannot dial");
+            if (call != null) {
+                Result<Void> result = null;
+                if (permission) {
+                    CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
+                    builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
+                    if (!doDial(builder.build())) {
+                        result = ResultImpl.error(STR_FAILURE_CALL + "cannot dial");
+                    }
+                } else {
+                    Ln.w(STR_PERMISSION_DENIED);
+                    result = ResultImpl.error(STR_PERMISSION_DENIED);
                 }
-            } else {
-                Ln.w(STR_PERMISSION_DENIED);
-                result = ResultImpl.error(STR_PERMISSION_DENIED);
+                CompletionHandler<Void> handler = call.getAnswerCallback();
+                if (handler != null && result != null) {
+                    handler.onComplete(result);
+                }
             }
-            CompletionHandler<Void> handler = call.getAnswerCallback();
-            if (handler != null && result != null) {
-                handler.onComplete(result);
+            else {
+                Ln.d("Cannot find call for key: " + key);
             }
         } else if (direction == Call.Direction.OUTGOING.ordinal()) {
             Ln.d("make outgoing call");
@@ -512,6 +521,7 @@ public class PhoneImpl implements Phone {
                 resetDialStatus(ResultImpl.error(STR_PERMISSION_DENIED));
             }
         }
+        _callTags.remove(tag);
     }
 
     public void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
@@ -536,15 +546,7 @@ public class PhoneImpl implements Phone {
         stopPreview();
         _dialOption = option;
         _dialCallback = callback;
-
-        final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
-        Bundle bundle = new Bundle();
-        bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.OUTGOING.ordinal());
-        bundle.putString(AcquirePermissionActivity.CALL_STRING, dialString);
-        intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
-        _context.startActivity(intent);
+        tryAcquirePermission(Call.Direction.OUTGOING, dialString);
     }
 
     void answer(@NonNull CallImpl call) {
@@ -582,12 +584,25 @@ public class PhoneImpl implements Phone {
             }
         }
         stopPreview();
+        tryAcquirePermission(Call.Direction.INCOMING, call.getKey());
+    }
+
+    private void tryAcquirePermission(Call.Direction direction, Object callParam) {
+        String tag = UUID.randomUUID().toString();
+        _callTags.put(tag, tag);
+
+        Bundle bundle = new Bundle();
+        bundle.putString(AcquirePermissionActivity.CALL_TAG, tag);
+        bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, direction.ordinal());
+        if (callParam instanceof Parcelable) {
+            bundle.putParcelable(AcquirePermissionActivity.CALL_KEY, (Parcelable) callParam);
+        }
+        else if (callParam instanceof String) {
+            bundle.putString(AcquirePermissionActivity.CALL_STRING, (String) callParam);
+        }
         final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
-        Bundle bundle = new Bundle();
-        bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.INCOMING.ordinal());
-        bundle.putParcelable(AcquirePermissionActivity.CALL_KEY, call.getKey());
         intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
         _context.startActivity(intent);
     }
