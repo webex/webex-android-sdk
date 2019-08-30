@@ -22,11 +22,7 @@
 
 package com.ciscowebex.androidsdk.phone.internal;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import javax.inject.Inject;
 
 import android.Manifest;
@@ -37,6 +33,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.util.Base64;
 import android.view.SurfaceHolder;
@@ -94,6 +91,7 @@ import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.Ln;
 
+import com.google.common.collect.Lists;
 import me.helloworld.utils.Checker;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.NoSubscriberEvent;
@@ -145,6 +143,8 @@ public class PhoneImpl implements Phone {
     private CompletionHandler<Void> _registerCallback;
 
     private Map<LocusKey, CallImpl> _calls = new HashMap<>();
+
+    private Map<String, String> _callTags = new HashMap<>();
 
     public CallImpl getCall(LocusKey key) {
         return _calls.get(key);
@@ -199,7 +199,6 @@ public class PhoneImpl implements Phone {
     private static final String STR_ALREADY_DISCONNECTED = "Already disconnected";
     private static final String STR_FIND_CALLIMPL = "Find callImpl ";
     private static final String STR_FAILURE_CALL = "Failure call: ";
-
 
     private static class DialTarget {
         private String address;
@@ -380,6 +379,13 @@ public class PhoneImpl implements Phone {
         hardwareVideoSettings = settings;
     }
 
+    @Override
+    public void enableAudioEnhancementForModels(List<String> models) {
+        if (_callControlService != null) {
+            _callControlService.setAudioEnhancementModels(models);
+        }
+    }
+
     public void disableVideoCodecActivation() {
         _prompter.setVideoLicenseActivationDisabled(true);
     }
@@ -409,6 +415,7 @@ public class PhoneImpl implements Phone {
 
     public void deregister(@NonNull CompletionHandler<Void> callback) {
         Ln.i("Deregistering");
+        resetDialStatus(null);
         RotationHandler.unregisterRotationReceiver(_context);
         _applicationController.logout(null, false, false, false);
         _mediaEngine.uninitialize();
@@ -454,17 +461,39 @@ public class PhoneImpl implements Phone {
             Ln.e("makeCall data is null!");
             return;
         }
+        String tag = data.getString(AcquirePermissionActivity.CALL_TAG);
+        if (tag == null) {
+            Ln.w("Duplicated call, ignore it");
+            return;
+        }
+        if (!_callTags.containsKey(tag)) {
+            Ln.w("Not found call tag, ignore it");
+            return;
+        }
         int direction = data.getInt(AcquirePermissionActivity.CALL_DIRECTION);
         if (direction == Call.Direction.INCOMING.ordinal()) {
             Ln.d("make incoming call");
-            CallImpl call = _calls.get(data.getParcelable(AcquirePermissionActivity.CALL_KEY));
-            if (permission && call != null) {
-                CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
-                builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
-                doDial(builder.build());
-            } else if (call != null && call.getAnswerCallback() != null) {
-                Ln.w(STR_PERMISSION_DENIED);
-                call.getAnswerCallback().onComplete(ResultImpl.error(STR_PERMISSION_DENIED));
+            LocusKey key = data.getParcelable(AcquirePermissionActivity.CALL_KEY);
+            CallImpl call = _calls.get(key);
+            if (call != null) {
+                Result<Void> result = null;
+                if (permission) {
+                    CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
+                    builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
+                    if (!doDial(builder.build())) {
+                        result = ResultImpl.error(STR_FAILURE_CALL + "cannot dial");
+                    }
+                } else {
+                    Ln.w(STR_PERMISSION_DENIED);
+                    result = ResultImpl.error(STR_PERMISSION_DENIED);
+                }
+                CompletionHandler<Void> handler = call.getAnswerCallback();
+                if (handler != null && result != null) {
+                    handler.onComplete(result);
+                }
+            }
+            else {
+                Ln.d("Cannot find call for key: " + key);
             }
         } else if (direction == Call.Direction.OUTGOING.ordinal()) {
             Ln.d("make outgoing call");
@@ -492,6 +521,7 @@ public class PhoneImpl implements Phone {
                 resetDialStatus(ResultImpl.error(STR_PERMISSION_DENIED));
             }
         }
+        _callTags.remove(tag);
     }
 
     public void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
@@ -516,15 +546,7 @@ public class PhoneImpl implements Phone {
         stopPreview();
         _dialOption = option;
         _dialCallback = callback;
-
-        final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
-        Bundle bundle = new Bundle();
-        bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.OUTGOING.ordinal());
-        bundle.putString(AcquirePermissionActivity.CALL_STRING, dialString);
-        intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
-        _context.startActivity(intent);
+        tryAcquirePermission(Call.Direction.OUTGOING, dialString);
     }
 
     void answer(@NonNull CallImpl call) {
@@ -562,12 +584,25 @@ public class PhoneImpl implements Phone {
             }
         }
         stopPreview();
+        tryAcquirePermission(Call.Direction.INCOMING, call.getKey());
+    }
+
+    private void tryAcquirePermission(Call.Direction direction, Object callParam) {
+        String tag = UUID.randomUUID().toString();
+        _callTags.put(tag, tag);
+
+        Bundle bundle = new Bundle();
+        bundle.putString(AcquirePermissionActivity.CALL_TAG, tag);
+        bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, direction.ordinal());
+        if (callParam instanceof Parcelable) {
+            bundle.putParcelable(AcquirePermissionActivity.CALL_KEY, (Parcelable) callParam);
+        }
+        else if (callParam instanceof String) {
+            bundle.putString(AcquirePermissionActivity.CALL_STRING, (String) callParam);
+        }
         final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
-        Bundle bundle = new Bundle();
-        bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.INCOMING.ordinal());
-        bundle.putParcelable(AcquirePermissionActivity.CALL_KEY, call.getKey());
         intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
         _context.startActivity(intent);
     }
@@ -880,11 +915,11 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlParticipantLeftEvent event) {
         Ln.i("CallControlParticipantLeftEvent is received " + event.getLocusKey());
-        resetDialStatus(null);
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (!call.isGroup()) {
+                resetDialStatus(null);
                 removeCall(new CallObserver.RemoteLeft(call));
             } else if (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING) {
                 boolean meetingIsOpen = false;
@@ -894,6 +929,7 @@ public class PhoneImpl implements Phone {
                     }
                 }
                 if (!meetingIsOpen) {
+                    resetDialStatus(null);
                     removeCall(new CallObserver.RemoteCancel(call));
                 }
             }
@@ -1597,12 +1633,16 @@ public class PhoneImpl implements Phone {
         });
     }
 
-    private void doDial(CallContext context) {
+    private boolean doDial(CallContext context) {
         MediaCapabilityConfig config = new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth);
         config.setHardwareCodecEnable(isEnableHardwareAcceleration);
         config.setHwVideoSetting(hardwareVideoSettings);
         _mediaEngine.setMediaConfig(config);
-        _callControlService.joinCall(context, false);
+        if (_callControlService.joinCall(context, false) == null) {
+            resetDialStatus(ResultImpl.error(STR_FAILURE_CALL + "cannot dial"));
+            return false;
+        }
+        return true;
     }
 
     private boolean isJoinedFromThisDevice(List<LocusParticipantDevice> devices) {
