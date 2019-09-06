@@ -50,20 +50,16 @@ import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.DatabaseProvider;
 import com.cisco.spark.android.sync.operationqueue.ActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.NewConversationOperation;
-import com.cisco.spark.android.sync.operationqueue.PostCommentOperation;
-import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation.ContentItem;
 import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation.ShareContentData;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.cisco.spark.android.sync.operationqueue.core.Operations;
 import com.cisco.spark.android.util.*;
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.message.*;
 import com.ciscowebex.androidsdk.message.Message;
-import com.ciscowebex.androidsdk.space.Space;
 import com.ciscowebex.androidsdk.utils.EmailAddress;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.http.ListBody;
@@ -102,6 +98,8 @@ public class MessageClientImpl implements MessageClient {
     private MessageObserver _observer;
 
     private Context _context;
+
+    private int lastSendProgress = -1;
 
     @Inject
     Operations operations;
@@ -522,12 +520,17 @@ public class MessageClientImpl implements MessageClient {
             }
             int progress;
             progress = uploadMonitor.getProgressForKey(contentUri.toString());
-            runOnUiThread(() -> {
-                if (file.getProgressHandler() != null) {
-                    file.getProgressHandler().onProgress(progress >= 0 ? progress : 0);
-                }
-            }, file);
+                runOnUiThread(() -> {
+                    if (file.getProgressHandler() != null) {
+                        int sendProgress = progress >= 0 ? progress : 0;
+                        if (lastSendProgress != sendProgress){
+                            file.getProgressHandler().onProgress(sendProgress);
+                            lastSendProgress = sendProgress;
+                        }
+                    }
+                }, file);
             if (progress >= 100) {
+                lastSendProgress = -1;
                 t.cancel(false);
             }
         }
