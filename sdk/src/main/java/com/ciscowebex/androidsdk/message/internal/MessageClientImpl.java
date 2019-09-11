@@ -220,7 +220,7 @@ public class MessageClientImpl implements MessageClient {
             }
         };
 
-        long time = (date == null ? new Date() : date).getTime();
+        long time = (date == null ? new Date() : date).getTime() - 1;
         if (mentions != null && mentions.length > 0) {
             // TODO filter by conv Id
             // TODO just get method me for now
