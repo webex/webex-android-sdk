@@ -244,7 +244,7 @@ dependencies {
     compileOnly 'com.squareup.dagger:dagger-compiler:1.2.2'
     kapt 'com.squareup.dagger:dagger-compiler:1.2.2'
     annotationProcessor 'com.squareup.dagger:dagger-compiler:1.2.2'
-    implementation('com.ciscowebex:androidsdk_commlib:2.1.2-SNAPSHOT@aar', {
+    implementation('com.ciscowebex:androidsdk_commlib:2.3.0-SNAPSHOT@aar', {
         transitive = true
         changing = true
     })
