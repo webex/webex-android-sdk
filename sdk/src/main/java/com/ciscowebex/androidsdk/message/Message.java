@@ -26,13 +26,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.cisco.spark.android.model.AuthenticatedUser;
-import com.cisco.spark.android.model.ItemCollection;
-import com.cisco.spark.android.model.Person;
-import com.cisco.spark.android.model.SpaceProperty;
-import com.cisco.spark.android.model.conversation.Activity;
-import com.cisco.spark.android.model.conversation.Content;
-import com.cisco.spark.android.model.conversation.File;
+import android.support.annotation.NonNull;
+import com.cisco.spark.android.model.*;
+import com.cisco.spark.android.model.conversation.*;
+import com.ciscowebex.androidsdk.WebexEvent;
 import com.ciscowebex.androidsdk.message.internal.RemoteFileImpl;
 import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.ciscowebex.androidsdk.space.Space;
@@ -43,13 +40,67 @@ import com.google.gson.Gson;
  *
  * @since 0.1
  */
-public class Message {
+public class Message implements WebexEvent.Data {
 
-    protected transient Activity activity;
+    /**
+     * @since 2.3.0
+     */
+    public static class Text {
+
+        public static Text plain(String plain) {
+            return new Text(plain, null, null);
+        }
+
+        public static Text html(String plain, String html) {
+            return new Text(plain, html, null);
+        }
+
+        public static Text markdown(String markdown, String html, String plain) {
+            return new Text(plain, html, markdown);
+        }
+
+        private String plain;
+
+        private String html;
+
+        private String markdown;
+
+        private Text(String plain, String html, String markdown) {
+            this.plain = plain;
+            this.html = html;
+            this.markdown = markdown;
+        }
+
+        private Text(@NonNull ActivityObject object) {
+            this.plain = object.getDisplayName();
+            this.html = object.getContent();
+            if (object instanceof Comment) {
+                this.markdown = ((Comment) object).getMarkdown();
+            }
+        }
+
+        public String getMarkdown() {
+            return markdown;
+        }
+
+        public String getHtml() {
+            return html;
+        }
+
+        public String getPlain() {
+            return plain;
+        }
+    }
+
+    private transient Activity activity;
 
     private String id;
 
     private String personId;
+
+    private String personEmail;
+
+    private String personDisplayName;
 
     private String spaceId;
 
@@ -61,19 +112,32 @@ public class Message {
 
     private boolean isSelfMentioned;
 
+    private Text complexText;
+
     private transient List<RemoteFile> remoteFiles;
 
     protected Message(Activity activity, AuthenticatedUser user, boolean received) {
         this.activity = activity;
         this.id = new WebexId(WebexId.Type.MESSAGE_ID, activity.getId()).toHydraId();
+        if (activity.getVerb().equals(Verb.delete) && activity.getObject() != null) {
+            this.id = new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId();
+        }
         if (activity.getActor() != null) {
             this.personId = new WebexId(WebexId.Type.PEOPLE_ID, activity.getActor().getId()).toHydraId();
+            this.personEmail = activity.getActor().getEmail();
+            this.personDisplayName = activity.getActor().getDisplayName();
         }
-        if (activity.getTarget() instanceof SpaceProperty) {
+        if (activity.getObject() != null) {
+            this.complexText = new Text(activity.getObject());
+        }
+        if (activity.getTarget() instanceof Conversation) {
             this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
-            this.spaceType = ((SpaceProperty)activity.getTarget()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
-        }
-        else if (activity.getTarget() instanceof Person) {
+            this.spaceType = ((Conversation) activity.getTarget()).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+        } else if (activity.getTarget() instanceof SpaceProperty) {
+            this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
+            this.spaceType = ((SpaceProperty) activity.getTarget()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+        } else if (activity.getTarget() instanceof Person) {
+            this.spaceType = Space.SpaceType.DIRECT;
             this.toPersonId = new WebexId(WebexId.Type.PEOPLE_ID, activity.getTarget().getId()).toHydraId();
             this.toPersonEmail = ((Person) activity.getTarget()).getEmail();
         }
@@ -91,8 +155,8 @@ public class Message {
         }
 
         ArrayList<RemoteFile> remoteFiles = new ArrayList<>();
-        if (activity.getObject().isContent()) {
-            Content content = (Content) activity.getObject();
+        if (activity.getObject() != null && activity.getObject().isContent()) {
+            com.cisco.spark.android.model.conversation.Content content = (com.cisco.spark.android.model.conversation.Content) activity.getObject();
             ItemCollection<File> files = content.getContentFiles();
             for (File file : files.getItems()) {
                 RemoteFile remoteFile = new RemoteFileImpl(file);
@@ -104,6 +168,7 @@ public class Message {
 
     /**
      * Returns The identifier of this message.
+     *
      * @return The identifier of this message.
      * @since 0.1
      */
@@ -113,6 +178,7 @@ public class Message {
 
     /**
      * Returns the identifier of the person who sent this message.
+     *
      * @return The identifier of the person who sent this message.
      * @since 0.1
      */
@@ -122,15 +188,27 @@ public class Message {
 
     /**
      * Returns the email address of the person who sent this message.
+     *
      * @return The email address of the person who sent this message.
      * @since 0.1
      */
     public String getPersonEmail() {
-        return activity.getActor() != null ? activity.getActor().getEmail() : null;
+        return personEmail;
+    }
+
+    /**
+     * Returns the name of the person who sent this message.
+     *
+     * @return The name of the person who sent this message.
+     * @since 2.3.0
+     */
+    public String getPersonDisplayName() {
+        return personDisplayName;
     }
 
     /**
      * Returns the identifier of the space where this message was posted.
+     *
      * @return The identifier of the space where this message was posted.
      * @since 0.1
      */
@@ -148,21 +226,34 @@ public class Message {
 
     /**
      * Returns the content of the message.
+     *
      * @return The content of the message.
      * @since 0.1
      */
     public String getText() {
-        if (activity.getObject().getContent() != null) {
-            return activity.getObject().getContent();
+        if (complexText == null) {
+            return null;
         }
-        else if (activity.getObject().getDisplayName() != null) {
-            return activity.getObject().getDisplayName();
+        String formatedText = complexText.getHtml();
+        if (formatedText != null) {
+            return formatedText;
         }
-        return null;
+        return complexText.getMarkdown() != null ? complexText.getMarkdown() : complexText.getPlain();
+    }
+
+    /**
+     * Returns the content of the message.
+     *
+     * @return The content of the message.
+     * @since 2.3.0
+     */
+    public Text getComplexText() {
+        return complexText;
     }
 
     /**
      * Returns the identifier of the recipient when sending a private 1:1 message.
+     *
      * @return The identifier of the recipient when sending a private 1:1 message.
      * @since 0.1
      */
@@ -172,6 +263,7 @@ public class Message {
 
     /**
      * Returns the email address of the recipient when sending a private 1:1 message
+     *
      * @return The email address of the recipient when sending a private 1:1 message.
      * @since 0.1
      */
@@ -181,6 +273,7 @@ public class Message {
 
     /**
      * Returns the {@link java.util.Date} that the message being created.
+     *
      * @return The {@link java.util.Date} that the message being created.
      * @since 0.1
      */
@@ -190,6 +283,7 @@ public class Message {
 
     /**
      * Returns true if the message is the recepient of the message is included in message's mention list
+     *
      * @return True if the message is the recepient of the message is included in message's mention list
      */
     public boolean isSelfMentioned() {
@@ -198,8 +292,8 @@ public class Message {
 
     /**
      * Returns a list of files attached to this message.
-     * @return A list of files attached to this message.
      *
+     * @return A list of files attached to this message.
      * @deprecated
      */
     @Deprecated
@@ -209,8 +303,8 @@ public class Message {
 
     /**
      * Return a list of files attached to this message.
-     * @return A list of files attached to this message.
      *
+     * @return A list of files attached to this message.
      * @since 2.1.0
      */
     public List<RemoteFile> getFiles() {
@@ -219,6 +313,7 @@ public class Message {
 
     /**
      * Returns the message in JSON string format.
+     *
      * @return the message in JSON string format.
      */
     @Override

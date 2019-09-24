@@ -24,6 +24,14 @@ package com.ciscowebex.androidsdk.membership;
 
 import java.util.Date;
 
+import com.cisco.spark.android.model.ParticipantRoomProperties;
+import com.cisco.spark.android.model.Person;
+import com.cisco.spark.android.model.Verb;
+import com.cisco.spark.android.model.conversation.Activity;
+import com.cisco.spark.android.model.conversation.Conversation;
+import com.ciscowebex.androidsdk.WebexEvent;
+import com.ciscowebex.androidsdk.message.internal.WebexId;
+import com.ciscowebex.androidsdk.space.Space;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
@@ -32,7 +40,7 @@ import com.google.gson.annotations.SerializedName;
  *
  * @since 0.1
  */
-public class Membership {
+public class Membership implements WebexEvent.Data {
 
     @SerializedName("id")
     private String _id;
@@ -56,10 +64,50 @@ public class Membership {
     private boolean _isModerator;
 
     @SerializedName("isMonitor")
+    @Deprecated
     private boolean _isMonitor;
 
     @SerializedName("created")
     private Date _created;
+
+    protected Membership(Conversation conversation, Person person) {
+        _id = new WebexId(WebexId.Type.MEMBERSHIP_ID, person.getId() + ":" + conversation.getId()).toHydraId();
+        _spaceId = new WebexId(WebexId.Type.ROOM_ID, conversation.getId()).toHydraId();
+        _personId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
+        _personEmail = person.getEmail();
+        _personDisplayName = person.getDisplayName();
+        _personOrgId = new WebexId(WebexId.Type.ORGANIZATION_ID, person.getOrgId()).toHydraId();
+        ParticipantRoomProperties roomProperties = person.getRoomProperties();
+        if (roomProperties != null) {
+            _isModerator = roomProperties.isModerator();
+            _isMonitor = _isModerator;
+        }
+        _created = null; // created is not available in the conversations payload
+    }
+
+    protected Membership(Activity activity) {
+        this._created = activity.getPublished();
+        if (activity.getVerb().equals(Verb.hide)) {
+            this._spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getObject().getId()).toHydraId();
+        } else {
+            this._spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
+        }
+        Person person = null;
+        if (activity.getVerb().equals(Verb.acknowledge)) {
+            person = activity.getActor();
+        } else if (activity.getObject() instanceof Person) {
+            person = (Person) activity.getObject();
+        }
+        if (null != person) {
+            this._id = new WebexId(WebexId.Type.MEMBERSHIP_ID, person.getId() + ":" + WebexId.translate(this._spaceId)).toHydraId();
+            this._personId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
+            this._personEmail = person.getEmail();
+            this._personDisplayName = person.getDisplayName();
+            this._personOrgId = new WebexId(WebexId.Type.ORGANIZATION_ID, person.getOrgId()).toHydraId();
+            this._isModerator = person.getRoomProperties() != null && person.getRoomProperties().isModerator();
+            this._isMonitor = _isModerator;
+        }
+    }
 
     /**
      * @return The id of this membership.
@@ -111,8 +159,10 @@ public class Membership {
 
     /**
      * @return True if this member is a monitor of the space in this membership. Otherwise false.
+     * @deprecated
      * @since 0.1
      */
+    @Deprecated
     public boolean isMonitor() {
         return _isMonitor;
     }
@@ -124,7 +174,7 @@ public class Membership {
     public Date getCreated() {
         return _created;
     }
-    
+
     /**
      * @return The personOrgId name of the person
      * @since 1.4
@@ -132,7 +182,7 @@ public class Membership {
     public String getPersonOrgId() {
         return _personOrgId;
     }
-    
+
     @Override
     public String toString() {
         Gson gson = new Gson();

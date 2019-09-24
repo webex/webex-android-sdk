@@ -14,13 +14,13 @@ public class CallbackablePostContentActivityOperation extends PostContentActivit
 
     private Action<ActivityOperation> onOperationFinishAction;
 
-    public CallbackablePostContentActivityOperation(Injector injector,
-                                                    String conversationId,
-                                                    ShareContentData shareContentData,
-                                                    Comment comment,
-                                                    List<File> content,
-                                                    List<String> operationIds,
-                                                    Action<ActivityOperation> onOperationFinishAction) {
+    CallbackablePostContentActivityOperation(Injector injector,
+                                             String conversationId,
+                                             ShareContentData shareContentData,
+                                             Comment comment,
+                                             List<File> content,
+                                             List<String> operationIds,
+                                             Action<ActivityOperation> onOperationFinishAction) {
         super(injector, conversationId, shareContentData, comment, content, operationIds);
         this.onOperationFinishAction = onOperationFinishAction;
     }

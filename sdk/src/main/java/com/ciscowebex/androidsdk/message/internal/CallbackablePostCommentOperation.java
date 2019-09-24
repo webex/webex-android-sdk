@@ -11,10 +11,10 @@ public class CallbackablePostCommentOperation extends PostCommentOperation {
 
     private Action<ActivityOperation> onOperationFinishAction;
 
-    public CallbackablePostCommentOperation(Injector injector,
-                                            String conversationId,
-                                            Comment comment,
-                                            Action<ActivityOperation> onOperationFinishAction) {
+    CallbackablePostCommentOperation(Injector injector,
+                                     String conversationId,
+                                     Comment comment,
+                                     Action<ActivityOperation> onOperationFinishAction) {
         super(injector, conversationId, comment);
         this.onOperationFinishAction = onOperationFinishAction;
     }

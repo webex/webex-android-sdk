@@ -1,5 +1,7 @@
 package com.ciscowebex.androidsdk.message;
 
+import com.ciscowebex.androidsdk.WebexEvent;
+
 /**
  * Callback to receive the events from a {@link MessageClient}.
  *
@@ -10,7 +12,7 @@ public interface MessageObserver {
     /**
      * Mark interface for all message events.
      */
-    interface MessageEvent {
+    interface MessageEvent extends WebexEvent {
     }
 
     /**
@@ -20,10 +22,11 @@ public interface MessageObserver {
      * @since 1.4.0
      */
     @Deprecated
-    class MessageArrived implements MessageEvent {
+    class MessageArrived extends WebexEvent.Base implements MessageEvent {
         private Message message;
 
         public MessageArrived(Message message) {
+            super(null);
             this.message = message;
         }
 
@@ -39,6 +42,7 @@ public interface MessageObserver {
         public void setMessage(Message message) {
             this.message = message;
         }
+
     }
 
     /**
@@ -46,10 +50,12 @@ public interface MessageObserver {
      *
      * @since 2.1.0
      */
-    class MessageReceived implements MessageEvent {
+    class MessageReceived extends WebexEvent.Base implements MessageEvent {
+
         private Message message;
 
-        public MessageReceived(Message message) {
+        public MessageReceived(Message message, WebexEvent.Payload payload) {
+            super(payload);
             this.message = message;
         }
 
@@ -69,10 +75,11 @@ public interface MessageObserver {
      *
      * @since 1.4.0
      */
-    class MessageDeleted implements MessageEvent {
+    class MessageDeleted extends WebexEvent.Base implements MessageEvent {
         private String messageId;
 
-        public MessageDeleted(String messageId) {
+        public MessageDeleted(String messageId, WebexEvent.Payload payload) {
+            super(payload);
             this.messageId = messageId;
         }
 
@@ -84,6 +91,7 @@ public interface MessageObserver {
         public String getMessageId() {
             return messageId;
         }
+
     }
 
     /**

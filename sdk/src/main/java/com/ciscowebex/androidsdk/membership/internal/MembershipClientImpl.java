@@ -22,23 +22,43 @@
 
 package com.ciscowebex.androidsdk.membership.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import android.content.Context;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.cisco.spark.android.authenticator.ApiTokenProvider;
+import com.cisco.spark.android.core.ApiClientProvider;
+import com.cisco.spark.android.model.Person;
+import com.cisco.spark.android.model.Verb;
+import com.cisco.spark.android.model.conversation.Activity;
+import com.cisco.spark.android.model.conversation.Conversation;
+import com.cisco.spark.android.processing.ActivityListener;
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.WebexEvent;
 import com.ciscowebex.androidsdk.auth.Authenticator;
+import com.ciscowebex.androidsdk.internal.InternalWebexEventPayload;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.membership.Membership;
 import com.ciscowebex.androidsdk.membership.MembershipClient;
+import com.ciscowebex.androidsdk.membership.MembershipObserver;
+import com.ciscowebex.androidsdk.membership.MembershipReadStatus;
+import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.ciscowebex.androidsdk.utils.http.ListBody;
 import com.ciscowebex.androidsdk.utils.http.ListCallback;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 
+import com.ciscowebex.androidsdk_commlib.SDKCommon;
+import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.collection.Maps;
 import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
@@ -48,40 +68,136 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+import javax.inject.Inject;
+
 public class MembershipClientImpl implements MembershipClient {
 
     private Authenticator _authenticator;
 
     private MembershipService _service;
 
-    public MembershipClientImpl(Authenticator authenticator) {
+    private MembershipObserver _observer;
+
+    private Context _context;
+
+    @Inject
+    ActivityListener activityListener;
+
+    @Inject
+    ApiTokenProvider _provider;
+
+    @Inject
+    ApiClientProvider _client;
+
+    public MembershipClientImpl(Context context, Authenticator authenticator, SDKCommon common) {
         _authenticator = authenticator;
         _service = new ServiceBuilder().build(MembershipService.class);
+        _context = context;
+        common.inject(this);
+        activityListener.register(activity -> {
+            processorActivity(activity);
+            return null;
+        });
     }
 
+    @Override
+    public void setMembershipObserver(MembershipObserver observer) {
+        _observer = observer;
+    }
+
+    @Override
     public void list(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.list(s, spaceId, spaceId, personId, personEmail, max <= 0 ? null : max), new ListCallback<>(handler));
+                _service.list(s, spaceId, spaceId, personId, personEmail, max <= 0 ? null : max), new ListCallback<>(handler));
     }
 
+    @Override
     public void create(@NonNull String spaceId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.create(s, Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)), new ObjectCallback<>(handler));
+                _service.create(s, Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)), new ObjectCallback<>(handler));
     }
 
+    @Override
     public void get(@NonNull String membershipId, @NonNull CompletionHandler<Membership> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.get(s, membershipId), new ObjectCallback<>(handler));
+                _service.get(s, membershipId), new ObjectCallback<>(handler));
     }
 
+    @Override
     public void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.update(s, membershipId, Maps.makeMap("isModerator", isModerator)), new ObjectCallback<>(handler));
+                _service.update(s, membershipId, Maps.makeMap("isModerator", isModerator)), new ObjectCallback<>(handler));
     }
 
+    @Override
     public void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
-            _service.delete(s, membershipId), new ObjectCallback<>(handler));
+                _service.delete(s, membershipId), new ObjectCallback<>(handler));
+    }
+
+    @Override
+    public void listWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<List<MembershipReadStatus>> handler) {
+        _client.getConversationClient().getConversationParticipantsReadStatus(WebexId.translate(spaceId)).enqueue(new Callback<Conversation>() {
+            @Override
+            public void onResponse(Call<Conversation> call, Response<Conversation> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Conversation conversation = response.body();
+                    List<MembershipReadStatus> result = new ArrayList<>();
+                    for (Person person : conversation.getParticipants().getItems()) {
+                        try {
+                            result.add(new InternalMembershipReadStatus(conversation, person));
+                        }
+                        catch (Throwable ignored) {
+                        }
+                    }
+                    handler.onComplete(ResultImpl.success(result));
+                } else {
+                    handler.onComplete(ResultImpl.error(response));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Conversation> call, Throwable throwable) {
+                handler.onComplete(ResultImpl.error(throwable));
+            }
+        });
+    }
+
+    private void processorActivity(Activity activity) {
+        if (null == _observer) {
+            return;
+        }
+        if (null == activity) {
+            Ln.e("MembershipClientImpl.processorActivity() activity is null");
+            return;
+        }
+        Membership membership = new InternalMembership(activity);
+        WebexEvent.Payload payload = new InternalWebexEventPayload(activity, _provider.getAuthenticatedUserOrNull(), membership);
+        MembershipObserver.MembershipEvent event;
+        switch (activity.getVerb()) {
+            case Verb.add:
+                event = new MembershipObserver.MembershipCreated(membership, payload);
+                break;
+            case Verb.leave:
+                event = new MembershipObserver.MembershipDeleted(membership, payload);
+                break;
+            case Verb.assignModerator:
+            case Verb.unassignModerator:
+                event = new MembershipObserver.MembershipUpdated(membership, payload);
+                break;
+            case Verb.acknowledge:
+                event = new MembershipObserver.MembershipSeen(membership, payload, new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
+                break;
+            default:
+                return;
+        }
+        runOnUiThread(() -> _observer.onEvent(event), _observer);
+    }
+
+    private void runOnUiThread(Runnable r, Object conditioner) {
+        if (conditioner == null) return;
+        Handler handler = new Handler(_context.getMainLooper());
+        handler.post(r);
     }
 
     private interface MembershipService {

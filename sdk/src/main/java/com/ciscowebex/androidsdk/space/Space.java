@@ -24,6 +24,13 @@ package com.ciscowebex.androidsdk.space;
 
 import java.util.Date;
 
+import com.cisco.spark.android.model.Verb;
+import com.cisco.spark.android.model.conversation.Activity;
+import com.cisco.spark.android.model.conversation.ActivityObject;
+import com.cisco.spark.android.model.conversation.Conversation;
+import com.cisco.spark.android.model.conversation.ConversationTag;
+import com.ciscowebex.androidsdk.WebexEvent;
+import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
@@ -34,7 +41,7 @@ import com.google.gson.annotations.SerializedName;
  *
  * @since 0.1
  */
-public class Space {
+public class Space implements WebexEvent.Data {
 
     /**
      * The enumeration of the types of a space.
@@ -92,10 +99,14 @@ public class Space {
     @SerializedName("sipAddress")
     private String _sipAddress;
 
-    @Override
-    public String toString() {
-        Gson gson = new Gson();
-        return gson.toJson(this);
+    protected Space(Activity activity) {
+        _lastActivity = activity.getPublished();
+        ActivityObject object = activity.getVerb().equals(Verb.create) ? activity.getObject() : activity.getTarget();
+        if (object instanceof Conversation) {
+            _id = new WebexId(WebexId.Type.ROOM_ID, object.getId()).toHydraId();
+            _isLocked = ((Conversation) object).isLocked();
+            _type = ((Conversation) object).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+        }
     }
 
     /**
@@ -160,6 +171,12 @@ public class Space {
      */
     public String getSipAddress() {
         return _sipAddress;
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
     }
 }
 

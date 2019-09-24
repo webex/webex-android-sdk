@@ -29,6 +29,7 @@ import android.app.Application;
 import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.core.BackgroundCheck;
 import com.cisco.spark.android.media.MediaEngine;
+import com.cisco.spark.android.reachability.ConnectivityChangeReceiver;
 import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.auth.OAuthAuthenticator;
@@ -38,6 +39,7 @@ import com.ciscowebex.androidsdk.message.MessageClient;
 import com.ciscowebex.androidsdk.message.internal.CallbackablePostCommentOperation;
 import com.ciscowebex.androidsdk.message.internal.CallbackablePostContentActivityOperation;
 import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
+import com.ciscowebex.androidsdk.message.internal.MessageMarkReadOperation;
 import com.ciscowebex.androidsdk.people.PersonClient;
 import com.ciscowebex.androidsdk.people.internal.PersonClientImpl;
 import com.ciscowebex.androidsdk.phone.Phone;
@@ -71,7 +73,7 @@ public class Webex {
     public static final String APP_NAME = "webex_android_sdk";
 
     public static final String APP_VERSION = BuildConfig.VERSION_NAME + "(" + BuildConfig.BUILD_TIME + "_" + BuildConfig.BUILD_REVISION + ")";
-    
+
     /**
      * The enumeration of log message level
      *
@@ -87,16 +89,23 @@ public class Webex {
 
     private PhoneImpl _phone;
 
-    private MessageClientImpl _message;
+    private MessageClientImpl _messages;
+
+    private MembershipClientImpl _memberships;
+
+    private SpaceClientImpl _spaces;
 
     @Inject
     MediaEngine _mediaEngine;
 
     @Inject
     BackgroundCheck _backgroundCheck;
-    
+
     @Inject
     UserAgentProvider _userAgentProvider;
+
+    @Inject
+    ConnectivityChangeReceiver connectivityChangeReceiver;
 
     /**
      * Constructs a new Webex object with an {@link Authenticator} and Application
@@ -108,15 +117,20 @@ public class Webex {
     public Webex(Application application, Authenticator authenticator) {
         _authenticator = authenticator;
         _common = new SDKCommon(application, APP_NAME, APP_VERSION);
-        _common.addInjectable(this.getClass(), authenticator.getClass(), 
-            OAuthAuthenticator.class, 
-            PhoneImpl.class, Call.class, 
-            MessageClientImpl.class, CallbackablePostCommentOperation.class, CallbackablePostContentActivityOperation.class);
+        _common.addInjectable(this.getClass(), authenticator.getClass(),
+                OAuthAuthenticator.class,
+                PhoneImpl.class, Call.class,
+                MessageClientImpl.class, MessageMarkReadOperation.class, CallbackablePostCommentOperation.class, CallbackablePostContentActivityOperation.class,
+                MembershipClientImpl.class,
+                SpaceClientImpl.class);
         _common.create();
         _common.inject(this);
         _common.inject(_authenticator);
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _common);
-        _message = new MessageClientImpl(application.getApplicationContext(), _authenticator, _common);
+        _messages = new MessageClientImpl(application.getApplicationContext(), _authenticator, _common);
+        _memberships = new MembershipClientImpl(application.getApplicationContext(), _authenticator, _common);
+        _spaces = new SpaceClientImpl(application.getApplicationContext(), _authenticator, _common);
+        application.registerReceiver(connectivityChangeReceiver, ConnectivityChangeReceiver.getIntentFilter());
         setLogLevel(LogLevel.DEBUG);
         Ln.i(_userAgentProvider.get());
         Ln.i(Utils.versionInfo());
@@ -174,7 +188,7 @@ public class Webex {
      * @since 0.1
      */
     public MessageClient messages() {
-        return _message;
+        return _messages;
     }
 
     /**
@@ -198,7 +212,7 @@ public class Webex {
      * @since 0.1
      */
     public MembershipClient memberships() {
-        return new MembershipClientImpl(this._authenticator);
+        return _memberships;
     }
 
     /**
@@ -244,7 +258,7 @@ public class Webex {
      * @since 0.1
      */
     public SpaceClient spaces() {
-        return new SpaceClientImpl(this._authenticator);
+        return _spaces;
     }
 
     /**
@@ -291,5 +305,5 @@ public class Webex {
             _mediaEngine.setLoggingLevel(mask);
         }
     }
-    
+
 }

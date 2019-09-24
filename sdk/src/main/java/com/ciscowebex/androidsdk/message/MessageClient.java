@@ -85,10 +85,20 @@ public interface MessageClient {
      * @param handler A closure to be executed once the message has posted.
      * @since 2.1.0
      */
-    void postToPerson(@NonNull String id,
-                      @Nullable String text,
-                      @Nullable LocalFile[] files,
-                      @NonNull CompletionHandler<Message> handler);
+    void postToPerson(@NonNull String id, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * Posts a message with optional file attachments to a person asynchronously.
+     * <p>
+     * The content of the message can be plain text, html, or markdown.
+     *
+     * @param id      The identifier of a person to which the message is to be posted.
+     * @param text    The content of message to be posted to the person. The content can be plain text, html, or markdown.
+     * @param files   Local files to be attached with the message. Null if no files to be attached.
+     * @param handler A closure to be executed once the message has posted.
+     * @since 2.3.0
+     */
+    void postToPerson(@NonNull String id, @Nullable Message.Text text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
 
     /**
      * Posts a message with optional file attachments to a person asynchronously.
@@ -101,10 +111,9 @@ public interface MessageClient {
      * @param handler A closure to be executed once the message has posted.
      * @since 2.1.0
      */
-    void postToPerson(@NonNull EmailAddress email,
-                      @Nullable String text,
-                      @Nullable LocalFile[] files,
-                      @NonNull CompletionHandler<Message> handler);
+    void postToPerson(@NonNull EmailAddress email, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
+
+    void postToPerson(@NonNull EmailAddress email, @Nullable Message.Text text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
 
     /**
      * Posts a message with optional file attachments to a space asynchronously.
@@ -120,11 +129,9 @@ public interface MessageClient {
      * @param handler  A closure to be executed once the message has posted.
      * @since 2.1.0
      */
-    void postToSpace(@NonNull String id,
-                     @Nullable String text,
-                     @Nullable Mention[] mentions,
-                     @Nullable LocalFile[] files,
-                     @NonNull CompletionHandler<Message> handler);
+    void postToSpace(@NonNull String id, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
+
+    void postToSpace(@NonNull String id, @Nullable Message.Text text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
 
     /**
      * Downloads a file attachement asynchronously.
@@ -226,6 +233,24 @@ public interface MessageClient {
               @Nullable Mention[] mentions,
               @Nullable LocalFile[] files,
               @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * Send an acknowledge in space, to mark all the exist messages in space has read.
+     * <P>
+     *
+     * @param spaceId the id of space.
+     * @since 2.2.0
+     */
+    void markAsRead(@NonNull String spaceId);
+
+    /**
+     * Send an acknowledge in space, to mark the message before lastSeenTimestamp has read.
+     * <P>
+     *
+     * @param spaceId the id of space.
+     * @param messageId the id of seen message, won't send out ack if message timestamp is before last seen ack.
+     */
+    void markAsRead(@NonNull String spaceId, String messageId);
 
     /**
      * A callback to indicate the progress of an action in already processed size (bytes).

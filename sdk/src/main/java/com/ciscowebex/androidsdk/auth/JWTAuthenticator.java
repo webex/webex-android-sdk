@@ -24,6 +24,7 @@ package com.ciscowebex.androidsdk.auth;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.inject.Inject;
@@ -147,12 +148,61 @@ public class JWTAuthenticator implements Authenticator {
                 if (token == null || token.getAccessToken() == null || token.getAccessToken().isEmpty()) {
                     handler.onComplete(ResultImpl.error(response));
                 } else {
-                    _token = token.toOAuthToken();
+                    _token = token.toOAuthToken(jwt);
                     if (_provider != null) {
                         AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
                         _provider.setAuthenticatedUser(authenticatedUser);
                     }
                     handler.onComplete(ResultImpl.success(_token.getAccessToken()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JwtToken> call, Throwable t) {
+                handler.onComplete(ResultImpl.error(t));
+            }
+        });
+    }
+
+    /**
+     * Returns the expire date of token.
+     * <p>
+     * This may involve long-running operations such as service calls, but may also return immediately.
+     * The application should not make assumptions about how quickly this completes.
+     *
+     * @param handler a callback to be executed when completed, with the access token if successfuly retrieved, otherwise nil.
+     * @since 2.1.2
+     */
+    public void getTokenExpired(CompletionHandler<Date> handler) {
+        checkNotNull(handler, "refreshToken: CompletionHandler should not be null");
+        String jwt = getUnexpiredJwt();
+        if (jwt == null) {
+            handler.onComplete(ResultImpl.error("JWT is null"));
+            return;
+        }
+        if (_token == null &&_provider != null){
+            AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
+            if (user != null) {
+                _token = user.getOAuth2Tokens();
+            }
+        }
+        if (_token != null) {
+            handler.onComplete(ResultImpl.success(new Date(_token.getExpiresIn() * 1000)));
+            return;
+        }
+        _authService.getToken(jwt).enqueue(new Callback<JwtToken>() {
+            @Override
+            public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
+                JwtToken token = response.body();
+                if (token == null || token.getAccessToken() == null || token.getAccessToken().isEmpty()) {
+                    handler.onComplete(ResultImpl.error(response));
+                } else {
+                    _token = token.toOAuthToken(jwt);
+                    if (_provider != null) {
+                        AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
+                        _provider.setAuthenticatedUser(authenticatedUser);
+                    }
+                    handler.onComplete(ResultImpl.success(new Date(_token.getExpiresIn() * 1000)));
                 }
             }
 
@@ -252,11 +302,11 @@ public class JWTAuthenticator implements Authenticator {
             return this.accessToken;
         }
 
-        OAuth2Tokens toOAuthToken() {
+        OAuth2Tokens toOAuthToken(String jwt) {
             OAuth2Tokens tokens = new OAuth2Tokens();
             tokens.setAccessToken(this.getAccessToken());
             tokens.setExpiresIn(this.getExpiresIn() + (System.currentTimeMillis() / 1000));
-            tokens.setRefreshToken(this.getAccessToken());
+            tokens.setRefreshToken(jwt);
             return tokens;
         }
     }

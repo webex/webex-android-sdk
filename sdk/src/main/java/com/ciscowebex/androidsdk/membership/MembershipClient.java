@@ -37,6 +37,15 @@ import com.ciscowebex.androidsdk.CompletionHandler;
 public interface MembershipClient {
 
     /**
+     * Sets a {@link MembershipObserver} in this client.
+     *
+     * @param observer the observer object.
+     * @see MembershipObserver
+     * @since 2.3.0
+     */
+    void setMembershipObserver(MembershipObserver observer);
+
+    /**
      * Lists all space memberships where the authenticated user belongs.
      *
      * @param spaceId      The identifier of the space where the membership belongs.
@@ -87,5 +96,14 @@ public interface MembershipClient {
      * @since 0.1
      */
     void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler);
+
+    /**
+     * Return a list of memberships with details about the lastSeenId for each user, allowing a client to indicate "read status" in a space GUI
+     * @param spaceId The identifier of the space.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 2.2.0
+     */
+    void listWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<List<MembershipReadStatus>> handler);
+
 
 }
