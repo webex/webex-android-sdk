@@ -22,7 +22,11 @@
 
 package com.ciscowebex.androidsdk.auth;
 
+import android.support.annotation.NonNull;
+
 import com.ciscowebex.androidsdk.CompletionHandler;
+
+import java.util.Date;
 
 /**
  * An interface for generic authentication strategies in Cisco Webex.
