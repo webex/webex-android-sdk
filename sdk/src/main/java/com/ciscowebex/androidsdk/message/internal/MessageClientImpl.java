@@ -33,6 +33,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -105,6 +106,8 @@ public class MessageClientImpl implements MessageClient {
 
     private Context _context;
 
+    private int lastSendProgress = -1;
+
     @Inject
     Operations operations;
 
@@ -147,7 +150,7 @@ public class MessageClientImpl implements MessageClient {
         });
     }
 
-    public void list(@NonNull String spaceId, @Nullable Before before, int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler) {
+    public void list(@NonNull String spaceId, @Nullable Before before, @IntRange(from = 0,to = Integer.MAX_VALUE) int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler) {
         String id = WebexId.translate(spaceId);
         if (max == 0) {
             runOnUiThread(() -> handler.onComplete(ResultImpl.success(Collections.emptyList())), handler);
@@ -169,9 +172,10 @@ public class MessageClientImpl implements MessageClient {
         }
     }
 
-    private void list(@NonNull String spaceId, @Nullable Date date, @Nullable Mention[] mentions, int max, @NonNull List<Activity> activities, @NonNull CompletionHandler<List<Message>> handler) {
-        List<Activity> result = activities;
+    private void list(@NonNull String spaceId, @Nullable Date date, @Nullable Mention[] mentions, @IntRange(from = 0,to = Integer.MAX_VALUE) int max, @NonNull List<Activity> activities, @NonNull CompletionHandler<List<Message>> handler) {
+        int queryMax = (max * 2) < 0 ? max : (max * 2);
 
+        List<Activity> result = activities;
         Callback<ItemCollection<Activity>> callback = new Callback<ItemCollection<Activity>>() {
 
             @Override
@@ -180,9 +184,11 @@ public class MessageClientImpl implements MessageClient {
                     for (Activity activity : response.body().getItems()) {
                         if (activity.getVerb().equals(Verb.post) || activity.getVerb().equals(Verb.share)) {
                             result.add(activity);
+                            if (result.size() >= max)
+                                break;
                         }
                     }
-                    if (result.size() >= max || response.body().size() < max) {
+                    if (result.size() >= max || response.body().size() < queryMax) {
                         AsyncTask.execute(() -> {
                             CountDownLatch latch = new CountDownLatch(result.size());
                             List<Message> messages = new ArrayList<>(result.size());
@@ -219,13 +225,14 @@ public class MessageClientImpl implements MessageClient {
             }
         };
 
-        long time = (date == null ? new Date() : date).getTime();
+        long time = (date == null ? new Date() : date).getTime() - 1;
         if (mentions != null && mentions.length > 0) {
             // TODO filter by conv Id
             // TODO just get method me for now
-            _client.getConversationClient().getUserMentions(time, max).enqueue(callback);
-        } else {
-            _client.getConversationClient().getConversationActivitiesBefore(spaceId, time, max).enqueue(callback);
+            _client.getConversationClient().getUserMentions(time, queryMax).enqueue(callback);
+        }
+        else {
+            _client.getConversationClient().getConversationActivitiesBefore(spaceId, time, queryMax).enqueue(callback);
         }
     }
 
@@ -508,12 +515,17 @@ public class MessageClientImpl implements MessageClient {
             }
             int progress;
             progress = uploadMonitor.getProgressForKey(contentUri.toString());
-            runOnUiThread(() -> {
-                if (file.getProgressHandler() != null) {
-                    file.getProgressHandler().onProgress(progress >= 0 ? progress : 0);
-                }
-            }, file);
+                runOnUiThread(() -> {
+                    if (file.getProgressHandler() != null) {
+                        int sendProgress = progress >= 0 ? progress : 0;
+                        if (lastSendProgress != sendProgress){
+                            file.getProgressHandler().onProgress(sendProgress);
+                            lastSendProgress = sendProgress;
+                        }
+                    }
+                }, file);
             if (progress >= 100) {
+                lastSendProgress = -1;
                 t.cancel(false);
             }
         }
@@ -617,7 +629,7 @@ public class MessageClientImpl implements MessageClient {
 
     @Override
     @Deprecated
-    public void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
+    public void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, @IntRange(from = 0,to = Integer.MAX_VALUE) int max, @NonNull CompletionHandler<List<Message>> handler) {
         List<Mention> mentions = null;
         if (mentionedPeople != null) {
             List<String> peoples = Strings.split(mentionedPeople, ",", false);

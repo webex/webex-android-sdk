@@ -25,6 +25,7 @@ package com.ciscowebex.androidsdk.message;
 import java.util.List;
 
 import android.net.Uri;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -62,7 +63,7 @@ public interface MessageClient {
      * @param handler  A closure to be executed once the request has finished with a list of messages based on the above criteria.
      * @since 2.1
      */
-    void list(@NonNull String spaceId, @Nullable Before before, int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler);
+    void list(@NonNull String spaceId, @Nullable Before before, @IntRange(from = 0,to = Integer.MAX_VALUE) int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler);
 
     /**
      * Retrieves a message asynchronously by message Id.
@@ -180,7 +181,7 @@ public interface MessageClient {
      * @deprecated
      */
     @Deprecated
-    void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler);
+    void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, @IntRange(from = 0,to = Integer.MAX_VALUE) int max, @NonNull CompletionHandler<List<Message>> handler);
 
     /**
      * Posts a plain text message, and optionally, a media content attachment, to a space by space Id.
