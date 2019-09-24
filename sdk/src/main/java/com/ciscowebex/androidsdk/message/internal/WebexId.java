@@ -12,7 +12,9 @@ public class WebexId {
 
         MESSAGE_ID("MESSAGE"),
         PEOPLE_ID("PEOPLE"),
-        ROOM_ID("ROOM");
+        ROOM_ID("ROOM"),
+        MEMBERSHIP_ID("MEMBERSHIP"),
+        ORGANIZATION_ID("ORGANIZATION");
 
         private String keyword;
 

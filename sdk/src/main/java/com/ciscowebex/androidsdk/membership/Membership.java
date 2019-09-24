@@ -35,31 +35,31 @@ import com.google.gson.annotations.SerializedName;
 public class Membership {
 
     @SerializedName("id")
-    private String _id;
+    protected String _id;
 
     @SerializedName("personId")
-    private String _personId;
+    protected String _personId;
 
     @SerializedName("personEmail")
-    private String _personEmail;
+    protected String _personEmail;
 
     @SerializedName("personDisplayName")
-    private String _personDisplayName;
+    protected String _personDisplayName;
 
     @SerializedName("personOrgId")
-    private String _personOrgId;
+    protected String _personOrgId;
 
     @SerializedName(value = "roomId", alternate = {"spaceId"})
-    private String _spaceId;
+    protected String _spaceId;
 
     @SerializedName("isModerator")
-    private boolean _isModerator;
+    protected boolean _isModerator;
 
     @SerializedName("isMonitor")
-    private boolean _isMonitor;
+    protected boolean _isMonitor;
 
     @SerializedName("created")
-    private Date _created;
+    protected Date _created;
 
     /**
      * @return The id of this membership.
