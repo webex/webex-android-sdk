@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 2.3.0 Releases
+- `2.3.0` Releases - [2.3.0](#230)
+
 #### 2.1.1 Releases
 - `2.1.1` Releases - [2.1.1](#211)
 
@@ -17,14 +20,30 @@ All notable changes to this project will be documented in this file.
 - `1.3.0` Releases - [1.3.0](#130)
 
 #### 0.2.0 Releases
-
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
+## [2.3.0](https://github.com/webex/webex-android-sdk/releases/tag/2.3.0)
+Released on 2019-09-27.
+#### Added
+- Add API to receive membership events.
+- Add API to receive room events.
+- Add API to get a space's last activity status.
+- Add API to get a list of all space's last activity status.
+- Add API to get a list of memberships's read status in a space.
+- Add API to get space meeting details.
+- Add API to send read receipts for messages.
+- Add "markdown" and "formatted" text fields on the message object.
+
+#### Updated
+- Update to Dagger 2 dependency.
+- Fixed long latency for message.list method.
+- Remove notification when download file.
+
 ## [2.1.1](https://github.com/webex/webex-android-sdk/releases/tag/2.1.1)
 Released on 2019-07-24.
 #### Added
-- Supoort 64bits.
+- Support 64bits.
 - Support Google hardware media codec for video.
 - Add API to list person by person IDs and Org ID.
 - Add API to get the person's last activity.
