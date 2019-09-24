@@ -22,41 +22,32 @@
 
 package com.ciscowebex.androidsdk.membership.internal;
 
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import android.net.Uri;
+import android.content.Context;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.cisco.spark.android.core.Settings;
-import com.cisco.spark.android.wdm.DeviceRegistration;
+import com.cisco.spark.android.authenticator.ApiTokenProvider;
+import com.cisco.spark.android.model.Verb;
+import com.cisco.spark.android.model.conversation.Activity;
+import com.cisco.spark.android.processing.ActivityListener;
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.Result;
+import com.ciscowebex.androidsdk.WebexEventPayload;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.internal.WebexEventPayloadImpl;
 import com.ciscowebex.androidsdk.membership.Membership;
 import com.ciscowebex.androidsdk.membership.MembershipClient;
-import com.ciscowebex.androidsdk.membership.MembershipReadStatus;
+import com.ciscowebex.androidsdk.membership.MembershipObserver;
 import com.ciscowebex.androidsdk.message.internal.WebexId;
-import com.ciscowebex.androidsdk.space.internal.SpaceClientImpl;
 import com.ciscowebex.androidsdk.utils.http.ListBody;
 import com.ciscowebex.androidsdk.utils.http.ListCallback;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
-import com.google.gson.JsonArray;
+import com.github.benoitdion.ln.Ln;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -82,10 +73,18 @@ public class MembershipClientImpl implements MembershipClient {
 
     private MembershipService _service;
 
-    private ConversationService _cService;
+    private MembershipObserver _observer;
 
-    public MembershipClientImpl(Authenticator authenticator, SDKCommon common) {
-        common.inject(this);
+    private Context _context;
+
+    @Inject
+    ActivityListener activityListener;
+
+    @Inject
+    ApiTokenProvider _provider;
+
+    @Deprecated
+    public MembershipClientImpl(Authenticator authenticator) {
         _authenticator = authenticator;
         _service = new ServiceBuilder().build(MembershipService.class);
         if (null != _settings)
@@ -100,6 +99,22 @@ public class MembershipClientImpl implements MembershipClient {
                 _cService = new ServiceBuilder().baseURL(url).build(ConversationService.class);
             }
         }
+    }
+
+    public MembershipClientImpl(Context context, Authenticator authenticator, SDKCommon common) {
+        _authenticator = authenticator;
+        _service = new ServiceBuilder().build(MembershipService.class);
+        _context = context;
+        common.inject(this);
+        activityListener.register(activity -> {
+            processorActivity(activity);
+            return null;
+        });
+    }
+
+    @Override
+    public void setMembershipObserver(MembershipObserver observer) {
+        _observer = observer;
     }
 
     public void list(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler) {
@@ -189,6 +204,7 @@ public class MembershipClientImpl implements MembershipClient {
     }
 
     private interface MembershipService {
+
         @GET("memberships")
         Call<ListBody<Membership>> list(@Header("Authorization") String authorization,
                                         @Query("roomId") String roomId,
@@ -210,6 +226,40 @@ public class MembershipClientImpl implements MembershipClient {
         Call<Void> delete(@Header("Authorization") String authorization, @Path("membershipId") String membershipId);
     }
 
+    private void runOnUiThread(Runnable r, Object conditioner) {
+        if (conditioner == null) return;
+        Handler handler = new Handler(_context.getMainLooper());
+        handler.post(r);
+    }
+
+    private void processorActivity(Activity activity) {
+        if (null == _observer)
+            return;
+        if (null == activity) {
+            Ln.e("MembershipClientImpl.processorActivity() activity is null");
+            return;
+        }
+        WebexEventPayload eventPayload = new WebexEventPayloadImpl(activity, _provider.getAuthenticatedUserOrNull(), "membership");
+        MembershipObserver.MembershipEvent event;
+        switch (activity.getVerb()) {
+            case Verb.add:
+                event = new MembershipObserver.MembershipCreated(eventPayload, new MembershipImpl(activity));
+                break;
+            case Verb.leave:
+                event = new MembershipObserver.MembershipDeleted(eventPayload, new MembershipImpl(activity));
+                break;
+            case Verb.assignModerator:
+            case Verb.unassignModerator:
+                event = new MembershipObserver.MembershipUpdated(eventPayload, new MembershipImpl(activity));
+                break;
+            case Verb.acknowledge:
+                event = new MembershipObserver.MembershipSeen(eventPayload, new MembershipImpl(activity), new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
+                break;
+            default:
+                return;
+        }
+        runOnUiThread(() -> _observer.onEvent(event), _observer);
+      
     private interface ConversationService {
         @GET("conversations/{spaceId}")
         Call<ResponseBody> listWithReadStatus(@Header("Authorization") String authorization, @Nullable @Path("spaceId") String spaceId,

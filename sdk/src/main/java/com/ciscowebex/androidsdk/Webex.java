@@ -22,8 +22,6 @@
 
 package com.ciscowebex.androidsdk;
 
-import javax.inject.Inject;
-
 import android.app.Application;
 
 import com.cisco.spark.android.callcontrol.model.Call;
@@ -63,6 +61,8 @@ import com.github.benoitdion.ln.NaturalLog;
 import com.github.benoitdion.ln.ReleaseLn;
 import com.webex.wme.MediaSessionAPI;
 
+import javax.inject.Inject;
+
 /**
  * Webex object is the entry point to use this Cisco Webex Android SDK.
  *
@@ -91,6 +91,10 @@ public class Webex {
 
     private MessageClientImpl _message;
 
+    private MembershipClientImpl _membership;
+
+    private SpaceClientImpl _space;
+
     @Inject
     MediaEngine _mediaEngine;
 
@@ -113,16 +117,18 @@ public class Webex {
         _common.addInjectable(this.getClass(), authenticator.getClass(),
                 OAuthAuthenticator.class,
                 PhoneImpl.class, Call.class,
-                SpaceClientImpl.class,
-                MembershipClientImpl.class,
                 MessageClientImpl.class,
-                MarkMessageReadOption.class,
-                CallbackablePostCommentOperation.class, CallbackablePostContentActivityOperation.class);
+                MembershipClientImpl.class,
+                SpaceClientImpl.class,
+                CallbackablePostCommentOperation.class,
+                CallbackablePostContentActivityOperation.class);
         _common.create();
         _common.inject(this);
         _common.inject(_authenticator);
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _common);
         _message = new MessageClientImpl(application.getApplicationContext(), _authenticator, _common);
+        _membership = new MembershipClientImpl(application.getApplicationContext(), _authenticator, _common);
+        _space = new SpaceClientImpl(application.getApplicationContext(), _authenticator, _common);
         setLogLevel(LogLevel.DEBUG);
         Ln.i(_userAgentProvider.get());
         Ln.i(Utils.versionInfo());
@@ -204,7 +210,7 @@ public class Webex {
      * @since 0.1
      */
     public MembershipClient memberships() {
-        return new MembershipClientImpl(this._authenticator, this._common);
+        return _membership;
     }
 
     /**
@@ -250,7 +256,7 @@ public class Webex {
      * @since 0.1
      */
     public SpaceClient spaces() {
-        return new SpaceClientImpl(this._authenticator, this._common);
+        return _space;
     }
 
     /**

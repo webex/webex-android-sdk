@@ -56,6 +56,15 @@ public interface SpaceClient {
     }
 
     /**
+     * Sets a {@link SpaceObserver} in this client.
+     *
+     * @param observer the observer object.
+     * @see SpaceObserver
+     * @since 2.2.0
+     */
+    void setSpaceObserver(SpaceObserver observer);
+
+    /**
      * Lists all spaces where the authenticated user belongs.
      *
      * @param teamId  If not nil, only list the spaces that are associated with the team by team id.
