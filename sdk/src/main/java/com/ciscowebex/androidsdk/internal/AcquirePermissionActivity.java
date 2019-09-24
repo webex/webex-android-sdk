@@ -50,6 +50,7 @@ public class AcquirePermissionActivity extends Activity {
     public static final String CALL_DIRECTION = "call_direction";
     public static final String CALL_KEY = "call_key";
     public static final String CALL_STRING = "call_string";
+    public static final String CALL_TAG = "call_tag";
     public static final String CALL_DATA = "call_data";
     protected static final int REQUEST_CAMERA_MIC = 0;
     protected static final int REQUEST_MEDIA_PROJECTION = 1;

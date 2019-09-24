@@ -26,15 +26,18 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.*;
+
 import javax.inject.Inject;
 
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.content.ContentUploadMonitor;
 import com.cisco.spark.android.core.ApiClientProvider;
@@ -50,20 +53,17 @@ import com.cisco.spark.android.sync.ConversationContract;
 import com.cisco.spark.android.sync.DatabaseProvider;
 import com.cisco.spark.android.sync.operationqueue.ActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.NewConversationOperation;
-import com.cisco.spark.android.sync.operationqueue.PostCommentOperation;
-import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation;
 import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation.ContentItem;
 import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation.ShareContentData;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.cisco.spark.android.sync.operationqueue.core.Operations;
+import com.cisco.spark.android.ui.conversation.ConversationResolver;
 import com.cisco.spark.android.util.*;
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.message.*;
 import com.ciscowebex.androidsdk.message.Message;
-import com.ciscowebex.androidsdk.space.Space;
 import com.ciscowebex.androidsdk.utils.EmailAddress;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.http.ListBody;
@@ -71,8 +71,11 @@ import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.Ln;
+
 import me.helloworld.utils.Strings;
+
 import org.greenrobot.eventbus.EventBus;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -102,6 +105,8 @@ public class MessageClientImpl implements MessageClient {
     private MessageObserver _observer;
 
     private Context _context;
+
+    private int lastSendProgress = -1;
 
     @Inject
     Operations operations;
@@ -145,7 +150,7 @@ public class MessageClientImpl implements MessageClient {
         });
     }
 
-    public void list(@NonNull String spaceId, @Nullable Before before, int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler) {
+    public void list(@NonNull String spaceId, @Nullable Before before, @IntRange(from = 0,to = Integer.MAX_VALUE) int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler) {
         String id = WebexId.translate(spaceId);
         if (max == 0) {
             runOnUiThread(() -> handler.onComplete(ResultImpl.success(Collections.emptyList())), handler);
@@ -153,26 +158,24 @@ public class MessageClientImpl implements MessageClient {
         }
         if (before == null) {
             list(id, null, mentions, max, new ArrayList<>(), handler);
-        }
-        else if (before instanceof Before.Date) {
+        } else if (before instanceof Before.Date) {
             list(id, ((Before.Date) before).getDate(), mentions, max, new ArrayList<>(), handler);
-        }
-        else if (before instanceof Before.Message) {
+        } else if (before instanceof Before.Message) {
             get(((Before.Message) before).getMessage(), false, result -> {
                 Message message = result.getData();
                 if (message == null) {
                     runOnUiThread(() -> handler.onComplete(ResultImpl.error(result.getError())), handler);
-                }
-                else {
+                } else {
                     list(id, message.getCreated(), mentions, max, new ArrayList<>(), handler);
                 }
             });
         }
     }
 
-    private void list(@NonNull String spaceId, @Nullable Date date, @Nullable Mention[] mentions, int max, @NonNull List<Activity> activities, @NonNull CompletionHandler<List<Message>> handler) {
-        List<Activity> result = activities;
+    private void list(@NonNull String spaceId, @Nullable Date date, @Nullable Mention[] mentions, @IntRange(from = 0,to = Integer.MAX_VALUE) int max, @NonNull List<Activity> activities, @NonNull CompletionHandler<List<Message>> handler) {
+        int queryMax = (max * 2) < 0 ? max : (max * 2);
 
+        List<Activity> result = activities;
         Callback<ItemCollection<Activity>> callback = new Callback<ItemCollection<Activity>>() {
 
             @Override
@@ -181,9 +184,11 @@ public class MessageClientImpl implements MessageClient {
                     for (Activity activity : response.body().getItems()) {
                         if (activity.getVerb().equals(Verb.post) || activity.getVerb().equals(Verb.share)) {
                             result.add(activity);
+                            if (result.size() >= max)
+                                break;
                         }
                     }
-                    if (result.size() >= max || response.body().size() < max) {
+                    if (result.size() >= max || response.body().size() < queryMax) {
                         AsyncTask.execute(() -> {
                             CountDownLatch latch = new CountDownLatch(result.size());
                             List<Message> messages = new ArrayList<>(result.size());
@@ -205,13 +210,11 @@ public class MessageClientImpl implements MessageClient {
                             }
                             runOnUiThread(() -> handler.onComplete(ResultImpl.success(messages)), handler);
                         });
-                    }
-                    else {
+                    } else {
                         Activity last = Lists.getLast(response.body().getItems());
                         list(spaceId, last == null ? null : last.getPublished(), mentions, max, result, handler);
                     }
-                }
-                else {
+                } else {
                     runOnUiThread(() -> handler.onComplete(ResultImpl.error(response)), handler);
                 }
             }
@@ -222,14 +225,14 @@ public class MessageClientImpl implements MessageClient {
             }
         };
 
-        long time = (date == null ? new Date() : date).getTime();
+        long time = (date == null ? new Date() : date).getTime() - 1;
         if (mentions != null && mentions.length > 0) {
             // TODO filter by conv Id
             // TODO just get method me for now
-            _client.getConversationClient().getUserMentions(time, max).enqueue(callback);
+            _client.getConversationClient().getUserMentions(time, queryMax).enqueue(callback);
         }
         else {
-            _client.getConversationClient().getConversationActivitiesBefore(spaceId, time, max).enqueue(callback);
+            _client.getConversationClient().getConversationActivitiesBefore(spaceId, time, queryMax).enqueue(callback);
         }
     }
 
@@ -252,12 +255,10 @@ public class MessageClientImpl implements MessageClient {
                                 runOnUiThread(() -> handler.onComplete(ResultImpl.success(createMessage(activity, false))), handler);
                             }
                         });
-                    }
-                    else {
+                    } else {
                         handler.onComplete(ResultImpl.success(createMessage(activity, false)));
                     }
-                }
-                else {
+                } else {
                     handler.onComplete(ResultImpl.error(response));
                 }
             }
@@ -290,32 +291,26 @@ public class MessageClientImpl implements MessageClient {
         if (webexId == null) {
             if (EmailAddress.fromString(personOrSpace) == null) {
                 doPost(personOrSpace, comment, localFiles, handler);
-            }
-            else {
+            } else {
                 this.createSpaceWithPerson(personOrSpace, result -> {
                     if (result.getData() != null) {
                         doPost(result.getData(), comment, localFiles, handler);
-                    }
-                    else {
+                    } else {
                         handler.onComplete(ResultImpl.error(result.getError()));
                     }
                 });
             }
-        }
-        else if (webexId.is(WebexId.Type.ROOM_ID)) {
+        } else if (webexId.is(WebexId.Type.ROOM_ID)) {
             doPost(webexId.getId(), comment, localFiles, handler);
-        }
-        else if (webexId.is(WebexId.Type.PEOPLE_ID)) {
+        } else if (webexId.is(WebexId.Type.PEOPLE_ID)) {
             this.createSpaceWithPerson(webexId.getId(), result -> {
                 if (result.getData() != null) {
                     doPost(result.getData(), comment, localFiles, handler);
-                }
-                else {
+                } else {
                     handler.onComplete(ResultImpl.error(result.getError()));
                 }
             });
-        }
-        else {
+        } else {
             handler.onComplete(ResultImpl.error("Unknown target: " + personOrSpace));
         }
     }
@@ -331,8 +326,7 @@ public class MessageClientImpl implements MessageClient {
                 Activity activity = item.getResult();
                 if (activity == null) {
                     runOnUiThread(() -> handler.onComplete(ResultImpl.error(item.getErrorMessage())), handler);
-                }
-                else  {
+                } else {
                     decryptActivity(activity, new Action<Activity>() {
                         @Override
                         public void call(Activity activity) {
@@ -378,7 +372,7 @@ public class MessageClientImpl implements MessageClient {
                              @Nullable java.io.File path,
                              @Nullable ProgressHandler progressHandler,
                              @NonNull CompletionHandler<Uri> handler) {
-        download(((RemoteFileImpl) file).getFile(), file.getDisplayName(), false, path , progressHandler, handler);
+        download(((RemoteFileImpl) file).getFile(), file.getDisplayName(), false, path, progressHandler, handler);
     }
 
     @Override
@@ -433,8 +427,7 @@ public class MessageClientImpl implements MessageClient {
                     }
                     FileUtils.copyFile(item.getLocalUriAsFile(), file);
                     runOnUiThread(() -> completionHandler.onComplete(ResultImpl.success(Uri.fromFile(file))), completionHandler);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     runOnUiThread(() -> completionHandler.onComplete(ResultImpl.error(e)), completionHandler);
                 }
             }
@@ -522,12 +515,17 @@ public class MessageClientImpl implements MessageClient {
             }
             int progress;
             progress = uploadMonitor.getProgressForKey(contentUri.toString());
-            runOnUiThread(() -> {
-                if (file.getProgressHandler() != null) {
-                    file.getProgressHandler().onProgress(progress >= 0 ? progress : 0);
-                }
-            }, file);
+                runOnUiThread(() -> {
+                    if (file.getProgressHandler() != null) {
+                        int sendProgress = progress >= 0 ? progress : 0;
+                        if (lastSendProgress != sendProgress){
+                            file.getProgressHandler().onProgress(sendProgress);
+                            lastSendProgress = sendProgress;
+                        }
+                    }
+                }, file);
             if (progress >= 100) {
+                lastSendProgress = -1;
                 t.cancel(false);
             }
         }
@@ -574,8 +572,7 @@ public class MessageClientImpl implements MessageClient {
             }
             if (mentionAll.size() > 0) {
                 comment.setGroupMentions(mentionAll);
-            }
-            else if (mentionedPersons.size() > 0) {
+            } else if (mentionedPersons.size() > 0) {
                 comment.setMentions(mentionedPersons);
             }
         }
@@ -632,7 +629,7 @@ public class MessageClientImpl implements MessageClient {
 
     @Override
     @Deprecated
-    public void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
+    public void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, @IntRange(from = 0,to = Integer.MAX_VALUE) int max, @NonNull CompletionHandler<List<Message>> handler) {
         List<Mention> mentions = null;
         if (mentionedPeople != null) {
             List<String> peoples = Strings.split(mentionedPeople, ",", false);
@@ -653,8 +650,7 @@ public class MessageClientImpl implements MessageClient {
             } catch (Exception ignored) {
 
             }
-        }
-        else  if (beforeMessage != null) {
+        } else if (beforeMessage != null) {
             b = new Before.Message(beforeMessage);
         }
         list(spaceId, b, max, mentions == null ? null : mentions.toArray(new Mention[mentions.size()]), handler);
@@ -667,12 +663,11 @@ public class MessageClientImpl implements MessageClient {
         List<LocalFile> localFiles = null;
         if (files != null && files.length > 0) {
             localFiles = new ArrayList<>(files.length);
-            for (String file : files){
+            for (String file : files) {
                 java.io.File f = new java.io.File(file);
                 try {
                     localFiles.add(new LocalFile(f));
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     Ln.e(e);
                 }
             }
@@ -688,16 +683,23 @@ public class MessageClientImpl implements MessageClient {
             EmailAddress email = EmailAddress.fromString(idOrEmail);
             if (email == null) {
                 postToPerson(idOrEmail, text, files, handler);
-            }
-            else {
+            } else {
                 postToPerson(email, text, files, handler);
             }
-        }
-        else if (webexId.is(WebexId.Type.ROOM_ID)) {
+        } else if (webexId.is(WebexId.Type.ROOM_ID)) {
             postToSpace(idOrEmail, text, mentions, files, handler);
-        }
-        else if (webexId.is(WebexId.Type.PEOPLE_ID)) {
+        } else if (webexId.is(WebexId.Type.PEOPLE_ID)) {
             postToPerson(idOrEmail, text, files, handler);
         }
+    }
+
+    @Override
+    public void markAsRead(@NonNull String spaceId) {
+        operations.submit(new MarkMessageReadOption(injector, WebexId.translate(spaceId)));
+    }
+
+    @Override
+    public void markAsRead(@NonNull String spaceId, String messageId) {
+        operations.submit(new MarkMessageReadOption(injector, WebexId.translate(spaceId), WebexId.translate(messageId)));
     }
 }

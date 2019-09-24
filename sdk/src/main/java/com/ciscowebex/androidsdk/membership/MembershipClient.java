@@ -29,6 +29,8 @@ import android.support.annotation.Nullable;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
 
+import okhttp3.ResponseBody;
+
 /**
  * A client wrapper of the Cisco Webex <a href="https://developer.webex.com/resource-memberships.html">Space Memberships REST API</a>
  *
@@ -96,5 +98,13 @@ public interface MembershipClient {
      * @since 0.1
      */
     void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler);
+
+    /**
+     * Return a list of memberships with details about the lastSeenId for each user, allowing a client to indicate "read status" in a space GUI
+     * @param spaceId The identifier of the space.
+     * @param handler A closure to be executed once the request has finished.
+     * @since 2.2.0
+     */
+    void listWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<List<MembershipReadStatus>> handler);
 
 }

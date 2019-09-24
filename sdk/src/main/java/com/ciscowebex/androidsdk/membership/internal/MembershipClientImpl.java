@@ -52,6 +52,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import me.helloworld.utils.collection.Maps;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -63,6 +64,10 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public class MembershipClientImpl implements MembershipClient {
+    @Inject
+    volatile Settings _settings;
+
+    private DeviceRegistration _device;
 
     private Authenticator _authenticator;
 
@@ -82,6 +87,18 @@ public class MembershipClientImpl implements MembershipClient {
     public MembershipClientImpl(Authenticator authenticator) {
         _authenticator = authenticator;
         _service = new ServiceBuilder().build(MembershipService.class);
+        if (null != _settings)
+            _device = _settings.getDeviceRegistration();
+        if (null != _device) {
+            Uri uri = _device.getConversationServiceUrl();
+            if (uri != null) {
+                String url = uri.toString();
+                if (!url.endsWith("/")) {
+                    url = url + "/";
+                }
+                _cService = new ServiceBuilder().baseURL(url).build(ConversationService.class);
+            }
+        }
     }
 
     public MembershipClientImpl(Context context, Authenticator authenticator, SDKCommon common) {
@@ -123,6 +140,67 @@ public class MembershipClientImpl implements MembershipClient {
     public void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
                 _service.delete(s, membershipId), new ObjectCallback<>(handler));
+    }
+
+    @Override
+    public void listWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<List<MembershipReadStatus>> handler) {
+        if (null == _cService) {
+            handler.onComplete(ResultImpl.error("Device not registered."));
+            return;
+        }
+        CompletionHandler<ResponseBody> resHandler = new CompletionHandler<ResponseBody>() {
+            @Override
+            public void onComplete(Result<ResponseBody> result) {
+                if (!result.isSuccessful()) {
+                    handler.onComplete(ResultImpl.error(result.getError()));
+                    return;
+                }
+                if (null != result.getData())
+                    try {
+                        List<MembershipReadStatus> results = new ArrayList<>();
+                        String json = result.getData().string();
+                        JSONArray array = new JSONObject(json).getJSONObject("participants").getJSONArray("items");
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject object = array.getJSONObject(i);
+                            String personId = object.getString("entryUUID");
+                            String personEmail = object.getString("emailAddress");
+                            String personDisplayName = object.getString("displayName");
+                            String personOrgId = object.getString("orgId");
+                            Date created = null;// created is not available in the conversations payload
+                            boolean isMonitor = false;
+                            boolean isModerator = false;
+                            String lastSeenId = null;
+                            Date lastSeenDate = null;
+                            JSONObject roomProperties = object.optJSONObject("roomProperties");
+                            if (null != roomProperties) {
+                                isModerator = roomProperties.optBoolean("isModerator");
+                                lastSeenId = roomProperties.optString("lastSeenActivityUUID", null);
+                                String date = roomProperties.optString("lastSeenActivityDate", null);
+                                if (null != date) {
+                                    lastSeenDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).parse(date);
+                                }
+                            }
+                            String id = personId + ":" + spaceId;
+                            Membership membership = new MembershipInternal(new WebexId(WebexId.Type.MEMBERSHIP_ID, id).toHydraId(),
+                                    new WebexId(WebexId.Type.PEOPLE_ID, personId).toHydraId(),
+                                    personEmail, personDisplayName,
+                                    new WebexId(WebexId.Type.ORGANIZATION_ID, personOrgId).toHydraId(),
+                                    new WebexId(WebexId.Type.ROOM_ID, spaceId).toHydraId(),
+                                    isModerator, isMonitor, created);
+                            MembershipReadStatus membershipReadStatus = new MembershipReadStatusInternal(membership,
+                                    new WebexId(WebexId.Type.MESSAGE_ID, lastSeenId).toHydraId(), lastSeenDate);
+                            results.add(membershipReadStatus);
+                        }
+                        handler.onComplete(ResultImpl.success(results));
+                        return;
+                    } catch (IOException | JSONException | ParseException e) {
+                        e.printStackTrace();
+                    }
+                handler.onComplete(ResultImpl.error(""));
+            }
+        };
+        ServiceBuilder.async(_authenticator, resHandler, s ->
+                _cService.listWithReadStatus(s, spaceId, 0, "all"), new ObjectCallback<>(resHandler));
     }
 
     private interface MembershipService {
@@ -181,5 +259,11 @@ public class MembershipClientImpl implements MembershipClient {
                 return;
         }
         runOnUiThread(() -> _observer.onEvent(event), _observer);
+      
+    private interface ConversationService {
+        @GET("conversations/{spaceId}")
+        Call<ResponseBody> listWithReadStatus(@Header("Authorization") String authorization, @Nullable @Path("spaceId") String spaceId,
+                                              @Query("activitiesLimit") int activitiesLimit,
+                                              @Query("participantAckFilter") String participantAckFilter);
     }
 }

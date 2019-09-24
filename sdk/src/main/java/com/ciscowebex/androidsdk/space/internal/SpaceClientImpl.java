@@ -22,7 +22,6 @@
 
 package com.ciscowebex.androidsdk.space.internal;
 
-
 import java.util.List;
 import java.util.Map;
 
@@ -35,9 +34,12 @@ import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.model.Verb;
 import com.cisco.spark.android.model.conversation.Activity;
 import com.cisco.spark.android.processing.ActivityListener;
-import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.WebexEventPayload;
-import com.ciscowebex.androidsdk.auth.Authenticator;
+import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.cisco.spark.android.core.Settings;
+import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.ciscowebex.androidsdk.internal.WebexEventPayloadImpl;
 import com.ciscowebex.androidsdk.membership.MembershipObserver;
 import com.ciscowebex.androidsdk.membership.internal.MembershipImpl;
@@ -45,11 +47,7 @@ import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.ciscowebex.androidsdk.space.Space;
 import com.ciscowebex.androidsdk.space.SpaceClient;
 import com.ciscowebex.androidsdk.space.SpaceObserver;
-import com.ciscowebex.androidsdk.utils.http.ListBody;
-import com.ciscowebex.androidsdk.utils.http.ListCallback;
-import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
-import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
-import com.ciscowebex.androidsdk_commlib.SDKCommon;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.github.benoitdion.ln.Ln;
 
 import javax.inject.Inject;
@@ -66,6 +64,10 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public class SpaceClientImpl implements SpaceClient {
+    @Inject
+    volatile Settings _settings;
+
+    private DeviceRegistration _device;
 
     private Authenticator _authenticator;
 
@@ -85,6 +87,18 @@ public class SpaceClientImpl implements SpaceClient {
     public SpaceClientImpl(Authenticator authenticator) {
         _authenticator = authenticator;
         _service = new ServiceBuilder().build(SpaceService.class);
+        if (null != _settings)
+            _device = _settings.getDeviceRegistration();
+        if (null != _device) {
+            Uri uri = _device.getConversationServiceUrl();
+            if (uri != null) {
+                String url = uri.toString();
+                if (!url.endsWith("/")) {
+                    url = url + "/";
+                }
+                _cService = new ServiceBuilder().baseURL(url).build(ConversationService.class);
+            }
+        }
     }
 
     public SpaceClientImpl(Context context, Authenticator authenticator, SDKCommon common) {
@@ -108,24 +122,54 @@ public class SpaceClientImpl implements SpaceClient {
                 _service.list(s, teamId, type != null ? type.serializedName() : null, sortBy != null ? sortBy.serializedName() : null, max <= 0 ? null : max), new ListCallback<Space>(handler));
     }
 
+    @Override
     public void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Space> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
                 _service.create(s, Maps.makeMap("title", title, "teamId", teamId)), new ObjectCallback<>(handler));
     }
 
+    @Override
     public void get(@NonNull String spaceId, @NonNull CompletionHandler<Space> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
                 _service.get(s, spaceId), new ObjectCallback<>(handler));
     }
 
+    @Override
     public void update(@NonNull String spaceId, @NonNull String title, @NonNull CompletionHandler<Space> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
                 _service.update(s, spaceId, Maps.makeMap("title", title)), new ObjectCallback<>(handler));
     }
 
+    @Override
     public void delete(@NonNull String spaceId, @NonNull CompletionHandler<Void> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
                 _service.delete(s, spaceId), new ObjectCallback<>(handler));
+    }
+
+    @Override
+    public void getMeeting(@NonNull String spaceId, @NonNull CompletionHandler<SpaceMeeting> handler) {
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _service.getMeeting(s, spaceId), new ObjectCallback<>(handler));
+    }
+
+    @Override
+    public void getWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<SpaceReadStatus> handler) {
+        if (null == _cService) {
+            handler.onComplete(ResultImpl.error("Device not registered."));
+            return;
+        }
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _cService.getWithReadStatus(s, spaceId, false, true, true, 0, false), new ObjectCallback<>(handler));
+    }
+
+    @Override
+    public void listWithReadStatus(@NonNull CompletionHandler<List<SpaceReadStatus>> handler) {
+        if (null == _cService) {
+            handler.onComplete(ResultImpl.error("Device not registered."));
+            return;
+        }
+        ServiceBuilder.async(_authenticator, handler, s ->
+                _cService.listWithReadStatus(s, false, true, true, 0, false), new ListCallback<>(handler));
     }
 
     private interface SpaceService {
@@ -147,6 +191,27 @@ public class SpaceClientImpl implements SpaceClient {
 
         @DELETE("rooms/{spaceId}")
         Call<Void> delete(@Header("Authorization") String authorization, @Path("spaceId") String spaceId);
+
+        @GET("rooms/{spaceId}/meetingInfo")
+        Call<SpaceMeeting> getMeeting(@Header("Authorization") String authorization, @Path("spaceId") String spaceId);
+    }
+
+    private interface ConversationService {
+        @GET("conversations/{spaceId}")
+        Call<SpaceReadStatus> getWithReadStatus(@Header("Authorization") String authorization, @Nullable @Path("spaceId") String spaceId,
+                                                @Query("includeParticipants") boolean includeParticipants,
+                                                @Query("uuidEntryFormat") boolean uuidEntryFormat,
+                                                @Query("personRefresh") boolean personRefresh,
+                                                @Query("activitiesLimit") int activitiesLimit,
+                                                @Query("includeConvWithDeletedUserUUID") boolean includeConvWithDeletedUserUUID);
+
+        @GET("conversations")
+        Call<ListBody<SpaceReadStatus>> listWithReadStatus(@Header("Authorization") String authorization,
+                                                 @Query("includeParticipants") boolean includeParticipants,
+                                                 @Query("uuidEntryFormat") boolean uuidEntryFormat,
+                                                 @Query("personRefresh") boolean personRefresh,
+                                                 @Query("activitiesLimit") int activitiesLimit,
+                                                 @Query("includeConvWithDeletedUserUUID") boolean includeConvWithDeletedUserUUID);
     }
 
     private void runOnUiThread(Runnable r, Object conditioner) {
