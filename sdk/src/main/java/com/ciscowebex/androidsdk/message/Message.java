@@ -29,7 +29,6 @@ import java.util.List;
 import android.support.annotation.NonNull;
 import com.cisco.spark.android.model.*;
 import com.cisco.spark.android.model.conversation.*;
-import com.ciscowebex.androidsdk.WebexEvent;
 import com.ciscowebex.androidsdk.message.internal.RemoteFileImpl;
 import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.ciscowebex.androidsdk.space.Space;
@@ -40,21 +39,41 @@ import com.google.gson.Gson;
  *
  * @since 0.1
  */
-public class Message implements WebexEvent.Data {
+public class Message {
 
     /**
+     * The wrapper for the message text in different formats.
+     *
      * @since 2.3.0
      */
     public static class Text {
 
+        /**
+         * Make a Text object for the plain text.
+         *
+         * @param plain the plain text.
+         */
         public static Text plain(String plain) {
             return new Text(plain, null, null);
         }
 
-        public static Text html(String plain, String html) {
+        /**
+         * Make a Text object for the html.
+         *
+         * @param html the text with the html markup.
+         * @param plain the alternate plain text for cases that do not support html markup.
+         */
+        public static Text html(String html, String plain) {
             return new Text(plain, html, null);
         }
 
+        /**
+         * Make a Text object for the markdown.
+         *
+         * @param markdown the text with the markdown markup.
+         * @param html the html text for how to render the markdown.
+         * @param plain the alternate plain text for cases that do not support markdown and html markup.
+         */
         public static Text markdown(String markdown, String html, String plain) {
             return new Text(plain, html, markdown);
         }
@@ -79,14 +98,24 @@ public class Message implements WebexEvent.Data {
             }
         }
 
+        /**
+         * Returns the markdown if exist.
+         */
         public String getMarkdown() {
             return markdown;
         }
 
+        /**
+         * Returns the html if exist.
+         *
+         */
         public String getHtml() {
             return html;
         }
 
+        /**
+         * Returns the plain text if exist
+         */
         public String getPlain() {
             return plain;
         }
@@ -242,7 +271,7 @@ public class Message implements WebexEvent.Data {
     }
 
     /**
-     * Returns the content of the message.
+     * Returns the content of the message in different formats.
      *
      * @return The content of the message.
      * @since 2.3.0

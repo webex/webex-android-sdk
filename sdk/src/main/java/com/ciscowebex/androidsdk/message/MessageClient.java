@@ -113,6 +113,17 @@ public interface MessageClient {
      */
     void postToPerson(@NonNull EmailAddress email, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
 
+    /**
+     * Posts a message with optional file attachments to a person asynchronously.
+     * <p>
+     * The content of the message can be plain text, html, or markdown.
+     *
+     * @param email   The email address of a person to which the message is to be posted.
+     * @param text    The content of message to be posted to the person. The content can be plain text, html, or markdown.
+     * @param files   Local files to be attached with the message. Null if no files to be attached.
+     * @param handler A closure to be executed once the message has posted.
+     * @since 2.3.0
+     */
     void postToPerson(@NonNull EmailAddress email, @Nullable Message.Text text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
 
     /**
@@ -131,6 +142,20 @@ public interface MessageClient {
      */
     void postToSpace(@NonNull String id, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
 
+    /**
+     * Posts a message with optional file attachments to a space asynchronously.
+     * <p>
+     * The content of the message can be plain text, html, or markdown.
+     * To notify specific person or everyone in a space, mentions should be used.
+     * Having <code>@johndoe</code> in the content of the message does not generate notification.
+     *
+     * @param id       The identifier of a space to which the message is to be posted.
+     * @param text     The content of message to be posted to the space. The content can be plain text, html, or markdown.
+     * @param mentions Notify either one or all in a space about this message.
+     * @param files    Local files to be attached with the message. Null if no files to be attached.
+     * @param handler  A closure to be executed once the message has posted.
+     * @since 2.3.0
+     */
     void postToSpace(@NonNull String id, @Nullable Message.Text text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
 
     /**
@@ -235,20 +260,20 @@ public interface MessageClient {
               @NonNull CompletionHandler<Message> handler);
 
     /**
-     * Send an acknowledge in space, to mark all the exist messages in space has read.
-     * <P>
+     * Mark all messages in the space read.
      *
      * @param spaceId the id of space.
-     * @since 2.2.0
+     * @since 2.3.0
      */
     void markAsRead(@NonNull String spaceId);
 
     /**
-     * Send an acknowledge in space, to mark the message before lastSeenTimestamp has read.
+     * Mark messages sent before the specified message in the space are read, including the specified message.
      * <P>
      *
      * @param spaceId the id of space.
-     * @param messageId the id of seen message, won't send out ack if message timestamp is before last seen ack.
+     * @param messageId the id of a message.
+     * @since 2.3.0
      */
     void markAsRead(@NonNull String spaceId, String messageId);
 

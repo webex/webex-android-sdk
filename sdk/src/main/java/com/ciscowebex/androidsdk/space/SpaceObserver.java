@@ -22,12 +22,13 @@
 
 package com.ciscowebex.androidsdk.space;
 
+import com.cisco.spark.android.model.conversation.Activity;
 import com.ciscowebex.androidsdk.WebexEvent;
 
 /**
  * Callback to receive the events from a {@link SpaceClient}.
  *
- * @since 2.2.0
+ * @since 2.3.0
  */
 public interface SpaceObserver {
 
@@ -39,22 +40,18 @@ public interface SpaceObserver {
 
     /**
      * The event when a new space was created
-     *
-     * @since 2.2.0
      */
     class SpaceCreated extends WebexEvent.Base implements SpaceEvent {
 
         private Space space;
 
-        public SpaceCreated(Space space, WebexEvent.Payload payload) {
-            super(payload);
+        protected SpaceCreated(Space space, Activity activity) {
+            super(activity);
             this.space = space;
         }
 
         /**
-         * Return the id of space.
-         *
-         * @return the id of space.
+         * Returns the created space.
          */
         public Space getSpace() {
             return space;
@@ -64,23 +61,19 @@ public interface SpaceObserver {
 
     /**
      * The event when a space was changed (usually a rename).
-     *
-     * @since 2.2.0
      */
     class SpaceUpdated extends WebexEvent.Base implements SpaceEvent {
 
         private Space space;
 
-        public SpaceUpdated(Space space, WebexEvent.Payload payload) {
-            super(payload);
+        protected SpaceUpdated(Space space, Activity activity) {
+            super(activity);
             this.space = space;
         }
 
         /**
-         * Return the id of space.
+         * Returns the changed space.
          *
-         * @return the id of space.
-         * @since 2.2.0
          */
         public Space getSpace() {
             return space;

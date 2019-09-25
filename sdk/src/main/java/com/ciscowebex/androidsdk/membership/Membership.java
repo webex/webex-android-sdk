@@ -29,9 +29,7 @@ import com.cisco.spark.android.model.Person;
 import com.cisco.spark.android.model.Verb;
 import com.cisco.spark.android.model.conversation.Activity;
 import com.cisco.spark.android.model.conversation.Conversation;
-import com.ciscowebex.androidsdk.WebexEvent;
 import com.ciscowebex.androidsdk.message.internal.WebexId;
-import com.ciscowebex.androidsdk.space.Space;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
@@ -40,7 +38,7 @@ import com.google.gson.annotations.SerializedName;
  *
  * @since 0.1
  */
-public class Membership implements WebexEvent.Data {
+public class Membership {
 
     @SerializedName("id")
     private String _id;
@@ -57,7 +55,7 @@ public class Membership implements WebexEvent.Data {
     @SerializedName("personOrgId")
     private String _personOrgId;
 
-    @SerializedName(value = "roomId", alternate = {"spaceId"})
+    @SerializedName(value = "roomId", alternate = "spaceId")
     private String _spaceId;
 
     @SerializedName("isModerator")

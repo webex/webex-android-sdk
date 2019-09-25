@@ -1,5 +1,6 @@
 package com.ciscowebex.androidsdk.message;
 
+import com.cisco.spark.android.model.conversation.Activity;
 import com.ciscowebex.androidsdk.WebexEvent;
 
 /**
@@ -25,8 +26,8 @@ public interface MessageObserver {
     class MessageArrived extends WebexEvent.Base implements MessageEvent {
         private Message message;
 
-        public MessageArrived(Message message) {
-            super(null);
+        protected MessageArrived(Message message, Activity activity) {
+            super(activity);
             this.message = message;
         }
 
@@ -54,8 +55,8 @@ public interface MessageObserver {
 
         private Message message;
 
-        public MessageReceived(Message message, WebexEvent.Payload payload) {
-            super(payload);
+        protected MessageReceived(Message message, Activity activity) {
+            super(activity);
             this.message = message;
         }
 
@@ -76,10 +77,11 @@ public interface MessageObserver {
      * @since 1.4.0
      */
     class MessageDeleted extends WebexEvent.Base implements MessageEvent {
+
         private String messageId;
 
-        public MessageDeleted(String messageId, WebexEvent.Payload payload) {
-            super(payload);
+        protected MessageDeleted(String messageId, Activity activity) {
+            super(activity);
             this.messageId = messageId;
         }
 

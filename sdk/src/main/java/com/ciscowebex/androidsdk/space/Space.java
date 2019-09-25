@@ -41,7 +41,7 @@ import com.google.gson.annotations.SerializedName;
  *
  * @since 0.1
  */
-public class Space implements WebexEvent.Data {
+public class Space {
 
     /**
      * The enumeration of the types of a space.

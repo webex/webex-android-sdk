@@ -58,7 +58,6 @@ import com.cisco.spark.android.sync.operationqueue.core.Operations;
 import com.cisco.spark.android.util.*;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.InternalWebexEventPayload;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.message.*;
 import com.ciscowebex.androidsdk.message.Message;
@@ -470,11 +469,11 @@ public class MessageClientImpl implements MessageClient {
             case Verb.post:
             case Verb.share:
                 message = createMessage(activity, true);
-                event = new MessageObserver.MessageReceived(message, new InternalWebexEventPayload(activity, _provider.getAuthenticatedUserOrNull(), message));
+                event = new InternalMessage.InternalMessageReceived(message, activity);
                 break;
             case Verb.delete:
                 message = createMessage(activity, true);
-                event = new MessageObserver.MessageDeleted(message.getId(), new InternalWebexEventPayload(activity, _provider.getAuthenticatedUserOrNull(), message));
+                event = new InternalMessage.InternalMessageDeleted(message.getId(), activity);
                 break;
             default:
                 Ln.e("unknown verb " + activity.getVerb());
@@ -483,7 +482,7 @@ public class MessageClientImpl implements MessageClient {
         runOnUiThread(() -> _observer.onEvent(event), _observer);
         // TODO Remove the deprecated event in next big release
         if (event instanceof MessageObserver.MessageReceived) {
-            runOnUiThread(() -> _observer.onEvent(new MessageObserver.MessageArrived(((MessageObserver.MessageReceived) event).getMessage())), _observer);
+            runOnUiThread(() -> _observer.onEvent(new InternalMessage.InternalMessageArrived(((MessageObserver.MessageReceived) event).getMessage(), activity)), _observer);
         }
     }
 

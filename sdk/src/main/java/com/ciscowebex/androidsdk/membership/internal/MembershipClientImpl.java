@@ -39,9 +39,7 @@ import com.cisco.spark.android.model.conversation.Activity;
 import com.cisco.spark.android.model.conversation.Conversation;
 import com.cisco.spark.android.processing.ActivityListener;
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.WebexEvent;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.InternalWebexEventPayload;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.membership.Membership;
 import com.ciscowebex.androidsdk.membership.MembershipClient;
@@ -172,21 +170,20 @@ public class MembershipClientImpl implements MembershipClient {
             return;
         }
         Membership membership = new InternalMembership(activity);
-        WebexEvent.Payload payload = new InternalWebexEventPayload(activity, _provider.getAuthenticatedUserOrNull(), membership);
         MembershipObserver.MembershipEvent event;
         switch (activity.getVerb()) {
             case Verb.add:
-                event = new MembershipObserver.MembershipCreated(membership, payload);
+                event = new InternalMembership.InternalMembershipCreated(membership, activity);
                 break;
             case Verb.leave:
-                event = new MembershipObserver.MembershipDeleted(membership, payload);
+                event = new InternalMembership.InternalMembershipDeleted(membership, activity);
                 break;
             case Verb.assignModerator:
             case Verb.unassignModerator:
-                event = new MembershipObserver.MembershipUpdated(membership, payload);
+                event = new InternalMembership.InternalMembershipUpdated(membership, activity);
                 break;
             case Verb.acknowledge:
-                event = new MembershipObserver.MembershipSeen(membership, payload, new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
+                event = new InternalMembership.InternalMembershipSeen(membership, activity, new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
                 break;
             default:
                 return;

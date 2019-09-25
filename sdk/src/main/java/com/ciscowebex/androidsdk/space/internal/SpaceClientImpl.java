@@ -40,9 +40,7 @@ import com.cisco.spark.android.model.conversation.Activity;
 import com.cisco.spark.android.model.conversation.Conversation;
 import com.cisco.spark.android.processing.ActivityListener;
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.WebexEvent;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.InternalWebexEventPayload;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.ciscowebex.androidsdk.space.*;
@@ -134,7 +132,7 @@ public class SpaceClientImpl implements SpaceClient {
     }
 
     @Override
-    public void getMeeting(@NonNull String spaceId, @NonNull CompletionHandler<SpaceMeeting> handler) {
+    public void getMeetingInfo(@NonNull String spaceId, @NonNull CompletionHandler<SpaceMeetingInfo> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
                 _service.getMeeting(s, spaceId), new ObjectCallback<>(handler));
     }
@@ -190,14 +188,13 @@ public class SpaceClientImpl implements SpaceClient {
             return;
         }
         Space space = new InternalSpace(activity);
-        WebexEvent.Payload payload = new InternalWebexEventPayload(activity, _provider.getAuthenticatedUserOrNull(), space);
         SpaceObserver.SpaceEvent event;
         switch (activity.getVerb()) {
             case Verb.create:
-                event = new SpaceObserver.SpaceCreated(space, payload);
+                event = new InternalSpace.InternalSpaceCeated(space, activity);
                 break;
             case Verb.update:
-                event = new SpaceObserver.SpaceUpdated(space, payload);
+                event = new InternalSpace.InternalSpaceUpdated(space, activity);
                 break;
             default:
                 return;
@@ -232,7 +229,7 @@ public class SpaceClientImpl implements SpaceClient {
         Call<Void> delete(@Header("Authorization") String authorization, @Path("spaceId") String spaceId);
 
         @GET("rooms/{spaceId}/meetingInfo")
-        Call<SpaceMeeting> getMeeting(@Header("Authorization") String authorization, @Path("spaceId") String spaceId);
+        Call<SpaceMeetingInfo> getMeeting(@Header("Authorization") String authorization, @Path("spaceId") String spaceId);
 
     }
 }

@@ -98,10 +98,11 @@ public interface MembershipClient {
     void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler);
 
     /**
-     * Return a list of memberships with details about the lastSeenId for each user, allowing a client to indicate "read status" in a space GUI
+     * Return a list of {@link MembershipReadStatus} with details about the lastSeenId for each user, allowing a client to indicate "read status" in a space GUI
      * @param spaceId The identifier of the space.
      * @param handler A closure to be executed once the request has finished.
-     * @since 2.2.0
+     * @see MembershipReadStatus
+     * @since 2.3.0
      */
     void listWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<List<MembershipReadStatus>> handler);
 

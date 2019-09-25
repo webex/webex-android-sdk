@@ -60,7 +60,7 @@ public interface SpaceClient {
      *
      * @param observer the observer object.
      * @see SpaceObserver
-     * @since 2.2.0
+     * @since 2.3.0
      */
     void setSpaceObserver(SpaceObserver observer);
 
@@ -116,32 +116,38 @@ public interface SpaceClient {
     void delete(@NonNull String spaceId, @NonNull CompletionHandler<Void> handler);
 
     /**
-     * Get space meeting details.
-     * @param spaceId The identifier of the space.
-     * @param handler A closure to be executed once the request has finished.
-     * @since 2.2.0
-     */
-    void getMeeting(@NonNull String spaceId, @NonNull CompletionHandler<SpaceMeeting> handler);
-
-    /**
-     * Returns a single space object with details about the data of the last
-     * activity in the space, and the date of the users last presence in the space.
-     * For spaces where lastActivityDate > lastSeenDate the room can be considered to be "unread"
+     * Shows Webex meeting details for a space such as the SIP address, meeting URL, toll-free and toll dial-in numbers.
      *
      * @param spaceId The identifier of the space.
      * @param handler A closure to be executed once the request has finished.
-     * @since 2.2.0
+     * @see SpaceMeetingInfo
+     * @since 2.3.0
+     */
+    void getMeetingInfo(@NonNull String spaceId, @NonNull CompletionHandler<SpaceMeetingInfo> handler);
+
+    /**
+     * Returns a {@link SpaceReadStatus} with the details about the date of the last
+     * activity in the space, and the date of current user last presence in the space.
+     *
+     * For spaces where lastActivityDate > lastSeenDate the space can be considered to be "unread"
+     *
+     * @param spaceId The identifier of the space.
+     * @param handler A closure to be executed once the request has finished.
+     * @see SpaceReadStatus
+     * @since 2.3.0
      */
     void getWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<SpaceReadStatus> handler);
 
     /**
-     * Returns a list of space objects with details about the data of the last
-     * activity in the space, and the date of the users last presence in the space.
-     * For spaces where lastActivityDate > lastSeenDate the room can be considered to be "unread"
-     * See {@link SpaceReadStatus}
+     * Returns a list of {@link SpaceReadStatus} with details about the date of the last
+     * activity in the space, and the date of current user last presence in the space. The
+     * list is sorted with this with most recent activity first.
+     *
+     * For spaces where lastActivityDate > lastSeenDate the space can be considered to be "unread"
      *
      * @param handler A closure to be executed once the request has finished.
-     * @since 2.2.0
+     * @see SpaceReadStatus
+     * @since 2.3.0
      */
     void listWithReadStatus(@NonNull CompletionHandler<List<SpaceReadStatus>> handler);
 

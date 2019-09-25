@@ -318,7 +318,7 @@ public interface Phone {
      *
      * @param models the list of device models, if the list is null or empty, turn off the audio enhancement.
      *
-     * @since 2.1.2
+     * @since 2.3.0
      */
     void enableAudioEnhancementForModels(List<String> models);
 
