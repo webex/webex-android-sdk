@@ -33,12 +33,14 @@ Released on 2019-09-27.
 - Add API to get a list of memberships's read status in a space.
 - Add API to get space meeting details.
 - Add API to send read receipts for messages.
+- Add API to get the expire date of JWT token.
 - Add "markdown" and "formatted" text fields on the message object.
 
 #### Updated
 - Update to Dagger 2 dependency.
 - Fixed long latency for message.list method.
-- Remove notification when download file.
+- Fixed message list result include the message as "before" query parameter.
+- Removed notification when download file.
 
 ## [2.1.1](https://github.com/webex/webex-android-sdk/releases/tag/2.1.1)
 Released on 2019-07-24.
