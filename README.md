@@ -38,7 +38,7 @@ Assuming you already have an Android project, e.g. _MyWebexApp_, for your Androi
 
     ```groovy
     dependencies { 
-        compile('com.ciscowebex:androidsdk:2.0.0@aar', {
+        compile('com.ciscowebex:androidsdk:2.3.0@aar', {
             transitive = true
         })
     }
@@ -61,20 +61,7 @@ Assuming you already have an Android project, e.g. _MyWebexApp_, for your Androi
         exclude 'META-INF/rxjava.properties'
     }
     ```
-        
-5. Use ABI Filters and APK split :
-
-    ```groovy
-    splits {
-        abi {
-            enable true
-            reset()
-            include 'armeabi-v7a'
-            universalApk false
-        }
-    }
-    ```
-
+    
 ## Usage
 
 To use the SDK, you will need Cisco Webex integration credentials. If you do not already have a Cisco Webex account, visit the [Cisco Webex for Developers portal](https://developer.webex.com/) to create your account and [register an integration](https://developer.webex.com/authentication.html#registering-your-integration). Your app will need to authenticate users via an [OAuth](https://oauth.net/) grant flow for existing Cisco Webex users or a [JSON Web Token](https://jwt.io/) for guest users without a Cisco Webex account.
@@ -334,13 +321,14 @@ Here are some examples of how to use the Android SDK in your app.
             public void onComplete(Result<Message> result) {
                 if (result.isSuccessful()) {
                     // message sent success
+                    ...
                 } else {
                     // message sent failed
+                    ...
                 }
             }
         }));
     ```
-
 11. Receive a message
 
     ```java
@@ -357,8 +345,17 @@ Here are some examples of how to use the Android SDK in your app.
         }
     );
     ```
+12. Send Read Receipts
 
-12. Multi-Stream to receive more video streams 
+    ```java
+    //Mark all exist messages in space as read
+    webex.message().markAsRead(spaceId);
+
+    //Mark exist messages before pointed message(include) in space as read
+    webex.message().markAsRead(spaceId, messageId);
+    ```
+
+13. Multi-Stream to receive more video streams 
 
     ```java
     activeCall.setMultiStreamObserver(new MultiStreamObserver() {
@@ -402,7 +399,76 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
     ```
+14. Set MembershipObserver to receive Membership events 
 
+    ```java
+    webex.memberships().setMembershipObserver(new MembershipObserver() {
+            @Override
+            public void onEvent(MembershipEvent event) {
+                //The WebexEventPayload.
+                WebexEvent.Payload payload = event.getPayload();
+                ...
+                if (event instanceof MembershipCreated) {
+                    //The event when a new membership has added to a space.
+                    ...
+                } else if (event instanceof MembershipDeleted) {
+                    //The event when a membership has removed from a space.
+                    ...
+                } else if (event instanceof MembershipUpdated) {
+                    //The event when a membership moderator status changed
+                    ...
+                }else if (event instanceof MembershipSeen){
+                    //The event when a user has sent a read receipt
+                    ...
+                }
+            }
+        });
+    ```
+15. Set SpaceObserver to receive Space events 
+
+    ```java
+    webex.spaces().setSpaceObserver(new SpaceObserver() {
+            @Override
+            public void onEvent(SpaceEvent event) {
+                //The WebexEventPayload.
+                WebexEvent.Payload payload = event.getPayload();
+                
+                if (event instanceof SpaceCreated){
+                    //The event when a new space was created
+                    ...
+                }else if (event instanceof SpaceUpdated){
+                    //The event when a space was changed (usually a rename)
+                    ...
+                }
+            }
+        });
+    ```
+16. Get space meeting details
+
+    ```java
+    webex.spaces().getMeeting(spaceId, new CompletionHandler<SpaceMeeting>() {
+            @Override
+            public void onComplete(Result<SpaceMeeting> result) {
+                if (result.isSuccessful()){
+                    SpaceMeeting spaceMeeting = result.getData();
+                    ...
+                }
+            }
+        });
+    ```
+17. Get read status of a space
+
+    ```java
+    webex.spaces().getWithReadStatus(spaceId, new CompletionHandler<SpaceReadStatus>() {
+            @Override
+            public void onComplete(Result<SpaceReadStatus> result) {
+                if (result.isSuccessful()){
+                    SpaceReadStatus spaceReadStatus = result.getData();
+                    ...
+                }
+            }
+        });
+    ```
 ## Migrating from Cisco Spark Android SDK
 
 The purpose of this guide is to help you to migrate from Cisco Spark Android SDK to Cisco Webex Android SDK.
@@ -432,7 +498,7 @@ Assuming you already have an Android project with Spark Android SDK integrated. 
         // compile('com.ciscospark:androidsdk:1.4.0@aar', {
         //     transitive = true
         // })
-        compile('com.ciscowebex:androidsdk:2.0.0@aar', {
+        compile('com.ciscowebex:androidsdk:2.3.0@aar', {
             transitive = true
         })
     }
