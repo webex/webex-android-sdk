@@ -83,7 +83,7 @@ public class Webex {
      * @since 0.1
      */
     public enum LogLevel {
-        NO, ERROR, WARNING, INFO, DEBUG, VERBOSE, ALL
+        NO, ERROR, WARNING, INFO, DEBUG_NO_HTTP_DETAILS, DEBUG, VERBOSE, ALL
     }
 
     private SDKCommonInjector<SDKComponent> _injector;
@@ -291,6 +291,11 @@ public class Webex {
                     LoggingInterceptor.LogHTTPBody = false;
                     logger = new InfoLn();
                     mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
+                    break;
+                case DEBUG_NO_HTTP_DETAILS:
+                    LoggingInterceptor.LogHTTPBody = false;
+                    logger = new com.ciscowebex.androidsdk.utils.log.DebugLn();
+                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO;
                     break;
                 case DEBUG:
                     LoggingInterceptor.LogHTTPBody = true;
