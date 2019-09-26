@@ -401,15 +401,21 @@ public class PhoneImpl implements Phone {
         _registerCallback = callback;
         RotationHandler.registerRotationReceiver(_context, this);
 
-        ServiceBuilder.async(_authenticator, callback, s -> {
-            _registerTimeoutTask = () -> {
-                Ln.i("Register timeout");
-                if (_device == null && _registerCallback != null) {
-                    _registerCallback.onComplete(ResultImpl.error("Register timeout"));
-                }
-            };
-            _registerTimer.postDelayed(_registerTimeoutTask, 60L * 1000);
-            new AuthenticatedUserTask(_applicationController).execute();
+        ServiceBuilder.async(_authenticator, callback, true, s -> {
+            if (s == null) {
+                RotationHandler.unregisterRotationReceiver(_context);
+                _registerCallback = null;
+            }
+            else {
+                _registerTimeoutTask = () -> {
+                    Ln.i("Register timeout");
+                    if (_device == null && _registerCallback != null) {
+                        _registerCallback.onComplete(ResultImpl.error("Register timeout"));
+                    }
+                };
+                _registerTimer.postDelayed(_registerTimeoutTask, 60L * 1000);
+                new AuthenticatedUserTask(_applicationController).execute();
+            }
             return null;
         }, null);
     }
