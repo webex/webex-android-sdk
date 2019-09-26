@@ -30,6 +30,7 @@ package com.ciscowebex.androidsdk.auth;
 
 import java.util.Map;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -64,6 +65,7 @@ public class SSOAuthenticator implements Authenticator {
     private Map<String, String> additionalQueryItems;
 
     @Inject
+    @Named("SDK")
     Injector _injector;
 
     /**

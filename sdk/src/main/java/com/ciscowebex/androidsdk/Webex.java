@@ -32,14 +32,13 @@ import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.reachability.ConnectivityChangeReceiver;
 import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.auth.OAuthAuthenticator;
+import com.ciscowebex.androidsdk.internal.DaggerSDKComponent;
+import com.ciscowebex.androidsdk.internal.SDKComponent;
+import com.ciscowebex.androidsdk.internal.SDKModule;
 import com.ciscowebex.androidsdk.membership.MembershipClient;
 import com.ciscowebex.androidsdk.membership.internal.MembershipClientImpl;
 import com.ciscowebex.androidsdk.message.MessageClient;
-import com.ciscowebex.androidsdk.message.internal.CallbackablePostCommentOperation;
-import com.ciscowebex.androidsdk.message.internal.CallbackablePostContentActivityOperation;
 import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
-import com.ciscowebex.androidsdk.message.internal.MessageMarkReadOperation;
 import com.ciscowebex.androidsdk.people.PersonClient;
 import com.ciscowebex.androidsdk.people.internal.PersonClientImpl;
 import com.ciscowebex.androidsdk.phone.Phone;
@@ -56,6 +55,8 @@ import com.ciscowebex.androidsdk.utils.log.WarningLn;
 import com.ciscowebex.androidsdk.webhook.WebhookClient;
 import com.ciscowebex.androidsdk.webhook.internal.WebhookClientImpl;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
+import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
+import com.ciscowebex.androidsdk_commlib.SDKCommonModule_ProvideOkHttpClientBuilderFactory;
 import com.github.benoitdion.ln.DebugLn;
 import com.github.benoitdion.ln.InfoLn;
 import com.github.benoitdion.ln.Ln;
@@ -82,6 +83,8 @@ public class Webex {
     public enum LogLevel {
         NO, ERROR, WARNING, INFO, DEBUG, VERBOSE, ALL
     }
+
+    private SDKCommonInjector<SDKComponent> _injector;
 
     private SDKCommon _common;
 
@@ -117,19 +120,15 @@ public class Webex {
     public Webex(Application application, Authenticator authenticator) {
         _authenticator = authenticator;
         _common = new SDKCommon(application, APP_NAME, APP_VERSION);
-        _common.addInjectable(this.getClass(), authenticator.getClass(),
-                OAuthAuthenticator.class,
-                PhoneImpl.class, Call.class,
-                MessageClientImpl.class, MessageMarkReadOperation.class, CallbackablePostCommentOperation.class, CallbackablePostContentActivityOperation.class,
-                MembershipClientImpl.class,
-                SpaceClientImpl.class);
         _common.create();
-        _common.inject(this);
-        _common.inject(_authenticator);
-        _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _common);
-        _messages = new MessageClientImpl(application.getApplicationContext(), _authenticator, _common);
-        _memberships = new MembershipClientImpl(application.getApplicationContext(), _authenticator, _common);
-        _spaces = new SpaceClientImpl(application.getApplicationContext(), _authenticator, _common);
+        _injector = new SDKCommonInjector<>();
+        _injector.setComponent(SDKComponent.class, DaggerSDKComponent.builder().sDKModule(new SDKModule(_injector)).sDKCommonComponent(_common.getInjector().getComponent()).build());
+        _injector.inject(this);
+        _injector.inject(authenticator);
+        _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _injector);
+        _messages = new MessageClientImpl(application.getApplicationContext(), _authenticator, _injector);
+        _memberships = new MembershipClientImpl(application.getApplicationContext(), _authenticator, _injector);
+        _spaces = new SpaceClientImpl(application.getApplicationContext(), _authenticator, _injector);
         application.registerReceiver(connectivityChangeReceiver, ConnectivityChangeReceiver.getIntentFilter());
         setLogLevel(LogLevel.DEBUG);
         Ln.i(_userAgentProvider.get());

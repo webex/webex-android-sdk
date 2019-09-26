@@ -24,6 +24,7 @@ package com.ciscowebex.androidsdk.auth;
 
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -33,6 +34,7 @@ import com.cisco.spark.android.core.Injector;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.internal.OAuthLauncher;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.internal.SDKScope;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.AfterInjected;
 import me.helloworld.utils.Checker;
@@ -53,6 +55,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     private OAuthLauncher _launcher;
 
     @Inject
+    @Named("SDK")
     Injector _injector;
 
     /**

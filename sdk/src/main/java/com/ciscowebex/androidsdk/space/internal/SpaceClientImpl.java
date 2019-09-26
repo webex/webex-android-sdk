@@ -50,6 +50,7 @@ import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
+import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.collection.Maps;
 import retrofit2.Call;
@@ -85,11 +86,11 @@ public class SpaceClientImpl implements SpaceClient {
     @Inject
     ApiClientProvider _client;
 
-    public SpaceClientImpl(Context context, Authenticator authenticator, SDKCommon common) {
+    public SpaceClientImpl(Context context, Authenticator authenticator, SDKCommonInjector injector) {
+        injector.inject(this);
         _authenticator = authenticator;
         _service = new ServiceBuilder().build(SpaceService.class);
         _context = context;
-        common.inject(this);
         activityListener.register(activity -> {
             processorActivity(activity);
             return null;

@@ -67,6 +67,7 @@ import com.ciscowebex.androidsdk.utils.http.ListBody;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
+import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Strings;
 import org.greenrobot.eventbus.EventBus;
@@ -103,10 +104,10 @@ public class MessageClientImpl implements MessageClient {
     private int lastSendProgress = -1;
 
     @Inject
-    Operations operations;
+    Injector injector;
 
     @Inject
-    Injector injector;
+    Operations operations;
 
     @Inject
     EventBus _bus;
@@ -132,11 +133,11 @@ public class MessageClientImpl implements MessageClient {
     @Inject
     KeyManager keyManager;
 
-    public MessageClientImpl(Context context, Authenticator authenticator, SDKCommon common) {
+    public MessageClientImpl(Context context, Authenticator authenticator, SDKCommonInjector injector) {
+        injector.inject(this);
         _authenticator = authenticator;
         _service = new ServiceBuilder().build(MessageService.class);
         _context = context;
-        common.inject(this);
         //_bus.register(this);
         activityListener.register(activity -> {
             processorActivity(activity);

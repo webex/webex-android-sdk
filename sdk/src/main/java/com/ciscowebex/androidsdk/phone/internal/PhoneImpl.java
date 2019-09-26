@@ -89,6 +89,7 @@ import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.SDKCommon;
+import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
 import com.github.benoitdion.ln.Ln;
 
 import com.google.common.collect.Lists;
@@ -288,8 +289,8 @@ public class PhoneImpl implements Phone {
 
     }
 
-    public PhoneImpl(Context context, Authenticator authenticator, SDKCommon common) {
-        common.inject(this);
+    public PhoneImpl(Context context, Authenticator authenticator, SDKCommonInjector injector) {
+        injector.inject(this);
         _authenticator = authenticator;
         _bus.register(this);
         _registerTimer = new Handler();
