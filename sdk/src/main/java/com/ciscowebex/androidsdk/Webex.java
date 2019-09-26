@@ -28,6 +28,7 @@ import android.app.Application;
 
 import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.core.BackgroundCheck;
+import com.cisco.spark.android.core.LoggingInterceptor;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.reachability.ConnectivityChangeReceiver;
 import com.cisco.spark.android.util.UserAgentProvider;
@@ -62,6 +63,7 @@ import com.github.benoitdion.ln.InfoLn;
 import com.github.benoitdion.ln.Ln;
 import com.github.benoitdion.ln.NaturalLog;
 import com.github.benoitdion.ln.ReleaseLn;
+import com.webex.wme.Log;
 import com.webex.wme.MediaSessionAPI;
 
 /**
@@ -271,30 +273,37 @@ public class Webex {
         if (logLevel != null) {
             switch (logLevel) {
                 case NO:
+                    LoggingInterceptor.LogHTTPBody = false;
                     logger = new NoLn();
                     mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_NOTRACE;
                     break;
                 case ERROR:
+                    LoggingInterceptor.LogHTTPBody = false;
                     logger = new ReleaseLn();
                     mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_ERROR;
                     break;
                 case WARNING:
+                    LoggingInterceptor.LogHTTPBody = false;
                     logger = new WarningLn();
                     mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
                     break;
                 case INFO:
+                    LoggingInterceptor.LogHTTPBody = false;
                     logger = new InfoLn();
                     mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
                     break;
                 case DEBUG:
+                    LoggingInterceptor.LogHTTPBody = true;
                     logger = new com.ciscowebex.androidsdk.utils.log.DebugLn();
                     mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO;
                     break;
                 case VERBOSE:
+                    LoggingInterceptor.LogHTTPBody = true;
                     logger = new DebugLn();
                     mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG;
                     break;
                 case ALL:
+                    LoggingInterceptor.LogHTTPBody = true;
                     logger = new DebugLn();
                     mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DETAIL;
             }

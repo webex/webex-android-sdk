@@ -27,6 +27,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.cisco.spark.android.core.LoggingInterceptor;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
@@ -60,8 +61,13 @@ public class ServiceBuilder {
 
     public ServiceBuilder() {
         _interceptors.add(new DefaultHeadersInterceptor());
-        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> Log.d("RetrofitLog", "retrofitBack = " + message));
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> Ln.i("RetrofitLog", "retrofitBack = " + message));
+        if (LoggingInterceptor.LogHTTPBody) {
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        }
+        else {
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        }
         _interceptors.add(loggingInterceptor);
     }
 

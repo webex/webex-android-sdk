@@ -188,15 +188,14 @@ public class JWTAuthenticator implements Authenticator {
     }
 
     private @Nullable String getUnexpiredJwt() {
-        if (_jwt == null && _token != null) {
-            _jwt = _token.getRefreshToken();
-        }
-        if (_jwt == null && _provider != null) {
+        if (_jwt == null && _token == null && _provider != null) {
             AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
             if (user != null) {
                 _token = user.getOAuth2Tokens();
-                _jwt = _token.getRefreshToken();
             }
+        }
+        if (_jwt == null && _token != null) {
+            _jwt = _token.getRefreshToken();
         }
         if (_jwt == null) {
             return null;
