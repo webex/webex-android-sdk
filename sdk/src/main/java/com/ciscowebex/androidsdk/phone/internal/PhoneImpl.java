@@ -949,7 +949,8 @@ public class PhoneImpl implements Phone {
         Ln.i("CallControlLeaveLocusEvent is received " + event.locusData().getKey());
         resetDialStatus(null);
         CallImpl call = _calls.get(event.locusData().getKey());
-        if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
+        // if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
+        if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.locusData().getKey());
             removeCall(new CallObserver.RemoteDecline(call));
         }
