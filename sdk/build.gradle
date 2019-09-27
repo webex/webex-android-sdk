@@ -9,7 +9,7 @@ ext {
     moduleName = 'Cisco Webex Android SDK'
     moduleGroupId = 'com.ciscowebex'
     moduleArtifactId = 'androidsdk'
-    moduleVersion = '2.3.0-SNAPSHOT'
+    moduleVersion = '2.3.0'
     moduleDescription = 'Cisco Webex SDK for Android'
     moduleSiteUrl = 'https://developer.webex.com/getting-started.html'
     moduleProjectUrl = 'https://github.com/webex/webex-android-sdk'
@@ -244,7 +244,7 @@ dependencies {
     compileOnly 'com.google.dagger:dagger-compiler:2.24'
     kapt 'com.google.dagger:dagger-compiler:2.24'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.24'
-    implementation('com.ciscowebex:androidsdk_commlib:2.3.0-SNAPSHOT@aar', {
+    implementation('com.ciscowebex:androidsdk_commlib:2.3.0@aar', {
         transitive = true
         changing = true
     })
