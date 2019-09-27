@@ -24,22 +24,23 @@ All notable changes to this project will be documented in this file.
 
 ---
 ## [2.3.0](https://github.com/webex/webex-android-sdk/releases/tag/2.3.0)
-Released on 2019-09-27.
+Released on 2019-09-30.
 #### Added
-- Add API to receive membership events.
-- Add API to receive room events.
+- Add API to receive membership created/deleted/updated/seen events.
+- Add API to receive room created/updated events.
 - Add API to get a space's last activity status.
 - Add API to get a list of all space's last activity status.
 - Add API to get a list of memberships's read status in a space.
 - Add API to get space meeting details.
-- Add API to send read receipts for messages.
-- Add API to get the expire date of JWT token.
-- Add "markdown" and "formatted" text fields on the message object.
+- Add API to send read receipts for message.
+- Add API to get the token expiration date for JWTAuthenticator.
 
 #### Updated
 - Update to Dagger 2 dependency.
-- Fixed long latency for message.list method.
+- Reduce latency when list messages.
 - Fixed message list result include the message as "before" query parameter.
+- Fixed audio in meeting being faint or nonexistant.
+- Fixed already calling error when same cases.
 - Removed notification when download file.
 
 ## [2.1.1](https://github.com/webex/webex-android-sdk/releases/tag/2.1.1)

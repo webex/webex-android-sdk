@@ -145,10 +145,11 @@ public interface SpaceClient {
      *
      * For spaces where lastActivityDate > lastSeenDate the space can be considered to be "unread"
      *
+     * @param max The maximum number of result, recommend that the parameter is limited between 1 and 100.
      * @param handler A closure to be executed once the request has finished.
      * @see SpaceReadStatus
      * @since 2.3.0
      */
-    void listWithReadStatus(@NonNull CompletionHandler<List<SpaceReadStatus>> handler);
+    void listWithReadStatus(int max, @NonNull CompletionHandler<List<SpaceReadStatus>> handler);
 
 }

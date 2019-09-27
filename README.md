@@ -104,7 +104,7 @@ Here are some examples of how to use the Android SDK in your app.
     }
     ```
 
-3. Register the device to send and receive calls:
+3. Register the device to Webex platform:
 
     ```java
     webex.phone().register(new CompletionHandler<Void>() {
@@ -153,7 +153,7 @@ Here are some examples of how to use the Android SDK in your app.
 
     // Send a message to a space:
 
-    webex.messages().post(spaceId, null, null, "Hello there", null, null, new CompletionHandler<Message>() {
+    webex.messages().postToSpace(spaceId, Message.Text.html("<strong>Hello</strong>", "Hello"), null, null, new CompletionHandler<Message>() {
         @Override
         public void onComplete(Result<Message> result) {
             if (result.isSuccessful()) {
@@ -311,11 +311,10 @@ Here are some examples of how to use the Android SDK in your app.
 10. Post a message
 
     ```java
-    webex.message().postToSpace(
-        id,          // space id
-        message,    // text message to be sent
-        mentions,   // list of Mention object
-        files,      // list of files to be sent
+    webex.message().postToPerson(
+        EmailAddress.fromString("bob@example.com"), 
+        Message.Text.markdown("**Hello**", "<strong>Hello</strong>", "Hello"), 
+        files,
         new CompletionHandler<Message>() {
             @Override
             public void onComplete(Result<Message> result) {
@@ -329,6 +328,7 @@ Here are some examples of how to use the Android SDK in your app.
             }
         }));
     ```
+
 11. Receive a message
 
     ```java

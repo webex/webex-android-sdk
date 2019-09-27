@@ -158,8 +158,8 @@ public class SpaceClientImpl implements SpaceClient {
     }
 
     @Override
-    public void listWithReadStatus(@NonNull CompletionHandler<List<SpaceReadStatus>> handler) {
-        _client.getConversationClient().getConversationsReadStatus().enqueue(new Callback<ItemCollection<Conversation>>() {
+    public void listWithReadStatus(int max, @NonNull CompletionHandler<List<SpaceReadStatus>> handler) {
+        _client.getConversationClient().getConversationsReadStatus(max).enqueue(new Callback<ItemCollection<Conversation>>() {
             @Override
             public void onResponse(Call<ItemCollection<Conversation>> call, Response<ItemCollection<Conversation>> response) {
                 if (response.isSuccessful() && response.body() != null) {
