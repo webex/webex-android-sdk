@@ -5,10 +5,94 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="482501bb-fc35-469f-a5b6-101dea3d1daf" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/CHANGELOG.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/PhoneImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/PhoneImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/build_file_checksums.ser" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/build_file_checksums.ser" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__android_arch_core_common_1_1_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__android_arch_core_runtime_1_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__android_arch_lifecycle_common_1_1_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__android_arch_lifecycle_livedata_core_1_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__android_arch_lifecycle_runtime_1_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__android_arch_lifecycle_viewmodel_1_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_animated_vector_drawable_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_appcompat_v7_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_cardview_v7_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_design_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_gridlayout_v7_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_recyclerview_v7_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_support_annotations_27_1_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_support_compat_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_support_core_ui_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_support_core_utils_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_support_fragment_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_support_media_compat_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_support_v13_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_support_v4_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_support_vector_drawable_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_android_support_transition_27_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_ciscowebex_androidclient_common_3_0_5129_SNAPSHOT_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_ciscowebex_androidsdk_commlib_2_1_1_SNAPSHOT_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_facebook_fresco_drawee_1_10_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_facebook_fresco_fbcore_1_10_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_facebook_fresco_fresco_1_10_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_facebook_fresco_imagepipeline_1_10_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_facebook_fresco_imagepipeline_base_1_10_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_facebook_fresco_imagepipeline_okhttp3_1_10_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_facebook_soloader_soloader_0_5_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_github_benoitdion_ln_ln_0_1_2_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_google_android_gms_play_services_base_11_8_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_google_android_gms_play_services_base_license_11_8_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_google_android_gms_play_services_basement_11_8_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_google_android_gms_play_services_basement_license_11_8_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_google_android_gms_play_services_safetynet_11_8_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_google_android_gms_play_services_safetynet_license_11_8_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_google_android_gms_play_services_tasks_11_8_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_google_android_gms_play_services_tasks_license_11_8_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_google_code_gson_gson_2_8_2_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_google_guava_guava_15_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_jakewharton_rxrelay2_rxrelay_2_0_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_madgag_spongycastle_core_1_54_0_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_madgag_spongycastle_prov_1_54_0_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_nimbusds_nimbus_jose_jwt_2_26_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_parse_bolts_bolts_tasks_1_4_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_segment_analytics_android_analytics_4_3_1_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_dagger_dagger_1_2_2_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_dagger_dagger_compiler_1_2_2_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_javawriter_2_5_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_leakcanary_leakcanary_android_no_op_1_6_1_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_okhttp3_logging_interceptor_3_11_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_okhttp3_okhttp_3_11_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_okio_okio_1_14_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_retrofit2_adapter_rxjava2_2_4_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_retrofit2_adapter_rxjava_2_4_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_retrofit2_converter_gson_2_4_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_retrofit2_retrofit_2_4_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_vaadin_external_google_android_json_0_0_20131108_vaadin1_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_webex_wme4android_release_8_9_0_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__custom_see_sqlite3_3_26_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__io_reactivex_rxjava2_rxandroid_2_1_0_aar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__io_reactivex_rxjava2_rxjava_2_2_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__io_reactivex_rxjava_1_3_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__javax_inject_javax_inject_1_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__joda_time_joda_time_2_10_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__net_jcip_jcip_annotations_1_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__net_minidev_json_smart_1_1_1_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_apache_commons_commons_lang3_3_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_bouncycastle_bcprov_jdk15on_1_50_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_greenrobot_eventbus_3_0_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_jetbrains_annotations_15_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_jetbrains_kotlin_kotlin_stdlib_1_3_21_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_jetbrains_kotlin_kotlin_stdlib_common_1_3_21_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_jetbrains_kotlin_kotlin_stdlib_jdk7_1_3_21_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_jetbrains_kotlin_kotlin_stdlib_jdk8_1_3_21_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_reactivestreams_reactive_streams_1_0_2_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_skyscreamer_jsonassert_1_5_0_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
+    <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,26 +115,7 @@
     </system>
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/PhoneImpl.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="330">
-              <caret line="365" column="41" selection-start-line="365" selection-start-column="21" selection-end-line="365" selection-end-column="41" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/Phone.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="357">
-              <caret line="295" column="49" selection-start-line="295" selection-start-column="22" selection-end-line="295" selection-end-column="49" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -107,14 +172,13 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="x" value="1460" />
-    <option name="y" value="269" />
-    <option name="width" value="1720" />
-    <option name="height" value="1026" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="y" value="23" />
+    <option name="width" value="1680" />
+    <option name="height" value="1027" />
   </component>
   <component name="ProjectView">
-    <navigator currentView="AndroidView" proportions="" version="1">
+    <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
@@ -129,37 +193,9 @@
           <select />
         </subPane>
       </pane>
-      <pane id="AndroidView">
-        <subPane>
-          <expand>
-            <path>
-              <item name="webex-android-sdk" type="1abcf292:AndroidViewProjectNode" />
-              <item name="sdk" type="feadf853:AndroidModuleNode" />
-            </path>
-            <path>
-              <item name="webex-android-sdk" type="1abcf292:AndroidViewProjectNode" />
-              <item name="sdk" type="feadf853:AndroidModuleNode" />
-              <item name="java" type="edd41e36:AndroidSourceTypeNode" />
-            </path>
-            <path>
-              <item name="webex-android-sdk" type="1abcf292:AndroidViewProjectNode" />
-              <item name="sdk" type="feadf853:AndroidModuleNode" />
-              <item name="java" type="edd41e36:AndroidSourceTypeNode" />
-              <item name="androidsdk" type="cbb59c9e:AndroidPsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="webex-android-sdk" type="1abcf292:AndroidViewProjectNode" />
-              <item name="sdk" type="feadf853:AndroidModuleNode" />
-              <item name="java" type="edd41e36:AndroidSourceTypeNode" />
-              <item name="androidsdk" type="cbb59c9e:AndroidPsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="PackagesPane" />
       <pane id="Scope" />
+      <pane id="PackagesPane" />
+      <pane id="AndroidView" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -193,11 +229,11 @@
     </option>
   </component>
   <component name="RunManager">
-    <configuration default="true" type="AndroidJUnit">
+    <configuration default="true" type="AndroidJUnit" factoryName="Android JUnit">
       <option name="TEST_OBJECT" value="class" />
       <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
       <method v="2">
-        <option name="Make" enabled="true" />
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
       </method>
     </configuration>
   </component>
@@ -243,11 +279,11 @@
     <option name="totallyTimeSpent" value="77887000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1460" y="269" width="1720" height="1026" extended-state="0" />
-    <editor active="true" />
+    <frame x="0" y="24" width="1680" height="1026" extended-state="6" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.48072806" visible="true" weight="0.2592372" />
-      <window_info id="Structure" order="1" sideWeight="0.51927197" side_tool="true" visible="true" weight="0.2592372" />
+      <window_info id="Resources Explorer" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.47882736" visible="true" weight="0.25921375" />
+      <window_info id="Structure" order="1" sideWeight="0.52117264" side_tool="true" visible="true" weight="0.25921375" />
       <window_info id="Designer" order="2" />
       <window_info id="Build Variants" order="3" sideWeight="0.5180587" side_tool="true" weight="0.26556778" />
       <window_info id="Image Layers" order="4" />
@@ -261,14 +297,14 @@
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Build" order="7" sideWeight="0.49974886" weight="0.32731378" />
+      <window_info anchor="bottom" id="Build" order="7" sideWeight="0.49974886" weight="0.32677597" />
       <window_info anchor="bottom" id="Android Profiler" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Docker" order="9" show_stripe_button="false" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5002511" side_tool="true" weight="0.32815057" />
       <window_info anchor="bottom" id="Logcat" order="11" weight="0.3295711" />
       <window_info anchor="bottom" id="Database Changes" order="12" />
       <window_info anchor="bottom" id="Version Control" order="13" />
-      <window_info anchor="bottom" id="Terminal" order="14" />
+      <window_info anchor="bottom" id="Terminal" order="14" visible="true" weight="0.32896176" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -331,27 +367,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/AuxStream.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="322">
-          <caret line="14" column="17" selection-start-line="14" selection-start-column="17" selection-end-line="14" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/util/SafeAsyncTask.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1494">
-          <caret line="68" column="16" selection-start-line="68" selection-start-column="16" selection-end-line="68" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/http/ListenerCallback.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="230">
-          <caret line="10" column="13" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/AuxStream.java" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/util/SafeAsyncTask.class" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/http/ListenerCallback.java" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.squareup.retrofit2/retrofit/2.3.0/76f3c69879d3e01c082f49d8661c5590838148e1/retrofit-2.3.0-sources.jar!/retrofit2/Call.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="95">
@@ -359,314 +377,50 @@
         </state>
       </provider>
     </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/sync/operationqueue/core/Operations.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="399">
-          <caret line="191" column="21" selection-start-line="191" selection-start-column="21" selection-end-line="191" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/http/ServiceBuilder.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="106" column="32" lean-forward="true" selection-start-line="106" selection-start-column="32" selection-end-line="106" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/locus/model/MediaDirection.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="299">
-          <caret line="16" selection-start-line="16" selection-end-line="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/locus/model/LocusParticipant.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2047">
-          <caret line="92" column="26" selection-start-line="92" selection-start-column="11" selection-end-line="92" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/locus/model/LocusParticipantStatus.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="437">
-          <caret line="22" column="35" selection-start-line="22" selection-start-column="35" selection-end-line="22" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/Utils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1173">
-          <caret line="71" column="25" selection-start-line="71" selection-start-column="25" selection-end-line="71" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/core/ApplicationController.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-8847">
-          <caret line="285" column="24" selection-start-line="285" selection-start-column="16" selection-end-line="285" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/authenticator/AuthenticatedUserTask.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="506">
-          <caret line="25" column="42" selection-start-line="25" selection-start-column="39" selection-end-line="25" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/locus/model/LocusKey.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-93">
-          <caret line="12" column="13" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/callcontrol/CallControlService.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="14697">
-          <caret line="644" column="33" selection-start-line="644" selection-start-column="21" selection-end-line="644" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/log/LogCaptureUtil.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="430">
-          <caret line="69" column="25" selection-start-line="69" selection-start-column="11" selection-end-line="69" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/membership/MembershipClient.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="36" column="17" selection-start-line="36" selection-start-column="17" selection-end-line="36" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/media/events/DeviceCameraUnavailable.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="92">
-          <caret line="7" column="24" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/MessageObserver.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="22">
-          <caret line="7" column="17" selection-start-line="7" selection-start-column="17" selection-end-line="7" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/classes.jar!/com/cisco/spark/android/callcontrol/events/CallControlMediaVideoMutedEvent.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="230">
-          <caret line="10" column="37" selection-start-line="10" selection-start-column="21" selection-end-line="10" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/libs/client-model.jar!/com/cisco/spark/android/model/conversation/Image.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="287">
-          <caret line="29" selection-start-line="29" selection-end-line="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/internal/MessageClientImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="397">
-          <caret line="601" column="29" selection-start-line="601" selection-start-column="29" selection-end-line="601" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/internal/RemoteFileImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="741">
-          <caret line="122" column="36" selection-start-line="122" selection-start-column="36" selection-end-line="122" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/libs/client-model.jar!/com/cisco/spark/android/model/AuthenticatedUser.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="154">
-          <caret line="31" column="28" selection-start-line="31" selection-start-column="11" selection-end-line="31" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/CallMembershipImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="230">
-          <caret line="98" column="21" selection-start-line="98" selection-start-column="21" selection-end-line="98" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/classes.jar!/com/cisco/spark/android/media/MediaEngine.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="287">
-          <caret line="20" column="8" selection-start-line="20" selection-start-column="8" selection-end-line="20" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/MediaOption.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="23">
-          <caret line="34" column="13" selection-start-line="34" selection-start-column="13" selection-end-line="34" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/classes.jar!/com/cisco/spark/android/core/SquaredBackgroundCheck.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="141" column="56" selection-start-line="141" selection-start-column="34" selection-end-line="141" selection-end-column="56" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/CallObserver.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="287">
-          <caret line="583" column="15" selection-start-line="583" selection-start-column="15" selection-end-line="583" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/classes.jar!/com/cisco/spark/android/media/MediaSessionImpl.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="377">
-          <caret line="2240" column="28" selection-start-line="2240" selection-start-column="16" selection-end-line="2240" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build.gradle">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="322">
-          <caret line="14" column="14" lean-forward="true" selection-start-line="14" selection-start-column="14" selection-end-line="14" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/JWTAuthenticator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4784">
-          <caret line="228" column="61" selection-start-line="228" selection-start-column="54" selection-end-line="228" selection-end-column="71" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/OAuthAuthenticator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3266">
-          <caret line="162" column="5" selection-start-line="162" selection-start-column="5" selection-end-line="162" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/WebexError.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="448">
-          <caret line="97" column="17" selection-start-line="97" selection-start-column="17" selection-end-line="97" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/classes.jar!/com/cisco/spark/android/media/MediaCapabilityConfig.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="239">
-          <caret line="27" selection-start-line="27" selection-end-line="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/CallImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="567" column="16" selection-start-line="567" selection-start-column="16" selection-end-line="567" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/Call.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="205">
-          <caret line="323" column="28" selection-start-line="323" selection-start-column="28" selection-end-line="323" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/build.gradle">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="383">
-          <caret line="61" lean-forward="true" selection-start-line="61" selection-end-line="61" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/Webex.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="257">
-          <caret line="135" column="7" lean-forward="true" selection-start-line="135" selection-start-column="7" selection-end-line="135" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/people/Person.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="154" column="29" lean-forward="true" selection-start-line="154" selection-start-column="29" selection-end-line="154" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/people/internal/PersonClientImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="318">
-          <caret line="69" selection-start-line="69" selection-end-line="69" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/people/PersonClient.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="349">
-          <caret line="71" column="7" lean-forward="true" selection-start-line="71" selection-start-column="7" selection-end-line="71" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/Message.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="144" column="17" selection-start-line="144" selection-start-column="17" selection-end-line="144" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/SerializedEnum.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="23">
-          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/Space.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="534">
-          <caret line="60" selection-start-line="60" selection-end-line="67" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/SpaceClient.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="371">
-          <caret line="52" column="40" lean-forward="true" selection-start-line="52" selection-start-column="40" selection-end-line="52" selection-end-column="40" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/internal/SpaceClientImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="254">
-          <caret line="66" lean-forward="true" selection-start-line="66" selection-end-line="66" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/PhoneImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="365" column="41" selection-start-line="365" selection-start-column="21" selection-end-line="365" selection-end-column="41" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/Phone.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="295" column="49" selection-start-line="295" selection-start-column="22" selection-end-line="295" selection-end-column="49" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/sync/operationqueue/core/Operations.class" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/http/ServiceBuilder.java" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/locus/model/MediaDirection.class" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/locus/model/LocusParticipant.class" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/locus/model/LocusParticipantStatus.class" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/Utils.java" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/core/ApplicationController.class" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/authenticator/AuthenticatedUserTask.class" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/locus/model/LocusKey.class" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/callcontrol/CallControlService.class" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/log/LogCaptureUtil.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/membership/MembershipClient.java" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.4651.1.aar/bb3baff713b780c66e4db1d9544e69fa/jars/classes.jar!/com/cisco/spark/android/media/events/DeviceCameraUnavailable.class" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/MessageObserver.java" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/classes.jar!/com/cisco/spark/android/callcontrol/events/CallControlMediaVideoMutedEvent.class" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/libs/client-model.jar!/com/cisco/spark/android/model/conversation/Image.class" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/internal/MessageClientImpl.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/internal/RemoteFileImpl.java" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/libs/client-model.jar!/com/cisco/spark/android/model/AuthenticatedUser.class" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/CallMembershipImpl.java" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/classes.jar!/com/cisco/spark/android/media/MediaEngine.class" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/MediaOption.java" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/classes.jar!/com/cisco/spark/android/core/SquaredBackgroundCheck.class" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/CallObserver.java" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/classes.jar!/com/cisco/spark/android/media/MediaSessionImpl.class" />
+    <entry file="file://$PROJECT_DIR$/build.gradle" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/JWTAuthenticator.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/OAuthAuthenticator.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/WebexError.java" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/androidclient_common-3.0.5129-SNAPSHOT.aar/8e4e2c201004f198b767aec5ea8c8ea3/jars/classes.jar!/com/cisco/spark/android/media/MediaCapabilityConfig.class" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/CallImpl.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/Call.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/build.gradle" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/Webex.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/people/Person.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/people/internal/PersonClientImpl.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/people/PersonClient.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/Message.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/SerializedEnum.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/Space.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/SpaceClient.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/internal/SpaceClientImpl.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/PhoneImpl.java" />
+    <entry file="file://$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/Phone.java" />
   </component>
   <component name="masterDetails">
     <states>
