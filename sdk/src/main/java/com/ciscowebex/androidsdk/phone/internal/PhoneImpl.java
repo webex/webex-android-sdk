@@ -766,8 +766,8 @@ public class PhoneImpl implements Phone {
             //group call self join.
             com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
             for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
-                if (locusParticipant.getDeviceUrl().equals(_device.getUrl())
-                        && locus != null
+                if (locus != null
+                        && locusParticipant.getDeviceUrl().equals(_device.getUrl())
                         && locus.getLocusData().isMeeting()) {
                     call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, event.getLocusKey(), locus.getLocusData().isMeeting());
                     _bus.register(call);
@@ -1558,7 +1558,10 @@ public class PhoneImpl implements Phone {
                     });
                 }
             }
-            _callControlService.updateMediaSession(_callControlService.getCall(call.getKey()), mediaOptionToMediaDirection(call.getOption()));
+            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(call.getKey());
+            if (locus != null) {
+                _callControlService.updateMediaSession(locus, mediaOptionToMediaDirection(call.getOption()));
+            }
         }
         call.setStatus(Call.CallStatus.CONNECTED);
 

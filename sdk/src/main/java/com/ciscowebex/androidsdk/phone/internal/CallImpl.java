@@ -742,18 +742,21 @@ public class CallImpl implements Call {
             return;
         }
         if (_videoRenderViews != null && _videoRenderViews.first != null && _videoRenderViews.second != null) {
-            _phone._callControlService.setPreviewWindow(getKey(), _videoRenderViews.first);
-            _phone._callControlService.setRemoteWindow(getKey(), _videoRenderViews.second);
+            _phone.getCallService().setPreviewWindow(getKey(), _videoRenderViews.first);
+            _phone.getCallService().setRemoteWindow(getKey(), _videoRenderViews.second);
         } else {
-            _phone._callControlService.setPreviewWindow(getKey(), null);
-            _phone._callControlService.removeRemoteVideoWindows(getKey());
+            _phone.getCallService().setPreviewWindow(getKey(), null);
+            _phone.getCallService().removeRemoteVideoWindows(getKey());
         }
 
         if (_sharingRenderView != null) {
-            _phone._callControlService.setShareWindow(getKey(), _sharingRenderView);
+            _phone.getCallService().setShareWindow(getKey(), _sharingRenderView);
         } else {
-            _phone._callControlService.removeShareWindow(getKey());
+            _phone.getCallService().removeShareWindow(getKey());
         }
-        _phone._callControlService.updateMediaSession(_phone._callControlService.getCall(getKey()), PhoneImpl.mediaOptionToMediaDirection(_option));
+        com.cisco.spark.android.callcontrol.model.Call call = _phone.getCallService().getCall(getKey());
+        if (call != null) {
+            _phone.getCallService().updateMediaSession(call, PhoneImpl.mediaOptionToMediaDirection(_option));
+        }
     }
 }
