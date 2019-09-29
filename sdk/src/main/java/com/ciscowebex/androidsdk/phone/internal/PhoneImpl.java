@@ -400,15 +400,21 @@ public class PhoneImpl implements Phone {
         _registerCallback = callback;
         RotationHandler.registerRotationReceiver(_context, this);
 
-        ServiceBuilder.async(_authenticator, callback, s -> {
-            _registerTimeoutTask = () -> {
-                Ln.i("Register timeout");
-                if (_device == null && _registerCallback != null) {
-                    _registerCallback.onComplete(ResultImpl.error("Register timeout"));
-                }
-            };
-            _registerTimer.postDelayed(_registerTimeoutTask, 60L * 1000);
-            new AuthenticatedUserTask(_applicationController).execute();
+        ServiceBuilder.async(_authenticator, callback, true, s -> {
+            if (s == null) {
+                RotationHandler.unregisterRotationReceiver(_context);
+                _registerCallback = null;
+            }
+            else {
+                _registerTimeoutTask = () -> {
+                    Ln.i("Register timeout");
+                    if (_device == null && _registerCallback != null) {
+                        _registerCallback.onComplete(ResultImpl.error("Register timeout"));
+                    }
+                };
+                _registerTimer.postDelayed(_registerTimeoutTask, 60L * 1000);
+                new AuthenticatedUserTask(_applicationController).execute();
+            }
             return null;
         }, null);
     }
@@ -948,7 +954,10 @@ public class PhoneImpl implements Phone {
         Ln.i("CallControlLeaveLocusEvent is received " + event.locusData().getKey());
         resetDialStatus(null);
         CallImpl call = _calls.get(event.locusData().getKey());
-        if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
+        // if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
+        if (call == null) {
+            Ln.d("Cannot find the call " + event.locusData().getKey());
+        } else {
             Ln.d(STR_FIND_CALLIMPL + event.locusData().getKey());
             removeCall(new CallObserver.RemoteDecline(call));
         }
@@ -1262,8 +1271,9 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlMediaDecodeSizeChangedEvent event) {
         Ln.d("CallControlMediaDecodeSizeChangedEvent is received  mid: " + event.getMediaId() + "  size: " + event.getSize());
-        if (_activeCallLocusKey == null)
+        if (_activeCallLocusKey == null) {
             return;
+        }
         CallImpl activeCall = _calls.get(_activeCallLocusKey);
         if (activeCall != null && activeCall.isGroup()) {
             switch (event.getMediaId()) {
@@ -1550,7 +1560,10 @@ public class PhoneImpl implements Phone {
                     });
                 }
             }
-            _callControlService.updateMediaSession(_callControlService.getCall(call.getKey()), mediaOptionToMediaDirection(call.getOption()));
+            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(call.getKey());
+            if (locus != null) {
+                _callControlService.updateMediaSession(locus, mediaOptionToMediaDirection(call.getOption()));
+            }
         }
         call.setStatus(Call.CallStatus.CONNECTED);
 

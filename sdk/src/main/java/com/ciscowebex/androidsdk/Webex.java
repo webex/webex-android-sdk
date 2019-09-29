@@ -29,6 +29,7 @@ import android.app.Application;
 import com.cisco.spark.android.callcontrol.model.Call;
 import com.cisco.spark.android.core.BackgroundCheck;
 import com.cisco.spark.android.media.MediaEngine;
+import com.cisco.spark.android.reachability.ConnectivityChangeReceiver;
 import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.auth.OAuthAuthenticator;
@@ -98,6 +99,9 @@ public class Webex {
     @Inject
     UserAgentProvider _userAgentProvider;
 
+    @Inject
+    ConnectivityChangeReceiver connectivityChangeReceiver;
+
     /**
      * Constructs a new Webex object with an {@link Authenticator} and Application
      *
@@ -117,6 +121,7 @@ public class Webex {
         _common.inject(_authenticator);
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _common);
         _message = new MessageClientImpl(application.getApplicationContext(), _authenticator, _common);
+        application.registerReceiver(connectivityChangeReceiver, ConnectivityChangeReceiver.getIntentFilter());
         setLogLevel(LogLevel.DEBUG);
         Ln.i(_userAgentProvider.get());
         Ln.i(Utils.versionInfo());

@@ -292,7 +292,9 @@ task javadoc(type: Javadoc) {
         }
     }
     source = android.sourceSets.main.java.srcDirs
+    options.memberLevel = JavadocMemberLevel.PUBLIC
     options.encoding('UTF-8')
+    options.locale('en_US')
     options.setUse(true)
     options.author(true)
     options.version(true)

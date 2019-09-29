@@ -101,37 +101,61 @@ public class ServiceBuilder {
         return retrofit.create(service);
     }
 
-    public static <T> void async(Authenticator authenticator, CompletionHandler<T> handler, Closure<String> closure, ListenerCallback callback) {
+    public static <T> void async(Authenticator authenticator, CompletionHandler<T> doAuthFailed, Closure<String> doPrepareReqeust, ListenerCallback doHandleResponse) {
+        async(authenticator, doAuthFailed, false, doPrepareReqeust, doHandleResponse);
+    }
+
+    public static <T> void async(Authenticator authenticator, CompletionHandler<T> doAuthFailed, boolean notifyFailed, Closure<String> doPrepareReqeust, ListenerCallback doHandleResponse) {
         authenticator.getToken(result -> {
             String token = result.getData();
-            if (token != null) {
-                if (callback != null) {
-                    callback.setUnauthErrorListener(response -> {
-                        if (!handleUnauthError(authenticator, handler, closure, callback) && handler != null){
-                            handler.onComplete(ResultImpl.error(response));
+            if (token == null) {
+                if (doPrepareReqeust != null && notifyFailed) {
+                    doPrepareReqeust.invoke(null);
+                }
+                if (doAuthFailed != null) {
+                    doAuthFailed.onComplete(ResultImpl.error(result.getError()));
+                }
+            }
+            else {
+                if (doHandleResponse != null) {
+                    doHandleResponse.setUnauthErrorListener(response -> {
+                        if (!handleUnauthError(authenticator, doAuthFailed, doPrepareReqeust, doHandleResponse)){
+                            if (doPrepareReqeust != null && notifyFailed) {
+                                doPrepareReqeust.invoke(null);
+                            }
+                            if (doAuthFailed != null) {
+                                doAuthFailed.onComplete(ResultImpl.error(response));
+                            }
                         }
                     });
                 }
-                Call call = closure.invoke("Bearer " + token);
-                if (call != null)
-                    call.enqueue(callback);
-            } else if (handler != null){
-                handler.onComplete(ResultImpl.error(result.getError()));
+                Call call = doPrepareReqeust.invoke("Bearer " + token);
+                if (call != null) {
+                    call.enqueue(doHandleResponse);
+                }
             }
         });
     }
 
-    private static boolean handleUnauthError(Authenticator authenticator, CompletionHandler handler, Closure<String> closure, Callback callback){
+    private static <T> boolean handleUnauthError(Authenticator authenticator, CompletionHandler<T> doAuthFailed, Closure<String> doPrepareReqeust, Callback doHandleResponse) {
         Ln.d("handleUnauthError");
         if (authenticator != null) {
             Ln.d("refreshToken");
             authenticator.refreshToken(result -> {
                 String token = result.getData();
-                if (token != null) {
-                    Call call = closure.invoke("Bearer " + token);
-                    call.enqueue(callback);
-                } else if (handler != null){
-                    handler.onComplete(ResultImpl.error(result.getError()));
+                if (token == null) {
+                    if (doPrepareReqeust != null) {
+                        doPrepareReqeust.invoke(null);
+                    }
+                    if (doAuthFailed != null) {
+                        doAuthFailed.onComplete(ResultImpl.error(result.getError()));
+                    }
+                }
+                else {
+                    Call call = doPrepareReqeust.invoke("Bearer " + token);
+                    if (call != null) {
+                        call.enqueue(doHandleResponse);
+                    }
                 }
             });
             return true;
