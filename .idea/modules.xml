@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/sdk/sdk.iml" filepath="$PROJECT_DIR$/sdk/sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/webex-android-sdk.iml" filepath="$PROJECT_DIR$/webex-android-sdk.iml" />
     </modules>
   </component>
