@@ -88,9 +88,9 @@ public class SpaceReadStatus {
     }
 
     /**
-     * The date of the last message in the space that login user seen.
+     * The date of the last message in the space that login user has read.
      *
-     * @return the date of the last message in the space that login user seen.
+     * @return the date of the last message in the space that login user has read.
      */
     public Date getLastSeenDate() {
         return _lastSeenActivityDate;

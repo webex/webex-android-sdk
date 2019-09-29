@@ -54,22 +54,21 @@ public class MembershipReadStatus {
     }
 
     /**
-     * The {@link Membership} of the space
+     * The {@link Membership} of the space.
      */
     public Membership getMembership() {
         return _membership;
     }
 
     /**
-     * The id of the last {@link Message} the member have seen
+     * The id of the last {@link Message} the member have read.
      */
     public String getLastSeenId() {
         return _lastSeenId;
     }
 
     /**
-     * The last date the member have seen
-     * @since 2.3.0
+     * The last date and time the member have read messages.
      */
     public Date getLastSeenDate() {
         return _lastSeenDate;

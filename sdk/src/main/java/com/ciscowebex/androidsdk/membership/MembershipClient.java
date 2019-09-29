@@ -39,7 +39,7 @@ public interface MembershipClient {
     /**
      * Sets a {@link MembershipObserver} in this client.
      *
-     * @param observer the observer object.
+     * @param observer the callback to receive events about membership changes.
      * @see MembershipObserver
      * @since 2.3.0
      */
@@ -98,7 +98,8 @@ public interface MembershipClient {
     void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler);
 
     /**
-     * Return a list of {@link MembershipReadStatus} with details about the lastSeenId for each user, allowing a client to indicate "read status" in a space GUI
+     * Returns a list of memberships with details about the lastSeenId for each user so that application can tell
+     * which message was the last message was read by each user.
      * @param spaceId The identifier of the space.
      * @param handler A closure to be executed once the request has finished.
      * @see MembershipReadStatus

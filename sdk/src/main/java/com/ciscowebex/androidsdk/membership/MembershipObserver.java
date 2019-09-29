@@ -51,7 +51,7 @@ public interface MembershipObserver {
         }
 
         /**
-         * Returns the membership is added.
+         * Returns the membership being added.
          */
         public Membership getMembership() {
             return membership;
@@ -59,7 +59,7 @@ public interface MembershipObserver {
     }
 
     /**
-     * The event when a user is removed to a space.
+     * The event when a user is removed from a space.
      */
     class MembershipDeleted extends WebexEvent.Base implements MembershipEvent {
 
@@ -71,7 +71,7 @@ public interface MembershipObserver {
         }
 
         /**
-         * Returns the membership is removed.
+         * Returns the membership being removed.
          */
         public Membership getMembership() {
             return membership;
@@ -91,7 +91,7 @@ public interface MembershipObserver {
         }
 
         /**
-         * Returns the membership whose properties has been modified.
+         * Returns the membership whose properties have been modified.
          */
         public Membership getMembership() {
             return membership;
@@ -101,12 +101,12 @@ public interface MembershipObserver {
     /**
      * The event when a membership has sent a read receipt
      */
-    class MembershipSeen extends WebexEvent.Base implements MembershipEvent {
+    class MembershipMessageSeen extends WebexEvent.Base implements MembershipEvent {
 
         private Membership membership;
         private String lastSeenMessageId;
 
-        protected MembershipSeen(Membership membership, Activity activity, String lastSeenMessageId) {
+        protected MembershipMessageSeen(Membership membership, Activity activity, String lastSeenMessageId) {
             super(activity);
             this.membership = membership;
             this.lastSeenMessageId = lastSeenMessageId;
@@ -120,7 +120,7 @@ public interface MembershipObserver {
         }
 
         /**
-         * Returns the last seen message's id of the membership.
+         * Returns the id of last message read by the membership.
          */
         public String getLastSeenMessageId() {
             return lastSeenMessageId;

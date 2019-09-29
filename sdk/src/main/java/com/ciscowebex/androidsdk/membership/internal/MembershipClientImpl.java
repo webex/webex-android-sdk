@@ -51,7 +51,6 @@ import com.ciscowebex.androidsdk.utils.http.ListCallback;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 
-import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.collection.Maps;
@@ -184,7 +183,7 @@ public class MembershipClientImpl implements MembershipClient {
                 event = new InternalMembership.InternalMembershipUpdated(membership, activity);
                 break;
             case Verb.acknowledge:
-                event = new InternalMembership.InternalMembershipSeen(membership, activity, new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
+                event = new InternalMembership.InternalMembershipMessageSeen(membership, activity, new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
                 break;
             default:
                 return;

@@ -34,11 +34,11 @@ import com.ciscowebex.androidsdk.message.internal.WebexId;
 public interface WebexEvent {
 
     /**
-     * Returns the personId of the user that caused the event to be sent. For example, for a messsage received event,
+     * Returns the identifier of the user that caused the event to be sent. For example, for a messsage received event,
      * the author of the message will be the actor. For a membership deleted event, the actor is the person who removed the user
      * from space.
      *
-     * @return The personId of the user that caused the event to be sent.
+     * @return The identifier of the user that caused the event to be sent.
      */
     String getActorId();
 

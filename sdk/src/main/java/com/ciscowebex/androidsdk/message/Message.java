@@ -42,7 +42,9 @@ import com.google.gson.Gson;
 public class Message {
 
     /**
-     * The wrapper for the message text in different formats.
+     * The wrapper for the message text in different formats: plain text, markdown, and html.
+     * Please note this version of the SDK requires the application to convert markdown to html.
+     * Future version of the SDK will provide auto conversion from markdown to html.
      *
      * @since 2.3.0
      */
@@ -71,7 +73,7 @@ public class Message {
          * Make a Text object for the markdown.
          *
          * @param markdown the text with the markdown markup.
-         * @param html the html text for how to render the markdown.
+         * @param html the html text for how to render the markdown. This will be optional in the future.
          * @param plain the alternate plain text for cases that do not support markdown and html markup.
          */
         public static Text markdown(String markdown, String html, String plain) {
@@ -141,7 +143,7 @@ public class Message {
 
     private boolean isSelfMentioned;
 
-    private Text complexText;
+    private Text textAsObject;
 
     private transient List<RemoteFile> remoteFiles;
 
@@ -157,7 +159,7 @@ public class Message {
             this.personDisplayName = activity.getActor().getDisplayName();
         }
         if (activity.getObject() != null) {
-            this.complexText = new Text(activity.getObject());
+            this.textAsObject = new Text(activity.getObject());
         }
         if (activity.getTarget() instanceof Conversation) {
             this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
@@ -260,24 +262,24 @@ public class Message {
      * @since 0.1
      */
     public String getText() {
-        if (complexText == null) {
+        if (textAsObject == null) {
             return null;
         }
-        String formatedText = complexText.getHtml();
+        String formatedText = textAsObject.getHtml();
         if (formatedText != null) {
             return formatedText;
         }
-        return complexText.getMarkdown() != null ? complexText.getMarkdown() : complexText.getPlain();
+        return textAsObject.getMarkdown() != null ? textAsObject.getMarkdown() : textAsObject.getPlain();
     }
 
     /**
-     * Returns the content of the message in different formats.
+     * Returns the content of the message in as {@link Message.Text} object.
      *
      * @return The content of the message.
      * @since 2.3.0
      */
-    public Text getComplexText() {
-        return complexText;
+    public Text getTextAsObject() {
+        return textAsObject;
     }
 
     /**
