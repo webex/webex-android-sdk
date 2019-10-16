@@ -742,6 +742,8 @@ public class CallImpl implements Call {
             return;
         }
         if (_videoRenderViews != null && _videoRenderViews.first != null && _videoRenderViews.second != null) {
+            Ln.d("Render views: " + _videoRenderViews.first + "[" + Objects.identityString(_videoRenderViews.first) + "], "
+                    + _videoRenderViews.second + "[" + Objects.identityString( _videoRenderViews.second) + "]");
             _phone.getCallService().setPreviewWindow(getKey(), _videoRenderViews.first);
             _phone.getCallService().setRemoteWindow(getKey(), _videoRenderViews.second);
         } else {
