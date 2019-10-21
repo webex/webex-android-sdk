@@ -1560,10 +1560,7 @@ public class PhoneImpl implements Phone {
                     });
                 }
             }
-            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(call.getKey());
-            if (locus != null) {
-                _callControlService.updateMediaSession(locus, mediaOptionToMediaDirection(call.getOption()));
-            }
+            call.updateMedia();
         }
         call.setStatus(Call.CallStatus.CONNECTED);
 
