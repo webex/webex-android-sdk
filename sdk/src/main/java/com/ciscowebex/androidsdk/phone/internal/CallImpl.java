@@ -506,7 +506,7 @@ public class CallImpl implements Call {
         CallControlService service = _phone.getCallService();
         LocusKey key = getKey();
         if (_videoRenderViews == null && videoRenderViews == null) {
-            Ln.d("");
+            Ln.d("Do nothing.");
         }
         else if (_videoRenderViews == null) {
             _videoRenderViews = videoRenderViews;
