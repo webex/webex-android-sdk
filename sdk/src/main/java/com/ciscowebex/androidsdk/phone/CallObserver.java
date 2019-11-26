@@ -33,6 +33,12 @@ import me.helloworld.utils.annotation.StringPart;
  * @since 0.1
  */
 public interface CallObserver {
+    /**
+     * Callback when the call is in lobby.
+     * @param call Call
+     * @since 2.4
+     */
+    void onInLobby(Call call, Call.InLobbyReason inLobbyReason);
 
     /**
      * Callback when remote participant(s) is ringing.
@@ -712,6 +718,17 @@ public interface CallObserver {
     class MembershipSendingSharingEvent extends AbstractCallMembershipChangedEvent {
 
         public MembershipSendingSharingEvent(Call call, CallMembership membership) {
+            super(call, membership);
+        }
+    }
+
+    /**
+     * This might be triggered when the person in the membership joined lobby of this call.
+     *
+     * @since 2.4.0
+     */
+    class MembershipJoinedLobbyEvent extends AbstractCallMembershipChangedEvent{
+        public MembershipJoinedLobbyEvent(Call call, CallMembership membership){
             super(call, membership);
         }
     }

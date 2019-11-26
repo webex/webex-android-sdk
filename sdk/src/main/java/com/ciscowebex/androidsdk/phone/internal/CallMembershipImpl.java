@@ -22,12 +22,9 @@
 
 package com.ciscowebex.androidsdk.phone.internal;
 
-import android.util.Base64;
-
 import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.cisco.spark.android.locus.model.LocusParticipantInfo;
 import com.cisco.spark.android.locus.model.MediaDirection;
-import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
 import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.utils.Utils;
@@ -42,9 +39,9 @@ import me.helloworld.utils.annotation.StringPart;
 
 public class CallMembershipImpl implements CallMembership {
 
-    private static CallMembership.State fromLocusState(LocusParticipant.State state) {
+    private static CallMembership.State fromLocusState(LocusParticipant.State state, boolean isInLobby) {
         if (state == LocusParticipant.State.IDLE) {
-            return CallMembership.State.IDLE;
+            return isInLobby? CallMembership.State.INLOBBY:CallMembership.State.IDLE;
         } else if (state == LocusParticipant.State.NOTIFIED) {
             return State.NOTIFIED;
         } else if (state == LocusParticipant.State.JOINED) {
@@ -94,7 +91,7 @@ public class CallMembershipImpl implements CallMembership {
         _phoneNumber = person.getPhoneNumber();
         _sipUrl = person.getPhoneNumber();
         _isInitiator = participant.isCreator();
-        _state = fromLocusState(participant.getState());
+        _state = fromLocusState(participant.getState(), participant.isInLobby());
         MediaDirection videoStatus = participant.getStatus().getVideoStatus();
         MediaDirection audioStatus = participant.getStatus().getAudioStatus();
         Ln.d("CallMembership: " + person.getId() + " email: " + _email + "  video: " +videoStatus + "   audio: " + audioStatus);

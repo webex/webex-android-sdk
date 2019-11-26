@@ -28,7 +28,9 @@ import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.google.gson.JsonArray;
 
 import android.view.View;
 import android.util.Pair;
@@ -96,7 +98,33 @@ public interface Call {
          *
          * @since 0.1
          */
-        DISCONNECTED
+        DISCONNECTED,
+        /**
+         * The call is in lobby.
+         *
+         * @since 2.4
+         */
+        INLOBBY
+    }
+
+    /**
+     * The reason of in lobby status
+     *
+     * @since 2.4
+     */
+    enum InLobbyReason{
+        /**
+         * The meeting haven't started
+         *
+         * @since 2.4
+         */
+        MEETING_NOT_START,
+        /**
+         * Waiting in lobby for admiting by hosts
+         *
+         * @since 2.4
+         */
+        WAITING_FOR_ADMITTING
     }
 
     /**
@@ -413,4 +441,8 @@ public interface Call {
      * @since 2.0.0
      */
     MultiStreamObserver getMultiStreamObserver();
+
+    void admitParticipant(@NonNull CallMembership callMembership);
+
+    void admitAllParticipant();
 }
