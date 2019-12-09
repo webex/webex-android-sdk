@@ -732,15 +732,28 @@ public class PhoneImpl implements Phone {
                     setCallOnConnected(call, event.getLocusKey());
                 }
             }
-        } else {
-            Ln.e("Internal callImpl is exist " + call);
-            resetDialStatus(null);
+        } else if (!call.getStatus().equals(Call.CallStatus.CONNECTED)) {
+            Ln.d("Internal callImpl is exist " + call);
+            Ln.d("Call status is " + call.getStatus());
+//            resetDialStatus(null);
+            if (!_bus.isRegistered(call))
+                _bus.register(call);
+            _calls.put(key, call);
+            if (_dialCallback != null) {
+                _dialCallback.onComplete(ResultImpl.success(call));
+                _dialCallback = null;
+            }
+            if (call.isGroup()) {
+                setCallOnRinging(call);
+                setCallOnConnected(call, event.getLocusKey());
+            }
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlJoinedLobbyEvent event) {
         Ln.i("CallControlJoinedLobbyEvent is received " + event.getLocusKey());
+        updateCallLobbyStatus(event.getLocusKey(), true);
         LocusKey key = event.getLocusKey();
         CallImpl call = _calls.get(key);
         if (call != null) {
@@ -755,6 +768,40 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlJoinedMeetingFromLobbyEvent event) {
         Ln.i("CallControlJoinedMeetingFromLobbyEvent is received " + event.getLocusKey());
+        updateCallLobbyStatus(event.getLocusKey(), false);
+        CallImpl call = _calls.get(event.getLocusKey());
+        if (call == null) {
+            //group call self join.
+            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
+            call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, event.getLocusKey(), locus.getLocusData().isMeeting());
+            _bus.register(call);
+            _calls.put(call.getKey(), call);
+            if (_dialCallback != null) {
+                _dialCallback.onComplete(ResultImpl.success(call));
+                _dialCallback = null;
+            }
+            setCallOnRinging(call);
+            setCallOnConnected(call, event.getLocusKey());
+        } else {
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
+            if (call.getStatus() != Call.CallStatus.CONNECTED) {
+                if (call.getAnswerCallback() != null) {
+                    call.getAnswerCallback().onComplete(ResultImpl.success(null));
+                }
+                if (_dialCallback != null) {
+                    _dialCallback.onComplete(ResultImpl.success(call));
+                    _dialCallback = null;
+                }
+                setCallOnRinging(call);
+                if (call.getOption() == null && _dialOption != null) {
+                    call.setMediaOption(_dialOption);
+                }
+                setCallOnConnected(call, event.getLocusKey());
+                resetDialStatus(null);
+            } else {
+                resetDialStatus(null);
+            }
+        }
     }
 
     // Remoted send acknowledge and it means it is RINGING
@@ -803,8 +850,10 @@ public class PhoneImpl implements Phone {
                         _dialCallback.onComplete(ResultImpl.success(call));
                         _dialCallback = null;
                     }
-                    setCallOnRinging(call);
-                    setCallOnConnected(call, event.getLocusKey());
+                    if (!locusParticipant.isInLobby()){
+                        setCallOnRinging(call);
+                        setCallOnConnected(call, event.getLocusKey());
+                    }
                 }
             }
         } else {
@@ -818,18 +867,20 @@ public class PhoneImpl implements Phone {
             } else if (call.getStatus() != Call.CallStatus.CONNECTED) {
                 for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
                     if (locusParticipant != null && locusParticipant.getDeviceUrl() != null && locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
-                        if (call.getAnswerCallback() != null) {
-                            call.getAnswerCallback().onComplete(ResultImpl.success(null));
-                        }
                         if (_dialCallback != null) {
                             _dialCallback.onComplete(ResultImpl.success(call));
                             _dialCallback = null;
                         }
-                        setCallOnRinging(call);
-                        if (call.getOption() == null && _dialOption != null) {
-                            call.setMediaOption(_dialOption);
+                        if (!locusParticipant.isInLobby()){
+                            if (call.getAnswerCallback() != null) {
+                                call.getAnswerCallback().onComplete(ResultImpl.success(null));
+                            }
+                            setCallOnRinging(call);
+                            if (call.getOption() == null && _dialOption != null) {
+                                call.setMediaOption(_dialOption);
+                            }
+                            setCallOnConnected(call, event.getLocusKey());
                         }
-                        setCallOnConnected(call, event.getLocusKey());
                     }
                 }
                 resetDialStatus(null);
@@ -1803,5 +1854,12 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ApplicationControllerStateChangedEvent event) {
         // -- Ignore Event
+    }
+
+    private void updateCallLobbyStatus(LocusKey locusKey, boolean inLobby) {
+        com.cisco.spark.android.callcontrol.model.Call call = _callControlService.getCall(locusKey);
+        if (call != null) {
+            call.setLeavingCallBeforeMediaStarted(inLobby);
+        }
     }
 }

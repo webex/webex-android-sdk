@@ -442,7 +442,23 @@ public interface Call {
      */
     MultiStreamObserver getMultiStreamObserver();
 
+    /**
+     * Admit a participant join meeting from lobby.
+     * @param personId the person ID of the participant.
+     * @since 2.4.0
+     */
+    void admitParticipant(@NonNull String personId);
+
+    /**
+     * Admit a participant join meeting from lobby.
+     * @param callMembership the call membership of the participant.
+     * @since 2.4.0
+     */
     void admitParticipant(@NonNull CallMembership callMembership);
 
+    /**
+     * Admit all participants join meeting from lobby.
+     * @since 2.4.0
+     */
     void admitAllParticipant();
 }

@@ -770,14 +770,20 @@ public class CallImpl implements Call {
     }
 
     @Override
-    public void admitParticipant(@NonNull CallMembership callMembership) {
+    public void admitParticipant(@NonNull String personId) {
         List<LocusParticipant> participants = getRemoteParticipants();
         for (LocusParticipant participant : participants) {
-            if (participant.isInLobby() && callMembership.getPersonId().equals(Utils.encode(participant.getPerson().getId()))) {
+            if (participant.isInLobby() && personId.equals(Utils.encode(participant.getPerson().getId()))) {
                 _phone.getCallService().admitParticipant(participant);
                 return;
             }
         }
+    }
+
+    @Override
+    public void admitParticipant(@NonNull CallMembership callMembership) {
+        String personId = callMembership.getPersonId();
+        admitParticipant(personId);
     }
 
     @Override
