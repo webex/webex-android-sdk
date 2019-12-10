@@ -756,7 +756,20 @@ public class PhoneImpl implements Phone {
         updateCallLobbyStatus(event.getLocusKey(), true);
         LocusKey key = event.getLocusKey();
         CallImpl call = _calls.get(key);
-        if (call != null) {
+        if(call == null){
+            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
+            call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, event.getLocusKey(), locus.getLocusData().isMeeting());
+            _bus.register(call);
+            _calls.put(call.getKey(), call);
+            if (_dialCallback != null) {
+                _dialCallback.onComplete(ResultImpl.success(call));
+                _dialCallback = null;
+            }
+            if (call.isGroup())
+                if (call.getDirection() == Call.Direction.OUTGOING) {
+                    setCallInLobby(call, event.isActive() ? Call.InLobbyReason.WAITING_FOR_ADMITTING : Call.InLobbyReason.MEETING_NOT_START);
+                }
+        }else {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (call.isGroup())
                 if (call.getDirection() == Call.Direction.OUTGOING) {
@@ -780,7 +793,6 @@ public class PhoneImpl implements Phone {
                 _dialCallback.onComplete(ResultImpl.success(call));
                 _dialCallback = null;
             }
-            setCallOnRinging(call);
             setCallOnConnected(call, event.getLocusKey());
         } else {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
@@ -792,7 +804,6 @@ public class PhoneImpl implements Phone {
                     _dialCallback.onComplete(ResultImpl.success(call));
                     _dialCallback = null;
                 }
-                setCallOnRinging(call);
                 if (call.getOption() == null && _dialOption != null) {
                     call.setMediaOption(_dialOption);
                 }
@@ -1680,10 +1691,11 @@ public class PhoneImpl implements Phone {
                     });
                 }
             }
-            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(call.getKey());
-            if (locus != null) {
-                _callControlService.updateMediaSession(locus, mediaOptionToMediaDirection(call.getOption()));
-            }
+            // Avoid updateMediaSession twice
+//            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(call.getKey());
+//            if (locus != null) {
+//                _callControlService.updateMediaSession(locus, mediaOptionToMediaDirection(call.getOption()));
+//            }
         }
         call.setStatus(Call.CallStatus.CONNECTED);
 
