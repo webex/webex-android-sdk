@@ -33,12 +33,13 @@ import me.helloworld.utils.annotation.StringPart;
  * @since 0.1
  */
 public interface CallObserver {
+
     /**
-     * Callback when the call is in lobby.
+     * Callback when the caller is waiting in lobby.
      * @param call Call
-     * @since 2.4
+     * @since 2.4.0
      */
-    void onInLobby(Call call, Call.InLobbyReason inLobbyReason);
+    void onWaiting(Call call, Call.WaitReason inLobbyReason);
 
     /**
      * Callback when remote participant(s) is ringing.
@@ -727,9 +728,17 @@ public interface CallObserver {
      *
      * @since 2.4.0
      */
-    class MembershipJoinedLobbyEvent extends AbstractCallMembershipChangedEvent{
-        public MembershipJoinedLobbyEvent(Call call, CallMembership membership){
+    class MembershipWaitingEvent extends AbstractCallMembershipChangedEvent{
+
+        private Call.WaitReason waitReason;
+
+        public MembershipWaitingEvent(Call call, CallMembership membership, Call.WaitReason waitReason){
             super(call, membership);
+            this.waitReason = waitReason;
+        }
+
+        public Call.WaitReason getWaitReason() {
+            return waitReason;
         }
     }
 }

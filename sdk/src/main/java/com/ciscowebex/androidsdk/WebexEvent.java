@@ -24,7 +24,7 @@ package com.ciscowebex.androidsdk;
 
 import com.cisco.spark.android.model.Person;
 import com.cisco.spark.android.model.conversation.Activity;
-import com.ciscowebex.androidsdk.message.internal.WebexId;
+import com.ciscowebex.androidsdk.utils.WebexId;
 
 /**
  * Interface for all Webex events.

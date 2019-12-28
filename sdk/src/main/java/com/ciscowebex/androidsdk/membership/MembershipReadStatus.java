@@ -25,7 +25,7 @@ package com.ciscowebex.androidsdk.membership;
 import com.cisco.spark.android.model.ParticipantRoomProperties;
 import com.cisco.spark.android.model.Person;
 import com.cisco.spark.android.model.conversation.Conversation;
-import com.ciscowebex.androidsdk.message.internal.WebexId;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.ciscowebex.androidsdk.message.Message;
 
 import java.util.Date;

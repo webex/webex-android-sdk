@@ -28,9 +28,7 @@ import com.cisco.spark.android.model.Verb;
 import com.cisco.spark.android.model.conversation.Activity;
 import com.cisco.spark.android.model.conversation.ActivityObject;
 import com.cisco.spark.android.model.conversation.Conversation;
-import com.cisco.spark.android.model.conversation.ConversationTag;
-import com.ciscowebex.androidsdk.WebexEvent;
-import com.ciscowebex.androidsdk.message.internal.WebexId;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 

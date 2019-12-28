@@ -6,6 +6,7 @@ import com.cisco.spark.android.model.Verb;
 import com.cisco.spark.android.model.conversation.Activity;
 import com.cisco.spark.android.sync.SparkDatabaseQueries;
 import com.cisco.spark.android.sync.operationqueue.MarkReadOperation;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 
 import java.util.Date;

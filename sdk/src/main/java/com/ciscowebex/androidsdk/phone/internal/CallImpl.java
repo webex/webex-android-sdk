@@ -24,10 +24,8 @@ package com.ciscowebex.androidsdk.phone.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import android.graphics.Rect;
 import android.util.Pair;
@@ -54,7 +52,6 @@ import com.cisco.spark.android.sync.operationqueue.SendDtmfOperation;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
-import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.ciscowebex.androidsdk.phone.AuxStream;
 import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.phone.CallMembership;
@@ -63,6 +60,7 @@ import com.ciscowebex.androidsdk.phone.MediaOption;
 import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
 import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Utils;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.JsonArray;
 
@@ -805,10 +803,12 @@ public class CallImpl implements Call {
     }
 
     @Override
-    public void admitParticipant(@NonNull String personId) {
+    // TODO Callback
+    public void letIn(@NonNull CallMembership membership) {
+        String personId = WebexId.translate(membership.getPersonId());
         List<LocusParticipant> participants = getRemoteParticipants();
         for (LocusParticipant participant : participants) {
-            if (participant.isInLobby() && personId.equals(Utils.encode(participant.getPerson().getId()))) {
+            if (participant.isInLobby() && personId.equals(participant.getPerson().getId())) {
                 _phone.getCallService().admitParticipant(participant);
                 return;
             }
@@ -816,21 +816,22 @@ public class CallImpl implements Call {
     }
 
     @Override
-    public void admitParticipant(@NonNull CallMembership callMembership) {
-        String personId = callMembership.getPersonId();
-        admitParticipant(personId);
-    }
-
-    @Override
-    public void admitAllParticipant() {
-        List<LocusParticipant> participants = getRemoteParticipants();
+    // TODO Callback
+    public void letIn(@NonNull List<CallMembership> memberships) {
         JsonArray jsonArray = new JsonArray();
+        List<LocusParticipant> participants = getRemoteParticipants();
         for (LocusParticipant participant : participants) {
             if (participant.isInLobby()) {
-                jsonArray.add(participant.getId().toString());
+                for (CallMembership membership : memberships) {
+                    String personId = WebexId.translate(membership.getPersonId());
+                    if (personId.equals(participant.getPerson().getId())) {
+                        jsonArray.add(participant.getId().toString());
+                    }
+                }
             }
         }
-        if (jsonArray.size() != 0)
+        if (jsonArray.size() != 0) {
             _phone.getCallService().admitAllParticipant(jsonArray);
+        }
     }
 }

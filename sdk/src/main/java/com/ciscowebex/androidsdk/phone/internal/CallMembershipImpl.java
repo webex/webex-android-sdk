@@ -28,6 +28,7 @@ import com.cisco.spark.android.locus.model.MediaDirection;
 import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.utils.Utils;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 
 import me.helloworld.utils.Objects;
@@ -41,7 +42,7 @@ public class CallMembershipImpl implements CallMembership {
 
     private static CallMembership.State fromLocusState(LocusParticipant.State state, boolean isInLobby) {
         if (state == LocusParticipant.State.IDLE) {
-            return isInLobby? CallMembership.State.INLOBBY:CallMembership.State.IDLE;
+            return isInLobby ? State.WAITING : State.IDLE;
         } else if (state == LocusParticipant.State.NOTIFIED) {
             return State.NOTIFIED;
         } else if (state == LocusParticipant.State.JOINED) {
@@ -86,7 +87,7 @@ public class CallMembershipImpl implements CallMembership {
 
     CallMembershipImpl(LocusParticipant participant, Call call) {
         LocusParticipantInfo person = participant.getPerson();
-        _personId = Utils.encode(person.getId());
+        _personId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
         _email = person.getEmail();
         _phoneNumber = person.getPhoneNumber();
         _sipUrl = person.getPhoneNumber();

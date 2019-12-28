@@ -100,29 +100,29 @@ public interface Call {
          */
         DISCONNECTED,
         /**
-         * The call is in lobby.
+         * The call is waiting in lobby.
          *
-         * @since 2.4
+         * @since 2.4.0
          */
-        INLOBBY
+        WAITING
     }
 
     /**
      * The reason of in lobby status
      *
-     * @since 2.4
+     * @since 2.4.0
      */
-    enum InLobbyReason{
+    enum WaitReason{
         /**
          * The meeting haven't started
          *
-         * @since 2.4
+         * @since 2.4.0
          */
         MEETING_NOT_START,
         /**
          * Waiting in lobby for admiting by hosts
          *
-         * @since 2.4
+         * @since 2.4.0
          */
         WAITING_FOR_ADMITTING
     }
@@ -443,22 +443,19 @@ public interface Call {
     MultiStreamObserver getMultiStreamObserver();
 
     /**
-     * Admit a participant join meeting from lobby.
-     * @param personId the person ID of the participant.
+     * Admit a CallMembership join meeting from lobby. This should be called by moderator.
+     *
+     * @param membership the call membership that waiting in lobby.
      * @since 2.4.0
      */
-    void admitParticipant(@NonNull String personId);
+    void letIn(@NonNull CallMembership membership);
 
     /**
-     * Admit a participant join meeting from lobby.
-     * @param callMembership the call membership of the participant.
+     * Admit CallMemberships join meeting from lobby. This should be called by moderator.
+     *
+     * @param memberships the call memberships that waiting in lobby.
      * @since 2.4.0
      */
-    void admitParticipant(@NonNull CallMembership callMembership);
+    void letIn(@NonNull List<CallMembership> memberships);
 
-    /**
-     * Admit all participants join meeting from lobby.
-     * @since 2.4.0
-     */
-    void admitAllParticipant();
 }

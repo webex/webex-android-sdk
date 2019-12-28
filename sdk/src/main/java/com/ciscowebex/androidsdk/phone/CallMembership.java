@@ -74,9 +74,9 @@ public interface CallMembership {
         /**
          * The person is waiting in lobby.
          *
-         * @since 2.4
+         * @since 2.4.0
          */
-        INLOBBY
+        WAITING
     }
 
     /**

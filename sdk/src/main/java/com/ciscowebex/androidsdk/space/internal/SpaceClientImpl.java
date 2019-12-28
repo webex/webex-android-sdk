@@ -42,14 +42,13 @@ import com.cisco.spark.android.processing.ActivityListener;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
-import com.ciscowebex.androidsdk.message.internal.WebexId;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.ciscowebex.androidsdk.space.*;
 import com.ciscowebex.androidsdk.utils.http.ListBody;
 import com.ciscowebex.androidsdk.utils.http.ListCallback;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 
-import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.collection.Maps;

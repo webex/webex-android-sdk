@@ -1,8 +1,7 @@
-package com.ciscowebex.androidsdk.message.internal;
+package com.ciscowebex.androidsdk.utils;
 
 import android.text.TextUtils;
 import android.util.Base64;
-import com.github.benoitdion.ln.Ln;
 
 import java.util.Objects;
 

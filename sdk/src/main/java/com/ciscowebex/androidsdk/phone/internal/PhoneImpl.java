@@ -721,23 +721,14 @@ public class PhoneImpl implements Phone {
             } else {
                 call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, key, locus.getLocusData().isMeeting());
                 Ln.d("Call is created: " + call);
-                _bus.register(call);
-                _calls.put(key, call);
-                if (_dialCallback != null) {
-                    _dialCallback.onComplete(ResultImpl.success(call));
-                    _dialCallback = null;
-                }
-                if (call.isGroup()) {
-                    setCallOnRinging(call);
-                    setCallOnConnected(call, event.getLocusKey());
-                }
             }
-        } else if (!call.getStatus().equals(Call.CallStatus.CONNECTED)) {
-            Ln.d("Internal callImpl is exist " + call);
-            Ln.d("Call status is " + call.getStatus());
-//            resetDialStatus(null);
-            if (!_bus.isRegistered(call))
+        } else {
+            Ln.d("Call already exist " + call + ", " + call.getStatus());
+        }
+        if (call != null && !call.getStatus().equals(Call.CallStatus.CONNECTED)) {
+            if (!_bus.isRegistered(call)) {
                 _bus.register(call);
+            }
             _calls.put(key, call);
             if (_dialCallback != null) {
                 _dialCallback.onComplete(ResultImpl.success(call));
@@ -756,25 +747,26 @@ public class PhoneImpl implements Phone {
         updateCallLobbyStatus(event.getLocusKey(), true);
         LocusKey key = event.getLocusKey();
         CallImpl call = _calls.get(key);
-        if(call == null){
+        if (call == null) {
             com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
-            call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, event.getLocusKey(), locus.getLocusData().isMeeting());
-            _bus.register(call);
-            _calls.put(call.getKey(), call);
-            if (_dialCallback != null) {
-                _dialCallback.onComplete(ResultImpl.success(call));
-                _dialCallback = null;
+            if (locus == null) {
+                Ln.e("Internal callImpl isn't exist " + event.getLocusKey());
+                resetDialStatus(ResultImpl.error("Internal callImpl isn't exist"));
+            } else {
+                call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, key, locus.getLocusData().isMeeting());
+                Ln.d("Call is created: " + call);
+                _bus.register(call);
+                _calls.put(call.getKey(), call);
+                if (_dialCallback != null) {
+                    _dialCallback.onComplete(ResultImpl.success(call));
+                    _dialCallback = null;
+                }
             }
-            if (call.isGroup())
-                if (call.getDirection() == Call.Direction.OUTGOING) {
-                    setCallInLobby(call, event.isActive() ? Call.InLobbyReason.WAITING_FOR_ADMITTING : Call.InLobbyReason.MEETING_NOT_START);
-                }
-        }else {
+        } else {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
-            if (call.isGroup())
-                if (call.getDirection() == Call.Direction.OUTGOING) {
-                    setCallInLobby(call, event.isActive() ? Call.InLobbyReason.WAITING_FOR_ADMITTING : Call.InLobbyReason.MEETING_NOT_START);
-                }
+        }
+        if (call != null && call.isGroup() && call.getDirection() == Call.Direction.OUTGOING) {
+            setCallOnWaiting(call, event.isActive() ? Call.WaitReason.WAITING_FOR_ADMITTING : Call.WaitReason.MEETING_NOT_START);
         }
     }
 
@@ -786,14 +778,19 @@ public class PhoneImpl implements Phone {
         if (call == null) {
             //group call self join.
             com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
-            call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, event.getLocusKey(), locus.getLocusData().isMeeting());
-            _bus.register(call);
-            _calls.put(call.getKey(), call);
-            if (_dialCallback != null) {
-                _dialCallback.onComplete(ResultImpl.success(call));
-                _dialCallback = null;
+            if (locus == null) {
+                Ln.e("Internal callImpl isn't exist " + event.getLocusKey());
+                resetDialStatus(ResultImpl.error("Internal callImpl isn't exist"));
+            } else {
+                call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, event.getLocusKey(), locus.getLocusData().isMeeting());
+                _bus.register(call);
+                _calls.put(call.getKey(), call);
+                if (_dialCallback != null) {
+                    _dialCallback.onComplete(ResultImpl.success(call));
+                    _dialCallback = null;
+                }
+                setCallOnConnected(call, event.getLocusKey());
             }
-            setCallOnConnected(call, event.getLocusKey());
         } else {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (call.getStatus() != Call.CallStatus.CONNECTED) {
@@ -808,10 +805,8 @@ public class PhoneImpl implements Phone {
                     call.setMediaOption(_dialOption);
                 }
                 setCallOnConnected(call, event.getLocusKey());
-                resetDialStatus(null);
-            } else {
-                resetDialStatus(null);
             }
+            resetDialStatus(null);
         }
     }
 
@@ -861,7 +856,7 @@ public class PhoneImpl implements Phone {
                         _dialCallback.onComplete(ResultImpl.success(call));
                         _dialCallback = null;
                     }
-                    if (!locusParticipant.isInLobby()){
+                    if (!locusParticipant.isInLobby()) {
                         setCallOnRinging(call);
                         setCallOnConnected(call, event.getLocusKey());
                     }
@@ -882,7 +877,7 @@ public class PhoneImpl implements Phone {
                             _dialCallback.onComplete(ResultImpl.success(call));
                             _dialCallback = null;
                         }
-                        if (!locusParticipant.isInLobby()){
+                        if (!locusParticipant.isInLobby()) {
                             if (call.getAnswerCallback() != null) {
                                 call.getAnswerCallback().onComplete(ResultImpl.success(null));
                             }
@@ -914,13 +909,14 @@ public class PhoneImpl implements Phone {
     public void onEventMainThread(CallControlParticipantJoinedLobbyEvent event) {
         Ln.i("CallControlParticipantJoinedLobbyEvent is received " + event.getLocusKey());
         CallImpl call = _calls.get(event.getLocusKey());
-        if (call == null)
+        if (call == null) {
             return;
+        }
         //call membership changed
         List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
         for (LocusParticipant locusParticipant : event.getWaitingInLobbyParticipants()) {
             if (locusParticipant != null && locusParticipant.getDeviceUrl() != null && !locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
-                events.add(new CallObserver.MembershipJoinedLobbyEvent(call, new CallMembershipImpl(locusParticipant, call)));
+                events.add(new CallObserver.MembershipWaitingEvent(call, new CallMembershipImpl(locusParticipant, call), event.isActive() ? Call.WaitReason.WAITING_FOR_ADMITTING : Call.WaitReason.MEETING_NOT_START));
             }
         }
         doCallMembershipChanged(call, events);
@@ -1722,18 +1718,19 @@ public class PhoneImpl implements Phone {
         }
     }
 
-    private void setCallInLobby(@NonNull CallImpl call, Call.InLobbyReason inLobbyReason) {
-        if (call.getStatus() == Call.CallStatus.INLOBBY) {
-            Ln.d("Already in lobby, return");
+    private void setCallOnWaiting(@NonNull CallImpl call, Call.WaitReason waitReason) {
+        if (call.getStatus() == Call.CallStatus.WAITING) {
+            Ln.d("Already waiting, do nothing");
             return;
         }
         if (call.getStatus() == Call.CallStatus.CONNECTED || call.getStatus() == Call.CallStatus.DISCONNECTED) {
-            Ln.w("Do not setCallInLobby, because current state is: " + call.getStatus());
+            Ln.w("Already connected or disconnected, do nothing");
             return;
         }
+        call.setStatus(Call.CallStatus.WAITING);
         CallObserver observer = call.getObserver();
         if (observer != null) {
-            observer.onInLobby(call, inLobbyReason);
+            observer.onWaiting(call, waitReason);
         }
     }
 
@@ -1795,8 +1792,9 @@ public class PhoneImpl implements Phone {
     }
 
     private boolean doDial(CallContext context) {
-        if (this._callContext == null)
+        if (this._callContext == null) {
             this._callContext = context;
+        }
         MediaCapabilityConfig config = new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth);
         config.setHardwareCodecEnable(isEnableHardwareAcceleration);
         config.setHwVideoSetting(hardwareVideoSettings);

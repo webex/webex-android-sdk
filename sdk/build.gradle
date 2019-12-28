@@ -310,6 +310,7 @@ task javadoc(type: Javadoc) {
     exclude '**/utils/log/**'
     exclude '**/utils/Lists.*'
     exclude '**/utils/Utils.*'
+    exclude '**/utils/WebexId.*'
     exclude '**/OAuthTestUserAuthenticator.java'
 
     failOnError false

@@ -30,7 +30,7 @@ import android.support.annotation.NonNull;
 import com.cisco.spark.android.model.*;
 import com.cisco.spark.android.model.conversation.*;
 import com.ciscowebex.androidsdk.message.internal.RemoteFileImpl;
-import com.ciscowebex.androidsdk.message.internal.WebexId;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.ciscowebex.androidsdk.space.Space;
 import com.google.gson.Gson;
 

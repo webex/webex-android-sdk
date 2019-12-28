@@ -45,7 +45,7 @@ import com.ciscowebex.androidsdk.membership.Membership;
 import com.ciscowebex.androidsdk.membership.MembershipClient;
 import com.ciscowebex.androidsdk.membership.MembershipObserver;
 import com.ciscowebex.androidsdk.membership.MembershipReadStatus;
-import com.ciscowebex.androidsdk.message.internal.WebexId;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.ciscowebex.androidsdk.utils.http.ListBody;
 import com.ciscowebex.androidsdk.utils.http.ListCallback;
 import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
