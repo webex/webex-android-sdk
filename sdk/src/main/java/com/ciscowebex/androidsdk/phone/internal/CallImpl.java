@@ -24,8 +24,10 @@ package com.ciscowebex.androidsdk.phone.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import android.graphics.Rect;
 import android.util.Pair;
@@ -52,6 +54,7 @@ import com.cisco.spark.android.sync.operationqueue.SendDtmfOperation;
 import com.cisco.spark.android.sync.operationqueue.core.Operation;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.message.internal.WebexId;
 import com.ciscowebex.androidsdk.phone.AuxStream;
 import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.phone.CallMembership;
@@ -59,7 +62,9 @@ import com.ciscowebex.androidsdk.phone.CallObserver;
 import com.ciscowebex.androidsdk.phone.MediaOption;
 import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
 import com.ciscowebex.androidsdk.phone.Phone;
+import com.ciscowebex.androidsdk.utils.Utils;
 import com.github.benoitdion.ln.Ln;
+import com.google.gson.JsonArray;
 
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
@@ -69,16 +74,20 @@ import org.greenrobot.eventbus.ThreadMode;
 
 public class CallImpl implements Call {
 
-    private @NonNull PhoneImpl _phone;
+    private @NonNull
+    PhoneImpl _phone;
 
     @StringPart
-    private @NonNull CallStatus _status;
+    private @NonNull
+    CallStatus _status;
 
     @StringPart
-    private @NonNull Direction _direction;
+    private @NonNull
+    Direction _direction;
 
     @StringPart
-    private @NonNull LocusKey _key;
+    private @NonNull
+    LocusKey _key;
 
     private MediaOption _option;
 
@@ -170,7 +179,7 @@ public class CallImpl implements Call {
     CompletionHandler<Void> getShareReleaseCallback() {
         return _shareReleaseCallback;
     }
-    
+
     @NonNull
     public CallStatus getStatus() {
         return _status;
@@ -269,7 +278,7 @@ public class CallImpl implements Call {
         return _openedAuxStreamList.size();
     }
 
-    public void setAvailableAuxStreamCount(int count){
+    public void setAvailableAuxStreamCount(int count) {
         _availableAuxStreamCount = count;
     }
 
@@ -278,12 +287,12 @@ public class CallImpl implements Call {
         return _availableAuxStreamCount;
     }
 
-    public void setActiveSpeaker(CallMembership person){
+    public void setActiveSpeaker(CallMembership person) {
         _activeSpeaker = person;
     }
 
     @Override
-    public CallMembership getActiveSpeaker(){
+    public CallMembership getActiveSpeaker() {
         return _activeSpeaker;
     }
 
@@ -297,8 +306,8 @@ public class CallImpl implements Call {
         return _multiStreamObserver;
     }
 
-    public AuxStreamImpl getAuxStream(long vid){
-        for (AuxStreamImpl auxStream : _openedAuxStreamList){
+    public AuxStreamImpl getAuxStream(long vid) {
+        for (AuxStreamImpl auxStream : _openedAuxStreamList) {
             if (auxStream.getVid() == vid)
                 return auxStream;
         }
@@ -306,8 +315,8 @@ public class CallImpl implements Call {
     }
 
     @Override
-    public AuxStream getAuxStream(View view){
-        for (AuxStreamImpl auxStream : _openedAuxStreamList){
+    public AuxStream getAuxStream(View view) {
+        for (AuxStreamImpl auxStream : _openedAuxStreamList) {
             if (auxStream.getRenderView() == view)
                 return auxStream;
         }
@@ -318,15 +327,15 @@ public class CallImpl implements Call {
     public void openAuxStream(@NonNull View view) {
         Ln.d("openAuxStream: " + view);
         String error = null;
-        if (getOpenedAuxStreamCount() >= _availableAuxStreamCount || getOpenedAuxStreamCount() >= MediaEngine.MAX_NUMBER_STREAMS){
+        if (getOpenedAuxStreamCount() >= _availableAuxStreamCount || getOpenedAuxStreamCount() >= MediaEngine.MAX_NUMBER_STREAMS) {
             error = "Reach maximum count";
         }
 
-        if (getAuxStream(view) != null){
+        if (getAuxStream(view) != null) {
             error = "This view has been used";
         }
 
-        if (!isGroup()){
+        if (!isGroup()) {
             error = "Only can be used for group call";
         }
 
@@ -376,9 +385,9 @@ public class CallImpl implements Call {
     public void closeAuxStream(AuxStream auxStream, View view) {
         Ln.d("closeAuxStream auxStream: " + auxStream);
         String error = null;
-        if (auxStream != null && _phone.getCallService().unsubscribeRemoteAuxVideo(getKey(), ((AuxStreamImpl) auxStream).getVid())){
+        if (auxStream != null && _phone.getCallService().unsubscribeRemoteAuxVideo(getKey(), ((AuxStreamImpl) auxStream).getVid())) {
             _openedAuxStreamList.remove(auxStream);
-        }else{
+        } else {
             error = "Close aux stream error";
         }
 
@@ -387,7 +396,7 @@ public class CallImpl implements Call {
         }
     }
 
-    public void closeAuxStream(){
+    public void closeAuxStream() {
         if (getOpenedAuxStreamCount() > _availableAuxStreamCount) {
             AuxStream auxStream = _openedAuxStreamList.get(_openedAuxStreamList.size() - 1);
             closeAuxStream(auxStream, auxStream.getRenderView());
@@ -622,11 +631,11 @@ public class CallImpl implements Call {
                     Ln.w("Can not startSharing, because call is sharing content");
                     callback.onComplete(ResultImpl.error("Call is sharing content"));
                 }
-            }else if (callback != null) {
+            } else if (callback != null) {
                 Ln.w("startSharing callControlService.getLocusData is null");
                 callback.onComplete(ResultImpl.error("Call is not exist"));
             }
-        }else if (callback != null) {
+        } else if (callback != null) {
             Ln.w("Can not startSharing, because call status is: " + _status);
             callback.onComplete(ResultImpl.error("Call is not connected"));
         }
@@ -641,15 +650,15 @@ public class CallImpl implements Call {
                 if (contentMediaShare != null && contentMediaShare.isMediaShareGranted() && _phone.isSharingFromThisDevice(locusData)) {
                     _shareReleaseCallback = callback;
                     _phone.stopSharing(_key);
-                }else if (callback != null) {
+                } else if (callback != null) {
                     Ln.w("Can not stopSharing, because call is not sharing content");
                     callback.onComplete(ResultImpl.error("Call is not sharing content"));
                 }
-            }else if (callback != null) {
+            } else if (callback != null) {
                 Ln.w("stopSharing callControlService.getLocusData is null");
                 callback.onComplete(ResultImpl.error("Call is not exist"));
             }
-        }else if (callback != null) {
+        } else if (callback != null) {
             Ln.w("Can not stopSharing, because call status is: " + _status);
             callback.onComplete(ResultImpl.error("Call is not connected"));
         }
@@ -753,8 +762,8 @@ public class CallImpl implements Call {
         if (locus == null) {
             return participants;
         }
-        for(LocusParticipant p : locus.getParticipants()){
-            if (p.getType() == LocusParticipant.Type.USER || p.getType() == LocusParticipant.Type.RESOURCE_ROOM){
+        for (LocusParticipant p : locus.getParticipants()) {
+            if (p.getType() == LocusParticipant.Type.USER || p.getType() == LocusParticipant.Type.RESOURCE_ROOM) {
                 participants.add(p);
             }
         }
@@ -793,5 +802,35 @@ public class CallImpl implements Call {
         if (locus != null) {
             _phone.getCallService().updateMediaSession(locus, PhoneImpl.mediaOptionToMediaDirection(_option));
         }
+    }
+
+    @Override
+    public void admitParticipant(@NonNull String personId) {
+        List<LocusParticipant> participants = getRemoteParticipants();
+        for (LocusParticipant participant : participants) {
+            if (participant.isInLobby() && personId.equals(Utils.encode(participant.getPerson().getId()))) {
+                _phone.getCallService().admitParticipant(participant);
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void admitParticipant(@NonNull CallMembership callMembership) {
+        String personId = callMembership.getPersonId();
+        admitParticipant(personId);
+    }
+
+    @Override
+    public void admitAllParticipant() {
+        List<LocusParticipant> participants = getRemoteParticipants();
+        JsonArray jsonArray = new JsonArray();
+        for (LocusParticipant participant : participants) {
+            if (participant.isInLobby()) {
+                jsonArray.add(participant.getId().toString());
+            }
+        }
+        if (jsonArray.size() != 0)
+            _phone.getCallService().admitAllParticipant(jsonArray);
     }
 }

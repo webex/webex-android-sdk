@@ -22,17 +22,15 @@ package com.ciscowebex.androidsdk.utils.http;
  * THE SOFTWARE.
  */
 
-import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import com.cisco.spark.android.core.LoggingInterceptor;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.Gson;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -50,6 +48,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ServiceBuilder {
 
     public static final String HYDRA_URL = "https://api.ciscospark.com/v1/";
+//    public static final String HYDRA_URL = "https://apialpha.ciscospark.com/v1/";
 
     private String _baseURL = HYDRA_URL;
 

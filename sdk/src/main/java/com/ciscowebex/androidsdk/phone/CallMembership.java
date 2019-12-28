@@ -70,7 +70,13 @@ public interface CallMembership {
          *
          * @since 0.1
          */
-        DECLINED
+        DECLINED,
+        /**
+         * The person is waiting in lobby.
+         *
+         * @since 2.4
+         */
+        INLOBBY
     }
 
     /**

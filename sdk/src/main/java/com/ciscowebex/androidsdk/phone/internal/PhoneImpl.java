@@ -23,6 +23,7 @@
 package com.ciscowebex.androidsdk.phone.internal;
 
 import java.util.*;
+
 import javax.inject.Inject;
 
 import android.Manifest;
@@ -39,6 +40,7 @@ import android.util.Base64;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.callcontrol.CallContext;
 import com.cisco.spark.android.callcontrol.CallControlService;
@@ -55,6 +57,7 @@ import com.cisco.spark.android.locus.events.*;
 import com.cisco.spark.android.locus.model.Locus;
 import com.cisco.spark.android.locus.model.LocusData;
 import com.cisco.spark.android.locus.model.LocusKey;
+import com.cisco.spark.android.locus.model.LocusMeetingInfo;
 import com.cisco.spark.android.locus.model.LocusParticipant;
 import com.cisco.spark.android.locus.model.LocusParticipantDevice;
 import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
@@ -64,9 +67,12 @@ import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaSession;
 import com.cisco.spark.android.media.events.MediaAvailabilityChangeEvent;
 import com.cisco.spark.android.media.events.MediaBlockedChangeEvent;
+import com.cisco.spark.android.meetings.GetMeetingInfoType;
+import com.cisco.spark.android.meetings.LocusMeetingInfoProvider;
 import com.cisco.spark.android.metrics.CallAnalyzerReporter;
 import com.cisco.spark.android.sync.operationqueue.core.Operations;
 import com.cisco.spark.android.sync.queue.ConversationSyncQueue;
+import com.cisco.spark.android.util.Action;
 import com.cisco.spark.android.wdm.DeviceRegistration;
 import com.cisco.wme.appshare.ScreenShareContext;
 import com.ciscowebex.androidsdk.CompletionHandler;
@@ -88,26 +94,29 @@ import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
 import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
-import com.ciscowebex.androidsdk_commlib.SDKCommon;
 import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
 import com.github.benoitdion.ln.Ln;
 
-import com.google.common.collect.Lists;
 import me.helloworld.utils.Checker;
+
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.NoSubscriberEvent;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class PhoneImpl implements Phone {
 
     @Inject
+    LocusMeetingInfoProvider _locusMeetingInfoProvider;
+
+    @Inject
     ApplicationController _applicationController;
 
     @Inject
-    ApiClientProvider apiClientProvider;
+    ApiClientProvider _apiClientProvider;
 
     @Inject
     CallControlService _callControlService;
@@ -126,6 +135,8 @@ public class PhoneImpl implements Phone {
 
     @Inject
     volatile Settings settings;
+
+    private CallContext _callContext;
 
     private IncomingCallListener _incomingCallListener;
 
@@ -405,8 +416,7 @@ public class PhoneImpl implements Phone {
             if (s == null) {
                 RotationHandler.unregisterRotationReceiver(_context);
                 _registerCallback = null;
-            }
-            else {
+            } else {
                 _registerTimeoutTask = () -> {
                     Ln.i("Register timeout");
                     if (_device == null && _registerCallback != null) {
@@ -498,8 +508,7 @@ public class PhoneImpl implements Phone {
                 if (handler != null && result != null) {
                     handler.onComplete(result);
                 }
-            }
-            else {
+            } else {
                 Ln.d("Cannot find call for key: " + key);
             }
         } else if (direction == Call.Direction.OUTGOING.ordinal()) {
@@ -603,8 +612,7 @@ public class PhoneImpl implements Phone {
         bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, direction.ordinal());
         if (callParam instanceof Parcelable) {
             bundle.putParcelable(AcquirePermissionActivity.CALL_KEY, (Parcelable) callParam);
-        }
-        else if (callParam instanceof String) {
+        } else if (callParam instanceof String) {
             bundle.putString(AcquirePermissionActivity.CALL_STRING, (String) callParam);
         }
         final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
@@ -724,9 +732,86 @@ public class PhoneImpl implements Phone {
                     setCallOnConnected(call, event.getLocusKey());
                 }
             }
+        } else if (!call.getStatus().equals(Call.CallStatus.CONNECTED)) {
+            Ln.d("Internal callImpl is exist " + call);
+            Ln.d("Call status is " + call.getStatus());
+//            resetDialStatus(null);
+            if (!_bus.isRegistered(call))
+                _bus.register(call);
+            _calls.put(key, call);
+            if (_dialCallback != null) {
+                _dialCallback.onComplete(ResultImpl.success(call));
+                _dialCallback = null;
+            }
+            if (call.isGroup()) {
+                setCallOnRinging(call);
+                setCallOnConnected(call, event.getLocusKey());
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlJoinedLobbyEvent event) {
+        Ln.i("CallControlJoinedLobbyEvent is received " + event.getLocusKey());
+        updateCallLobbyStatus(event.getLocusKey(), true);
+        LocusKey key = event.getLocusKey();
+        CallImpl call = _calls.get(key);
+        if(call == null){
+            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
+            call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, event.getLocusKey(), locus.getLocusData().isMeeting());
+            _bus.register(call);
+            _calls.put(call.getKey(), call);
+            if (_dialCallback != null) {
+                _dialCallback.onComplete(ResultImpl.success(call));
+                _dialCallback = null;
+            }
+            if (call.isGroup())
+                if (call.getDirection() == Call.Direction.OUTGOING) {
+                    setCallInLobby(call, event.isActive() ? Call.InLobbyReason.WAITING_FOR_ADMITTING : Call.InLobbyReason.MEETING_NOT_START);
+                }
+        }else {
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
+            if (call.isGroup())
+                if (call.getDirection() == Call.Direction.OUTGOING) {
+                    setCallInLobby(call, event.isActive() ? Call.InLobbyReason.WAITING_FOR_ADMITTING : Call.InLobbyReason.MEETING_NOT_START);
+                }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlJoinedMeetingFromLobbyEvent event) {
+        Ln.i("CallControlJoinedMeetingFromLobbyEvent is received " + event.getLocusKey());
+        updateCallLobbyStatus(event.getLocusKey(), false);
+        CallImpl call = _calls.get(event.getLocusKey());
+        if (call == null) {
+            //group call self join.
+            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(event.getLocusKey());
+            call = new CallImpl(this, _dialOption, CallImpl.Direction.OUTGOING, event.getLocusKey(), locus.getLocusData().isMeeting());
+            _bus.register(call);
+            _calls.put(call.getKey(), call);
+            if (_dialCallback != null) {
+                _dialCallback.onComplete(ResultImpl.success(call));
+                _dialCallback = null;
+            }
+            setCallOnConnected(call, event.getLocusKey());
         } else {
-            Ln.e("Internal callImpl is exist " + call);
-            resetDialStatus(null);
+            Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
+            if (call.getStatus() != Call.CallStatus.CONNECTED) {
+                if (call.getAnswerCallback() != null) {
+                    call.getAnswerCallback().onComplete(ResultImpl.success(null));
+                }
+                if (_dialCallback != null) {
+                    _dialCallback.onComplete(ResultImpl.success(call));
+                    _dialCallback = null;
+                }
+                if (call.getOption() == null && _dialOption != null) {
+                    call.setMediaOption(_dialOption);
+                }
+                setCallOnConnected(call, event.getLocusKey());
+                resetDialStatus(null);
+            } else {
+                resetDialStatus(null);
+            }
         }
     }
 
@@ -776,8 +861,10 @@ public class PhoneImpl implements Phone {
                         _dialCallback.onComplete(ResultImpl.success(call));
                         _dialCallback = null;
                     }
-                    setCallOnRinging(call);
-                    setCallOnConnected(call, event.getLocusKey());
+                    if (!locusParticipant.isInLobby()){
+                        setCallOnRinging(call);
+                        setCallOnConnected(call, event.getLocusKey());
+                    }
                 }
             }
         } else {
@@ -791,18 +878,20 @@ public class PhoneImpl implements Phone {
             } else if (call.getStatus() != Call.CallStatus.CONNECTED) {
                 for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
                     if (locusParticipant != null && locusParticipant.getDeviceUrl() != null && locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
-                        if (call.getAnswerCallback() != null) {
-                            call.getAnswerCallback().onComplete(ResultImpl.success(null));
-                        }
                         if (_dialCallback != null) {
                             _dialCallback.onComplete(ResultImpl.success(call));
                             _dialCallback = null;
                         }
-                        setCallOnRinging(call);
-                        if (call.getOption() == null && _dialOption != null) {
-                            call.setMediaOption(_dialOption);
+                        if (!locusParticipant.isInLobby()){
+                            if (call.getAnswerCallback() != null) {
+                                call.getAnswerCallback().onComplete(ResultImpl.success(null));
+                            }
+                            setCallOnRinging(call);
+                            if (call.getOption() == null && _dialOption != null) {
+                                call.setMediaOption(_dialOption);
+                            }
+                            setCallOnConnected(call, event.getLocusKey());
                         }
-                        setCallOnConnected(call, event.getLocusKey());
                     }
                 }
                 resetDialStatus(null);
@@ -819,6 +908,22 @@ public class PhoneImpl implements Phone {
         }
         doCallMembershipChanged(call, events);
         doParticipantCountChanged(call);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlParticipantJoinedLobbyEvent event) {
+        Ln.i("CallControlParticipantJoinedLobbyEvent is received " + event.getLocusKey());
+        CallImpl call = _calls.get(event.getLocusKey());
+        if (call == null)
+            return;
+        //call membership changed
+        List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
+        for (LocusParticipant locusParticipant : event.getWaitingInLobbyParticipants()) {
+            if (locusParticipant != null && locusParticipant.getDeviceUrl() != null && !locusParticipant.getDeviceUrl().equals(_device.getUrl())) {
+                events.add(new CallObserver.MembershipJoinedLobbyEvent(call, new CallMembershipImpl(locusParticipant, call)));
+            }
+        }
+        doCallMembershipChanged(call, events);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -857,10 +962,38 @@ public class PhoneImpl implements Phone {
         resetDialStatus(ResultImpl.error("Join Error: " + Utils.toMap(event)));
     }
 
+//    @Subscribe(threadMode = ThreadMode.MAIN)
+//    public void onEventMainThread(LocusMeetingLockedEvent event) {
+//        Ln.e("LocusMeetingLockedEvent is received ");
+//        resetDialStatus(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+//    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(LocusMeetingLockedEvent event) {
-        Ln.e("LocusMeetingLockedEvent is received ");
-        resetDialStatus(ResultImpl.error("Join Error: " + Utils.toMap(event)));
+    public void onEventMainThread(CallControlLocusRequiresModeratorPINOrGuest event) {
+        Ln.d("CallControlLocusRequiresModeratorPINOrGuest is received");
+        callAsGuest();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(CallControlLocusRequiresModeratorPINorGuestPIN event) {
+        Ln.d("CallControlLocusRequiresModeratorPINorGuestPIN is received");
+        callAsGuest();
+    }
+
+    private void callAsGuest() {
+        if (_callContext != null) {
+            String invitee = _callContext.getInvitee();
+            if (invitee != null && !invitee.isEmpty()) {
+                _locusMeetingInfoProvider.callWithLocusMeetingInfo(invitee, GetMeetingInfoType.SIP_URI, new Action<LocusMeetingInfo>() {
+                    @Override
+                    public void call(LocusMeetingInfo item) {
+                        Ln.d("Dial " + invitee);
+                        _callContext.setModerator(false);
+                        doDial(_callContext);
+                    }
+                });
+            }
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1561,7 +1694,8 @@ public class PhoneImpl implements Phone {
                     });
                 }
             }
-            call.updateMedia();
+            // Avoid updateMediaSession twice
+            // call.updateMedia();
         }
         call.setStatus(Call.CallStatus.CONNECTED);
 
@@ -1588,6 +1722,21 @@ public class PhoneImpl implements Phone {
         }
     }
 
+    private void setCallInLobby(@NonNull CallImpl call, Call.InLobbyReason inLobbyReason) {
+        if (call.getStatus() == Call.CallStatus.INLOBBY) {
+            Ln.d("Already in lobby, return");
+            return;
+        }
+        if (call.getStatus() == Call.CallStatus.CONNECTED || call.getStatus() == Call.CallStatus.DISCONNECTED) {
+            Ln.w("Do not setCallInLobby, because current state is: " + call.getStatus());
+            return;
+        }
+        CallObserver observer = call.getObserver();
+        if (observer != null) {
+            observer.onInLobby(call, inLobbyReason);
+        }
+    }
+
     private void doCallMembershipChanged(CallImpl call, @NonNull List<CallObserver.CallMembershipChangedEvent> events) {
         if (call == null) {
             return;
@@ -1605,6 +1754,7 @@ public class PhoneImpl implements Phone {
     private void resetDialStatus(Result result) {
         Ln.d("Try to reset dial status for " + result + ", callback " + _dialCallback);
         _dialOption = null;
+        _callContext = null;
         if (_dialCallback != null) {
             CompletionHandler<Call> callback = _dialCallback;
             _dialCallback = null;
@@ -1623,7 +1773,7 @@ public class PhoneImpl implements Phone {
 
     private void doDialSpaceID(String target, MediaOption option) {
         Ln.d("Dial " + target);
-        apiClientProvider.getConversationClient().getOrCreatePermanentLocus(target).enqueue(new Callback<LocusUrlResponse>() {
+        _apiClientProvider.getConversationClient().getOrCreatePermanentLocus(target).enqueue(new Callback<LocusUrlResponse>() {
             @Override
             public void onResponse(retrofit2.Call<LocusUrlResponse> call, Response<LocusUrlResponse> response) {
                 if (response.isSuccessful()) {
@@ -1645,6 +1795,8 @@ public class PhoneImpl implements Phone {
     }
 
     private boolean doDial(CallContext context) {
+        if (this._callContext == null)
+            this._callContext = context;
         MediaCapabilityConfig config = new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth);
         config.setHardwareCodecEnable(isEnableHardwareAcceleration);
         config.setHwVideoSetting(hardwareVideoSettings);
@@ -1714,5 +1866,12 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(ApplicationControllerStateChangedEvent event) {
         // -- Ignore Event
+    }
+
+    private void updateCallLobbyStatus(LocusKey locusKey, boolean inLobby) {
+        com.cisco.spark.android.callcontrol.model.Call call = _callControlService.getCall(locusKey);
+        if (call != null) {
+            call.setLeavingCallBeforeMediaStarted(inLobby);
+        }
     }
 }
