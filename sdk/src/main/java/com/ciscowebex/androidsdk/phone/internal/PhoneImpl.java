@@ -956,7 +956,9 @@ public class PhoneImpl implements Phone {
         resetDialStatus(null);
         CallImpl call = _calls.get(event.locusData().getKey());
         // if (call != null && (event.wasCallDeclined() && !(event.wasMediaFlowing() || event.wasUCCall() || event.wasRoomCall() || event.wasRoomCallConnected()))) {
-        if (call != null) {
+        if (call == null) {
+            Ln.d("Cannot find the call " + event.locusData().getKey());
+        } else {
             Ln.d(STR_FIND_CALLIMPL + event.locusData().getKey());
             removeCall(new CallObserver.RemoteDecline(call));
         }
@@ -1270,8 +1272,9 @@ public class PhoneImpl implements Phone {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlMediaDecodeSizeChangedEvent event) {
         Ln.d("CallControlMediaDecodeSizeChangedEvent is received  mid: " + event.getMediaId() + "  size: " + event.getSize());
-        if (_activeCallLocusKey == null)
+        if (_activeCallLocusKey == null) {
             return;
+        }
         CallImpl activeCall = _calls.get(_activeCallLocusKey);
         if (activeCall != null && activeCall.isGroup()) {
             switch (event.getMediaId()) {
@@ -1558,10 +1561,7 @@ public class PhoneImpl implements Phone {
                     });
                 }
             }
-            com.cisco.spark.android.callcontrol.model.Call locus = _callControlService.getCall(call.getKey());
-            if (locus != null) {
-                _callControlService.updateMediaSession(locus, mediaOptionToMediaDirection(call.getOption()));
-            }
+            call.updateMedia();
         }
         call.setStatus(Call.CallStatus.CONNECTED);
 

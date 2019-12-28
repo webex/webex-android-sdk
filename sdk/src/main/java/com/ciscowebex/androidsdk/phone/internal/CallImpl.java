@@ -35,6 +35,7 @@ import android.view.View;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.cisco.spark.android.callcontrol.CallControlService;
 import com.cisco.spark.android.callcontrol.events.CallControlMediaDecodeSizeChangedEvent;
 import com.cisco.spark.android.events.OperationCompletedEvent;
 import com.cisco.spark.android.locus.model.Locus;
@@ -490,16 +491,46 @@ public class CallImpl implements Call {
 
     @Override
     public void setVideoRenderViews(@Nullable Pair<View, View> videoRenderViews) {
-        if (videoRenderViews == _videoRenderViews) {
-            Ln.d("Same render views");
+        if (_status == CallStatus.DISCONNECTED) {
             return;
         }
-        if (videoRenderViews != null && _videoRenderViews != null && videoRenderViews.first == _videoRenderViews.first && videoRenderViews.second == _videoRenderViews.second) {
-            Ln.d("Same render views");
+        Ln.d("setVideoRenderViews, old: " + _videoRenderViews + ", new: " + videoRenderViews);
+        if (videoRenderViews != null && (videoRenderViews.first == null || videoRenderViews.second == null)) {
+            Ln.e("The local and remote video views must be set in same time");
             return;
         }
-        _videoRenderViews = videoRenderViews;
-        updateMedia();
+        if (_videoRenderViews != null && (_videoRenderViews.first == null || _videoRenderViews.second == null)) {
+            Ln.e("The local and remote video views must be set in same time");
+            return;
+        }
+        CallControlService service = _phone.getCallService();
+        LocusKey key = getKey();
+        if (_videoRenderViews == null && videoRenderViews == null) {
+            Ln.d("Do nothing.");
+        }
+        else if (_videoRenderViews == null) {
+            _videoRenderViews = videoRenderViews;
+            service.setPreviewWindow(key, _videoRenderViews.first);
+            service.setRemoteWindow(key, _videoRenderViews.second);
+            updateMedia();
+        }
+        else if (videoRenderViews == null) {
+            _videoRenderViews = null;
+            service.removePreviewWindows(key);
+            service.removeRemoteVideoWindows(key);
+            updateMedia();
+        }
+        else {
+            if (_videoRenderViews.first != videoRenderViews.first) {
+                service.removePreviewWindow(key, _videoRenderViews.first);
+                service.setPreviewWindow(key, videoRenderViews.first);
+            }
+            if (_videoRenderViews.second != videoRenderViews.second) {
+                service.removeRemoteWindow(key, _videoRenderViews.second);
+                service.setRemoteWindow(key, videoRenderViews.second);
+            }
+            _videoRenderViews = videoRenderViews;
+        }
     }
 
     public View getSharingRenderView() {
@@ -508,9 +539,29 @@ public class CallImpl implements Call {
 
     @Override
     public void setSharingRenderView(View view) {
-        if (view != _sharingRenderView) {
-            _sharingRenderView = view;
+        if (_status == CallStatus.DISCONNECTED) {
+            return;
+        }
+        if (_sharingRenderView == null && view == null) {
+            return;
+        }
+        CallControlService service = _phone.getCallService();
+        LocusKey key = getKey();
+        View oldView = _sharingRenderView;
+        _sharingRenderView = view;
+        if (oldView != null && view == null) {
+            service.removeShareWindow(key);
             updateMedia();
+            return;
+        }
+        if (oldView == null && view != null) {
+            service.setShareWindow(key, view);
+            updateMedia();
+            return;
+        }
+        if (oldView != view) {
+            service.removeShareWindow(key);
+            service.setShareWindow(key, view);
         }
     }
 
@@ -737,26 +788,10 @@ public class CallImpl implements Call {
         return null;
     }
 
-    private void updateMedia() {
-        if (_status == CallStatus.DISCONNECTED) {
-            return;
-        }
-        if (_videoRenderViews != null && _videoRenderViews.first != null && _videoRenderViews.second != null) {
-            _phone.getCallService().setPreviewWindow(getKey(), _videoRenderViews.first);
-            _phone.getCallService().setRemoteWindow(getKey(), _videoRenderViews.second);
-        } else {
-            _phone.getCallService().setPreviewWindow(getKey(), null);
-            _phone.getCallService().removeRemoteVideoWindows(getKey());
-        }
-
-        if (_sharingRenderView != null) {
-            _phone.getCallService().setShareWindow(getKey(), _sharingRenderView);
-        } else {
-            _phone.getCallService().removeShareWindow(getKey());
-        }
-        com.cisco.spark.android.callcontrol.model.Call call = _phone.getCallService().getCall(getKey());
-        if (call != null) {
-            _phone.getCallService().updateMediaSession(call, PhoneImpl.mediaOptionToMediaDirection(_option));
+    void updateMedia() {
+        com.cisco.spark.android.callcontrol.model.Call locus = _phone.getCallService().getCall(getKey());
+        if (locus != null) {
+            _phone.getCallService().updateMediaSession(locus, PhoneImpl.mediaOptionToMediaDirection(_option));
         }
     }
 }
