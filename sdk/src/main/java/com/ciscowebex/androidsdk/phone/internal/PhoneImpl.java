@@ -1719,10 +1719,6 @@ public class PhoneImpl implements Phone {
     }
 
     private void setCallOnWaiting(@NonNull CallImpl call, Call.WaitReason waitReason) {
-        if (call.getStatus() == Call.CallStatus.WAITING) {
-            Ln.d("Already waiting, do nothing");
-            return;
-        }
         if (call.getStatus() == Call.CallStatus.CONNECTED || call.getStatus() == Call.CallStatus.DISCONNECTED) {
             Ln.w("Already connected or disconnected, do nothing");
             return;
