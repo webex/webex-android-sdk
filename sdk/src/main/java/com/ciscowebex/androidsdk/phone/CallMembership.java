@@ -72,7 +72,7 @@ public interface CallMembership {
          */
         DECLINED,
         /**
-         * The person is waiting in lobby.
+         * The person is waiting in the lobby about the call.
          *
          * @since 2.4.0
          */

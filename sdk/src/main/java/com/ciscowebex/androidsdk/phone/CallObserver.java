@@ -35,11 +35,12 @@ import me.helloworld.utils.annotation.StringPart;
 public interface CallObserver {
 
     /**
-     * Callback when the caller is waiting in lobby.
-     * @param call Call
+     * Callback when the call is waiting.
+     * @param call Call.
+     * @param reason The reason why the call is waiting.
      * @since 2.4.0
      */
-    void onWaiting(Call call, Call.WaitReason inLobbyReason);
+    void onWaiting(Call call, Call.WaitReason reason);
 
     /**
      * Callback when remote participant(s) is ringing.
@@ -724,7 +725,7 @@ public interface CallObserver {
     }
 
     /**
-     * This might be triggered when the person in the membership joined lobby of this call.
+     * This might be triggered when the person in the membership is waiting in the lobby.
      *
      * @since 2.4.0
      */

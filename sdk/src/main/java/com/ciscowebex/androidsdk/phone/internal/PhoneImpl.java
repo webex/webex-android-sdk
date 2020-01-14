@@ -710,7 +710,7 @@ public class PhoneImpl implements Phone {
     // Locus has create call,waiting remote to accept
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(CallControlLocusCreatedEvent event) {
-        Ln.i("CallControlLocusCreatedEventis received " + event.getLocusKey());
+        Ln.i("CallControlLocusCreatedEvent is received " + event.getLocusKey());
         LocusKey key = event.getLocusKey();
         CallImpl call = _calls.get(key);
         if (call == null) {
