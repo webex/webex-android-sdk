@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 2.4.0 Releases
+- `2.4.0` Releases - [2.4.0](#240)
+
 #### 2.3.0 Releases
 - `2.3.0` Releases - [2.3.0](#230)
 
@@ -23,6 +26,17 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
+## [2.4.0](https://github.com/webex/webex-android-sdk/releases/tag/2.4.0)
+Released on 2020-01-15.
+#### Added
+- Add "WAITING" status to CallStatus, indicate user is now waiting in lobby.
+- Add API to admit a CallMembership join meeting from lobby.
+- Add API to admit CallMemberships join meeting from lobby.
+
+#### Updated
+- Fixed users' audio cannot be heard mute/unmute.
+- Fixed remote video black screen in PiP mode.
+
 ## [2.3.0](https://github.com/webex/webex-android-sdk/releases/tag/2.3.0)
 Released on 2019-09-30.
 #### Added
