@@ -29,9 +29,8 @@ All notable changes to this project will be documented in this file.
 ## [2.4.0](https://github.com/webex/webex-android-sdk/releases/tag/2.4.0)
 Released on 2020-01-15.
 #### Added
-- Add "WAITING" status to CallStatus, indicate user is now waiting in lobby.
-- Add API to admit a CallMembership join meeting from lobby.
-- Add API to admit CallMemberships join meeting from lobby.
+- Support to join the meeting where lobby is enabled.
+- Support to let-in waiting people from looby to the meeting.
 
 #### Updated
 - Fixed users' audio cannot be heard mute/unmute.
