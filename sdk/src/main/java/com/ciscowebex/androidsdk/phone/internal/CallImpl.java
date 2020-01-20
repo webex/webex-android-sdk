@@ -137,6 +137,10 @@ public class CallImpl implements Call {
         return _key;
     }
 
+    void setKey(LocusKey key) {
+        _key = key;
+    }
+
     void setStatus(@NonNull CallStatus status) {
         Ln.d("CallStatus from " + _status + " to " + status + ", " + this);
         _status = status;

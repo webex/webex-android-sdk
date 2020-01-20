@@ -1171,6 +1171,22 @@ public class PhoneImpl implements Phone {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(LocusDataCacheReplacesEvent event) {
+        Ln.i("LocusDataCacheReplacesEvent is received " + event.getLocusKey() + ", " + event.getReplacedLocusKey());
+        LocusKey oldKey = event.getReplacedLocusKey();
+        LocusKey newKey = event.getLocusKey();
+        CallImpl call = _calls.get(oldKey);
+        if (call == null) {
+            Ln.d("Cannot find call bind with the replaced key: " + oldKey);
+        }
+        else {
+            call.setKey(newKey);
+            _calls.put(newKey, call);
+            _calls.remove(oldKey);
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventMainThread(DismissCallNotificationEvent event) {
         Ln.i("DismissCallNotificationEvent is received " + event.getLocusKey());
         final LocusData call = _callControlService.getLocusData(event.getLocusKey());
