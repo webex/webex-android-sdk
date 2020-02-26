@@ -26,6 +26,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.*;
+
 import javax.inject.Inject;
 
 import android.content.Context;
@@ -36,6 +37,7 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.content.ContentUploadMonitor;
 import com.cisco.spark.android.core.ApiClientProvider;
@@ -69,8 +71,11 @@ import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
 import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
 import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
 import com.github.benoitdion.ln.Ln;
+
 import me.helloworld.utils.Strings;
+
 import org.greenrobot.eventbus.EventBus;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -266,55 +271,85 @@ public class MessageClientImpl implements MessageClient {
 
     @Override
     public void postToPerson(@NonNull String personId, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(personId, createComment(Message.Text.html(text, text), null), files, handler);
+        post(personId, createComment(Message.Text.html(text, text), null), files, null, handler);
     }
 
     @Override
     public void postToPerson(@NonNull String personId, @Nullable Message.Text text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(personId, createComment(text, null), files, handler);
+        post(personId, createComment(text, null), files, null, handler);
     }
 
     @Override
     public void postToPerson(@NonNull EmailAddress personEmail, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(personEmail.toString(), createComment(Message.Text.html(text, text), null), files, handler);
+        post(personEmail.toString(), createComment(Message.Text.html(text, text), null), files, null, handler);
     }
 
     @Override
     public void postToPerson(@NonNull EmailAddress personEmail, @Nullable Message.Text text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(personEmail.toString(), createComment(text, null), files, handler);
+        post(personEmail.toString(), createComment(text, null), files, null, handler);
+    }
+
+    @Override
+    public void postToPerson(@NonNull String personId, @Nullable String text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
+        post(personId, createComment(Message.Text.html(text, text), null), files, parentMessage, handler);
+    }
+
+    @Override
+    public void postToPerson(@NonNull String personId, @Nullable Message.Text text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
+        post(personId, createComment(text, null), files, parentMessage, handler);
+    }
+
+    @Override
+    public void postToPerson(@NonNull EmailAddress personEmail, @Nullable String text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
+        post(personEmail.toString(), createComment(Message.Text.html(text, text), null), files, parentMessage, handler);
+    }
+
+    @Override
+    public void postToPerson(@NonNull EmailAddress personEmail, @Nullable Message.Text text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
+        post(personEmail.toString(), createComment(text, null), files, parentMessage, handler);
     }
 
     @Override
     public void postToSpace(@NonNull String spaceId, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(spaceId, createComment(Message.Text.html(text, text), mentions), files, handler);
+        post(spaceId, createComment(Message.Text.html(text, text), mentions), files, null, handler);
     }
 
     @Override
     public void postToSpace(@NonNull String spaceId, @Nullable Message.Text text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(spaceId, createComment(text, mentions), files, handler);
+        post(spaceId, createComment(text, mentions), files, null, handler);
     }
 
-    private void post(String personOrSpace, Comment comment, LocalFile[] localFiles, CompletionHandler<Message> handler) {
+    @Override
+    public void postToSpace(@NonNull String spaceId, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
+        post(spaceId, createComment(Message.Text.html(text, text), mentions), files, parentMessage, handler);
+    }
+
+    @Override
+    public void postToSpace(@NonNull String spaceId, @Nullable Message.Text text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
+        post(spaceId, createComment(text, mentions), files, parentMessage, handler);
+    }
+
+    private void post(String personOrSpace, Comment comment, LocalFile[] localFiles, Message parentMessage, CompletionHandler<Message> handler) {
         Ln.d("Post to： " + personOrSpace);
         WebexId webexId = WebexId.from(personOrSpace);
         if (webexId == null) {
             if (EmailAddress.fromString(personOrSpace) == null) {
-                doPost(personOrSpace, comment, localFiles, handler);
+                doPost(personOrSpace, comment, localFiles, parentMessage, handler);
             } else {
                 this.createSpaceWithPerson(personOrSpace, result -> {
                     if (result.getData() != null) {
-                        doPost(result.getData(), comment, localFiles, handler);
+                        doPost(result.getData(), comment, localFiles, parentMessage, handler);
                     } else {
                         handler.onComplete(ResultImpl.error(result.getError()));
                     }
                 });
             }
         } else if (webexId.is(WebexId.Type.ROOM_ID)) {
-            doPost(webexId.getId(), comment, localFiles, handler);
+            doPost(webexId.getId(), comment, localFiles, parentMessage, handler);
         } else if (webexId.is(WebexId.Type.PEOPLE_ID)) {
             this.createSpaceWithPerson(webexId.getId(), result -> {
                 if (result.getData() != null) {
-                    doPost(result.getData(), comment, localFiles, handler);
+                    doPost(result.getData(), comment, localFiles, parentMessage, handler);
                 } else {
                     handler.onComplete(ResultImpl.error(result.getError()));
                 }
@@ -324,7 +359,7 @@ public class MessageClientImpl implements MessageClient {
         }
     }
 
-    private void doPost(String conversationId, Comment comment, LocalFile[] localFiles, CompletionHandler<Message> handler) {
+    private void doPost(String conversationId, Comment comment, LocalFile[] localFiles, Message parentMessage, CompletionHandler<Message> handler) {
         if (TextUtils.isEmpty(conversationId)) {
             handler.onComplete(ResultImpl.error("Invalid person or id!"));
             return;
@@ -345,6 +380,18 @@ public class MessageClientImpl implements MessageClient {
                 }
             }
         };
+        ParentObject parent = null;
+        if (parentMessage != null) {
+            if (parentMessage.getParent() != null)
+                parent = parentMessage.getParent();
+            else {
+                parent = new ParentObject();
+                parent.setId(WebexId.translate(parentMessage.getId()));
+                parent.setType(Activities.ACTIVITY_TYPE_REPLY);
+                parent.setPublished(parentMessage.getCreated());
+                parent.setActorId(parentMessage.getPersonId());
+            }
+        }
         if (localFiles != null && localFiles.length > 0) {
             ShareContentData shareContentData = new ShareContentData();
             for (LocalFile localFile : localFiles) {
@@ -363,10 +410,11 @@ public class MessageClientImpl implements MessageClient {
                     comment,
                     shareContentData.getContentFiles(),
                     shareContentData.getOperationIds(),
+                    parent,
                     callback);
             operations.submit(postContent);
         } else {
-            CallbackablePostCommentOperation postCommentOperation = new CallbackablePostCommentOperation(injector, conversationId, comment, callback);
+            CallbackablePostCommentOperation postCommentOperation = new CallbackablePostCommentOperation(injector, conversationId, comment, parent, callback);
             operations.submit(postCommentOperation);
         }
     }

@@ -147,6 +147,10 @@ public class Message {
 
     private transient List<RemoteFile> remoteFiles;
 
+    private boolean isReply;
+
+    private ParentObject parent;
+
     protected Message(Activity activity, AuthenticatedUser user, boolean received) {
         this.activity = activity;
         this.id = new WebexId(WebexId.Type.MESSAGE_ID, activity.getId()).toHydraId();
@@ -195,6 +199,8 @@ public class Message {
             }
         }
         this.remoteFiles = remoteFiles;
+        this.isReply = activity.isReply();
+        this.parent = activity.getParent();
     }
 
     /**
@@ -340,6 +346,26 @@ public class Message {
      */
     public List<RemoteFile> getFiles() {
         return this.remoteFiles;
+    }
+
+    /**
+     * Checks if this is a reply message.
+     *
+     * @return true if this is a reply message.
+     * @since 2.5.0
+     */
+    public boolean isReply() {
+        return isReply;
+    }
+
+    /**
+     * Returns the parent object reference, if this message is a reply message.
+     *
+     * @return the parent or null if not reply message.
+     * @since 2.5.0
+     */
+    public ParentObject getParent() {
+        return parent;
     }
 
     /**

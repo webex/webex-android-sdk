@@ -127,6 +127,62 @@ public interface MessageClient {
     void postToPerson(@NonNull EmailAddress email, @Nullable Message.Text text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
 
     /**
+     * Posts a message with optional file attachments to a person asynchronously.
+     * <p>
+     * The content of the message can be plain text, html, or markdown.
+     *
+     * @param id      The identifier of a person to which the message is to be posted.
+     * @param text    The content of message to be posted to the person. The content can be plain text, html, or markdown.
+     * @param files   Local files to be attached with the message. Null if no files to be attached.
+     * @param parentMessage Parent message. Null if no parent message.
+     * @param handler A closure to be executed once the message has posted.
+     * @since 2.5.0
+     */
+    void postToPerson(@NonNull String id, @Nullable String text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * Posts a message with optional file attachments to a person asynchronously.
+     * <p>
+     * The content of the message can be plain text, html, or markdown.
+     *
+     * @param id      The identifier of a person to which the message is to be posted.
+     * @param text    The content of message to be posted to the person. The content can be plain text, html, or markdown.
+     * @param files   Local files to be attached with the message. Null if no files to be attached.
+     * @param parentMessage Parent message. Null if no parent message.
+     * @param handler A closure to be executed once the message has posted.
+     * @since 2.5.0
+     */
+    void postToPerson(@NonNull String id, @Nullable Message.Text text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * Posts a message with optional file attachments to a person asynchronously.
+     * <p>
+     * The content of the message can be plain text, html, or markdown.
+     *
+     * @param email   The email address of a person to which the message is to be posted.
+     * @param text    The content of message to be posted to the person. The content can be plain text, html, or markdown.
+     * @param files   Local files to be attached with the message. Null if no files to be attached.
+     * @param parentMessage Parent message. Null if no parent message.
+     * @param handler A closure to be executed once the message has posted.
+     * @since 2.5.0
+     */
+    void postToPerson(@NonNull EmailAddress email, @Nullable String text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * Posts a message with optional file attachments to a person asynchronously.
+     * <p>
+     * The content of the message can be plain text, html, or markdown.
+     *
+     * @param email   The email address of a person to which the message is to be posted.
+     * @param text    The content of message to be posted to the person. The content can be plain text, html, or markdown.
+     * @param files   Local files to be attached with the message. Null if no files to be attached.
+     * @param parentMessage Parent message. Null if no parent message.
+     * @param handler A closure to be executed once the message has posted.
+     * @since 2.5.0
+     */
+    void postToPerson(@NonNull EmailAddress email, @Nullable Message.Text text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler);
+
+    /**
      * Posts a message with optional file attachments to a space asynchronously.
      * <p>
      * The content of the message can be plain text, html, or markdown.
@@ -157,6 +213,40 @@ public interface MessageClient {
      * @since 2.3.0
      */
     void postToSpace(@NonNull String id, @Nullable Message.Text text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * Posts a message with optional file attachments to a space asynchronously.
+     * <p>
+     * The content of the message can be plain text, html, or markdown.
+     * To notify specific person or everyone in a space, mentions should be used.
+     * Having <code>@johndoe</code> in the content of the message does not generate notification.
+     *
+     * @param id       The identifier of a space to which the message is to be posted.
+     * @param text     The content of message to be posted to the space. The content can be plain text, html, or markdown.
+     * @param mentions Notify either one or all in a space about this message.
+     * @param files    Local files to be attached with the message. Null if no files to be attached.
+     * @param parentMessage Parent message. Null if no parent message.
+     * @param handler  A closure to be executed once the message has posted.
+     * @since 2.5.0
+     */
+    void postToSpace(@NonNull String id, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * Posts a message with optional file attachments to a space asynchronously.
+     * <p>
+     * The content of the message can be plain text, html, or markdown.
+     * To notify specific person or everyone in a space, mentions should be used.
+     * Having <code>@johndoe</code> in the content of the message does not generate notification.
+     *
+     * @param id       The identifier of a space to which the message is to be posted.
+     * @param text     The content of message to be posted to the space. The content can be plain text, html, or markdown.
+     * @param mentions Notify either one or all in a space about this message.
+     * @param files    Local files to be attached with the message. Null if no files to be attached.
+     * @param parentMessage Parent message. Null if no parent message.
+     * @param handler  A closure to be executed once the message has posted.
+     * @since 2.5.0
+     */
+    void postToSpace(@NonNull String id, @Nullable Message.Text text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler);
 
     /**
      * Downloads a file attachement asynchronously.
