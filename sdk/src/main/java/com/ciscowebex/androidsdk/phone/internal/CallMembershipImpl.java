@@ -90,7 +90,7 @@ public class CallMembershipImpl implements CallMembership {
         _personId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
         _email = person.getEmail();
         _phoneNumber = person.getPhoneNumber();
-        _sipUrl = person.getPhoneNumber();
+        _sipUrl = person.getSipUrl();
         _isInitiator = participant.isCreator();
         _state = fromLocusState(participant.getState(), participant.isInLobby());
         MediaDirection videoStatus = participant.getStatus().getVideoStatus();
