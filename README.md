@@ -518,7 +518,7 @@ Here are API changes list from Spark Android SDK to Webex Android SDK.
 | Package name | com.ciscospark.androidsdk | com.ciscowebex.androidsdk
 | Create a new instance | Spark spark = new Spark(application, authenticator) | Webex webex = new Webex(application, authenticator)
 | Get error response | SparkError error = result.getError() | WebexError error = result.getError()
-| Rename Room to Space | spark.rooms().get(roomId, CompletionHandler< Room > callback) | webex.spaces().get(spaceId, CompletionHandler< Space > callback)
+| Rename Room to Space | spark.rooms().get(roomId, CompletionHandler< Room > handler) | webex.spaces().get(spaceId, CompletionHandler< Space > handler)
 
 ## Contribute
 
