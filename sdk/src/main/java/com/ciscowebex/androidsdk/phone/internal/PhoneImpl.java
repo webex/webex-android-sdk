@@ -1055,8 +1055,10 @@ public class PhoneImpl implements Phone {
         if (call != null) {
             Ln.d(STR_FIND_CALLIMPL + event.getLocusKey());
             if (!call.isGroup()) {
-                resetDialStatus(null);
-                removeCall(new CallObserver.RemoteLeft(call));
+                if (call.getRemoteParticipants().isEmpty()){
+                    resetDialStatus(null);
+                    removeCall(new CallObserver.RemoteLeft(call));
+                }
             } else if (call.getStatus() == Call.CallStatus.INITIATED || call.getStatus() == Call.CallStatus.RINGING) {
                 boolean meetingIsOpen = false;
                 for (CallMembership membership : call.getMemberships()) {
