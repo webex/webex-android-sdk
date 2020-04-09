@@ -22,127 +22,149 @@
 
 package com.ciscowebex.androidsdk.phone.internal;
 
-import com.cisco.spark.android.locus.model.LocusParticipant;
-import com.cisco.spark.android.locus.model.LocusParticipantInfo;
-import com.cisco.spark.android.locus.model.MediaDirection;
-import com.ciscowebex.androidsdk.phone.Call;
+import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.phone.CallMembership;
-import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 
+import me.helloworld.utils.Checker;
 import me.helloworld.utils.Objects;
-import me.helloworld.utils.annotation.StringPart;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * Created on 12/06/2017.
- */
+import java.util.List;
 
 public class CallMembershipImpl implements CallMembership {
 
-    private static CallMembership.State fromLocusState(LocusParticipant.State state, boolean isInLobby) {
-        if (state == LocusParticipant.State.IDLE) {
+    private static CallMembership.State fromLocusState(LocusParticipantModel.State state, boolean isInLobby) {
+        if (state == LocusParticipantModel.State.IDLE) {
             return isInLobby ? State.WAITING : State.IDLE;
-        } else if (state == LocusParticipant.State.NOTIFIED) {
+        } else if (state == LocusParticipantModel.State.NOTIFIED) {
             return State.NOTIFIED;
-        } else if (state == LocusParticipant.State.JOINED) {
+        } else if (state == LocusParticipantModel.State.JOINED) {
             return State.JOINED;
-        } else if (state == LocusParticipant.State.LEFT) {
+        } else if (state == LocusParticipantModel.State.LEFT) {
             return State.LEFT;
-        } else if (state == LocusParticipant.State.DECLINED) {
+        } else if (state == LocusParticipantModel.State.DECLINED) {
             return State.DECLINED;
-        } else if (state == LocusParticipant.State.LEAVING) {
+        } else if (state == LocusParticipantModel.State.LEAVING) {
             return State.LEFT;
         } else {
             return State.UNKNOWN;
         }
     }
 
-    @StringPart
-    private boolean _isInitiator = false;
+    private final CallImpl call;
 
-    @StringPart
-    private String _personId;
+    private LocusParticipantModel model;
 
-    @StringPart
-    private State _state = State.UNKNOWN;
+    private boolean self;
 
-    @StringPart
-    private String _email;
+    private boolean initiator = false;
 
-    @StringPart
-    private String _sipUrl;
+    private String personId;
 
-    @StringPart
-    private String _phoneNumber;
+    CallMembershipImpl(LocusParticipantModel participant, CallImpl call) {
+        this.call = call;
+        setModel(participant);
+        Ln.d("CallMembership: " + getId() + " person: " + getPersonId() + " email: " + getEmail() + "  video: " +  isSendingVideo() + "   audio: " + isSendingAudio());
+    }
 
-    @StringPart
-    private boolean _sendingVideo = false;
+    public String getId() {
+        return model.getId();
+    }
 
-    @StringPart
-    private boolean _sendingAudio = false;
-
-    @StringPart
-    private boolean _sendingSharing = false;
-
-    CallMembershipImpl(LocusParticipant participant, Call call) {
-        LocusParticipantInfo person = participant.getPerson();
-        _personId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
-        _email = person.getEmail();
-        _phoneNumber = person.getPhoneNumber();
-        _sipUrl = person.getSipUrl();
-        _isInitiator = participant.isCreator();
-        _state = fromLocusState(participant.getState(), participant.isInLobby());
-        MediaDirection videoStatus = participant.getStatus().getVideoStatus();
-        MediaDirection audioStatus = participant.getStatus().getAudioStatus();
-        Ln.d("CallMembership: " + person.getId() + " email: " + _email + "  video: " +videoStatus + "   audio: " + audioStatus);
-        _sendingVideo = videoStatus == null || videoStatus == MediaDirection.SENDRECV || videoStatus == MediaDirection.SENDONLY;
-        _sendingAudio = audioStatus == null || audioStatus == MediaDirection.SENDRECV || audioStatus == MediaDirection.SENDONLY;
-        _sendingSharing = false;
-        if (call instanceof CallImpl && ((CallImpl) call).getSharingSender() != null) {
-            _sendingSharing = ((CallImpl) call).getSharingSender().getPerson().getId().equalsIgnoreCase(person.getId());
-        }
-
+    public boolean isSelf() {
+        return self;
     }
 
     public boolean isInitiator() {
-        return _isInitiator;
+        return initiator;
     }
 
     public String getPersonId() {
-        return _personId;
+        return personId;
     }
 
     public State getState() {
-        return _state;
+        return fromLocusState(model.getState(), model.isInLobby());
     }
 
     public String getEmail() {
-        return _email;
+        return model.getPerson() == null ? null : model.getPerson().getEmail();
     }
 
     public String getSipUrl() {
-        return _sipUrl;
+        return model.getPerson() == null ? null : model.getPerson().getSipUrl();
     }
 
     public String getPhoneNumber() {
-        return _phoneNumber;
+        return model.getPerson() == null ? null : model.getPerson().getPhoneNumber();
     }
 
     public boolean isSendingVideo() {
-        return _sendingVideo;
+        return model.getStatus() != null && model.getStatus().getVideoStatus() == LocusMediaDirection.SENDRECV;
     }
 
     public boolean isSendingAudio() {
-        return _sendingAudio;
+        return model.getStatus() != null && model.getStatus().getAudioStatus() == LocusMediaDirection.SENDRECV;
     }
 
     public boolean isSendingSharing() {
-        return _sendingSharing;
+        LocusModel model = call.getModel();
+        FloorModel floor = model.getFloor();
+        return floor != null && model.isFloorGranted()
+                && floor.getBeneficiary() != null && Checker.isEqual(floor.getBeneficiary().getId(), getId())
+                && floor.getDisposition() == FloorModel.Disposition.GRANTED;
+    }
+
+    @Override
+    public boolean isActiveSpeaker() {
+        return Checker.isEqual(getId(), ((CallMembershipImpl) call.getActiveSpeaker()).getId());
+    }
+
+    public LocusParticipantModel getModel() {
+        synchronized (this) {
+            return model;
+        }
+    }
+
+    public void setModel(@NotNull LocusParticipantModel model) {
+        synchronized (this) {
+            this.model = model;
+            this.self = Checker.isEqual(model.getId(), call.getModel().getSelfId());
+            this.personId = new WebexId(WebexId.Type.PEOPLE_ID, model.getPerson().getId()).toHydraId();
+            this.initiator = model.isCreator();
+        }
+    }
+
+    public boolean containsCSI(long csi) {
+        List<Long> CSIs = model.getStatus() == null ? null : model.getStatus().getCsis();
+        if (!Checker.isEmpty(CSIs)) {
+            return CSIs.contains(csi);
+        }
+        return false;
     }
 
     public String toString() {
-        return Objects.toStringByAnnotation(this);
+        return "CallMembership: " + getId()
+                + " status: " + getState()
+                + " isSelf: " + isSelf()
+                + " person: " + getPersonId()
+                + " email: " + getEmail()
+                + " video: " +  isSendingVideo()
+                + " audio: " + isSendingAudio();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CallMembershipImpl that = (CallMembershipImpl) o;
+        return getId().equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(getId());
+    }
 }

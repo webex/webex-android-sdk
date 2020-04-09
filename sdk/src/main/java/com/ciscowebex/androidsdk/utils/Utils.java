@@ -22,26 +22,34 @@
 
 package com.ciscowebex.androidsdk.utils;
 
+import android.content.Context;
 import android.os.Build;
 import android.support.annotation.Nullable;
-import android.util.Base64;
 
-import com.cisco.spark.android.util.Strings;
+import android.view.WindowManager;
 import com.ciscowebex.androidsdk.Webex;
+import com.ciscowebex.androidsdk.utils.log.DebugLn;
+import com.ciscowebex.androidsdk.utils.log.NoLn;
+import com.ciscowebex.androidsdk.utils.log.WarningLn;
+import com.github.benoitdion.ln.InfoLn;
+import com.github.benoitdion.ln.NaturalLog;
+import com.github.benoitdion.ln.ReleaseLn;
+import com.webex.wme.MediaSessionAPI;
+import com.github.benoitdion.ln.Ln;
+import me.helloworld.utils.Checker;
+import me.helloworld.utils.Strings;
+import okhttp3.logging.HttpLoggingInterceptor;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-
+import java.io.*;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * An utility class.
  *
  * @since 0.1
  */
-
 public class Utils {
 
     private Utils(){}
@@ -53,10 +61,6 @@ public class Utils {
         return object;
     }
 
-    public static String timestampUTC() {
-        return DateTime.now(DateTimeZone.UTC).toString();
-    }
-
     public static String versionInfo() {
         String tempUserAgent = String.format("%s/%s (Android %s; %s %s / %s %s;)",
                 Webex.APP_NAME, Webex.APP_VERSION,
@@ -66,16 +70,7 @@ public class Utils {
                 Strings.capitalize(Build.BRAND),
                 Strings.capitalize(Build.MODEL)
         );
-        return Strings.stripInvalidHeaderChars(tempUserAgent);
-    }
-
-    public static String encode(String id) {
-        if (id == null || id.isEmpty())
-            return id;
-
-        String encodeString = "ciscospark://us/PEOPLE/" + id;
-        return new String(Base64.encode(encodeString.getBytes(),
-                Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP));
+        return stripInvalidHeaderChars(tempUserAgent);
     }
 
     public static Map<String, Object> toMap(Object o) {
@@ -106,4 +101,191 @@ public class Utils {
         }
         return result;
     }
+
+    private static final Pattern pattern = Pattern.compile("[^\\x20-\\x7E]");
+
+    public static String stripInvalidHeaderChars(String str) {
+        return pattern.matcher(str).replaceAll("");
+    }
+
+    public static <T> String join(final String delimiter, final Collection<T> objs) {
+        if (objs == null || objs.isEmpty()) {
+            return "";
+        }
+        final Iterator<T> iter = objs.iterator();
+        final StringBuilder buffer = new StringBuilder(toString(iter.next()));
+
+        while (iter.hasNext()) {
+            final T obj = iter.next();
+            if (!Checker.isEmpty(toString(obj))) buffer.append(delimiter).append(toString(obj));
+        }
+        return buffer.toString();
+    }
+
+    public static <T> String join(final String delimiter, final T... objects) {
+        return join(delimiter, Arrays.asList(objects));
+    }
+
+    public static String toString(InputStream input) {
+        StringWriter sw = new StringWriter();
+        copy(new InputStreamReader(input), sw);
+        return sw.toString();
+    }
+
+    public static String toString(Reader input) {
+        StringWriter sw = new StringWriter();
+        copy(input, sw);
+        return sw.toString();
+    }
+
+    public static String toString(final Object o) {
+        return toString(o, "");
+    }
+
+    public static String toString(final Object o, final String def) {
+        return o == null ? def :
+                o instanceof InputStream ? toString((InputStream) o) :
+                        o instanceof Reader ? toString((Reader) o) :
+                                o instanceof Object[] ? join(", ", (Object[]) o) :
+                                        o instanceof Collection ? join(", ", (Collection<?>) o) : o.toString();
+    }
+
+    public static int copy(Reader input, Writer output) {
+        long count = copyLarge(input, output);
+        return count > Integer.MAX_VALUE ? -1 : (int) count;
+    }
+
+    public static long copyLarge(Reader input, Writer output) throws RuntimeException {
+        try {
+            char[] buffer = new char[1024 * 4];
+            long count = 0;
+            int n;
+            while (-1 != (n = input.read(buffer))) {
+                output.write(buffer, 0, n);
+                count += n;
+            }
+            return count;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String[] chunk(String str, int chunkSize) {
+        if (Checker.isEmpty(str) || chunkSize == 0) {
+            return new String[0];
+        }
+        // return str.split("(?<=\\G.{" + chunkSize + "})");
+        final int len = str.length();
+        final int arrayLen = ((len - 1) / chunkSize) + 1;
+        final String[] array = new String[arrayLen];
+        for (int i = 0; i < arrayLen; ++i) {
+            array[i] = str.substring(i * chunkSize, Math.min((i * chunkSize) + chunkSize, len));
+        }
+        return array;
+    }
+
+    public static int getScreenRotation(Context context) {
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        return windowManager != null ? windowManager.getDefaultDisplay().getRotation() : 0;
+    }
+
+    public static <T> T getFirst(T[] array) {
+        if (array.length == 0) {
+            return null;
+        }
+        return array[0];
+    }
+
+    public static HttpLoggingInterceptor.Level toHttpLogLevel(Webex.LogLevel logLevel) {
+        if (logLevel == Webex.LogLevel.NO) {
+            return HttpLoggingInterceptor.Level.NONE;
+        }
+        else if (logLevel == Webex.LogLevel.ERROR || logLevel == Webex.LogLevel.WARNING || logLevel == Webex.LogLevel.INFO) {
+            return HttpLoggingInterceptor.Level.BASIC;
+        }
+        else if (logLevel == Webex.LogLevel.DEBUG_NO_HTTP_DETAILS) {
+            return HttpLoggingInterceptor.Level.HEADERS;
+        }
+        else {
+            return HttpLoggingInterceptor.Level.BODY;
+        }
+     }
+
+    public static NaturalLog toLnLog(Webex.LogLevel logLevel) {
+        NaturalLog logger = new DebugLn();
+        if (logLevel != null) {
+            switch (logLevel) {
+                case NO:
+                    logger = new NoLn();
+                    break;
+                case ERROR:
+                    logger = new ReleaseLn();
+                    break;
+                case WARNING:
+                    logger = new WarningLn();
+                    break;
+                case INFO:
+                    logger = new InfoLn();
+                    break;
+                case DEBUG_NO_HTTP_DETAILS:
+                case DEBUG:
+                case VERBOSE:
+                case ALL:
+                    logger = new DebugLn();
+                    break;
+            }
+        }
+        return logger;
+    }
+
+    public static MediaSessionAPI.TraceLevelMask toTraceLevelMask(Webex.LogLevel level) {
+        MediaSessionAPI.TraceLevelMask mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
+        if (level != null) {
+            switch (level) {
+                case NO:
+                case ERROR:
+                case WARNING:
+                case INFO:
+                case DEBUG_NO_HTTP_DETAILS:
+                case DEBUG:
+                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_NOTRACE;
+                    break;
+                case VERBOSE:
+                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO;
+                    break;
+                case ALL:
+                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DETAIL;
+            }
+        }
+        return mask;
+    }
+
+    public static String readFile(File file) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                sb.append("\n");
+                line = br.readLine();
+            }
+            br.close();
+            return sb.toString();
+        } catch (IOException e) {
+            Ln.e(e, "Error reading file: " + file.getAbsolutePath());
+            return null;
+        }
+    }
+
+    public static File mkdir(String dirName) {
+        File logDir = new File(dirName);
+        if (!logDir.exists()) {
+            if (!logDir.mkdirs())
+                Ln.e("Failed to make directory");
+        }
+        return logDir;
+    }
+
 }

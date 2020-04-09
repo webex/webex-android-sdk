@@ -22,8 +22,8 @@
 
 package com.ciscowebex.androidsdk.membership;
 
-import com.cisco.spark.android.model.conversation.Activity;
 import com.ciscowebex.androidsdk.WebexEvent;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 
 /**
  * Callback to receive the events from a {@link MembershipClient}.
@@ -45,7 +45,7 @@ public interface MembershipObserver {
 
         private Membership membership;
 
-        protected MembershipCreated(Membership membership, Activity activity) {
+        protected MembershipCreated(Membership membership, ActivityModel activity) {
             super(activity);
             this.membership = membership;
         }
@@ -65,7 +65,7 @@ public interface MembershipObserver {
 
         private Membership membership;
 
-        protected MembershipDeleted(Membership membership, Activity activity) {
+        protected MembershipDeleted(Membership membership, ActivityModel activity) {
             super(activity);
             this.membership = membership;
         }
@@ -85,7 +85,7 @@ public interface MembershipObserver {
 
         private Membership membership;
 
-        protected MembershipUpdated(Membership membership, Activity activity) {
+        protected MembershipUpdated(Membership membership, ActivityModel activity) {
             super(activity);
             this.membership = membership;
         }
@@ -106,7 +106,7 @@ public interface MembershipObserver {
         private Membership membership;
         private String lastSeenMessageId;
 
-        protected MembershipMessageSeen(Membership membership, Activity activity, String lastSeenMessageId) {
+        protected MembershipMessageSeen(Membership membership, ActivityModel activity, String lastSeenMessageId) {
             super(activity);
             this.membership = membership;
             this.lastSeenMessageId = lastSeenMessageId;

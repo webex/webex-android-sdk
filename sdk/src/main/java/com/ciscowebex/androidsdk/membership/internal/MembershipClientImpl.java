@@ -23,199 +23,150 @@
 package com.ciscowebex.androidsdk.membership.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import android.content.Context;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.cisco.spark.android.authenticator.ApiTokenProvider;
-import com.cisco.spark.android.core.ApiClientProvider;
-import com.cisco.spark.android.model.Person;
-import com.cisco.spark.android.model.Verb;
-import com.cisco.spark.android.model.conversation.Activity;
-import com.cisco.spark.android.model.conversation.Conversation;
-import com.cisco.spark.android.processing.ActivityListener;
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.internal.*;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.ConversationModel;
+import com.ciscowebex.androidsdk.internal.model.PersonModel;
 import com.ciscowebex.androidsdk.membership.Membership;
 import com.ciscowebex.androidsdk.membership.MembershipClient;
 import com.ciscowebex.androidsdk.membership.MembershipObserver;
 import com.ciscowebex.androidsdk.membership.MembershipReadStatus;
+import com.ciscowebex.androidsdk.phone.internal.PhoneImpl;
 import com.ciscowebex.androidsdk.utils.WebexId;
-import com.ciscowebex.androidsdk.utils.http.ListBody;
-import com.ciscowebex.androidsdk.utils.http.ListCallback;
-import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
-import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
+import com.ciscowebex.androidsdk.internal.model.ItemsModel;
 
-import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
-import com.github.benoitdion.ln.Ln;
+import com.google.gson.reflect.TypeToken;
 import me.helloworld.utils.collection.Maps;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
-import javax.inject.Inject;
+public class MembershipClientImpl implements MembershipClient, ActivityListener {
 
-public class MembershipClientImpl implements MembershipClient {
+    private PhoneImpl phone;
+    private MembershipObserver observer;
 
-    private Authenticator _authenticator;
-
-    private MembershipService _service;
-
-    private MembershipObserver _observer;
-
-    private Context _context;
-
-    @Inject
-    ActivityListener activityListener;
-
-    @Inject
-    ApiTokenProvider _provider;
-
-    @Inject
-    ApiClientProvider _client;
-
-    public MembershipClientImpl(Context context, Authenticator authenticator, SDKCommonInjector injector) {
-        injector.inject(this);
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(MembershipService.class);
-        _context = context;
-        activityListener.register(activity -> {
-            processorActivity(activity);
-            return null;
-        });
+    public MembershipClientImpl(PhoneImpl phone) {
+        this.phone = phone;
     }
 
     @Override
     public void setMembershipObserver(MembershipObserver observer) {
-        _observer = observer;
+        this.observer = observer;
+    }
+
+    public void processActivity(@NonNull ActivityModel activity) {
+        if (observer == null) {
+            return;
+        }
+        final MembershipObserver.MembershipEvent event;
+        if (activity.isAddParticipant()) {
+            event = new InternalMembership.InternalMembershipCreated(new InternalMembership(activity), activity);
+        }
+        else if (activity.isLeaveActivity()) {
+            event = new InternalMembership.InternalMembershipDeleted(new InternalMembership(activity), activity);
+        }
+        else if (activity.getVerb() == ActivityModel.Verb.assignModerator || activity.getVerb() == ActivityModel.Verb.unassignModerator) {
+            event = new InternalMembership.InternalMembershipUpdated(new InternalMembership(activity), activity);
+        }
+        else if (activity.getVerb() == ActivityModel.Verb.acknowledge) {
+            event = new InternalMembership.InternalMembershipMessageSeen(new InternalMembership(activity), activity, new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
+        }
+        else {
+            event = null;
+        }
+        if (event != null) {
+            Queue.main.run(() -> observer.onEvent(event));
+        }
     }
 
     @Override
     public void list(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-                _service.list(s, spaceId, spaceId, personId, personEmail, max <= 0 ? null : max), new ListCallback<>(handler));
-    }
-
-    @Override
-    public void create(@NonNull String spaceId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-                _service.create(s, Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)), new ObjectCallback<>(handler));
+        Service.Hydra.get("memberships")
+                .with("roomId", spaceId)
+                .with("spaceId", spaceId)
+                .with("personId", personId)
+                .with("personEmail", personEmail)
+                .with("max", max <= 0 ? null : String.valueOf(max))
+                .auth(phone.getAuthenticator())
+                .queue(Queue.main)
+                .model(new TypeToken<ItemsModel<Membership>>(){}.getType())
+                .error(handler)
+                .async((Closure<ItemsModel<Membership>>) result -> handler.onComplete(ResultImpl.success(result.getItems())));
     }
 
     @Override
     public void get(@NonNull String membershipId, @NonNull CompletionHandler<Membership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-                _service.get(s, membershipId), new ObjectCallback<>(handler));
+        Service.Hydra.get("memberships", membershipId)
+                .auth(phone.getAuthenticator())
+                .queue(Queue.main)
+                .model(Membership.class)
+                .error(handler)
+                .async((Closure<Membership>) result -> handler.onComplete(ResultImpl.success(result)));
+    }
+
+    @Override
+    public void create(@NonNull String spaceId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
+        Service.Hydra.post(Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator))
+                .to("memberships")
+                .auth(phone.getAuthenticator())
+                .queue(Queue.main)
+                .model(Membership.class)
+                .error(handler)
+                .async((Closure<Membership>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     @Override
     public void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-                _service.update(s, membershipId, Maps.makeMap("isModerator", isModerator)), new ObjectCallback<>(handler));
+        Service.Hydra.put(Maps.makeMap("isModerator", isModerator))
+                .to("memberships", membershipId)
+                .auth(phone.getAuthenticator())
+                .queue(Queue.main)
+                .model(Membership.class)
+                .error(handler)
+                .async((Closure<Membership>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     @Override
     public void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-                _service.delete(s, membershipId), new ObjectCallback<>(handler));
+        Service.Hydra.delete("memberships", membershipId)
+                .auth(phone.getAuthenticator())
+                .queue(Queue.main)
+                .error(handler)
+                .async((Closure<Void>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     @Override
     public void listWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<List<MembershipReadStatus>> handler) {
-        _client.getConversationClient().getConversationParticipantsReadStatus(WebexId.translate(spaceId)).enqueue(new Callback<Conversation>() {
-            @Override
-            public void onResponse(Call<Conversation> call, Response<Conversation> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Conversation conversation = response.body();
+        Service.Conv.get("conversations", WebexId.translate(spaceId))
+                .with("uuidEntryFormat", "true")
+                .with("personRefresh", "true")
+                .with("includeParticipants", "true")
+                .with("participantAckFilter", "all")
+                .with("activitiesLimit", "0")
+                .auth(phone.getAuthenticator())
+                .device(phone.getDevice())
+                .queue(Queue.main)
+                .model(ConversationModel.class)
+                .error(handler)
+                .async((Closure<ConversationModel>) model -> {
+                    if (model == null) {
+                        handler.onComplete(ResultImpl.success(Collections.emptyList()));
+                        return;
+                    }
                     List<MembershipReadStatus> result = new ArrayList<>();
-                    for (Person person : conversation.getParticipants().getItems()) {
+                    for (PersonModel person : model.getParticipants().getItems()) {
                         try {
-                            result.add(new InternalMembershipReadStatus(conversation, person));
-                        }
-                        catch (Throwable ignored) {
+                            result.add(new InternalMembershipReadStatus(model, person));
+                        } catch (Throwable ignored) {
                         }
                     }
                     handler.onComplete(ResultImpl.success(result));
-                } else {
-                    handler.onComplete(ResultImpl.error(response));
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Conversation> call, Throwable throwable) {
-                handler.onComplete(ResultImpl.error(throwable));
-            }
-        });
-    }
-
-    private void processorActivity(Activity activity) {
-        if (null == _observer) {
-            return;
-        }
-        if (null == activity) {
-            Ln.e("MembershipClientImpl.processorActivity() activity is null");
-            return;
-        }
-        Membership membership = new InternalMembership(activity);
-        MembershipObserver.MembershipEvent event;
-        switch (activity.getVerb()) {
-            case Verb.add:
-                event = new InternalMembership.InternalMembershipCreated(membership, activity);
-                break;
-            case Verb.leave:
-                event = new InternalMembership.InternalMembershipDeleted(membership, activity);
-                break;
-            case Verb.assignModerator:
-            case Verb.unassignModerator:
-                event = new InternalMembership.InternalMembershipUpdated(membership, activity);
-                break;
-            case Verb.acknowledge:
-                event = new InternalMembership.InternalMembershipMessageSeen(membership, activity, new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
-                break;
-            default:
-                return;
-        }
-        runOnUiThread(() -> _observer.onEvent(event), _observer);
-    }
-
-    private void runOnUiThread(Runnable r, Object conditioner) {
-        if (conditioner == null) return;
-        Handler handler = new Handler(_context.getMainLooper());
-        handler.post(r);
-    }
-
-    private interface MembershipService {
-        @GET("memberships")
-        Call<ListBody<Membership>> list(@Header("Authorization") String authorization,
-                                        @Query("roomId") String roomId,
-                                        @Query("spaceId") String spaceId,
-                                        @Query("personId") String personId,
-                                        @Query("personEmail") String personEmail,
-                                        @Query("max") Integer max);
-
-        @POST("memberships")
-        Call<Membership> create(@Header("Authorization") String authorization, @Body Map parameters);
-
-        @GET("memberships/{membershipId}")
-        Call<Membership> get(@Header("Authorization") String authorization, @Path("membershipId") String membershipId);
-
-        @PUT("memberships/{membershipId}")
-        Call<Membership> update(@Header("Authorization") String authorization, @Path("membershipId") String membershipId, @Body Map parameters);
-
-        @DELETE("memberships/{membershipId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("membershipId") String membershipId);
+                });
     }
 }

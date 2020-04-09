@@ -26,10 +26,8 @@ package com.ciscowebex.androidsdk;
 import android.app.Application;
 import android.content.Context;
 import android.os.Environment;
-import android.os.Handler;
 
 import android.support.test.runner.AndroidJUnitRunner;
-import com.ciscowebex.androidsdk.auth.OAuthTestUserAuthenticator;
 import com.facebook.drawee.backends.pipeline.Fresco;
 
 import java.io.File;
@@ -71,48 +69,48 @@ public class WebexTestRunner extends AndroidJUnitRunner {
     public void callApplicationOnCreate(Application app) {
         super.callApplicationOnCreate(app);
         Fresco.initialize(app.getApplicationContext());
-        new Handler().post(this::loginBySparkId);
+        //new Handler().post(this::loginBySparkId);
     }
 
     private void loginBySparkId() {
         System.out.println("!!! loginBySparkId !!!");
-        String path = Environment.getExternalStorageDirectory().getPath();
-        //String path = application.getExternalFilesDir("login");
-
-        File file = new File(path, "login.txt");
-        if (file.exists()) {
-            HashMap map = readKeyValueTxtToMap(file);
-            SparkUserEmail = (String) map.get("SparkUserEmail");
-            SparkUserName = (String) map.get("SparkUserName");
-            SparkUserPwd = (String) map.get("SparkUserPwd");
-            CLIENT_ID = (String) map.get("CLIENT_ID");
-            CLIENT_SEC = (String) map.get("CLIENT_SEC");
-            REDIRECT_URL = (String) map.get("REDIRECT_URL");
-            SCOPE = (String) map.get("SCOPE");
-        } else {
-            System.out.println("!!! login file is not exist !!!");
-        }
-        System.out.println("Test User:" + SparkUserEmail);
-
-        OAuthTestUserAuthenticator auth = new OAuthTestUserAuthenticator(CLIENT_ID, CLIENT_SEC, SCOPE, REDIRECT_URL,
-                SparkUserEmail, SparkUserName, SparkUserPwd);
-        webex = new Webex(application, auth);
-        final CountDownLatch signal = new CountDownLatch(1);
-        auth.authorize(result -> {
-            if (result.isSuccessful()) {
-                System.out.println("loginBySparkId isSuccessful!");
-            } else {
-                System.out.println("loginBySparkId failed! " + result.getError().toString());
-                System.exit(-1);
-            }
-            signal.countDown();
-        });
-
-        try {
-            signal.await(60, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        String path = Environment.getExternalStorageDirectory().getPath();
+//        //String path = application.getExternalFilesDir("login");
+//
+//        File file = new File(path, "login.txt");
+//        if (file.exists()) {
+//            HashMap map = readKeyValueTxtToMap(file);
+//            SparkUserEmail = (String) map.get("SparkUserEmail");
+//            SparkUserName = (String) map.get("SparkUserName");
+//            SparkUserPwd = (String) map.get("SparkUserPwd");
+//            CLIENT_ID = (String) map.get("CLIENT_ID");
+//            CLIENT_SEC = (String) map.get("CLIENT_SEC");
+//            REDIRECT_URL = (String) map.get("REDIRECT_URL");
+//            SCOPE = (String) map.get("SCOPE");
+//        } else {
+//            System.out.println("!!! login file is not exist !!!");
+//        }
+//        System.out.println("Test User:" + SparkUserEmail);
+//
+//        OAuthTestUserAuthenticator auth = new OAuthTestUserAuthenticator(CLIENT_ID, CLIENT_SEC, SCOPE, REDIRECT_URL,
+//                SparkUserEmail, SparkUserName, SparkUserPwd);
+//        webex = new Webex(application, auth);
+//        final CountDownLatch signal = new CountDownLatch(1);
+//        auth.authorize(result -> {
+//            if (result.isSuccessful()) {
+//                System.out.println("loginBySparkId isSuccessful!");
+//            } else {
+//                System.out.println("loginBySparkId failed! " + result.getError().toString());
+//                System.exit(-1);
+//            }
+//            signal.countDown();
+//        });
+//
+//        try {
+//            signal.await(60, TimeUnit.SECONDS);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private HashMap readKeyValueTxtToMap(File file) {

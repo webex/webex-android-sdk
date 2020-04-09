@@ -22,9 +22,8 @@
 
 package com.ciscowebex.androidsdk.membership;
 
-import com.cisco.spark.android.model.ParticipantRoomProperties;
-import com.cisco.spark.android.model.Person;
-import com.cisco.spark.android.model.conversation.Conversation;
+import com.ciscowebex.androidsdk.internal.model.ConversationModel;
+import com.ciscowebex.androidsdk.internal.model.PersonModel;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.ciscowebex.androidsdk.message.Message;
 
@@ -43,8 +42,8 @@ public class MembershipReadStatus {
 
     private Date _lastSeenDate;
 
-    protected MembershipReadStatus(Conversation conversation, Person person) throws IllegalArgumentException {
-        ParticipantRoomProperties roomProperties = person.getRoomProperties();
+    protected MembershipReadStatus(ConversationModel conversation, PersonModel person) throws IllegalArgumentException {
+        PersonModel.RoomPropertiesModel roomProperties = person.getRoomProperties();
         if (roomProperties == null) {
             throw new IllegalArgumentException("RoomProperties is null");
         }

@@ -24,30 +24,25 @@ package com.ciscowebex.androidsdk.utils.http;
 
 import java.io.IOException;
 
+import com.ciscowebex.androidsdk.utils.TrackingIdGenerator;
 import com.ciscowebex.androidsdk.utils.Utils;
 
 import okhttp3.Interceptor;
-import okhttp3.Request;
 import okhttp3.Response;
 
 public class DefaultHeadersInterceptor implements Interceptor {
 
-    protected String _userAgent;
-
-    public DefaultHeadersInterceptor() {
-        _userAgent = Utils.versionInfo();
-    }
+    protected String userAgent = Utils.versionInfo();
+    protected TrackingIdGenerator trackingIdGenerator = new TrackingIdGenerator();
 
     @Override
     public Response intercept(Chain chain) throws IOException {
-        Request original = chain.request();
-        Request request = original.newBuilder()
-                .header("User-Agent", _userAgent)
-                .header("Spark-User-Agent", _userAgent)
+        okhttp3.Request.Builder requestBuilder = chain.request().newBuilder()
+                .addHeader("Accept", "application/json")
+                .header("User-Agent", userAgent)
+                .header("Spark-User-Agent", userAgent)
                 .header("Content-Type", "application/json; charset=utf-8")
-                .method(original.method(), original.body())
-                .build();
-
-        return chain.proceed(request);
+                .header("TrackingID", trackingIdGenerator.nextTrackingId());
+        return chain.proceed(requestBuilder.build());
     }
 }

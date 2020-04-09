@@ -22,22 +22,30 @@
 
 package com.ciscowebex.androidsdk.auth;
 
+import android.content.Context;
+import android.support.test.InstrumentationRegistry;
+import com.ciscowebex.androidsdk.Webex;
+import com.github.benoitdion.ln.DebugLn;
+import com.github.benoitdion.ln.Ln;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-/**
- * @author Allen Xiao<xionxiao@cisco.com>
- * @version 0.1
- */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JWTAuthenticatorTest {
     private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbmRyb2lkX3Rlc3R1c2VyXzEiLCJuYW1lIjoiQW5kcm9pZFRlc3RVc2VyMSIsImlzcyI6ImNkNWM5YWY3LThlZDMtNGUxNS05NzA1LTAyNWVmMzBiMWI2YSJ9.eJ99AY9iNDhG4HjDJsY36wgqOnNQSes_PIu0DKBHBzs";
 
     @Test
     public void test() {
+        Context context = InstrumentationRegistry.getTargetContext();
         JWTAuthenticator authenticator = new JWTAuthenticator();
-        authenticator.authorize(auth_token);
-        authenticator.getToken(System.out::println);
+        authenticator.authorize("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJNeUpUVzEiLCJuYW1lIjoiTXlKVFcxIiwiaXNzIjoiWTJselkyOXpjR0Z5YXpvdkwzVnpMMDlTUjBGT1NWcEJWRWxQVGk4eU1EVXlNV001WVMwNU1qVXlMVFF6WkRNdE9EUmtNQzAzTUdJMU1HUTJOMkV6WlRjIiwiZXhwIjoxNjAyMTI5NzUyfQ.Exu1Wg-TTzm_zR6BhZMtMcIOExKoTEjLwUOK767lmfo");
+
+
+        try {
+            Thread.sleep(100000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

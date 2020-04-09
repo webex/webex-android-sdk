@@ -24,10 +24,6 @@ package com.ciscowebex.androidsdk.utils.log;
 
 import com.github.benoitdion.ln.BaseLn;
 
-/**
- * Created by zhiyuliu on 03/09/2017.
- */
-
 public class NoLn extends BaseLn {
 
     @Override

@@ -556,6 +556,17 @@ public interface CallObserver {
     }
 
     /**
+     * Local video rendering view size has changed.
+     *
+     * @since 2.5.0
+     */
+    class LocalSharingViewSizeChanged extends AbstractCallEvent implements MediaChangedEvent {
+        public LocalSharingViewSizeChanged(Call call) {
+            super(call);
+        }
+    }
+
+    /**
      * Remote video rendering view size has changed.
      *
      * @since 0.1

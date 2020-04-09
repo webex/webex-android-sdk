@@ -25,7 +25,6 @@ package com.ciscowebex.androidsdk.webhook;
 import java.util.Date;
 
 import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
 
 /**
  * A data type presents a Webhook at Cisco Webex for Developer.
@@ -35,32 +34,15 @@ import com.google.gson.annotations.SerializedName;
  */
 public class Webhook {
 
-    @SerializedName("id")
-    private String _id;
-
-    @SerializedName("name")
-    private String _name;
-
-    @SerializedName("targetUrl")
-    private String _targetUrl;
-
-    @SerializedName("resource")
-    private String _resource;
-
-    @SerializedName("event")
-    private String _event;
-
-    @SerializedName("filter")
-    private String _filter;
-
-    @SerializedName("secret")
-    private String _secret;
-
-    @SerializedName("created")
-    private Date _created;
-
-    @SerializedName("status")
-    private String _status;
+    private String id;
+    private String name;
+    private String targetUrl;
+    private String resource;
+    private String event;
+    private String filter;
+    private String secret;
+    private Date created;
+    private String status;
 
     @Override
     public String toString() {
@@ -73,7 +55,7 @@ public class Webhook {
      * @since 0.1
      */
     public String getId() {
-        return _id;
+        return id;
     }
 
     /**
@@ -81,7 +63,7 @@ public class Webhook {
      * @since 0.1
      */
     public String getName() {
-        return _name;
+        return name;
     }
 
     /**
@@ -89,7 +71,7 @@ public class Webhook {
      * @since 0.1
      */
     public String getTargetUrl() {
-        return _targetUrl;
+        return targetUrl;
     }
 
     /**
@@ -97,7 +79,7 @@ public class Webhook {
      * @since 0.1
      */
     public String getResource() {
-        return _resource;
+        return resource;
     }
 
     /**
@@ -105,7 +87,7 @@ public class Webhook {
      * @since 0.1
      */
     public String getEvent() {
-        return _event;
+        return event;
     }
 
     /**
@@ -113,7 +95,7 @@ public class Webhook {
      * @since 0.1
      */
     public String getFilter() {
-        return _filter;
+        return filter;
     }
 
     /**
@@ -121,7 +103,7 @@ public class Webhook {
      * @since 0.1
      */
     public String getSecret() {
-        return _secret;
+        return secret;
     }
 
     /**
@@ -129,6 +111,6 @@ public class Webhook {
      * @since 0.1
      */
     public Date getCreated() {
-        return _created;
+        return created;
     }
 }

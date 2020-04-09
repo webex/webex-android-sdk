@@ -1,7 +1,7 @@
 package com.ciscowebex.androidsdk.message;
 
-import com.cisco.spark.android.model.conversation.Activity;
 import com.ciscowebex.androidsdk.WebexEvent;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 
 /**
  * Callback to receive the events from a {@link MessageClient}.
@@ -26,7 +26,7 @@ public interface MessageObserver {
     class MessageArrived extends WebexEvent.Base implements MessageEvent {
         private Message message;
 
-        protected MessageArrived(Message message, Activity activity) {
+        protected MessageArrived(Message message, ActivityModel activity) {
             super(activity);
             this.message = message;
         }
@@ -55,7 +55,7 @@ public interface MessageObserver {
 
         private Message message;
 
-        protected MessageReceived(Message message, Activity activity) {
+        protected MessageReceived(Message message, ActivityModel activity) {
             super(activity);
             this.message = message;
         }
@@ -80,7 +80,7 @@ public interface MessageObserver {
 
         private String messageId;
 
-        protected MessageDeleted(String messageId, Activity activity) {
+        protected MessageDeleted(String messageId, ActivityModel activity) {
             super(activity);
             this.messageId = messageId;
         }

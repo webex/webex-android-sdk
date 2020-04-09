@@ -27,9 +27,11 @@ import java.util.Date;
 import java.util.List;
 
 import android.support.annotation.NonNull;
-import com.cisco.spark.android.model.*;
-import com.cisco.spark.android.model.conversation.*;
+import com.ciscowebex.androidsdk.internal.Credentials;
+import com.ciscowebex.androidsdk.internal.model.*;
+import com.ciscowebex.androidsdk.message.internal.DraftImpl;
 import com.ciscowebex.androidsdk.message.internal.RemoteFileImpl;
+import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.ciscowebex.androidsdk.space.Space;
 import com.google.gson.Gson;
@@ -40,6 +42,48 @@ import com.google.gson.Gson;
  * @since 0.1
  */
 public class Message {
+
+    /**
+     * Write a draft to be posted.
+     *
+     * @param text The content of draft to be posted. The content can be plain text, html, or markdown.
+     * @since 2.5.0
+     */
+    public static Draft draft(Text text) {
+        return new DraftImpl(text);
+    }
+
+    /**
+     * Encapsulating the content will be post.
+     *
+     * @since 2.5.0
+     */
+    public interface Draft {
+
+        /**
+         * Attach local files to the draft.
+         *
+         * @param files Local files to be attached with the draft.
+         * @since 2.5.0
+         */
+        Draft addAttachments(LocalFile... files);
+
+        /**
+         * Mention either one people or all people in a space.
+         *
+         * @param mentions Notify either one or all in a space about this message.
+         * @since 2.5.0
+         */
+        Draft addMentions(Mention... mentions);
+
+        /**
+         * Set the parent message of the threading message.
+         *
+         * @param parent The parent message of the threading message.
+         * @since 2.5.0
+         */
+        Draft setParent(Message parent);
+    }
 
     /**
      * The wrapper for the message text in different formats: plain text, markdown, and html.
@@ -92,11 +136,11 @@ public class Message {
             this.markdown = markdown;
         }
 
-        private Text(@NonNull ActivityObject object) {
+        private Text(@NonNull ObjectModel object) {
             this.plain = object.getDisplayName();
             this.html = object.getContent();
-            if (object instanceof Comment) {
-                this.markdown = ((Comment) object).getMarkdown();
+            if (object instanceof MarkdownableModel) {
+                this.markdown = ((MarkdownableModel) object).getMarkdown();
             }
         }
 
@@ -123,7 +167,7 @@ public class Message {
         }
     }
 
-    private transient Activity activity;
+    private transient ActivityModel activity;
 
     private String id;
 
@@ -147,14 +191,12 @@ public class Message {
 
     private transient List<RemoteFile> remoteFiles;
 
-    private boolean isReply;
+    private ParentModel parent;
 
-    private ParentObject parent;
-
-    protected Message(Activity activity, AuthenticatedUser user, boolean received) {
+    protected Message(ActivityModel activity, Credentials user, boolean received) {
         this.activity = activity;
         this.id = new WebexId(WebexId.Type.MESSAGE_ID, activity.getId()).toHydraId();
-        if (activity.getVerb().equals(Verb.delete) && activity.getObject() != null) {
+        if (activity.getVerb().equals(ActivityModel.Verb.delete) && activity.getObject() != null) {
             this.id = new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId();
         }
         if (activity.getActor() != null) {
@@ -165,16 +207,16 @@ public class Message {
         if (activity.getObject() != null) {
             this.textAsObject = new Text(activity.getObject());
         }
-        if (activity.getTarget() instanceof Conversation) {
+        if (activity.getTarget() instanceof ConversationModel) {
             this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
-            this.spaceType = ((Conversation) activity.getTarget()).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
-        } else if (activity.getTarget() instanceof SpaceProperty) {
+            this.spaceType = ((ConversationModel) activity.getTarget()).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+        } else if (activity.getTarget() instanceof SpacePropertyModel) {
             this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
-            this.spaceType = ((SpaceProperty) activity.getTarget()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
-        } else if (activity.getTarget() instanceof Person) {
+            this.spaceType = ((ConversationModel) activity.getTarget()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+        } else if (activity.getTarget() instanceof PersonModel) {
             this.spaceType = Space.SpaceType.DIRECT;
             this.toPersonId = new WebexId(WebexId.Type.PEOPLE_ID, activity.getTarget().getId()).toHydraId();
-            this.toPersonEmail = ((Person) activity.getTarget()).getEmail();
+            this.toPersonEmail = ((PersonModel) activity.getTarget()).getEmail();
         }
         if (this.spaceId == null) {
             this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getConversationId()).toHydraId();
@@ -183,23 +225,22 @@ public class Message {
             if (this.toPersonId == null && received) {
                 this.toPersonId = new WebexId(WebexId.Type.PEOPLE_ID, user.getUserId()).toHydraId();
             }
-            if (this.toPersonEmail == null && received) {
-                this.toPersonEmail = user.getEmail();
+            if (this.toPersonEmail == null && received && user.getPerson() != null) {
+                this.toPersonEmail = Utils.getFirst(user.getPerson().getEmails());
             }
             this.isSelfMentioned = activity.isSelfMention(user, 0);
         }
 
         ArrayList<RemoteFile> remoteFiles = new ArrayList<>();
         if (activity.getObject() != null && activity.getObject().isContent()) {
-            com.cisco.spark.android.model.conversation.Content content = (com.cisco.spark.android.model.conversation.Content) activity.getObject();
-            ItemCollection<File> files = content.getContentFiles();
-            for (File file : files.getItems()) {
+            ContentModel content = (ContentModel) activity.getObject();
+            ItemsModel<FileModel> files = content.getContentFiles();
+            for (FileModel file : files.getItems()) {
                 RemoteFile remoteFile = new RemoteFileImpl(file);
                 remoteFiles.add(remoteFile);
             }
         }
         this.remoteFiles = remoteFiles;
-        this.isReply = activity.isReply();
         this.parent = activity.getParent();
     }
 
@@ -355,17 +396,17 @@ public class Message {
      * @since 2.5.0
      */
     public boolean isReply() {
-        return isReply;
+        return activity.isReply();
     }
 
     /**
-     * Returns the parent object reference, if this message is a reply message.
+     * Returns the parent if this message is a reply message.
      *
      * @return the parent or null if not reply message.
      * @since 2.5.0
      */
-    public ParentObject getParent() {
-        return parent;
+    public String getParentId() {
+        return parent == null ? null : new WebexId(WebexId.Type.MESSAGE_ID, parent.getId()).toHydraId();
     }
 
     /**

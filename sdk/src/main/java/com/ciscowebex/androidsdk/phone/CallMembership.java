@@ -132,4 +132,10 @@ public interface CallMembership {
      * @since 1.3.0
      */
     boolean isSendingSharing();
+
+    /**
+     * @return True if this `CallMembership` is speaking in this meeting and video is prsenting on remote media render view. Otherwise, false.
+     * @since 2.5.0
+     */
+    boolean isActiveSpeaker();
 }

@@ -25,18 +25,11 @@ package com.ciscowebex.androidsdk.phone.internal;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
+import com.ciscowebex.androidsdk.internal.Settings;
 import com.github.benoitdion.ln.Ln;
-
-/**
- * Created with IntelliJ IDEA.
- * User: zhiyuliu
- * Date: 15/09/2017
- * Time: 6:42 PM
- */
 
 public class H264LicensePrompter {
 
@@ -47,10 +40,7 @@ public class H264LicensePrompter {
         void onComplete(T result);
     }
 
-    private SharedPreferences _preferences;
-
-    H264LicensePrompter(SharedPreferences preferences) {
-        _preferences = preferences;
+    H264LicensePrompter() {
     }
 
     String getLicense() {
@@ -93,11 +83,11 @@ public class H264LicensePrompter {
     }
 
     boolean isVideoLicenseActivationDisabled() {
-        return _preferences.getBoolean("isVideoLicenseActivationDisabledKey", false);
+        return Settings.shared.get("isVideoLicenseActivationDisabledKey", false);
     }
 
     void setVideoLicenseActivationDisabled(boolean disabled) {
-        _preferences.edit().putBoolean("isVideoLicenseActivationDisabledKey", disabled).apply();
+        Settings.shared.store("isVideoLicenseActivationDisabledKey", disabled);
     }
 
     void reset() {
@@ -106,10 +96,10 @@ public class H264LicensePrompter {
     }
 
     private boolean isVideoLicenseActivated() {
-        return _preferences.getBoolean("isVideoLicenseActivatedKey", false);
+        return Settings.shared.get("isVideoLicenseActivatedKey", false);
     }
 
     private void setVideoLicenseActivated(boolean activated) {
-        _preferences.edit().putBoolean("isVideoLicenseActivatedKey", activated).apply();
+        Settings.shared.store("isVideoLicenseActivatedKey", activated);
     }
 }

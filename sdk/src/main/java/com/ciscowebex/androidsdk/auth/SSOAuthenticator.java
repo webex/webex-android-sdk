@@ -29,20 +29,15 @@
 package com.ciscowebex.androidsdk.auth;
 
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.webkit.WebView;
-import com.cisco.spark.android.core.Injector;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.internal.OAuthLauncher;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
-import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
-import com.ciscowebex.androidsdk_commlib.AfterInjected;
+import com.ciscowebex.androidsdk.internal.Service;
+import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
 
 /**
@@ -52,21 +47,16 @@ import me.helloworld.utils.Checker;
  * @since 1.3.0
  */
 public class SSOAuthenticator implements Authenticator {
-    private static final String TAG = SSOAuthenticator.class.getSimpleName();
 
-    private OAuthAuthenticator _authenticator;
+    private OAuthAuthenticator authenticator;
 
-    private OAuthLauncher _launcher;
+    private OAuthLauncher launcher;
 
     private String email;
 
     private String identityProviderUri;
 
     private Map<String, String> additionalQueryItems;
-
-    @Inject
-    @Named("SDK")
-    Injector _injector;
 
     /**
      * Creates a new OAuth authentication strategy
@@ -81,14 +71,18 @@ public class SSOAuthenticator implements Authenticator {
      * @see <a href="https://developer.webex.com/authentication.html">Cisco Webex Integration</a>
      * @since 1.3.0
      */
+    @Deprecated
     public SSOAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri,
                             @NonNull String email, @NonNull String identityProviderUri, @Nullable Map<String, String> queryItems) {
-        super();
-        _authenticator = new OAuthAuthenticator(clientId, clientSecret, scope, redirectUri);
-        _launcher = new OAuthLauncher();
+        authenticator = new OAuthAuthenticator(clientId, clientSecret, scope, redirectUri);
+        launcher = new OAuthLauncher();
         this.email = email;
         this.identityProviderUri = identityProviderUri;
         this.additionalQueryItems = queryItems;
+    }
+
+    public void afterAssociated() {
+        authenticator.afterAssociated();
     }
 
     /**
@@ -96,7 +90,7 @@ public class SSOAuthenticator implements Authenticator {
      */
     @Override
     public boolean isAuthorized() {
-        return _authenticator.isAuthorized();
+        return authenticator.isAuthorized();
     }
 
     /**
@@ -104,7 +98,7 @@ public class SSOAuthenticator implements Authenticator {
      */
     @Override
     public void deauthorize() {
-        _authenticator.deauthorize();
+        authenticator.deauthorize();
     }
 
     /**
@@ -115,13 +109,13 @@ public class SSOAuthenticator implements Authenticator {
      * @since 1.3.0
      */
     public void authorize(@NonNull WebView view, @NonNull CompletionHandler<Void> handler) {
-        _launcher.launchOAuthView(view, buildCodeGrantUrl(), _authenticator.getRedirectUri(), result -> {
-            Log.d(TAG, "authorize: " + result);
+        launcher.launchOAuthView(view, buildCodeGrantUrl(), authenticator.getRedirectUri(), result -> {
+            Ln.d("Authorize: " + result);
             String code = result.getData();
             if (!Checker.isEmpty(code)) {
-                _authenticator.authorize(code, handler);
+                authenticator.authorize(code, handler);
             } else {
-                handler.onComplete(ResultImpl.error(result.getError()));
+                ResultImpl.errorInMain(handler, result);
             }
         });
     }
@@ -131,12 +125,12 @@ public class SSOAuthenticator implements Authenticator {
      */
     @Override
     public void getToken(CompletionHandler<String> handler) {
-        _authenticator.getToken(handler);
+        authenticator.getToken(handler);
     }
 
     @Override
     public void refreshToken(CompletionHandler<String> handler) {
-        _authenticator.refreshToken(handler);
+        authenticator.refreshToken(handler);
     }
     
     /** Create the authorizationUrl by taking the original url and redirecting the request through the
@@ -148,12 +142,12 @@ public class SSOAuthenticator implements Authenticator {
      * use their account.
      */
     private String buildCodeGrantUrl() {
-        Uri.Builder orginalUrl = Uri.parse(ServiceBuilder.HYDRA_URL).buildUpon();
+        Uri.Builder orginalUrl = Uri.parse(Service.Hydra.endpoint(null)).buildUpon();
         orginalUrl.appendPath("authorize")
                 .appendQueryParameter("response_type", "code")
-                .appendQueryParameter("client_id", _authenticator.getClientId())
-                .appendQueryParameter("redirect_uri", _authenticator.getRedirectUri())
-                .appendQueryParameter("scope", _authenticator.getScope())
+                .appendQueryParameter("client_id", authenticator.getClientId())
+                .appendQueryParameter("redirect_uri", authenticator.getRedirectUri())
+                .appendQueryParameter("scope", authenticator.getScope())
                 .appendQueryParameter("state", "androidsdkstate");
         if (email != null && !email.isEmpty()) {
             // Extend the original authorization url with the email parameter.
@@ -169,13 +163,7 @@ public class SSOAuthenticator implements Authenticator {
                 builder.appendQueryParameter(entry.getKey(), entry.getValue());
             }
         }
-        Log.d(TAG, builder.toString());
+        Ln.d(builder.toString());
         return builder.toString();
-    }
-
-    @AfterInjected
-    private void afterInjected() {
-        Log.d(TAG, "Inject authenticator after self injected");
-        _injector.inject(_authenticator);
     }
 }

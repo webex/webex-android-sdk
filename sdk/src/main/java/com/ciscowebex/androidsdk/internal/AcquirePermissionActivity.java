@@ -34,31 +34,24 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.view.WindowManager;
 
-import com.cisco.spark.android.callcontrol.CallControlService;
-import com.ciscowebex.androidsdk.phone.internal.RotationHandler;
+import com.ciscowebex.androidsdk.phone.internal.UIEventHandler;
 import com.github.benoitdion.ln.Ln;
 
-import javax.inject.Inject;
-
-/**
- * Created by qimdeng on 3/1/18.
- */
 public class AcquirePermissionActivity extends Activity {
+
     public static final String PERMISSION_TYPE = "permission_type";
     public static final String PERMISSION_SCREEN_SHOT = "permission_screen_shot";
     public static final String PERMISSION_CAMERA_MIC = "permission_camera_mic";
-    public static final String CALL_DIRECTION = "call_direction";
+
+    public static final String ACTION_MEDIA_PERMISSION = "action_media_permission";
+    public static final String PERMISSION_RESULT = "permission_result";
+
     public static final String CALL_KEY = "call_key";
     public static final String CALL_STRING = "call_string";
     public static final String CALL_TAG = "call_tag";
     public static final String CALL_DATA = "call_data";
     protected static final int REQUEST_CAMERA_MIC = 0;
     protected static final int REQUEST_MEDIA_PROJECTION = 1;
-
-    @Inject
-    CallControlService _callControlService;
-
-    private Bundle _callData;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -71,38 +64,31 @@ public class AcquirePermissionActivity extends Activity {
             Ln.d("request PERMISSION_SCREEN_SHOT");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-                startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
+                if (mediaProjectionManager != null) {
+                    startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
+                }
             } else {
                 Ln.e("Android version is lower than LOLLIPOP");
                 finish();
             }
-        } else if (PERMISSION_CAMERA_MIC.equals(type)) {
+        }
+        else if (PERMISSION_CAMERA_MIC.equals(type)) {
             Ln.d("request PERMISSION_CAMERA_MIC");
-            _callData = getIntent().getBundleExtra(CALL_DATA);
-            int permissionCheckCamera = ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.CAMERA);
-            int permissionCheckMic = ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.RECORD_AUDIO);
+            int permissionCheckCamera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+            int permissionCheckMic = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
             String[] permissions = null;
             if (permissionCheckCamera != PackageManager.PERMISSION_GRANTED && permissionCheckMic != PackageManager.PERMISSION_GRANTED) {
-                permissions = new String[]{
-                        Manifest.permission.CAMERA,
-                        Manifest.permission.RECORD_AUDIO
-                };
+                permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
             } else if (permissionCheckCamera != PackageManager.PERMISSION_GRANTED) {
-                permissions = new String[]{
-                        Manifest.permission.CAMERA
-                };
+                permissions = new String[]{Manifest.permission.CAMERA};
             } else if (permissionCheckMic != PackageManager.PERMISSION_GRANTED) {
-                permissions = new String[]{
-                        Manifest.permission.RECORD_AUDIO
-                };
+                permissions = new String[]{Manifest.permission.RECORD_AUDIO};
             }
             if (permissions != null) {
                 ActivityCompat.requestPermissions(this, permissions, REQUEST_CAMERA_MIC);
             } else {
                 Ln.i("Do not need request permission, and make call directly");
-                RotationHandler.makeCall(_callData, true);
+                UIEventHandler.get().doMediaPermission(true);
                 finish();
             }
         } else {
@@ -115,10 +101,10 @@ public class AcquirePermissionActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
             if (resultCode == Activity.RESULT_OK) {
-                RotationHandler.setScreenshotPermission((Intent) data.clone());
+                UIEventHandler.get().doScreenCapturePermission((Intent) data.clone());
             } else {
                 Ln.i("User cancelled screen request");
-                RotationHandler.setScreenshotPermission(null);
+                UIEventHandler.get().doScreenCapturePermission(null);
             }
         }
         finish();
@@ -135,7 +121,7 @@ public class AcquirePermissionActivity extends Activity {
                 }
             }
             Ln.d("onRequestPermissionsResult: " + resultOk);
-            RotationHandler.makeCall(_callData, resultOk);
+            UIEventHandler.get().doMediaPermission(resultOk);
         }
         finish();
     }

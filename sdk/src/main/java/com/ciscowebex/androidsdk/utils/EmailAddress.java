@@ -23,8 +23,6 @@
 package com.ciscowebex.androidsdk.utils;
 
 import android.support.annotation.NonNull;
-import com.ciscowebex.androidsdk.message.Before;
-import com.ciscowebex.androidsdk.message.Mention;
 
 import java.util.Objects;
 
@@ -35,7 +33,7 @@ import java.util.Objects;
  */
 public class EmailAddress {
 
-    private String address = null;
+    private String address;
 
     private EmailAddress(String address) {
         this.address = address;
@@ -79,7 +77,7 @@ public class EmailAddress {
         return Objects.hash(address);
     }
 
-    private static boolean isValid(String address) {
+    public static boolean isValid(String address) {
         String ePattern = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
         java.util.regex.Pattern p = java.util.regex.Pattern.compile(ePattern);
         java.util.regex.Matcher m = p.matcher(address);

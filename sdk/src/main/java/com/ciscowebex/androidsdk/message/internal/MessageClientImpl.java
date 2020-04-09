@@ -22,670 +22,415 @@
 
 package com.ciscowebex.androidsdk.message.internal;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.*;
-import java.util.concurrent.*;
-
-import javax.inject.Inject;
-
 import android.content.Context;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Handler;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
-
-import com.cisco.spark.android.authenticator.ApiTokenProvider;
-import com.cisco.spark.android.content.ContentUploadMonitor;
-import com.cisco.spark.android.core.ApiClientProvider;
-import com.cisco.spark.android.core.Injector;
-import com.cisco.spark.android.model.*;
-import com.cisco.spark.android.model.conversation.*;
-import com.cisco.spark.android.model.crypto.scr.ContentReference;
-import com.cisco.spark.android.processing.ActivityListener;
-import com.cisco.spark.android.sync.ContentDataCacheRecord;
-import com.cisco.spark.android.sync.ContentDownloadMonitor;
-import com.cisco.spark.android.sync.ContentManager;
-import com.cisco.spark.android.sync.ConversationContract;
-import com.cisco.spark.android.sync.DatabaseProvider;
-import com.cisco.spark.android.sync.operationqueue.ActivityOperation;
-import com.cisco.spark.android.sync.operationqueue.NewConversationOperation;
-import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation.ContentItem;
-import com.cisco.spark.android.sync.operationqueue.PostContentActivityOperation.ShareContentData;
-import com.cisco.spark.android.sync.operationqueue.core.Operation;
-import com.cisco.spark.android.sync.operationqueue.core.Operations;
-import com.cisco.spark.android.util.*;
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.auth.Authenticator;
+import com.ciscowebex.androidsdk.internal.ActivityListener;
+import com.ciscowebex.androidsdk.internal.Closure;
+import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.internal.crypto.CryptoUtils;
+import com.ciscowebex.androidsdk.internal.crypto.KeyManager;
+import com.ciscowebex.androidsdk.internal.crypto.KeyObject;
+import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.message.*;
-import com.ciscowebex.androidsdk.message.Message;
-import com.ciscowebex.androidsdk.utils.EmailAddress;
-import com.ciscowebex.androidsdk.utils.Lists;
-import com.ciscowebex.androidsdk.utils.WebexId;
-import com.ciscowebex.androidsdk.utils.http.ListBody;
-import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
-import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
-import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
+import com.ciscowebex.androidsdk.phone.internal.PhoneImpl;
+import com.ciscowebex.androidsdk.utils.*;
 import com.github.benoitdion.ln.Ln;
-
+import com.google.gson.reflect.TypeToken;
+import me.helloworld.utils.Checker;
 import me.helloworld.utils.Strings;
+import me.helloworld.utils.collection.Maps;
 
-import org.greenrobot.eventbus.EventBus;
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
+public class MessageClientImpl implements MessageClient, ActivityListener {
 
-import static com.cisco.spark.android.content.ContentShareSource.FILE_PICKER;
+    private Context context;
+    private PhoneImpl phone;
+    private MessageObserver observer;
+    private Map<String, String> conversations = new ConcurrentHashMap<>();
+    private String uuid = UUID.randomUUID().toString();
 
-/**
- * Created with IntelliJ IDEA.
- * User: zhiyuliu
- * Date: 28/09/2017
- * Time: 5:23 PM
- */
+    public MessageClientImpl(Context context, PhoneImpl phone) {
+        this.context = context;
+        this.phone = phone;
+    }
 
-public class MessageClientImpl implements MessageClient {
+    public void setMessageObserver(MessageObserver observer) {
+        this.observer = observer;
+    }
 
-    private Authenticator _authenticator;
-
-    private MessageService _service;
-
-    private MessageObserver _observer;
-
-    private Context _context;
-
-    private int lastSendProgress = -1;
-
-    @Inject
-    Injector injector;
-
-    @Inject
-    Operations operations;
-
-    @Inject
-    EventBus _bus;
-
-    @Inject
-    ContentManager contentManager;
-
-    @Inject
-    ContentUploadMonitor uploadMonitor;
-
-    @Inject
-    DatabaseProvider db;
-
-    @Inject
-    ActivityListener activityListener;
-
-    @Inject
-    ApiTokenProvider _provider;
-
-    @Inject
-    ApiClientProvider _client;
-
-    @Inject
-    KeyManager keyManager;
-
-    public MessageClientImpl(Context context, Authenticator authenticator, SDKCommonInjector injector) {
-        injector.inject(this);
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(MessageService.class);
-        _context = context;
-        //_bus.register(this);
-        activityListener.register(activity -> {
-            processorActivity(activity);
-            return null;
-        });
+    public void processActivity(ActivityModel activity) {
+        if (observer == null) {
+            return;
+        }
+        if (activity.getVerb() == ActivityModel.Verb.post || activity.getVerb() == ActivityModel.Verb.share) {
+            String conversationId = activity.getConversationId();
+            if (conversationId == null) {
+                Ln.d("The activity without conversation");
+                return;
+            }
+            String clientTempId = activity.getClientTempId();
+            if (clientTempId != null && clientTempId.startsWith(uuid)) {
+                Ln.d("The activity is sent by self");
+                return;
+            }
+            KeyManager.shared.tryRefresh(conversationId, activity.getEncryptionKeyUrl());
+            KeyManager.shared.getKey(conversationId, phone.getCredentials(), phone.getDevice(), keyResult -> {
+                if (keyResult.getData() != null) {
+                    activity.decrypt(keyResult.getData());
+                }
+                Message message = createMessage(activity, true);
+                MessageObserver.MessageReceived event = new InternalMessage.InternalMessageReceived(message, activity);
+                Queue.main.run(() -> observer.onEvent(event));
+                // TODO Remove the deprecated event in next big release
+                Queue.main.run(() -> observer.onEvent(new InternalMessage.InternalMessageArrived(message, activity)));
+            });
+        }
+        else if (activity.getVerb() == ActivityModel.Verb.delete) {
+            String id = new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId();
+            MessageObserver.MessageEvent event = new InternalMessage.InternalMessageDeleted(id, activity);
+            Queue.main.run(() -> observer.onEvent(event));
+        }
     }
 
     public void list(@NonNull String spaceId, @Nullable Before before, @IntRange(from = 0, to = Integer.MAX_VALUE) int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler) {
         String id = WebexId.translate(spaceId);
         if (max == 0) {
-            runOnUiThread(() -> handler.onComplete(ResultImpl.success(Collections.emptyList())), handler);
+            ResultImpl.inMain(handler, Collections.emptyList());
             return;
         }
         if (before == null) {
-            list(id, null, mentions, max, new ArrayList<>(), handler);
+            doList(id, null, mentions, max, new ArrayList<>(), handler);
         } else if (before instanceof Before.Date) {
-            list(id, ((Before.Date) before).getDate(), mentions, max, new ArrayList<>(), handler);
+            doList(id, ((Before.Date) before).getDate(), mentions, max, new ArrayList<>(), handler);
         } else if (before instanceof Before.Message) {
             get(((Before.Message) before).getMessage(), false, result -> {
                 Message message = result.getData();
                 if (message == null) {
-                    runOnUiThread(() -> handler.onComplete(ResultImpl.error(result.getError())), handler);
+                    ResultImpl.errorInMain(handler, result);
                 } else {
-                    list(id, message.getCreated(), mentions, max, new ArrayList<>(), handler);
+                    doList(id, message.getCreated(), mentions, max, new ArrayList<>(), handler);
                 }
             });
         }
     }
 
-    private void list(@NonNull String spaceId, @Nullable Date date, @Nullable Mention[] mentions, @IntRange(from = 0, to = Integer.MAX_VALUE) int max, @NonNull List<Activity> activities, @NonNull CompletionHandler<List<Message>> handler) {
+    private void doList(@NonNull String spaceId,
+                      @Nullable Date date,
+                      @Nullable Mention[] mentions,
+                      @IntRange(from = 0, to = Integer.MAX_VALUE) int max,
+                      @NonNull List<ActivityModel> activities,
+                      @NonNull CompletionHandler<List<Message>> handler) {
         int queryMax = Math.max(max, max * 2);
-
-        List<Activity> result = activities;
-        Callback<ItemCollection<Activity>> callback = new Callback<ItemCollection<Activity>>() {
-
-            @Override
-            public void onResponse(Call<ItemCollection<Activity>> call, Response<ItemCollection<Activity>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    for (Activity activity : response.body().getItems()) {
-                        if (activity.getVerb().equals(Verb.post) || activity.getVerb().equals(Verb.share)) {
-                            result.add(activity);
-                            if (result.size() >= max)
+        Service.Conv.get(Checker.isEmpty(mentions) ? "activities" : "mentions")
+                .with("conversationId", WebexId.translate(spaceId))
+                .with("limit", String.valueOf(queryMax))
+                .with(Checker.isEmpty(mentions) ? "maxDate" : "sinceDate", String.valueOf((date == null ? new Date() : date).getTime()))
+                .auth(phone.getAuthenticator())
+                .device(phone.getDevice())
+                .model(new TypeToken<ItemsModel<ActivityModel>>(){}.getType())
+                .error(handler)
+                .async((Closure<ItemsModel<ActivityModel>>) items -> {
+                    for (ActivityModel model : items.getItems()) {
+                        if (model.getVerb().equals(ActivityModel.Verb.post) || model.getVerb().equals(ActivityModel.Verb.share)) {
+                            activities.add(model);
+                            if (activities.size() >= max) {
                                 break;
+                            }
                         }
                     }
-                    if (result.size() >= max || response.body().size() < queryMax) {
-                        AsyncTask.execute(() -> {
-                            CountDownLatch latch = new CountDownLatch(result.size());
-                            List<Message> messages = new ArrayList<>(result.size());
-                            for (Activity activity : result) {
-                                decryptActivity(activity, new Action<Activity>() {
-                                    @Override
-                                    public void call(Activity activity) {
-                                        Message message = createMessage(activity, false);
-                                        if (message != null) {
-                                            messages.add(message);
-                                        }
-                                        latch.countDown();
-                                    }
-                                });
+                    if (activities.size() >= max || items.size() < queryMax) {
+                        KeyManager.shared.getKey(WebexId.translate(spaceId), phone.getCredentials(), phone.getDevice(), keyResult -> {
+                            List<Message> messages = new ArrayList<>(activities.size());
+                            for (ActivityModel model : activities) {
+                                if (keyResult.getData() != null) {
+                                    model.decrypt(keyResult.getData());
+                                }
+                                messages.add(createMessage(model, false));
                             }
-                            try {
-                                latch.await();
-                            } catch (InterruptedException ignored) {
-                            }
-                            runOnUiThread(() -> handler.onComplete(ResultImpl.success(messages)), handler);
+                            ResultImpl.inMain(handler, messages);
                         });
-                    } else {
-                        Activity last = Lists.getLast(response.body().getItems());
-                        list(spaceId, last == null ? null : last.getPublished(), mentions, max, result, handler);
                     }
-                } else {
-                    runOnUiThread(() -> handler.onComplete(ResultImpl.error(response)), handler);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ItemCollection<Activity>> call, Throwable t) {
-                runOnUiThread(() -> handler.onComplete(ResultImpl.error(t)), handler);
-            }
-        };
-
-        long time = (date == null ? new Date() : date).getTime() - 1;
-        if (mentions != null && mentions.length > 0) {
-            // TODO filter by conv Id
-            // TODO just get method me for now
-            _client.getConversationClient().getUserMentions(time, queryMax).enqueue(callback);
-        } else {
-            _client.getConversationClient().getConversationActivitiesBefore(spaceId, time, queryMax).enqueue(callback);
-        }
+                    else {
+                        ActivityModel last = Lists.getLast(items.getItems());
+                        doList(spaceId, last == null ? null : last.getPublished(), mentions, max, activities, handler);
+                    }
+                });
     }
 
-    @Override
     public void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler) {
         get(messageId, true, handler);
     }
 
     private void get(@NonNull String messageId, boolean decrypt, @NonNull CompletionHandler<Message> handler) {
-        WebexId webexId = WebexId.from(messageId);
-        _client.getConversationClient().getActivity("activities/" + webexId.getId()).enqueue(new Callback<Activity>() {
-            @Override
-            public void onResponse(Call<Activity> call, Response<Activity> response) {
-                if (response.isSuccessful()) {
-                    Activity activity = response.body();
-                    if (decrypt) {
-                        decryptActivity(activity, new Action<Activity>() {
-                            @Override
-                            public void call(Activity activity) {
-                                runOnUiThread(() -> handler.onComplete(ResultImpl.success(createMessage(activity, false))), handler);
-                            }
-                        });
-                    } else {
-                        handler.onComplete(ResultImpl.success(createMessage(activity, false)));
+        Service.Conv.get("activities", WebexId.translate(messageId))
+                .auth(phone.getAuthenticator())
+                .model(ActivityModel.class)
+                .device(phone.getDevice())
+                .error(handler)
+                .async((Closure<ActivityModel>) model -> {
+                    if (!decrypt) {
+                        ResultImpl.inMain(handler, createMessage(model, false));
+                        return;
                     }
-                } else {
-                    handler.onComplete(ResultImpl.error(response));
-                }
-            }
+                    KeyManager.shared.getKey(model.getConversationId(), phone.getCredentials(), phone.getDevice(), keyResult -> {
+                        if (keyResult.getData() != null) {
+                            model.decrypt(keyResult.getData());
+                        }
+                        ResultImpl.inMain(handler, createMessage(model, false));
+                    });
+                });
+    }
 
-            @Override
-            public void onFailure(Call<Activity> call, Throwable t) {
-                handler.onComplete(ResultImpl.error(t));
-            }
-        });
+    public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
+        Service.Hydra.delete("messages", messageId)
+                .auth(phone.getAuthenticator())
+                .queue(Queue.main)
+                .error(handler)
+                .async((Closure<Void>) data -> handler.onComplete(ResultImpl.success(null)));
     }
 
     @Override
     public void postToPerson(@NonNull String personId, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(personId, createComment(Message.Text.html(text, text), null), files, null, handler);
+        post(personId, Message.draft(Message.Text.html(text, text)).addAttachments(files), handler);
     }
 
     @Override
     public void postToPerson(@NonNull String personId, @Nullable Message.Text text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(personId, createComment(text, null), files, null, handler);
+        post(personId, Message.draft(text).addAttachments(files), handler);
     }
 
     @Override
     public void postToPerson(@NonNull EmailAddress personEmail, @Nullable String text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(personEmail.toString(), createComment(Message.Text.html(text, text), null), files, null, handler);
+        post(personEmail.toString(), Message.draft(Message.Text.html(text, text)).addAttachments(files), handler);
     }
 
     @Override
     public void postToPerson(@NonNull EmailAddress personEmail, @Nullable Message.Text text, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(personEmail.toString(), createComment(text, null), files, null, handler);
-    }
-
-    @Override
-    public void postToPerson(@NonNull String personId, @Nullable String text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
-        post(personId, createComment(Message.Text.html(text, text), null), files, parentMessage, handler);
-    }
-
-    @Override
-    public void postToPerson(@NonNull String personId, @Nullable Message.Text text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
-        post(personId, createComment(text, null), files, parentMessage, handler);
-    }
-
-    @Override
-    public void postToPerson(@NonNull EmailAddress personEmail, @Nullable String text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
-        post(personEmail.toString(), createComment(Message.Text.html(text, text), null), files, parentMessage, handler);
-    }
-
-    @Override
-    public void postToPerson(@NonNull EmailAddress personEmail, @Nullable Message.Text text, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
-        post(personEmail.toString(), createComment(text, null), files, parentMessage, handler);
+        post(personEmail.toString(), Message.draft(text).addAttachments(files), handler);
     }
 
     @Override
     public void postToSpace(@NonNull String spaceId, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(spaceId, createComment(Message.Text.html(text, text), mentions), files, null, handler);
+        post(spaceId, Message.draft(Message.Text.html(text, text)).addAttachments(files).addMentions(mentions), handler);
     }
 
     @Override
     public void postToSpace(@NonNull String spaceId, @Nullable Message.Text text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
-        post(spaceId, createComment(text, mentions), files, null, handler);
+        post(spaceId, Message.draft(text).addAttachments(files).addMentions(mentions), handler);
     }
 
-    @Override
-    public void postToSpace(@NonNull String spaceId, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
-        post(spaceId, createComment(Message.Text.html(text, text), mentions), files, parentMessage, handler);
-    }
-
-    @Override
-    public void postToSpace(@NonNull String spaceId, @Nullable Message.Text text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @Nullable Message parentMessage, @NonNull CompletionHandler<Message> handler) {
-        post(spaceId, createComment(text, mentions), files, parentMessage, handler);
-    }
-
-    private void post(String personOrSpace, Comment comment, LocalFile[] localFiles, Message parentMessage, CompletionHandler<Message> handler) {
-        Ln.d("Post to： " + personOrSpace);
-        WebexId webexId = WebexId.from(personOrSpace);
+    public void post(@NonNull String target, @NonNull Message.Draft draft, @NonNull CompletionHandler<Message> handler) {
+        WebexId webexId = WebexId.from(target);
         if (webexId == null) {
-            if (EmailAddress.fromString(personOrSpace) == null) {
-                doPost(personOrSpace, comment, localFiles, parentMessage, handler);
+            if (EmailAddress.fromString(target) == null) {
+                doPost(target, (DraftImpl) draft, handler);
             } else {
-                this.createSpaceWithPerson(personOrSpace, result -> {
-                    if (result.getData() != null) {
-                        doPost(result.getData(), comment, localFiles, parentMessage, handler);
-                    } else {
-                        handler.onComplete(ResultImpl.error(result.getError()));
+                getOrCreateConversation(target, result -> {
+                    String conversationId = result.getData();
+                    if (conversationId == null) {
+                        ResultImpl.errorInMain(handler, result);
+                        return;
                     }
+                    doPost(conversationId, (DraftImpl) draft, handler);
                 });
             }
         } else if (webexId.is(WebexId.Type.ROOM_ID)) {
-            doPost(webexId.getId(), comment, localFiles, parentMessage, handler);
+            doPost(webexId.getId(), (DraftImpl) draft, handler);
         } else if (webexId.is(WebexId.Type.PEOPLE_ID)) {
-            this.createSpaceWithPerson(webexId.getId(), result -> {
-                if (result.getData() != null) {
-                    doPost(result.getData(), comment, localFiles, parentMessage, handler);
-                } else {
-                    handler.onComplete(ResultImpl.error(result.getError()));
+            getOrCreateConversation(webexId.getId(), result -> {
+                String conversationId = result.getData();
+                if (conversationId == null) {
+                    ResultImpl.errorInMain(handler, result);
+                    return;
                 }
+                doPost(conversationId, (DraftImpl) draft, handler);
             });
-        } else {
-            handler.onComplete(ResultImpl.error("Unknown target: " + personOrSpace));
+        }
+        else {
+            ResultImpl.errorInMain(handler, "Unknown target: " + target);
         }
     }
 
-    private void doPost(String conversationId, Comment comment, LocalFile[] localFiles, Message parentMessage, CompletionHandler<Message> handler) {
-        if (TextUtils.isEmpty(conversationId)) {
-            handler.onComplete(ResultImpl.error("Invalid person or id!"));
-            return;
-        }
-        Action<ActivityOperation> callback = new Action<ActivityOperation>() {
-            @Override
-            public void call(ActivityOperation item) {
-                Activity activity = item.getResult();
-                if (activity == null) {
-                    runOnUiThread(() -> handler.onComplete(ResultImpl.error(item.getErrorMessage())), handler);
-                } else {
-                    decryptActivity(activity, new Action<Activity>() {
-                        @Override
-                        public void call(Activity activity) {
-                            runOnUiThread(() -> handler.onComplete(ResultImpl.success(createMessage(activity, false))), handler);
-                        }
-                    });
-                }
-            }
-        };
-        ParentObject parent = null;
-        if (parentMessage != null) {
-            if (parentMessage.getParent() != null)
-                parent = parentMessage.getParent();
-            else {
-                parent = new ParentObject();
-                parent.setId(WebexId.translate(parentMessage.getId()));
-                parent.setType(Activities.ACTIVITY_TYPE_REPLY);
-                parent.setPublished(parentMessage.getCreated());
-                parent.setActorId(parentMessage.getPersonId());
-            }
-        }
-        if (localFiles != null && localFiles.length > 0) {
-            ShareContentData shareContentData = new ShareContentData();
-            for (LocalFile localFile : localFiles) {
-                ContentItem item = new ContentItem(localFile.getFile(), FILE_PICKER.toString());
-                File modleFile = createModleFile(localFile, conversationId, contentManager, db);
-                if (modleFile != null) {
-                    Operation uploadContent = operations.uploadContent(conversationId, modleFile);
-                    item.setContentFile(modleFile);
-                    item.setOperationId(uploadContent.getOperationId());
-                    shareContentData.addContentItem(item);
-                    executor.scheduleAtFixedRate(new CheckUploadProgressTask(localFile), 0, 1, TimeUnit.SECONDS);
-                }
-            }
-            CallbackablePostContentActivityOperation postContent = new CallbackablePostContentActivityOperation(injector, conversationId,
-                    shareContentData,
-                    comment,
-                    shareContentData.getContentFiles(),
-                    shareContentData.getOperationIds(),
-                    parent,
-                    callback);
-            operations.submit(postContent);
-        } else {
-            CallbackablePostCommentOperation postCommentOperation = new CallbackablePostCommentOperation(injector, conversationId, comment, parent, callback);
-            operations.submit(postCommentOperation);
-        }
-    }
-
-    @Override
-    public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> _service.delete(s, messageId), new ObjectCallback<>(handler));
-    }
-
-    @Override
     public void downloadFile(@NonNull RemoteFile file,
                              @Nullable java.io.File path,
                              @Nullable ProgressHandler progressHandler,
                              @NonNull CompletionHandler<Uri> handler) {
-        download(((RemoteFileImpl) file).getFile(), file.getDisplayName(), false, path, progressHandler, handler);
+        doDownload((RemoteFileImpl) file, path, false, progressHandler, handler);
     }
 
-    @Override
     public void downloadThumbnail(@NonNull RemoteFile file,
                                   @Nullable java.io.File path,
                                   @Nullable ProgressHandler progressHandler,
                                   @NonNull CompletionHandler<Uri> handler) {
         RemoteFileImpl.ThumbnailImpl thumbnail = (RemoteFileImpl.ThumbnailImpl) file.getThumbnail();
         if (thumbnail == null || thumbnail.getImage() == null) {
-            handler.onComplete(ResultImpl.error("No thumbnail for this remote file."));
+            ResultImpl.errorInMain(handler, "No thumbnail for this remote file.");
             return;
         }
-        download(thumbnail.getImage(), file.getDisplayName(), true, path, progressHandler, handler);
+        doDownload((RemoteFileImpl) file, path, true, progressHandler, handler);
     }
 
-    private void download(@NonNull ContentReference reference,
-                          @Nullable String displayName,
-                          boolean thnumnail,
-                          @Nullable java.io.File path,
-                          @Nullable ProgressHandler progressHandler,
-                          @NonNull CompletionHandler<Uri> completionHandler) {
-        Action<Long> callback = progressHandler == null ? null : new Action<Long>() {
-            @Override
-            public void call(Long item) {
-                runOnUiThread(() -> progressHandler.onProgress(item), progressHandler);
+    public void markAsRead(@NonNull String spaceId) {
+        this.list(spaceId, null, 1, null, messages -> {
+            Message message = Lists.getFirst(messages.getData());
+            if (message != null) {
+                markAsRead(spaceId, message.getId());
             }
-        };
-
-        Action<ContentDataCacheRecord> action = new Action<ContentDataCacheRecord>() {
-            @Override
-            public void call(ContentDataCacheRecord item) {
-                if (progressHandler != null) {
-                    runOnUiThread(() -> progressHandler.onProgress(item.getDataSize()), progressHandler);
-                }
-                java.io.File target = path;
-                if (target == null) {
-                    target = new java.io.File(_context.getCacheDir(), "com.ciscowebex.sdk.downloads");
-                    target.mkdirs();
-                }
-                String name = UUID.randomUUID().toString();
-                if (displayName != null) {
-                    name = name + "-" + displayName;
-                }
-                if (thnumnail) {
-                    name = "thumb-" + name;
-                }
-                final java.io.File file = new java.io.File(target, name);
-                try {
-                    if (!file.createNewFile()) {
-                        runOnUiThread(() -> completionHandler.onComplete(ResultImpl.error("failed to download File " + file.toString())), completionHandler);
-                        return;
-                    }
-                    FileUtils.copyFile(item.getLocalUriAsFile(), file);
-                    runOnUiThread(() -> completionHandler.onComplete(ResultImpl.success(Uri.fromFile(file))), completionHandler);
-                } catch (Exception e) {
-                    runOnUiThread(() -> completionHandler.onComplete(ResultImpl.error(e)), completionHandler);
-                }
-            }
-        };
-
-        Uri uri = null;
-        String filename = null;
-        if (reference instanceof File) {
-            uri = ((File) reference).getUrl();
-            filename = ((File) reference).getDisplayName();
-        }
-        if (reference instanceof Image) {
-            uri = ((Image) reference).getUrl();
-            filename = "thumbnail.png";
-        }
-        contentManager.getCacheRecord(ConversationContract.ContentDataCacheEntry.Cache.MEDIA, uri, reference.getSecureContentReference(), filename, action, new ContentDownloadMonitor(), callback);
-    }
-
-    @Override
-    public void setMessageObserver(MessageObserver observer) {
-        _observer = observer;
-    }
-
-    private void processorActivity(Activity activity) {
-        if (_observer == null) {
-            return;
-        }
-        MessageObserver.MessageEvent event;
-        Message message;
-        switch (activity.getVerb()) {
-            case Verb.post:
-            case Verb.share:
-                message = createMessage(activity, true);
-                event = new InternalMessage.InternalMessageReceived(message, activity);
-                break;
-            case Verb.delete:
-                message = createMessage(activity, true);
-                event = new InternalMessage.InternalMessageDeleted(message.getId(), activity);
-                break;
-            default:
-                Ln.e("unknown verb " + activity.getVerb());
-                return;
-        }
-        runOnUiThread(() -> _observer.onEvent(event), _observer);
-        // TODO Remove the deprecated event in next big release
-        if (event instanceof MessageObserver.MessageReceived) {
-            runOnUiThread(() -> _observer.onEvent(new InternalMessage.InternalMessageArrived(((MessageObserver.MessageReceived) event).getMessage(), activity)), _observer);
-        }
-    }
-
-    private void decryptActivity(Activity activity, Action<Activity> callback) {
-        final Uri keyUrl = activity.getEncryptionKeyUrl();
-        if (keyUrl == null) {
-            callback.call(activity);
-            return;
-        }
-        keyManager.getBoundKeySync(keyUrl).subscribe(keyObject -> {
-            try {
-                CryptoUtils.decryptActivity(keyObject, activity);
-            } catch (Exception ignored) {
-            }
-            callback.call(activity);
         });
     }
 
-    private void runOnUiThread(Runnable r, Object conditioner) {
-        if (conditioner == null) return;
-        Handler handler = new Handler(_context.getMainLooper());
-        handler.post(r);
+    public void markAsRead(@NonNull String spaceId, @NonNull String messageId) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("objectType", ObjectModel.Type.activity);
+        body.put("verb", ActivityModel.Verb.acknowledge);
+        body.put("object", Maps.makeMap("id", WebexId.translate(messageId), "objectType", ObjectModel.Type.activity));
+        body.put("target", Maps.makeMap("id", WebexId.translate(spaceId), "objectType", ObjectModel.Type.conversation));
+        Service.Conv.post(body).to("activities").auth(phone.getAuthenticator()).device(phone.getDevice()).async(null);
     }
 
-    private static ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(5);
-    private static ScheduledFuture<?> t;
-
-    class CheckUploadProgressTask implements Runnable {
-        private Uri contentUri;
-        private LocalFile file;
-
-        CheckUploadProgressTask(LocalFile file) {
-            super();
-            this.file = file;
-            contentUri = Uri.fromFile(file.getFile());
+    private void doDownload(@NonNull RemoteFileImpl file,
+                            @Nullable java.io.File path,
+                            boolean thnumnail,
+                            @Nullable ProgressHandler progressHandler,
+                            @NonNull CompletionHandler<Uri> completionHandler) {
+        File outFile = path;
+        if (outFile == null) {
+            outFile = new java.io.File(context.getCacheDir(), "com.ciscowebex.sdk.downloads");
+            outFile.mkdirs();
         }
-
-        public void run() {
-            if (contentUri == null) {
+        String name = UUID.randomUUID().toString();
+        if (file.getDisplayName() != null) {
+            name = name + "-" + file.getDisplayName();
+        }
+        if (thnumnail) {
+            name = "thumb-" + file.getDisplayName();
+        }
+        outFile = new File(outFile, name);
+        try {
+            if (!outFile.createNewFile()) {
+                ResultImpl.errorInMain(completionHandler, "failed to download File " + file.toString());
                 return;
             }
-            int progress;
-            progress = uploadMonitor.getProgressForKey(contentUri.toString());
-            runOnUiThread(() -> {
-                if (file.getProgressHandler() != null) {
-                    int sendProgress = Math.max(progress, 0);
-                    if (lastSendProgress != sendProgress) {
-                        file.getProgressHandler().onProgress(sendProgress);
-                        lastSendProgress = sendProgress;
-                    }
-                }
-            }, file);
-            if (progress >= 100) {
-                lastSendProgress = -1;
-                t.cancel(false);
-            }
+            DownloadFileOperation operation = new DownloadFileOperation(phone.getCredentials().getAuthenticator(), file.getFile(), progressHandler);
+            operation.run(outFile, thnumnail, completionHandler);
+        } catch (Throwable t) {
+            ResultImpl.errorInMain(completionHandler, t);
         }
     }
 
-    private void createSpaceWithPerson(String person, CompletionHandler<String> action) {
-        EnumSet<NewConversationOperation.CreateFlags> createFlags = EnumSet.of(NewConversationOperation.CreateFlags.ONE_ON_ONE, NewConversationOperation.CreateFlags.PERSIST_WITHOUT_MESSAGES);
-        operations.createConversationWithCallBack(Collections.singletonList(person), null, createFlags,
-                new Action<NewConversationOperation>() {
-                    @Override
-                    public void call(NewConversationOperation item) {
-                        Ln.d("createConversationWithCallBack: " + item.getConversationId());
-                        action.onComplete(ResultImpl.success(item.getConversationId()));
-                    }
-
-                    @Override
-                    public void onException(Exception e) {
-                        super.onException(e);
-                        action.onComplete(ResultImpl.error(e));
-                    }
-                });
-    }
-
-    private Message createMessage(Activity activity, boolean received) {
-        return activity == null ? null : new InternalMessage(activity, _provider.getAuthenticatedUserOrNull(), received);
-    }
-
-    private static Comment createComment(Message.Text text, @Nullable Mention[] mentions) {
-        Comment comment = new Comment(text == null ? null : text.getPlain());
-        comment.setContent(text == null ? null : text.getHtml());
-        comment.setMarkdown(text == null ? null : text.getMarkdown());
-        if (mentions != null && mentions.length > 0) {
-            ItemCollection<Person> mentionedPersons = new ItemCollection<>();
-            ItemCollection<GroupMention> mentionAll = new ItemCollection<>();
-            for (Mention mention : mentions) {
+    private void doPost(String conversationId, DraftImpl draft, CompletionHandler<Message> handler) {
+        if (TextUtils.isEmpty(conversationId)) {
+            ResultImpl.errorInMain(handler, "Invalid person or id");
+            return;
+        }
+        Message.Text text = draft.getText();
+        Map<String, Object> parent = draft.getParent() == null ? null : Maps.makeMap("id", WebexId.translate(draft.getParent().getId()), "type", "reply");
+        Map<String, Object> target = Maps.makeMap("id", conversationId, "objectType", ObjectModel.Type.conversation);
+        Map<String, Object> object = new HashMap<>();
+        object.put("objectType", ObjectModel.Type.comment);
+        if (text != null) {
+            object.put("displayName", text.getPlain());
+            object.put("content", text.getHtml());
+            object.put("markdown", text.getMarkdown());
+        }
+        if (!Checker.isEmpty(draft.getMentions())) {
+            List<Map<String, Object>> mentionedPeople = new ArrayList<>();
+            List<Map<String, Object>> mentionedGroup = new ArrayList<>();
+            for (Mention mention : draft.getMentions()) {
                 if (mention instanceof Mention.Person) {
-                    WebexId personId = WebexId.from(((Mention.Person) mention).getPersonId());
-                    if (personId != null) {
-                        Person person = new Person(personId.getId());
-                        mentionedPersons.addItem(person);
-                    }
-                } else if (mention instanceof Mention.All) {
-                    mentionAll.addItem(new GroupMention(GroupMention.GroupType.ALL));
+                    mentionedPeople.add(Maps.makeMap("objectType", ObjectModel.Type.person, "id", WebexId.translate(((Mention.Person) mention).getPersonId())));
+                }
+                else if (mention instanceof Mention.All) {
+                    mentionedGroup.add(Maps.makeMap("objectType", ObjectModel.Type.groupMention, "groupType", "all"));
                 }
             }
-            if (mentionAll.size() > 0) {
-                comment.setGroupMentions(mentionAll);
-            } else if (mentionedPersons.size() > 0) {
-                comment.setMentions(mentionedPersons);
+            if (mentionedPeople.size() > 0) {
+                object.put("mentions", Maps.makeMap("items", mentionedPeople));
+            }
+            if (mentionedGroup.size() > 0) {
+                object.put("groupMentions", Maps.makeMap("items", mentionedGroup));
             }
         }
-        return comment;
-    }
-
-    // TODO use info in local file
-    private static File createModleFile(LocalFile localFile, String conversationId, ContentManager contentManager, DatabaseProvider db) {
-        try {
-            Uri contentUri = Uri.fromFile(localFile.getFile());
-            contentManager.addUploadedContent(new java.io.File(new URI(contentUri.toString())), contentUri, ConversationContract.ContentDataCacheEntry.Cache.MEDIA);
-
-            File modelFile = new File();
-            modelFile.setUrl(contentUri);
-            modelFile.setMimeType(MimeUtils.getMimeType(contentUri.toString()));
-            modelFile.setDisplayName(contentUri.getLastPathSegment());
-            if (localFile.getThumbnail() != null) {
-                java.io.File thumbFile = localFile.getThumbnail().getFile();
-                if (thumbFile.exists() && thumbFile.isFile()) {
-                    Image newThumb = new Image(Uri.fromFile(thumbFile), localFile.getThumbnail().getWidth(), localFile.getThumbnail().getHeight(), null, true);
-                    modelFile.setImage(newThumb);
+        KeyManager.shared.getKey(conversationId, phone.getCredentials(), phone.getDevice(), keyResult -> {
+            if (keyResult.getError() != null) {
+                ResultImpl.errorInMain(handler, keyResult);
+                return;
+            }
+            KeyObject key = keyResult.getData();
+            if (key != null && text != null) {
+                object.put("displayName", CryptoUtils.encryptToJwe(key, text.getPlain()));
+                object.put("content", CryptoUtils.encryptToJwe(key, text.getHtml()));
+                object.put("markdown", CryptoUtils.encryptToJwe(key, text.getMarkdown()));
+            }
+            UploadFileOperations operations = new UploadFileOperations(draft.getFiles());
+            operations.run(phone.getCredentials().getAuthenticator(), phone.getDevice(), conversationId, key, fileModels -> {
+                if (fileModels.getError() != null) {
+                    ResultImpl.errorInMain(handler, fileModels);
+                    return;
                 }
-            }
-            return modelFile;
-        } catch (URISyntaxException e) {
-            Ln.e(e, "Failed parsing content URI.");
-            return null;
-        } finally {
-            if (db != null && !TextUtils.isEmpty(conversationId)) {
-                db.notifyChange(ConversationContract.ConversationEntry.getConversationActivitiesUri(conversationId));
-            }
-        }
+                ActivityModel.Verb verb = ActivityModel.Verb.post;
+                if (!Checker.isEmpty(fileModels.getData())) {
+                    object.put("objectType", ObjectModel.Type.content);
+                    object.put("contentCategory", "documents");
+                    object.put("files", Maps.makeMap("items", fileModels.getData()));
+                    verb = ActivityModel.Verb.share;
+                }
+                Map<String, Object> activityMap = new HashMap<>();
+                activityMap.put("verb", verb.name());
+                activityMap.put("clientTempId", uuid + ":" + UUID.randomUUID().toString());
+                activityMap.put("encryptionKeyUrl", key == null ? null :key.getKeyUrl());
+                activityMap.put("object", object);
+                activityMap.put("target", target);
+                activityMap.put("parent", parent);
+                Service.Conv.post(activityMap).to("activities")
+                        .auth(phone.getAuthenticator())
+                        .device(phone.getDevice())
+                        .model(ActivityModel.class)
+                        .error(handler)
+                        .async((Closure<ActivityModel>) model -> {
+                            model.decrypt(key);
+                            ResultImpl.inMain(handler, createMessage(model, false));
+                        });
+            });
+        });
     }
 
-    private interface MessageService {
-        @GET("messages")
-        Call<ListBody<Message>> list(@Header("Authorization") String authorization,
-                                     @Query("roomId") String roomId,
-                                     @Query("spaceId") String spaceId,
-                                     @Query("before") String before,
-                                     @Query("beforeMessage") String beforeMessage,
-                                     @Query("mentionedPeople") String mentionedPeople,
-                                     @Query("max") Integer max);
+    private void getOrCreateConversation(String person, CompletionHandler<String> handler) {
+        Queue.background.run(() -> {
+            String conversionId = conversations.get(person);
+            if (conversionId != null) {
+                handler.onComplete(ResultImpl.success(conversionId));
+                return;
+            }
+            Service.Conv.put().to("conversations", "user", person)
+                    .auth(phone.getAuthenticator())
+                    .device(phone.getDevice())
+                    .queue(Queue.background)
+                    .model(ConversationModel.class)
+                    .error(handler)
+                    .async((Closure<ConversationModel>) model -> {
+                        if (model == null || model.getId() == null) {
+                            handler.onComplete(ResultImpl.error("Cannot get conversion with the people: " + person));
+                            return;
+                        }
+                        conversations.put(person, model.getId());
+                        handler.onComplete(ResultImpl.success(model.getId()));
+                    });
+        });
+    }
 
-        @POST("messages")
-        Call<Message> post(@Header("Authorization") String authorization, @Body Map parameters);
-
-        @GET("messages/{messageId}")
-        Call<Message> get(@Header("Authorization") String authorization, @Path("messageId") String messageId);
-
-        @DELETE("messages/{messageId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("messageId") String messageId);
+    private Message createMessage(ActivityModel activity, boolean received) {
+        return activity == null ? null : new InternalMessage(activity, phone.getCredentials(), received);
     }
 
     @Override
@@ -714,7 +459,7 @@ public class MessageClientImpl implements MessageClient {
         } else if (beforeMessage != null) {
             b = new Before.Message(beforeMessage);
         }
-        list(spaceId, b, max, mentions == null ? null : mentions.toArray(new Mention[mentions.size()]), handler);
+        list(spaceId, b, max, mentions == null ? null : mentions.toArray(new Mention[0]), handler);
     }
 
     @Override
@@ -754,13 +499,5 @@ public class MessageClientImpl implements MessageClient {
         }
     }
 
-    @Override
-    public void markAsRead(@NonNull String spaceId) {
-        operations.submit(new MessageMarkReadOperation(injector, spaceId));
-    }
 
-    @Override
-    public void markAsRead(@NonNull String spaceId, String messageId) {
-        operations.submit(new MessageMarkReadOperation(injector, spaceId, messageId));
-    }
 }

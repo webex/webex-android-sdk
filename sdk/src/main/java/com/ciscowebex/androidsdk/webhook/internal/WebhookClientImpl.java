@@ -23,89 +23,88 @@
 package com.ciscowebex.androidsdk.webhook.internal;
 
 import java.util.List;
-import java.util.Map;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.utils.http.ListBody;
-import com.ciscowebex.androidsdk.utils.http.ListCallback;
-import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
-import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
+import com.ciscowebex.androidsdk.internal.Closure;
+import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.model.ItemsModel;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.webhook.Webhook;
 import com.ciscowebex.androidsdk.webhook.WebhookClient;
-
+import com.google.gson.reflect.TypeToken;
 import me.helloworld.utils.collection.Maps;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
 public class WebhookClientImpl implements WebhookClient {
 
-    private Authenticator _authenticator;
-
-    private WebhookService _service;
+    private Authenticator authenticator;
 
     private static final String KEY_TARGET_URL = "targetUrl";
 
     public WebhookClientImpl(Authenticator authenticator) {
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(WebhookService.class);
+        this.authenticator = authenticator;
     }
 
     public void list(int max, @NonNull CompletionHandler<List<Webhook>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.list(s, max <= 0 ? null : max), new ListCallback<>(handler));
-    }
-
-    public void create(@NonNull String name, @NonNull String targetUrl, @NonNull String resource, @NonNull String event, @Nullable String filter, @Nullable String secret, @NonNull CompletionHandler<Webhook> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.create(s, Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl, "filter", filter, "secret", secret, "resource", resource, "event", event)), new ObjectCallback<>(handler));
+        Service.Hydra.get("webhooks")
+                .with("max", max <= 0 ? null : String.valueOf(max))
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(new TypeToken<ItemsModel<Webhook>>(){}.getType())
+                .error(handler)
+                .async((Closure<ItemsModel<Webhook>>) result -> handler.onComplete(ResultImpl.success(result.getItems())));
     }
 
     public void get(@NonNull String webhookId, @NonNull CompletionHandler<Webhook> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.get(s, webhookId), new ObjectCallback<>(handler));
+        Service.Hydra.get("webhooks", webhookId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Webhook.class)
+                .error(handler)
+                .async((Closure<Webhook>) result -> handler.onComplete(ResultImpl.success(result)));
+    }
+
+    public void create(@NonNull String name, @NonNull String targetUrl, @NonNull String resource, @NonNull String event, @Nullable String filter, @Nullable String secret, @NonNull CompletionHandler<Webhook> handler) {
+        Service.Hydra.post(Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl, "filter", filter, "secret", secret, "resource", resource, "event", event))
+                .to("webhooks")
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Webhook.class)
+                .error(handler)
+                .async((Closure<Webhook>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     public void update(@NonNull String webhookId, @NonNull String name, @NonNull String targetUrl, @NonNull CompletionHandler<Webhook> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.update(s, webhookId, Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl)), new ObjectCallback<>(handler));
+        Service.Hydra.put(Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl))
+                .to("webhooks", webhookId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Webhook.class)
+                .error(handler)
+                .async((Closure<Webhook>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     @Override
     public void update(@NonNull String webhookId, @NonNull String name, @NonNull String targetUrl, @Nullable String secret, @Nullable String status, @NonNull CompletionHandler<Webhook> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.update(s, webhookId, Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl, "secret", secret, "status", status)), new ObjectCallback<>(handler));
+        Service.Hydra.put(Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl, "secret", secret, "status", status))
+                .to("webhooks", webhookId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Webhook.class)
+                .error(handler)
+                .async((Closure<Webhook>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     public void delete(@NonNull String webhookId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.delete(s, webhookId), new ObjectCallback<>(handler));
+        Service.Hydra.delete("webhooks", webhookId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .error(handler)
+                .async((Closure<Void>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
-    private interface WebhookService {
-        @GET("webhooks")
-        Call<ListBody<Webhook>> list(@Header("Authorization") String authorization, @Query("max") Integer max);
-
-        @POST("webhooks")
-        Call<Webhook> create(@Header("Authorization") String authorization, @Body Map parameters);
-
-        @GET("webhooks/{webhookId}")
-        Call<Webhook> get(@Header("Authorization") String authorization, @Path("webhookId") String webhookId);
-
-        @PUT("webhooks/{webhookId}")
-        Call<Webhook> update(@Header("Authorization") String authorization, @Path("webhookId") String webhookId, @Body Map parameters);
-
-        @DELETE("webhooks/{webhookId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("webhookId") String webhookId);
-    }
 }

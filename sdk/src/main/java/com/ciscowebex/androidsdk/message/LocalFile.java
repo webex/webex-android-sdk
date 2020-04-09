@@ -2,8 +2,7 @@ package com.ciscowebex.androidsdk.message;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
-import com.cisco.spark.android.util.MimeUtils;
+import com.ciscowebex.androidsdk.utils.MimeUtils;
 
 import java.io.File;
 import java.net.URLConnection;
