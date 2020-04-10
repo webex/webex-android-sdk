@@ -78,7 +78,7 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void list(@Nullable String teamId, int max, @Nullable Space.SpaceType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Space>> handler) {
-        Service.Hydra.get("room")
+        Service.Hydra.get("rooms")
                 .with("teamId", teamId)
                 .with("type", type == null ? null : type.serializedName())
                 .with("sortBy", sortBy == null ? null : sortBy.serializedName())
