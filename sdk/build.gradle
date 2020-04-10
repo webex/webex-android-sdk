@@ -65,9 +65,9 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 27
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.ciscowebex.androidsdk.WebexTestRunner"
         multiDexEnabled true
-        versionCode 1
+        versionCode 2500
         versionName moduleVersion
         buildConfigField "String", "BUILD_TIME", "\"${buildTime()}\""
         buildConfigField "String", "BUILD_REVISION", "\"${revision()}\""
@@ -88,6 +88,8 @@ android {
             buildConfigField "String", "TEST_USER_NAME", getPropertyOrDefault('TEST_USER_NAME')
             buildConfigField "String", "TEST_USER_EMAIL", getPropertyOrDefault('TEST_USER_EMAIL')
             buildConfigField "String", "TEST_USER_PWD", getPropertyOrDefault('TEST_USER_PWD')
+            buildConfigField "String", "TEST_USER_PWD", getPropertyOrDefault('TEST_USER_PWD')
+            buildConfigField "String", "JWT", getPropertyOrDefault('JWT')
         }
         jenkins {
             initWith debug
@@ -248,8 +250,8 @@ dependencies {
     implementation('joda-time:joda-time:2.10')
 
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support:support-annotations:28.0.0'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support:support-annotations:27.1.0'
+    androidTestImplementation 'com.android.support.test:runner:1.0.0'
 }
 
 static def buildTime() {
