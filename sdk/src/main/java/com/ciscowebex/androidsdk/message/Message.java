@@ -54,7 +54,7 @@ public class Message {
     }
 
     /**
-     * Encapsulating the content will be post.
+     * Encapsulating the content will be post. A draft is created by {@link Message#draft(Text)}}
      *
      * @since 2.5.0
      */
