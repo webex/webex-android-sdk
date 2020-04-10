@@ -77,6 +77,7 @@ public class BackgroundChecker implements NetworkReachability.NetworkReachabilit
         syncLock.lock();
         try {
             running = false;
+            network.stop();
             cancelChecker();
         } finally {
             syncLock.unlock();

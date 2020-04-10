@@ -107,7 +107,7 @@ public class MercuryService {
         });
     }
 
-    public void disconnect() {
+    public void disconnect(boolean clear) {
         queue.run(() -> {
             connected = false;
             resetReconnect();
@@ -119,6 +119,9 @@ public class MercuryService {
                     Ln.d("Stop mecury websocket abnormal");
                 }
                 websocket = null;
+            }
+            if (clear) {
+                url = null;
             }
         });
     }

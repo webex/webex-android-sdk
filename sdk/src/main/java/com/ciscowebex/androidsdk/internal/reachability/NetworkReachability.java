@@ -60,7 +60,7 @@ public class NetworkReachability extends BroadcastReceiver {
     }
 
     public void onReceive(Context context, Intent intent) {
-        update();
+        asyncUpdateNetworkConnectivity();
     }
 
     public static IntentFilter getIntentFilter() {
@@ -74,6 +74,13 @@ public class NetworkReachability extends BroadcastReceiver {
 
     public void start() {
         update();
+    }
+
+    public void stop() {
+        if (updateNetworkState != null) {
+            updateNetworkState.cancel();
+            updateNetworkState = null;
+        }
     }
 
     public boolean isNetworkConnected() {
@@ -91,6 +98,7 @@ public class NetworkReachability extends BroadcastReceiver {
     public void update() {
         if (updateNetworkState != null) {
             updateNetworkState.cancel();
+            updateNetworkState = null;
         }
         updateNetworkState = Scheduler.schedule(this::asyncUpdateNetworkConnectivity, 20000, true);
     }
@@ -106,6 +114,7 @@ public class NetworkReachability extends BroadcastReceiver {
         if (info == null) {
             currentNetworkConnectionStatus = new NetworkConnectionStatus(false);
             if (oldIsConnected) {
+                Ln.i("End status not exist");
                 observer.onReachabilityChanged(false);
             }
             return;
@@ -137,7 +146,7 @@ public class NetworkReachability extends BroadcastReceiver {
         }
 
         if (oldIsConnected != isConnected) {
-            Ln.i("Different start and end states, sending event");
+            Ln.i("Different start and end states");
             observer.onReachabilityChanged(isConnected);
         }
     }

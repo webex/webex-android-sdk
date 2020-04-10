@@ -142,14 +142,9 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public void register(@NonNull CompletionHandler<Void> callback) {
         Queue.main.run(() -> {
-            if (state == State.REGISTERING) {
-                Ln.w("Already registering");
-                callback.onComplete(ResultImpl.error("Already registering"));
-                return;
-            }
-            if (state == State.UNREGISTERING) {
-                Ln.w("Already unregistering");
-                callback.onComplete(ResultImpl.error("Already unregistering"));
+            if (state != State.UNREGISTERED) {
+                Ln.w("Device is not unregistered");
+                callback.onComplete(ResultImpl.error("Device is not unregistered"));
                 return;
             }
             state = State.REGISTERING;
@@ -234,7 +229,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 if (foreground) {
                     mercury.tryReconnect();
                 } else {
-                    mercury.disconnect();
+                    mercury.disconnect(false);
                 }
             }
             for (CallImpl call : calls.values()) {
@@ -255,14 +250,9 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public void deregister(@NonNull CompletionHandler<Void> callback) {
         Queue.main.run(() -> {
-            if (state == State.REGISTERING) {
-                Ln.w("Already registering");
-                callback.onComplete(ResultImpl.error("Already registering"));
-                return;
-            }
-            if (state == State.UNREGISTERING) {
-                Ln.w("Already unregistering");
-                callback.onComplete(ResultImpl.error("Already unregistering"));
+            if (state != State.REGISTERED) {
+                Ln.w("Device is not registered");
+                callback.onComplete(ResultImpl.error("Device is not registered"));
                 return;
             }
             state = State.UNREGISTERING;
@@ -270,18 +260,18 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             UIEventHandler.get().unregisterUIEventHandler(context);
             Queue.serial.run(new UnregisterOperation(authenticator, device, result -> {
                 Ln.i("Unregistered");
-                mercury.disconnect();
                 Queue.main.run(() -> {
                     reachability.clear();
                     if (checker != null) {
                         checker.stop();
                     }
                 });
+                mercury.disconnect(true);
                 device = null;
                 credentials = null;
                 Settings.shared.clear(Device.DEVICE_URL);
                 state = State.UNREGISTERED;
-                callback.onComplete(result);
+                Queue.main.run(() -> callback.onComplete(result));
                 Queue.serial.yield();
             }));
         });
@@ -300,20 +290,20 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             stopPreview();
             if (callContext != null) {
                 Ln.w("Already calling");
-                callback.onComplete(ResultImpl.error("Already calling"));
+                Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already calling")));
                 Queue.serial.yield();
                 return;
             }
             if (device == null) {
                 Ln.e("Unregistered device");
-                callback.onComplete(ResultImpl.error("Unregistered device"));
+                Queue.main.run(() -> callback.onComplete(ResultImpl.error("Unregistered device")));
                 Queue.serial.yield();
                 return;
             }
             for (CallImpl call : getCalls()) {
                 if (!call.isGroup() || (call.isGroup() && call.getStatus() == Call.CallStatus.CONNECTED)) {
                     Ln.e("There are other active calls");
-                    callback.onComplete(ResultImpl.error("There are other active calls"));
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("There are other active calls")));
                     Queue.serial.yield();
                     return;
                 }
@@ -436,19 +426,19 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 callContext = null;
                 if (call.getMedia() == null || !call.getMedia().hasSharing()) {
                     Ln.e("Media option unsupport content share");
-                    callback.onComplete(ResultImpl.error("Media option unsupport content share"));
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("Media option unsupport content share")));
                     Queue.serial.yield();
                     return;
                 }
                 if (call.isSharingFromThisDevice()) {
                     Ln.e("Already shared by self");
-                    callback.onComplete(ResultImpl.error("Already shared by self"));
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already shared by self")));
                     Queue.serial.yield();
                     return;
                 }
                 if (call.getStatus() != Call.CallStatus.CONNECTED) {
                     Ln.e("No active call");
-                    callback.onComplete(ResultImpl.error("No active call"));
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("No active call")));
                     Queue.serial.yield();
                     return;
                 }
@@ -457,12 +447,13 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String url = mediaShare.getUrl();
                 if (url == null) {
                     Ln.e("Unsupport media share");
+                    Queue.main.run(() ->  callback.onComplete(ResultImpl.error("No MediaShare url")));
                     Queue.serial.yield();
                     return;
                 }
                 service.update(mediaShare, url, device, result -> {
                     if (result.getError() != null) {
-                        callback.onComplete(ResultImpl.error(result.getError()));
+                        Queue.main.run(() ->  callback.onComplete(ResultImpl.error(result.getError())));
                         Queue.serial.yield();
                         return;
                     }
@@ -834,13 +825,13 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         Queue.serial.run(() -> {
             if (call.getMedia() == null || !call.getMedia().hasSharing()) {
                 Ln.e("Media option unsupport content share");
-                callback.onComplete(ResultImpl.error("Media option unsupport content share"));
+                Queue.main.run(() -> callback.onComplete(ResultImpl.error("Media option unsupport content share")));
                 Queue.serial.yield();
                 return;
             }
             if (!call.isSharingFromThisDevice()) {
                 Ln.e("Local share screen not start");
-                callback.onComplete(ResultImpl.error("Local share screen not start"));
+                Queue.main.run(() -> callback.onComplete(ResultImpl.error("Local share screen not start")));
                 Queue.serial.yield();
                 return;
             }
@@ -849,6 +840,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             String url = mediaShare.getUrl();
             if (url == null) {
                 Ln.e("Unsupport media share");
+                Queue.main.run(() -> callback.onComplete(ResultImpl.error("Miss media share url")));
                 Queue.serial.yield();
                 return;
             }
