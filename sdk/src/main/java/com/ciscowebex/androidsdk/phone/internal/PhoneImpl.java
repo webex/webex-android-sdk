@@ -265,7 +265,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 callback.onComplete(ResultImpl.error("Already unregistering"));
                 return;
             }
-            state = State.UNREGISTERED;
+            state = State.UNREGISTERING;
             Ln.i("Unregistering");
             UIEventHandler.get().unregisterUIEventHandler(context);
             Queue.serial.run(new UnregisterOperation(authenticator, device, result -> {
@@ -375,7 +375,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 Queue.serial.yield();
                                 return;
                             }
-                            doLocusResponse(new LocusResponse.Call(target.isGroup(), device, session, callResult.getData(), outgoing.getCallback()), Queue.serial);
+                            doLocusResponse(new LocusResponse.Call(device, session, callResult.getData(), outgoing.getCallback()), Queue.serial);
                         });
                     }
                     else {
@@ -392,7 +392,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                     Queue.serial.yield();
                                     return;
                                 }
-                                doLocusResponse(new LocusResponse.Call(target.isGroup(), device, session, joinResult.getData(), outgoing.getCallback()), Queue.serial);
+                                doLocusResponse(new LocusResponse.Call(device, session, joinResult.getData(), outgoing.getCallback()), Queue.serial);
                             });
                         });
                     }
@@ -879,7 +879,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         if (response instanceof LocusResponse.Call) {
             LocusModel model = ((LocusResponse.Call) response).getLocus();
             Ln.d("Connecting call: " + model.getCallUrl());
-            CallImpl call = new CallImpl(model, this, device, ((LocusResponse.Call) response).getSession(), Call.Direction.OUTGOING, ((LocusResponse.Call) response).isGroup());
+            CallImpl call = new CallImpl(model, this, device, ((LocusResponse.Call) response).getSession(), Call.Direction.OUTGOING, !model.isOneOnOne());
             if (call.isStatusIllegal()) {
                 Ln.d("The previous session did not end");
                 Queue.main.run(() -> {

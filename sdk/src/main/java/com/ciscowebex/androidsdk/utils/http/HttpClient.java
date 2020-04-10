@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 public class HttpClient {
 
-    private static final int MAX_LENGTH = 2048;
+    private static final int MAX_LENGTH = 1024;
 
     private static HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> {
         if (message.length() > MAX_LENGTH) {

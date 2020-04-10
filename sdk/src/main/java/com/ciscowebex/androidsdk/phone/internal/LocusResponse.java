@@ -32,26 +32,19 @@ public interface LocusResponse {
 
     class Call implements LocusResponse {
 
-        private boolean group;
         private Device device;
         private MediaSession session;
         private LocusModel locus;
         private CompletionHandler<com.ciscowebex.androidsdk.phone.Call> callback;
 
-        public Call(boolean isGroup,
-                    Device device,
+        public Call(Device device,
                     MediaSession session,
                     LocusModel model,
                     CompletionHandler<com.ciscowebex.androidsdk.phone.Call> callback) {
-            this.group = isGroup;
             this.device = device;
             this.session = session;
             this.locus = model;
             this.callback = callback;
-        }
-
-        public boolean isGroup() {
-            return group;
         }
 
         public Device getDevice() {
