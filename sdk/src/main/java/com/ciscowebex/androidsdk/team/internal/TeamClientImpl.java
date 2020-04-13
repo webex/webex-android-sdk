@@ -22,83 +22,70 @@
 
 package com.ciscowebex.androidsdk.team.internal;
 
-
 import java.util.List;
-import java.util.Map;
 
 import android.support.annotation.NonNull;
-
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
+import com.ciscowebex.androidsdk.internal.Closure;
+import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.team.Team;
 import com.ciscowebex.androidsdk.team.TeamClient;
-import com.ciscowebex.androidsdk.utils.http.ListBody;
-import com.ciscowebex.androidsdk.utils.http.ListCallback;
-import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
-import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
-
+import com.ciscowebex.androidsdk.internal.model.ItemsModel;
+import com.google.gson.reflect.TypeToken;
 import me.helloworld.utils.collection.Maps;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
 public class TeamClientImpl implements TeamClient {
 
-    private Authenticator _authenticator;
-
-    private TeamService _service;
+    private Authenticator authenticator;
 
     public TeamClientImpl(Authenticator authenticator) {
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(TeamService.class);
+        this.authenticator = authenticator;
     }
 
     public void list(int max, @NonNull CompletionHandler<List<Team>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.list(s, max <= 0 ? null : max), new ListCallback<>(handler));
-    }
-
-    public void create(@NonNull String name, @NonNull CompletionHandler<Team> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.create(s, Maps.makeMap("name", name)), new ObjectCallback<>(handler));
+        Service.Hydra.get("teams").with("max", max <= 0 ? null : String.valueOf(max))
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(new TypeToken<ItemsModel<Team>>(){}.getType())
+                .error(handler)
+                .async((Closure<ItemsModel<Team>>) result -> handler.onComplete(ResultImpl.success(result.getItems())));
     }
 
     public void get(@NonNull String teamId, @NonNull CompletionHandler<Team> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.get(s, teamId), new ObjectCallback<>(handler));
+        Service.Hydra.get("teams", teamId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Team.class)
+                .error(handler)
+                .async((Closure<Team>) result -> handler.onComplete(ResultImpl.success(result)));
+    }
+
+    public void create(@NonNull String name, @NonNull CompletionHandler<Team> handler) {
+        Service.Hydra.post(Maps.makeMap("name", name)).to("teams")
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Team.class)
+                .error(handler)
+                .async((Closure<Team>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     public void update(@NonNull String teamId, String name, @NonNull CompletionHandler<Team> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.update(s, teamId, Maps.makeMap("name", name)), new ObjectCallback<>(handler));
+        Service.Hydra.put(Maps.makeMap("name", name)).to("teams", teamId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Team.class)
+                .error(handler)
+                .async((Closure<Team>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     public void delete(@NonNull String teamId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.delete(s, teamId), new ObjectCallback<>(handler));
+        Service.Hydra.delete("teams", teamId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .error(handler)
+                .async((Closure<Void>) result -> handler.onComplete(ResultImpl.success(result)));
     }
-
-    private interface TeamService {
-        @GET("teams")
-        Call<ListBody<Team>> list(@Header("Authorization") String authorization, @Query("max") Integer max);
-
-        @POST("teams")
-        Call<Team> create(@Header("Authorization") String authorization, @Body Map parameters);
-
-        @GET("teams/{teamId}")
-        Call<Team> get(@Header("Authorization") String authorization, @Path("teamId") String teamId);
-
-        @PUT("teams/{teamId}")
-        Call<Team> update(@Header("Authorization") String authorization, @Path("teamId") String teamId, @Body Map parameters);
-
-        @DELETE("teams/{teamId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("teamId") String teamId);
-    }
-
 }

@@ -41,10 +41,6 @@ import com.github.benoitdion.ln.Ln;
 
 import me.helloworld.utils.Checker;
 
-/**
- * Created by zhiyuliu on 01/09/2017.
- */
-
 public class OAuthLauncher {
 
     public void launchOAuthView(WebView view, String authorizationUrl, String redirectUri, CompletionHandler<String> handler) {
@@ -54,7 +50,6 @@ public class OAuthLauncher {
         WebSettings webSettings = view.getSettings();
         webSettings.setSupportZoom(true);
         webSettings.setJavaScriptEnabled(true);
-        // Required for javascript to work with HTML5
         webSettings.setDomStorageEnabled(true);
         webSettings.setSaveFormData(false);
         webSettings.setAllowFileAccess(false);
@@ -64,7 +59,7 @@ public class OAuthLauncher {
         view.loadUrl(authorizationUrl);
     }
 
-    private class BrowserWebViewClient extends WebViewClient {
+    private static class BrowserWebViewClient extends WebViewClient {
 
         private String _redirectUri;
 

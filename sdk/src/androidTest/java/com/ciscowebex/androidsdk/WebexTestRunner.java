@@ -25,33 +25,24 @@ package com.ciscowebex.androidsdk;
 
 import android.app.Application;
 import android.content.Context;
+
 import android.os.Environment;
 import android.os.Handler;
-
 import android.support.test.runner.AndroidJUnitRunner;
-import com.ciscowebex.androidsdk.auth.OAuthTestUserAuthenticator;
-import com.facebook.drawee.backends.pipeline.Fresco;
+import com.ciscowebex.androidsdk.auth.JWTAuthenticator;
+import me.helloworld.utils.Checker;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-
-
-
 public class WebexTestRunner extends AndroidJUnitRunner {
-    private static String SparkUserEmail = BuildConfig.TEST_USER_EMAIL;
-    private static String SparkUserName = BuildConfig.VERSION_NAME;
-    private static String SparkUserPwd = BuildConfig.TEST_USER_PWD;
-    private static String CLIENT_ID = BuildConfig.CLIENT_ID;
-    private static String CLIENT_SEC = BuildConfig.CLIENT_SEC;
-    private static String REDIRECT_URL = BuildConfig.REDIRECT_URL;
-    private static String SCOPE = BuildConfig.SCOPE;
 
     static Application application;
     static Webex webex;
@@ -70,39 +61,24 @@ public class WebexTestRunner extends AndroidJUnitRunner {
     @Override
     public void callApplicationOnCreate(Application app) {
         super.callApplicationOnCreate(app);
-        Fresco.initialize(app.getApplicationContext());
-        new Handler().post(this::loginBySparkId);
+        new Handler().post(this::login);
     }
 
-    private void loginBySparkId() {
-        System.out.println("!!! loginBySparkId !!!");
-        String path = Environment.getExternalStorageDirectory().getPath();
-        //String path = application.getExternalFilesDir("login");
-
-        File file = new File(path, "login.txt");
-        if (file.exists()) {
-            HashMap map = readKeyValueTxtToMap(file);
-            SparkUserEmail = (String) map.get("SparkUserEmail");
-            SparkUserName = (String) map.get("SparkUserName");
-            SparkUserPwd = (String) map.get("SparkUserPwd");
-            CLIENT_ID = (String) map.get("CLIENT_ID");
-            CLIENT_SEC = (String) map.get("CLIENT_SEC");
-            REDIRECT_URL = (String) map.get("REDIRECT_URL");
-            SCOPE = (String) map.get("SCOPE");
-        } else {
-            System.out.println("!!! login file is not exist !!!");
+    private void login() {
+        String jwt = BuildConfig.JWT;
+        if (Checker.isEmpty(jwt)) {
+            jwt = System.getProperty("JWT");
         }
-        System.out.println("Test User:" + SparkUserEmail);
-
-        OAuthTestUserAuthenticator auth = new OAuthTestUserAuthenticator(CLIENT_ID, CLIENT_SEC, SCOPE, REDIRECT_URL,
-                SparkUserEmail, SparkUserName, SparkUserPwd);
-        webex = new Webex(application, auth);
+        System.out.println("!!! login !!! " + jwt);
+        JWTAuthenticator authenticator = new JWTAuthenticator();
+        authenticator.authorize(jwt);
+        webex = new Webex(application, authenticator);
         final CountDownLatch signal = new CountDownLatch(1);
-        auth.authorize(result -> {
+        authenticator.getToken(result -> {
             if (result.isSuccessful()) {
-                System.out.println("loginBySparkId isSuccessful!");
+                System.out.println("login isSuccessful!");
             } else {
-                System.out.println("loginBySparkId failed! " + result.getError().toString());
+                System.out.println("login failed! " + result.getError());
                 System.exit(-1);
             }
             signal.countDown();
@@ -115,31 +91,27 @@ public class WebexTestRunner extends AndroidJUnitRunner {
         }
     }
 
-    private HashMap readKeyValueTxtToMap(File file) {
-        while (true) {
-            final HashMap keyValueMap = new HashMap();
-            while (true) {
-                try {
-                    final InputStream open = new FileInputStream(file);
-                    final byte[] readArray = new byte[open.available()];
-                    open.read(readArray);
-                    open.close();
-                    final StringTokenizer allLine = new StringTokenizer(new String(readArray, "UTF-8"), "\r\n");
-                    while (allLine.hasMoreTokens()) {
-                        final StringTokenizer oneLine = new StringTokenizer(allLine.nextToken(), "=");
-                        final String leftKey = oneLine.nextToken();
-                        if (!oneLine.hasMoreTokens()) {
-                            break;
-                        }
-                        final String rightValue = oneLine.nextToken();
-                        keyValueMap.put(leftKey, rightValue);
+    private HashMap<String, String > readKeyValueTxtToMap(File file) {
+        final HashMap<String, String> keyValueMap = new HashMap<>();
+            try {
+                final InputStream open = new FileInputStream(file);
+                final byte[] readArray = new byte[open.available()];
+                open.read(readArray);
+                open.close();
+                final StringTokenizer allLine = new StringTokenizer(new String(readArray, StandardCharsets.UTF_8), "\r\n");
+                while (allLine.hasMoreTokens()) {
+                    final StringTokenizer oneLine = new StringTokenizer(allLine.nextToken(), "=");
+                    final String leftKey = oneLine.nextToken();
+                    if (!oneLine.hasMoreTokens()) {
+                        break;
                     }
-                    return keyValueMap;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return keyValueMap;
+                    final String rightValue = oneLine.nextToken();
+                    keyValueMap.put(leftKey, rightValue);
                 }
+                return keyValueMap;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return keyValueMap;
             }
-        }
     }
 }

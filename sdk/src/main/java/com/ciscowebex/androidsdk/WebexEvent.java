@@ -22,8 +22,8 @@
 
 package com.ciscowebex.androidsdk;
 
-import com.cisco.spark.android.model.Person;
-import com.cisco.spark.android.model.conversation.Activity;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.PersonModel;
 import com.ciscowebex.androidsdk.utils.WebexId;
 
 /**
@@ -49,8 +49,8 @@ public interface WebexEvent {
 
         private String _actorId;
 
-        protected Base(Activity activity) {
-            Person person = activity.getActor();
+        protected Base(ActivityModel activity) {
+            PersonModel person = activity.getActor();
             if (person != null) {
                 _actorId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
             }

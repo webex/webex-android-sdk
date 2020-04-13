@@ -26,99 +26,95 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.util.List;
-import java.util.Map;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
+import com.ciscowebex.androidsdk.internal.Closure;
+import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.people.Person;
 import com.ciscowebex.androidsdk.people.PersonClient;
-import com.ciscowebex.androidsdk.utils.http.ListBody;
-import com.ciscowebex.androidsdk.utils.http.ListCallback;
-import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
-import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
+import com.ciscowebex.androidsdk.internal.model.ItemsModel;
 
+import com.google.gson.reflect.TypeToken;
 import me.helloworld.utils.collection.Maps;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
+import org.jetbrains.annotations.NotNull;
 
 public class PersonClientImpl implements PersonClient {
 
-    private Authenticator _authenticator;
-
-    private PersonService _service;
+    private Authenticator authenticator;
 
     public PersonClientImpl(Authenticator authenticator) {
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(PersonService.class);
+        this.authenticator = authenticator;
     }
 
-    public void list(String email, String displayName, int max, CompletionHandler<List<Person>> handler) {
+    public void list(@NotNull String email, String displayName, int max, @NotNull CompletionHandler<List<Person>> handler) {
         this.list(email, displayName, null, null, max, handler);
     }
 
-    public void list(String email, String displayName, String id, String orgId, int max, CompletionHandler<List<Person>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> _service.list(s, email, displayName, id, orgId, max <= 0 ? null : max), new ListCallback<>(handler));
+    public void list(String email, String displayName, String id, String orgId, int max, @NotNull CompletionHandler<List<Person>> handler) {
+        Service.Hydra.get("people")
+                .with("email", email)
+                .with("displayName", displayName)
+                .with("id", id)
+                .with("orgId", orgId)
+                .with("max", max <= 0 ? null : String.valueOf(max))
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(new TypeToken<ItemsModel<Person>>(){}.getType())
+                .error(handler)
+                .async((Closure<ItemsModel<Person>>) result -> handler.onComplete(ResultImpl.success(result.getItems())));
     }
 
-    public void get(String personId, CompletionHandler<Person> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.get(s, personId), new ObjectCallback<>(handler));
+    public void get(@NotNull String personId, @NotNull CompletionHandler<Person> handler) {
+        Service.Hydra.get("people", personId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Person.class)
+                .error(handler)
+                .async((Closure<Person>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
-    public void getMe(CompletionHandler<Person> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.getMe(s), new ObjectCallback<>(handler));
+    public void getMe(@NotNull CompletionHandler<Person> handler) {
+        Service.Hydra.get("people", "me")
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Person.class)
+                .error(handler)
+                .async((Closure<Person>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     @Override
     public void create(@NonNull String email, @Nullable String displayName, @Nullable String firstName, @Nullable String lastName, @Nullable String avatar, @Nullable String orgId, @Nullable String roles, @Nullable String licenses, @NonNull CompletionHandler<Person> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.create(s, Maps.makeMap("email", email, "displayName", displayName, "firstName", firstName, "lastName", lastName
-                , "avatar", avatar, "orgId", orgId, "roles", roles, "licenses", licenses)), new ObjectCallback<>(handler));
+        Service.Hydra.post(Maps.makeMap("email", email, "displayName", displayName, "firstName", firstName, "lastName", lastName,
+                "avatar", avatar, "orgId", orgId, "roles", roles, "licenses", licenses)).to("people")
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Person.class)
+                .error(handler)
+                .async((Closure<Person>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     @Override
     public void update(@NonNull String personId, @Nullable String email, @Nullable String displayName, @Nullable String firstName, @Nullable String lastName, @Nullable String avatar, @Nullable String orgId, @Nullable String roles, @Nullable String licenses, @NonNull CompletionHandler<Person> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.update(s, personId, Maps.makeMap("email", email, "displayName", displayName, "firstName", firstName, "lastName", lastName
-                , "avatar", avatar, "orgId", orgId, "roles", roles, "licenses", licenses)), new ObjectCallback<>(handler));
+        Service.Hydra.put(Maps.makeMap("email", email, "displayName", displayName, "firstName", firstName, "lastName", lastName,
+                "avatar", avatar, "orgId", orgId, "roles", roles, "licenses", licenses)).to("people", personId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(Person.class)
+                .error(handler)
+                .async((Closure<Person>) result -> {
+                    handler.onComplete(ResultImpl.success(result));
+                });
     }
 
     @Override
     public void delete(@NonNull String personId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.delete(s, personId), new ObjectCallback<>(handler));
-    }
-
-    private interface PersonService {
-        @GET("people")
-        Call<ListBody<Person>> list(@Header("Authorization") String authorizationHeader,
-                                    @Query("email") String email,
-                                    @Query("displayName") String displayName,
-                                    @Query("id") String id,
-                                    @Query("orgId") String orgId,
-                                    @Query("max") Integer max);
-
-        @GET("people/{personId}")
-        Call<Person> get(@Header("Authorization") String authorizationHeader, @Path("personId") String personId);
-
-        @GET("people/me")
-        Call<Person> getMe(@Header("Authorization") String authorizationHeader);
-
-        @POST("people")
-        Call<Person> create(@Header("Authorization") String authorizationHeader, @Body Map parameters);
-
-        @PUT("people/{personId}")
-        Call<Person> update(@Header("Authorization") String authorization, @Path("personId") String personId, @Body Map parameters);
-
-        @DELETE("people/{personId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("personId") String personId);
+        Service.Hydra.delete("people", personId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .error(handler)
+                .async((Closure<Void>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 }

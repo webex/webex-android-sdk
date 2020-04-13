@@ -75,6 +75,20 @@ public interface MessageClient {
     void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler);
 
     /**
+     * Posts a message to a space or a person asynchronously.
+     * <p>
+     * The content of the message can be plain text, html, or markdown.
+     * To notify specific person or everyone in a space, mentions should be used.
+     * Having <code>@johndoe</code> in the content of the message does not generate notification.
+     *
+     * @param target  The identifier of a space or a person or an email address to which the message is to be posted.
+     * @param draft   The content of message to be posted to the space.
+     * @param handler A closure to be executed once the message has posted.
+     * @since 2.5.0
+     */
+    void post(@NonNull String target, @NonNull Message.Draft draft, @NonNull CompletionHandler<Message> handler);
+
+    /**
      * Posts a message with optional file attachments to a person asynchronously.
      * <p>
      * The content of the message can be plain text, html, or markdown.
@@ -275,7 +289,7 @@ public interface MessageClient {
      * @param messageId the id of a message.
      * @since 2.3.0
      */
-    void markAsRead(@NonNull String spaceId, String messageId);
+    void markAsRead(@NonNull String spaceId, @NonNull String messageId);
 
     /**
      * A callback to indicate the progress of an action in already processed size (bytes).

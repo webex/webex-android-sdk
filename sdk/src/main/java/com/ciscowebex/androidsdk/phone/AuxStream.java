@@ -1,6 +1,7 @@
 package com.ciscowebex.androidsdk.phone;
 
 import android.graphics.Rect;
+import android.util.Size;
 import android.view.View;
 
 
@@ -23,7 +24,7 @@ public interface AuxStream {
      * @return the video dimensions of this auxiliary stream in pixels
      * @since 2.0.0
      */
-    Rect getSize();
+    Size getSize();
 
     /**
      * @return the person represented this auxiliary stream
@@ -40,7 +41,9 @@ public interface AuxStream {
     /**
      * Update the auxiliary stream view. When the view size is changed, you may need to refresh the view.
      * @since 2.0.0
+     * @deprecated
      */
+    @Deprecated
     void refresh();
 
     /**

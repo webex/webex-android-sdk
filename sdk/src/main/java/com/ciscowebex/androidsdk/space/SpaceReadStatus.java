@@ -22,7 +22,7 @@
 
 package com.ciscowebex.androidsdk.space;
 
-import com.cisco.spark.android.model.conversation.Conversation;
+import com.ciscowebex.androidsdk.internal.model.ConversationModel;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
@@ -50,7 +50,7 @@ public class SpaceReadStatus {
     @SerializedName("lastSeenActivityDate")
     private Date _lastSeenActivityDate;
 
-    protected SpaceReadStatus(Conversation conversation) {
+    protected SpaceReadStatus(ConversationModel conversation) {
         _id =  new WebexId(WebexId.Type.ROOM_ID, conversation.getId()).toHydraId();
         _type = conversation.isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         _lastSeenActivityDate = conversation.getLastSeenActivityDate();

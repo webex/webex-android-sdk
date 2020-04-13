@@ -24,10 +24,9 @@ package com.ciscowebex.androidsdk.space;
 
 import java.util.Date;
 
-import com.cisco.spark.android.model.Verb;
-import com.cisco.spark.android.model.conversation.Activity;
-import com.cisco.spark.android.model.conversation.ActivityObject;
-import com.cisco.spark.android.model.conversation.Conversation;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.ConversationModel;
+import com.ciscowebex.androidsdk.internal.model.ObjectModel;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
@@ -97,13 +96,13 @@ public class Space {
     @SerializedName("sipAddress")
     private String _sipAddress;
 
-    protected Space(Activity activity) {
+    protected Space(ActivityModel activity) {
         _lastActivity = activity.getPublished();
-        ActivityObject object = activity.getVerb().equals(Verb.create) ? activity.getObject() : activity.getTarget();
-        if (object instanceof Conversation) {
+        ObjectModel object = activity.getVerb().equals(ActivityModel.Verb.create) ? activity.getObject() : activity.getTarget();
+        if (object instanceof ConversationModel) {
             _id = new WebexId(WebexId.Type.ROOM_ID, object.getId()).toHydraId();
-            _isLocked = ((Conversation) object).isLocked();
-            _type = ((Conversation) object).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+            _isLocked = ((ConversationModel) object).isLocked();
+            _type = ((ConversationModel) object).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         }
     }
 

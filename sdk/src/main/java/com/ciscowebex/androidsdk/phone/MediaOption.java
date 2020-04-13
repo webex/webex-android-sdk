@@ -35,6 +35,15 @@ import android.view.View;
 public class MediaOption {
 
     /**
+     * The video layout for the active speaker and other attendees in the group video meeting.
+     *
+     * @since 2.5.0
+     */
+    public enum VideoLayout {
+        SINGLE, FILMSTRIP, GRID
+    }
+
+    /**
      * Constructs an audio only media option.
      *
      * @since 0.1
@@ -82,14 +91,11 @@ public class MediaOption {
     }
 
     private View _remoteView;
-
     private View _localView;
-
     private View _sharingView;
-
     private boolean _hasSharing;
-
     private boolean _hasVideo;
+    private VideoLayout layout;
 
     private MediaOption(@Nullable View localView, @Nullable View remoteView, @Nullable View sharingView, boolean hasSharing, boolean hasVideo) {
         _localView = localView;
@@ -143,4 +149,21 @@ public class MediaOption {
         return _sharingView;
     }
 
+    /**
+     * Returns the video layout of the active speaker and other attendees for the group video call.
+     *
+     * @since 2.5.0
+     */
+    public VideoLayout getLayout() {
+        return layout;
+    }
+
+    /**
+     * Set the video layout of the active speaker and other attendees for the group video call.
+     *
+     * @since 2.5.0
+     */
+    public void setLayout(VideoLayout layout) {
+        this.layout = layout;
+    }
 }

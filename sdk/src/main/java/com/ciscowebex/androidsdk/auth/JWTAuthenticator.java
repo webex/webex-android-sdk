@@ -22,38 +22,28 @@
 
 package com.ciscowebex.androidsdk.auth;
 
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Inject;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Base64;
-import com.cisco.spark.android.authenticator.ApiTokenProvider;
-import com.cisco.spark.android.authenticator.OAuth2Tokens;
-import com.cisco.spark.android.core.ApplicationController;
-import com.cisco.spark.android.model.AuthenticatedUser;
-import com.cisco.spark.android.model.conversation.ActorRecord;
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.WebexError;
+import com.ciscowebex.androidsdk.internal.Closure;
+import com.ciscowebex.androidsdk.internal.Settings;
+import com.ciscowebex.androidsdk.internal.model.TokenModel;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
+import com.ciscowebex.androidsdk.utils.Json;
+import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.model.JWTLoginModel;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
-import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
-import com.ciscowebex.androidsdk_commlib.AfterInjected;
 import com.github.benoitdion.ln.Ln;
-import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 
 import me.helloworld.utils.Converter;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-
-import static com.ciscowebex.androidsdk.utils.Utils.checkNotNull;
 
 /**
  * A <a href="https://jwt.io/introduction">JSON Web Token</a> (JWT) based authentication strategy is to be used to authenticate a user on Cisco Webex.
@@ -62,17 +52,9 @@ import static com.ciscowebex.androidsdk.utils.Utils.checkNotNull;
  */
 public class JWTAuthenticator implements Authenticator {
 
-    private OAuth2Tokens _token = null;
+    private String jwt;
 
-    private String _jwt;
-
-    private AuthService _authService;
-
-    @Inject
-    ApiTokenProvider _provider;
-
-    @Inject
-    ApplicationController _applicationController;
+    private TokenModel tokenModel;
 
     /**
      * Creates a new JWT authentication strategy
@@ -80,7 +62,12 @@ public class JWTAuthenticator implements Authenticator {
      * @since 0.1
      */
     public JWTAuthenticator() {
-        _authService = new ServiceBuilder().build(AuthService.class);
+    }
+
+    public void afterAssociated() {
+        if (tokenModel != null) {
+            Settings.shared.store(TokenModel.AUTHENTICATION_INFO, Json.get().toJson(tokenModel));
+        }
     }
 
     /**
@@ -99,7 +86,7 @@ public class JWTAuthenticator implements Authenticator {
      */
     public void authorize(@NonNull String jwt) {
         deauthorize();
-        _jwt = jwt;
+        this.jwt = jwt;
     }
 
     /**
@@ -107,12 +94,9 @@ public class JWTAuthenticator implements Authenticator {
      */
     @Override
     public void deauthorize() {
-        _jwt = null;
-        _token = null;
-        if (_applicationController != null) {
-            Ln.d("deauthorize() clear all!");
-            _applicationController.clear();
-        }
+        this.jwt = null;
+        this.tokenModel = null;
+        Settings.shared.clear();
     }
 
     /**
@@ -120,10 +104,9 @@ public class JWTAuthenticator implements Authenticator {
      */
     @Override
     public void getToken(@NonNull CompletionHandler<String> handler) {
-        checkNotNull(handler, "getToken: CompletionHandler should not be null");
         String jwt = getUnexpiredJwt();
         if (jwt == null) {
-            handler.onComplete(ResultImpl.error("JWT is null"));
+            ResultImpl.errorInMain(handler, WebexError.from("JWT is null"));
             return;
         }
         String token = getUnexpiredAccessToken();
@@ -136,32 +119,17 @@ public class JWTAuthenticator implements Authenticator {
 
     @Override
     public void refreshToken(CompletionHandler<String> handler) {
-        checkNotNull(handler, "refreshToken: CompletionHandler should not be null");
         String jwt = getUnexpiredJwt();
         if (jwt == null) {
-            handler.onComplete(ResultImpl.error("JWT is null"));
+            ResultImpl.errorInMain(handler, WebexError.from("JWT is null"));
             return;
         }
-        _authService.getToken(jwt).enqueue(new Callback<JwtToken>() {
-            @Override
-            public void onResponse(Call<JwtToken> call, Response<JwtToken> response) {
-                JwtToken token = response.body();
-                if (token == null || token.getAccessToken() == null || token.getAccessToken().isEmpty()) {
-                    handler.onComplete(ResultImpl.error(response));
-                } else {
-                    _token = token.toOAuthToken(jwt);
-                    if (_provider != null) {
-                        AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
-                        _provider.setAuthenticatedUser(authenticatedUser);
-                    }
-                    handler.onComplete(ResultImpl.success(_token.getAccessToken()));
-                }
-            }
-
-            @Override
-            public void onFailure(Call<JwtToken> call, Throwable t) {
-                handler.onComplete(ResultImpl.error(t));
-            }
+        Service.Hydra.post().to("jwt/login").header("Authorization", jwt).header("Cache-Control", "no-cache")
+                .queue(Queue.main).model(JWTLoginModel.class).error(handler)
+                .async((Closure<JWTLoginModel>) model -> {
+            tokenModel = model.toToken(jwt);
+            Settings.shared.store(TokenModel.AUTHENTICATION_INFO, Json.get().toJson(tokenModel));
+            handler.onComplete(ResultImpl.success(tokenModel.getAccessToken()));
         });
     }
 
@@ -175,32 +143,26 @@ public class JWTAuthenticator implements Authenticator {
         if (jwt == null) {
             return null;
         }
-        if (_token == null &&_provider != null){
-            AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
-            if (user != null) {
-                _token = user.getOAuth2Tokens();
-            }
+        if (tokenModel == null){
+            tokenModel = Settings.shared.get(TokenModel.AUTHENTICATION_INFO, TokenModel.class, null);
         }
-        if (_token != null) {
-            return new Date(_token.getExpiresIn() * 1000);
+        if (tokenModel != null) {
+            return new Date(tokenModel.getExpiresIn() * 1000);
         }
         return null;
     }
 
     private @Nullable String getUnexpiredJwt() {
-        if (_jwt == null && _token == null && _provider != null) {
-            AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
-            if (user != null) {
-                _token = user.getOAuth2Tokens();
-            }
+        if (jwt == null && tokenModel == null) {
+            tokenModel = Settings.shared.get(TokenModel.AUTHENTICATION_INFO, TokenModel.class, null);
         }
-        if (_jwt == null && _token != null) {
-            _jwt = _token.getRefreshToken();
+        if (jwt == null && tokenModel != null) {
+            jwt = tokenModel.getRefreshToken();
         }
-        if (_jwt == null) {
+        if (jwt == null) {
             return null;
         }
-        Map<String, Object> map = parseJWT(_jwt);
+        Map<String, Object> map = parseJWT(jwt);
         if (map == null) {
             return null;
         }
@@ -209,26 +171,23 @@ public class JWTAuthenticator implements Authenticator {
             if (exp > 0 && exp <= (System.currentTimeMillis() / 1000)) {
                 return null;
             }
-        } catch (Exception ignored) {
-            Ln.e(ignored);
+        } catch (Exception e) {
+            Ln.e(e);
         }
-        return _jwt;
+        return jwt;
     }
 
     private @Nullable String getUnexpiredAccessToken() {
         if (!isAuthorized()) {
             return null;
         }
-        if (_token == null && _provider != null) {
-            AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
-            if (user != null) {
-                _token = user.getOAuth2Tokens();
-            }
+        if (tokenModel == null) {
+            tokenModel = Settings.shared.get(TokenModel.AUTHENTICATION_INFO, TokenModel.class, null);
         }
-        if (_token == null || _token.getExpiresIn() <= (System.currentTimeMillis() / 1000) + (15 * 60)) {
+        if (tokenModel == null || tokenModel.getExpiresIn() <= (System.currentTimeMillis() / 1000) + (15 * 60)) {
             return null;
         }
-        return _token.getAccessToken();
+        return tokenModel.getAccessToken();
     }
 
     private @Nullable Map<String, Object> parseJWT(String jwt) {
@@ -236,51 +195,7 @@ public class JWTAuthenticator implements Authenticator {
         if (split.length != 3) {
             return null;
         }
-        try {
-            String json = new String(Base64.decode(split[1], Base64.URL_SAFE), "UTF-8");
-            Gson gson = new Gson();
-            Type strObjType = new TypeToken<HashMap<String, Object>>(){}.getType();
-            return gson.fromJson(json, strObjType);
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
-    }
-
-    @AfterInjected
-    private void afterInjected() {
-        if (_provider != null && _token != null) {
-            AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);
-            _provider.setAuthenticatedUser(authenticatedUser);
-        }
-    }
-
-    interface AuthService {
-        @POST("jwt/login")
-        Call<JwtToken> getToken(@Header("Authorization") String authorization);
-    }
-
-    private class JwtToken {
-
-        @SerializedName("expiresIn")
-        long expiresIn;
-
-        @SerializedName("token")
-        String accessToken;
-
-        public long getExpiresIn() {
-            return this.expiresIn;
-        }
-
-        String getAccessToken() {
-            return this.accessToken;
-        }
-
-        OAuth2Tokens toOAuthToken(String jwt) {
-            OAuth2Tokens tokens = new OAuth2Tokens();
-            tokens.setAccessToken(this.getAccessToken());
-            tokens.setExpiresIn(this.getExpiresIn() + (System.currentTimeMillis() / 1000));
-            tokens.setRefreshToken(jwt);
-            return tokens;
-        }
+        String json = new String(Base64.decode(split[1], Base64.URL_SAFE), StandardCharsets.UTF_8);
+        return Json.fromJson(json, new TypeToken<HashMap<String, Object>>(){}.getType());
     }
 }

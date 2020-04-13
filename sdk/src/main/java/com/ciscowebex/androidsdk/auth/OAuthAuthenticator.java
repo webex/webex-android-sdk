@@ -22,30 +22,20 @@
 
 package com.ciscowebex.androidsdk.auth;
 
-
-import javax.inject.Inject;
-
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import com.cisco.spark.android.authenticator.ApiTokenProvider;
-import com.cisco.spark.android.authenticator.OAuth2Tokens;
-import com.cisco.spark.android.core.ApplicationController;
-import com.cisco.spark.android.model.AuthenticatedUser;
-import com.cisco.spark.android.model.conversation.ActorRecord;
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.WebexError;
+import com.ciscowebex.androidsdk.internal.Closure;
+import com.ciscowebex.androidsdk.internal.Settings;
+import com.ciscowebex.androidsdk.internal.model.TokenModel;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
+import com.ciscowebex.androidsdk.utils.Json;
+import com.ciscowebex.androidsdk.internal.Service;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
-import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
-import com.ciscowebex.androidsdk_commlib.AfterInjected;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.http.Field;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.POST;
-
-import static com.ciscowebex.androidsdk.utils.Utils.checkNotNull;
+import okhttp3.FormBody;
 
 /**
  * An <a href="https://oauth.net/2/">OAuth</a> based authentication strategy for authenticating a user on Cisco Webex.
@@ -55,21 +45,13 @@ import static com.ciscowebex.androidsdk.utils.Utils.checkNotNull;
  */
 public class OAuthAuthenticator implements Authenticator {
 
-    private String _clientId;
-    private String _clientSecret;
-    private String _scope;
-    private String _redirectUri;
+    private String clientId;
+    private String clientSecret;
+    private String scope;
+    private String redirectUri;
 
-    private OAuth2Tokens _token;
-    private AuthService _authService;
+    private TokenModel tokenModel;
 
-    private static final String DEPARTMENT_UNKNOWN = "Unknown";
-
-    @Inject
-    ApiTokenProvider _provider;
-
-    @Inject
-    ApplicationController _applicationController;
     /**
      * Creates a new OAuth authentication strategy
      *
@@ -81,13 +63,17 @@ public class OAuthAuthenticator implements Authenticator {
      * @since 0.1
      */
     public OAuthAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri) {
-        _clientId = clientId;
-        _clientSecret = clientSecret;
-        _redirectUri = redirectUri;
-        _scope = scope;
-        _authService = new ServiceBuilder().build(AuthService.class);
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.redirectUri = redirectUri;
+        this.scope = scope;
     }
 
+    public void afterAssociated() {
+        if (tokenModel != null) {
+            Settings.shared.store(TokenModel.AUTHENTICATION_INFO, Json.get().toJson(tokenModel));
+        }
+    }
     /**
      * @see Authenticator
      */
@@ -101,11 +87,8 @@ public class OAuthAuthenticator implements Authenticator {
      */
     @Override
     public void deauthorize() {
-        _token = null;
-        if (_applicationController != null) {
-            Ln.d("deauthorize() clear all!");
-            _applicationController.clear();
-        }
+        tokenModel = null;
+        Settings.shared.clear();
     }
 
     /**
@@ -116,30 +99,22 @@ public class OAuthAuthenticator implements Authenticator {
      * @since 0.1
      */
     public void authorize(@NonNull String code, @NonNull CompletionHandler<Void> handler) {
-        checkNotNull(handler, "CompletionHandler is null");
         deauthorize();
         Ln.d("Authorize: " + code);
-        _authService.getToken(_clientId, _clientSecret, _redirectUri, "authorization_code", code).enqueue(new Callback<OAuth2Tokens>() {
-            @Override
-            public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
-                _token = response.body();
-                Ln.d("Authorize: " + _token + ", " + _provider);
-                if (_token == null || _token.getAccessToken() == null || _token.getAccessToken().isEmpty()) {
-                    handler.onComplete(ResultImpl.error(response));
-                } else {
-                    _token.setExpiresIn(_token.getExpiresIn() + System.currentTimeMillis() / 1000);
-                    if (_provider != null) {
-                        AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, DEPARTMENT_UNKNOWN, null, 0, null);
-                        _provider.setAuthenticatedUser(authenticatedUser);
-                    }
-                    handler.onComplete(ResultImpl.success(null));
-                }
-            }
-
-            @Override
-            public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
-                handler.onComplete(ResultImpl.error(t));
-            }
+        FormBody formBody = new FormBody.Builder()
+                .add("client_id", clientId)
+                .add("client_secret", clientSecret)
+                .add("redirect_uri", redirectUri)
+                .add("grant_type", "authorization_code")
+                .add("code", code)
+                .build();
+        Service.Hydra.post(formBody).to("access_token").queue(Queue.main).model(TokenModel.class).error(handler)
+                .async((Closure<TokenModel>) model -> {
+            Ln.d("Authorized: " + model);
+            tokenModel = model;
+            tokenModel.setExpiresIn(tokenModel.getExpiresIn() + System.currentTimeMillis() / 1000);
+            Settings.shared.store(TokenModel.AUTHENTICATION_INFO, Json.get().toJson(tokenModel));
+            handler.onComplete(ResultImpl.success(null));
         });
     }
 
@@ -148,15 +123,14 @@ public class OAuthAuthenticator implements Authenticator {
      */
     @Override
     public void getToken(@NonNull CompletionHandler<String> handler) {
-        checkNotNull(handler, "getToken: CompletionHandler is null");
-        OAuth2Tokens token = getToken();
-        Ln.d("GetToken: " + token + ", " + _provider);
+        TokenModel token = getToken();
+        Ln.d("GetToken: " + token);
         if (token == null) {
-            handler.onComplete(ResultImpl.error("Not authorized"));
+            ResultImpl.errorInMain(handler, WebexError.from("Not authorized"));
             return;
         }
         if (!Checker.isEmpty(token.getAccessToken()) && token.getExpiresIn() > (System.currentTimeMillis() / 1000) + (15 * 60)) {
-            handler.onComplete(ResultImpl.success(token.getAccessToken()));
+            ResultImpl.inMain(handler, token.getAccessToken());
             return;
         }
         refreshToken(handler);
@@ -164,92 +138,50 @@ public class OAuthAuthenticator implements Authenticator {
 
     @Override
     public void refreshToken(CompletionHandler<String> handler) {
-        checkNotNull(handler, "refreshToken: CompletionHandler is null");
-        OAuth2Tokens token = getToken();
-        Ln.d("refreshToken: " + token + ", " + _provider);
-        if (token == null) {
-            handler.onComplete(ResultImpl.error("Not authorized"));
+        TokenModel saved = getToken();
+        Ln.d("RefreshToken: " + saved);
+        if (saved == null) {
+            ResultImpl.errorInMain(handler, WebexError.from("Not authorized"));
             return;
         }
-        _authService.refreshToken(_clientId, _clientSecret, token.getRefreshToken(), "refresh_token").enqueue(new Callback<OAuth2Tokens>() {
-            @Override
-            public void onResponse(Call<OAuth2Tokens> call, Response<OAuth2Tokens> response) {
-                _token = response.body();
-                if (_token == null || Checker.isEmpty(_token.getAccessToken())) {
-                    handler.onComplete(ResultImpl.error(response));
-                } else {
-                    _token.setExpiresIn(_token.getExpiresIn() + System.currentTimeMillis() / 1000);
-                    if (_provider != null) {
-                        AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, DEPARTMENT_UNKNOWN, null, 0, null);
-                        _provider.setAuthenticatedUser(authenticatedUser);
-                    }
-                    handler.onComplete(ResultImpl.success(_token.getAccessToken()));
-                }
-            }
-
-            @Override
-            public void onFailure(Call<OAuth2Tokens> call, Throwable t) {
-                handler.onComplete(ResultImpl.error(t));
-            }
+        FormBody formBody = new FormBody.Builder()
+                .add("client_id", clientId)
+                .add("client_secret", clientSecret)
+                .add("refresh_token", saved.getRefreshToken())
+                .add("grant_type", "refresh_token")
+                .build();
+        Service.Hydra.post(formBody).to("access_token").queue(Queue.main).model(TokenModel.class).error(handler).async((Closure<TokenModel>) model -> {
+            Ln.d("Refreshed: " + model);
+            tokenModel = model;
+            tokenModel.setExpiresIn(tokenModel.getExpiresIn() + System.currentTimeMillis() / 1000);
+            Settings.shared.store(TokenModel.AUTHENTICATION_INFO, Json.get().toJson(tokenModel));
+            handler.onComplete(ResultImpl.success(tokenModel.getAccessToken()));
         });
     }
 
-    private @Nullable OAuth2Tokens getToken() {
-        if (_token == null && _provider != null) {
-            AuthenticatedUser user = _provider.getAuthenticatedUserOrNull();
-            Ln.d("Get user: " + user + ", " + _provider);
-            if (user != null) {
-                _token = user.getOAuth2Tokens();
-            }
+    private @Nullable TokenModel getToken() {
+        if (tokenModel == null) {
+            tokenModel = Settings.shared.get(TokenModel.AUTHENTICATION_INFO, TokenModel.class, null);
         }
-        if (_token == null || _token.getExpiresIn() <= (System.currentTimeMillis() / 1000) + (15 * 60)) {
-            Ln.d("Check token: " + _token + ", " + _provider);
-            if (_token != null) {
-                Ln.d("Check token: " + _token.getExpiresIn() + ", " + (System.currentTimeMillis() / 1000) + (15 * 60) + ", " + _provider);
-            }
+        if (tokenModel == null || tokenModel.getExpiresIn() <= (System.currentTimeMillis() / 1000) + (15 * 60)) {
             return null;
         }
-        return _token;
-    }
-
-    @AfterInjected
-    private void afterInjected() {
-        if (_provider != null && _token != null) {
-            AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, DEPARTMENT_UNKNOWN, null, 0, null);
-            _provider.setAuthenticatedUser(authenticatedUser);
-        }
+        return tokenModel;
     }
 
     protected String getClientId() {
-        return _clientId;
+        return clientId;
     }
 
     protected String getClientSecret() {
-        return _clientSecret;
+        return clientSecret;
     }
 
     protected String getScope() {
-        return _scope;
+        return scope;
     }
 
     protected String getRedirectUri() {
-        return _redirectUri;
-    }
-
-    interface AuthService {
-        @FormUrlEncoded
-        @POST("access_token")
-        Call<OAuth2Tokens> getToken(@Field("client_id") String clientId,
-                                    @Field("client_secret") String clientSecret,
-                                    @Field("redirect_uri") String redirectUri,
-                                    @Field("grant_type") String grantType,
-                                    @Field("code") String code);
-
-        @FormUrlEncoded
-        @POST("access_token")
-        Call<OAuth2Tokens> refreshToken(@Field("client_id") String clientId,
-                                        @Field("client_secret") String clientSecret,
-                                        @Field("refresh_token") String refreshToken,
-                                        @Field("grant_type") String grantType);
+        return redirectUri;
     }
 }

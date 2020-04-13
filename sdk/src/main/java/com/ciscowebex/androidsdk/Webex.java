@@ -22,20 +22,12 @@
 
 package com.ciscowebex.androidsdk;
 
-import javax.inject.Inject;
-
 import android.app.Application;
 
-import com.cisco.spark.android.callcontrol.model.Call;
-import com.cisco.spark.android.core.BackgroundCheck;
-import com.cisco.spark.android.core.LoggingInterceptor;
-import com.cisco.spark.android.media.MediaEngine;
-import com.cisco.spark.android.reachability.ConnectivityChangeReceiver;
-import com.cisco.spark.android.util.UserAgentProvider;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.DaggerSDKComponent;
-import com.ciscowebex.androidsdk.internal.SDKComponent;
-import com.ciscowebex.androidsdk.internal.SDKModule;
+import com.ciscowebex.androidsdk.internal.reachability.BackgroundChecker;
+import com.ciscowebex.androidsdk.internal.reachability.ForegroundChecker;
+import com.ciscowebex.androidsdk.internal.Settings;
 import com.ciscowebex.androidsdk.membership.MembershipClient;
 import com.ciscowebex.androidsdk.membership.internal.MembershipClientImpl;
 import com.ciscowebex.androidsdk.message.MessageClient;
@@ -43,6 +35,7 @@ import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
 import com.ciscowebex.androidsdk.people.PersonClient;
 import com.ciscowebex.androidsdk.people.internal.PersonClientImpl;
 import com.ciscowebex.androidsdk.phone.Phone;
+import com.ciscowebex.androidsdk.phone.internal.MediaEngine;
 import com.ciscowebex.androidsdk.phone.internal.PhoneImpl;
 import com.ciscowebex.androidsdk.space.SpaceClient;
 import com.ciscowebex.androidsdk.space.internal.SpaceClientImpl;
@@ -51,20 +44,11 @@ import com.ciscowebex.androidsdk.team.TeamMembershipClient;
 import com.ciscowebex.androidsdk.team.internal.TeamClientImpl;
 import com.ciscowebex.androidsdk.team.internal.TeamMembershipClientImpl;
 import com.ciscowebex.androidsdk.utils.Utils;
-import com.ciscowebex.androidsdk.utils.log.NoLn;
-import com.ciscowebex.androidsdk.utils.log.WarningLn;
+import com.ciscowebex.androidsdk.utils.http.HttpClient;
 import com.ciscowebex.androidsdk.webhook.WebhookClient;
 import com.ciscowebex.androidsdk.webhook.internal.WebhookClientImpl;
-import com.ciscowebex.androidsdk_commlib.SDKCommon;
-import com.ciscowebex.androidsdk_commlib.SDKCommonInjector;
-import com.ciscowebex.androidsdk_commlib.SDKCommonModule_ProvideOkHttpClientBuilderFactory;
-import com.github.benoitdion.ln.DebugLn;
-import com.github.benoitdion.ln.InfoLn;
 import com.github.benoitdion.ln.Ln;
-import com.github.benoitdion.ln.NaturalLog;
-import com.github.benoitdion.ln.ReleaseLn;
-import com.webex.wme.Log;
-import com.webex.wme.MediaSessionAPI;
+import me.helloworld.utils.reflect.Methods;
 
 /**
  * Webex object is the entry point to use this Cisco Webex Android SDK.
@@ -86,31 +70,19 @@ public class Webex {
         NO, ERROR, WARNING, INFO, DEBUG_NO_HTTP_DETAILS, DEBUG, VERBOSE, ALL
     }
 
-    private SDKCommonInjector<SDKComponent> _injector;
+    private Authenticator authenticator;
 
-    private SDKCommon _common;
+    private PhoneImpl phone;
 
-    private Authenticator _authenticator;
+    private MessageClientImpl messages;
 
-    private PhoneImpl _phone;
+    private MembershipClientImpl memberships;
 
-    private MessageClientImpl _messages;
+    private SpaceClientImpl spaces;
 
-    private MembershipClientImpl _memberships;
+    private MediaEngine engine;
 
-    private SpaceClientImpl _spaces;
-
-    @Inject
-    MediaEngine _mediaEngine;
-
-    @Inject
-    BackgroundCheck _backgroundCheck;
-
-    @Inject
-    UserAgentProvider _userAgentProvider;
-
-    @Inject
-    ConnectivityChangeReceiver connectivityChangeReceiver;
+    private final BackgroundChecker checker;
 
     /**
      * Constructs a new Webex object with an {@link Authenticator} and Application
@@ -120,22 +92,26 @@ public class Webex {
      * @since 0.1
      */
     public Webex(Application application, Authenticator authenticator) {
-        _authenticator = authenticator;
-        _common = new SDKCommon(application, APP_NAME, APP_VERSION);
-        _common.create();
-        _injector = new SDKCommonInjector<>();
-        _injector.setComponent(SDKComponent.class, DaggerSDKComponent.builder().sDKModule(new SDKModule(_injector)).sDKCommonComponent(_common.getInjector().getComponent()).build());
-        _injector.inject(this);
-        _injector.inject(authenticator);
-        _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _injector);
-        _messages = new MessageClientImpl(application.getApplicationContext(), _authenticator, _injector);
-        _memberships = new MembershipClientImpl(application.getApplicationContext(), _authenticator, _injector);
-        _spaces = new SpaceClientImpl(application.getApplicationContext(), _authenticator, _injector);
-        application.registerReceiver(connectivityChangeReceiver, ConnectivityChangeReceiver.getIntentFilter());
+        Settings.shared.init(application.getApplicationContext());
+        ForegroundChecker.init(application);
+        try {
+            Methods.invoke(authenticator, "afterAssociated", (Object[]) null);
+        } catch (Throwable t) {
+            Ln.d("Authenticator doest't support afterAssociated method");
+        }
+        this.authenticator = authenticator;
+        engine = new MediaEngine(application.getApplicationContext(), LogLevel.DEBUG);
+        phone = new PhoneImpl(application.getApplicationContext(), authenticator, engine);
+        messages = new MessageClientImpl(application.getApplicationContext(), phone);
+        memberships = new MembershipClientImpl(phone);
+        spaces = new SpaceClientImpl(phone);
+        phone.addActivityListener(messages);
+        phone.addActivityListener(memberships);
+        phone.addActivityListener(spaces);
+        checker = new BackgroundChecker(application, phone);
+        phone.setChecker(checker);
         setLogLevel(LogLevel.DEBUG);
-        Ln.i(_userAgentProvider.get());
         Ln.i(Utils.versionInfo());
-        Ln.i("SDKCommon (" + com.ciscowebex.androidsdk_commlib.BuildConfig.BUILD_TIME + "-" + com.ciscowebex.androidsdk_commlib.BuildConfig.BUILD_REVISION + ")");
     }
 
     /**
@@ -156,9 +132,9 @@ public class Webex {
      */
     public void runInBackground(boolean background) {
         if (background) {
-            _backgroundCheck.tryBackground();
+            checker.tryBackground();
         } else {
-            _backgroundCheck.tryForeground();
+            checker.tryForeground();
         }
     }
 
@@ -167,7 +143,7 @@ public class Webex {
      * @since 0.1
      */
     public Authenticator getAuthenticator() {
-        return _authenticator;
+        return authenticator;
     }
 
     /**
@@ -177,7 +153,7 @@ public class Webex {
      * @since 0.1
      */
     public Phone phone() {
-        return _phone;
+        return phone;
     }
 
     /**
@@ -189,7 +165,7 @@ public class Webex {
      * @since 0.1
      */
     public MessageClient messages() {
-        return _messages;
+        return messages;
     }
 
     /**
@@ -201,7 +177,7 @@ public class Webex {
      * @since 0.1
      */
     public PersonClient people() {
-        return new PersonClientImpl(this._authenticator);
+        return new PersonClientImpl(this.authenticator);
     }
 
     /**
@@ -213,7 +189,7 @@ public class Webex {
      * @since 0.1
      */
     public MembershipClient memberships() {
-        return _memberships;
+        return memberships;
     }
 
     /**
@@ -225,7 +201,7 @@ public class Webex {
      * @since 0.1
      */
     public TeamClient teams() {
-        return new TeamClientImpl(this._authenticator);
+        return new TeamClientImpl(this.authenticator);
     }
 
     /**
@@ -237,7 +213,7 @@ public class Webex {
      * @since 0.1
      */
     public TeamMembershipClient teamMembershipClient() {
-        return new TeamMembershipClientImpl(this._authenticator);
+        return new TeamMembershipClientImpl(this.authenticator);
     }
 
     /**
@@ -247,7 +223,7 @@ public class Webex {
      * @since 0.1
      */
     public WebhookClient webhooks() {
-        return new WebhookClientImpl(this._authenticator);
+        return new WebhookClientImpl(this.authenticator);
     }
 
     /**
@@ -259,7 +235,7 @@ public class Webex {
      * @since 0.1
      */
     public SpaceClient spaces() {
-        return _spaces;
+        return spaces;
     }
 
     /**
@@ -268,55 +244,10 @@ public class Webex {
      * @param logLevel log message level
      */
     public void setLogLevel(LogLevel logLevel) {
-        NaturalLog logger = new com.ciscowebex.androidsdk.utils.log.DebugLn();
-        MediaSessionAPI.TraceLevelMask mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO;
-        if (logLevel != null) {
-            switch (logLevel) {
-                case NO:
-                    LoggingInterceptor.LogHTTPBody = false;
-                    logger = new NoLn();
-                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_NOTRACE;
-                    break;
-                case ERROR:
-                    LoggingInterceptor.LogHTTPBody = false;
-                    logger = new ReleaseLn();
-                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_ERROR;
-                    break;
-                case WARNING:
-                    LoggingInterceptor.LogHTTPBody = false;
-                    logger = new WarningLn();
-                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
-                    break;
-                case INFO:
-                    LoggingInterceptor.LogHTTPBody = false;
-                    logger = new InfoLn();
-                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_WARNING;
-                    break;
-                case DEBUG_NO_HTTP_DETAILS:
-                    LoggingInterceptor.LogHTTPBody = false;
-                    logger = new com.ciscowebex.androidsdk.utils.log.DebugLn();
-                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO;
-                    break;
-                case DEBUG:
-                    LoggingInterceptor.LogHTTPBody = true;
-                    logger = new com.ciscowebex.androidsdk.utils.log.DebugLn();
-                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_INFO;
-                    break;
-                case VERBOSE:
-                    LoggingInterceptor.LogHTTPBody = true;
-                    logger = new DebugLn();
-                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DEBUG;
-                    break;
-                case ALL:
-                    LoggingInterceptor.LogHTTPBody = true;
-                    logger = new DebugLn();
-                    mask = MediaSessionAPI.TraceLevelMask.TRACE_LEVEL_MASK_DETAIL;
-            }
-        }
-        Ln.initialize(logger);
-        if (_mediaEngine != null) {
-            _mediaEngine.setLoggingLevel(mask);
-        }
+        Ln.initialize(Utils.toLnLog(logLevel));
+        HttpClient.setLogLevel(Utils.toHttpLogLevel(logLevel));
+        engine.setLoggingLevel(logLevel);
     }
+
 
 }

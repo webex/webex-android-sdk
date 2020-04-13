@@ -1,88 +1,88 @@
+/*
+ * Copyright 2016-2020 Cisco Systems Inc
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ciscowebex.androidsdk.phone.internal;
 
-
-import android.graphics.Rect;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.util.Size;
 import android.view.View;
 
-import com.cisco.spark.android.locus.model.LocusKey;
 import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.phone.AuxStream;
 
-/**
- * Created by qimdeng on 8/8/18.
- */
-
 public class AuxStreamImpl implements AuxStream {
-    private @NonNull
-    LocusKey _key;
 
-    private @NonNull PhoneImpl _phone;
+    private CallImpl call;
 
-    private @NonNull long _vid;
+    private int vid;
 
-    private View _renderView;
+    private View view;
 
-    private boolean isSendingVideo;
+    private CallMembership person;
 
-    private CallMembership _person;
-
-    private Rect _size;
-
-    AuxStreamImpl(@NonNull LocusKey key, @NonNull PhoneImpl phone, @NonNull long vid, @Nullable View view)  {
-        _key = key;
-        _phone = phone;
-        _vid = vid;
-        _renderView = view;
+    AuxStreamImpl(CallImpl call, int vid, View view)  {
+        this.call = call;
+        this.vid = vid;
+        this.view = view;
     }
 
-    public long getVid(){return _vid;}
+    public int getVid() {
+        return vid;
+    }
+
+    public void setVid(int vid) {
+        this.vid = vid;
+    }
 
     @Override
     public View getRenderView() {
-        return _renderView;
+        return view;
     }
 
     @Override
+    @Deprecated
     public void refresh() {
-        if (_renderView != null){
-            _phone.getCallService().updateRemoteWindowForVid(_key, _vid, _renderView);
-        }
     }
 
     @Override
     public boolean isSendingVideo() {
-        return isSendingVideo;
+        return call.getMedia() != null && !call.getMedia().isAuxVideoRemoteMuted(vid);
+    }
+
+    @Override
+    public Size getSize() {
+        return call.getMedia() == null ? new Size(0, 0) : call.getMedia().getAuxVideoViewSize(vid);
     }
 
     @Override
     public void close() {
-        CallImpl call = _phone.getCall(_key);
-        if (call != null){
-            call.closeAuxStream(this, _renderView);
-        }
-    }
-
-    public void setSendingVideo(boolean isSending){
-        isSendingVideo = isSending;
-    }
-
-    @Override
-    public Rect getSize() {
-        return _size;
-    }
-
-    public void setSize(Rect size){
-        _size = size;
+        call.closeAuxStream(view);
     }
 
     @Override
     public CallMembership getPerson() {
-        return _person;
+        return person;
     }
 
     public void setPerson(CallMembership person) {
-        _person = person;
+        this.person = person;
     }
 }

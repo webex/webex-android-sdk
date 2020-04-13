@@ -1,12 +1,34 @@
+/*
+ * Copyright 2016-2020 Cisco Systems Inc
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ciscowebex.androidsdk.utils.log;
 
 import android.content.Context;
 import android.util.Log;
 
-import com.cisco.spark.android.BuildConfig;
-import com.cisco.spark.android.core.PSUtils;
-import com.cisco.spark.android.util.FileUtils;
+import com.ciscowebex.androidsdk.BuildConfig;
 import com.ciscowebex.androidsdk.Webex;
+import com.ciscowebex.androidsdk.utils.PSUtils;
+import com.ciscowebex.androidsdk.utils.Utils;
 import com.github.benoitdion.ln.Ln;
 
 import java.io.BufferedReader;
@@ -15,7 +37,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 
 /**
  * LogFilePrint reads from logcat and writes the output to files.
@@ -114,11 +135,11 @@ public class LogCaptureUtil implements Runnable {
     }
 
     public synchronized String getLogString() {
-        StringBuilder result = new StringBuilder("");
+        StringBuilder result = new StringBuilder();
         for (int i = maxLogFiles - 1; i >= 0; i--) {
             File aLogFile = buildLogFile(i);
             if (aLogFile.exists()) {
-                result.append(FileUtils.readFile(aLogFile));
+                result.append(Utils.readFile(aLogFile));
             }
         }
         return result.toString();
@@ -129,7 +150,7 @@ public class LogCaptureUtil implements Runnable {
     }
 
     public File getLogDirectory() {
-        return FileUtils.mkdir(getLogDirectoryName());
+        return Utils.mkdir(getLogDirectoryName());
     }
 
     public void run() {
@@ -200,7 +221,7 @@ public class LogCaptureUtil implements Runnable {
     }
 
     private File buildLogFile(int i) {
-        return new File(getLogDirectoryName() + LOG_FILE_NAME + Integer.toString(i) + LOG_FILE_EXT);
+        return new File(getLogDirectoryName() + LOG_FILE_NAME + i + LOG_FILE_EXT);
     }
 
     protected String getLogDirectoryName() {

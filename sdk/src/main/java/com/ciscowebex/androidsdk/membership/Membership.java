@@ -24,11 +24,9 @@ package com.ciscowebex.androidsdk.membership;
 
 import java.util.Date;
 
-import com.cisco.spark.android.model.ParticipantRoomProperties;
-import com.cisco.spark.android.model.Person;
-import com.cisco.spark.android.model.Verb;
-import com.cisco.spark.android.model.conversation.Activity;
-import com.cisco.spark.android.model.conversation.Conversation;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.ConversationModel;
+import com.ciscowebex.androidsdk.internal.model.PersonModel;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
@@ -68,14 +66,14 @@ public class Membership {
     @SerializedName("created")
     private Date _created;
 
-    protected Membership(Conversation conversation, Person person) {
+    protected Membership(ConversationModel conversation, PersonModel person) {
         _id = new WebexId(WebexId.Type.MEMBERSHIP_ID, person.getId() + ":" + conversation.getId()).toHydraId();
         _spaceId = new WebexId(WebexId.Type.ROOM_ID, conversation.getId()).toHydraId();
         _personId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
         _personEmail = person.getEmail();
         _personDisplayName = person.getDisplayName();
         _personOrgId = new WebexId(WebexId.Type.ORGANIZATION_ID, person.getOrgId()).toHydraId();
-        ParticipantRoomProperties roomProperties = person.getRoomProperties();
+        PersonModel.RoomPropertiesModel roomProperties = person.getRoomProperties();
         if (roomProperties != null) {
             _isModerator = roomProperties.isModerator();
             _isMonitor = _isModerator;
@@ -83,18 +81,18 @@ public class Membership {
         _created = null; // created is not available in the conversations payload
     }
 
-    protected Membership(Activity activity) {
+    protected Membership(ActivityModel activity) {
         this._created = activity.getPublished();
-        if (activity.getVerb().equals(Verb.hide)) {
+        if (activity.getVerb() == ActivityModel.Verb.hide) {
             this._spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getObject().getId()).toHydraId();
         } else {
             this._spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
         }
-        Person person = null;
-        if (activity.getVerb().equals(Verb.acknowledge)) {
+        PersonModel person = null;
+        if (activity.getVerb() == ActivityModel.Verb.acknowledge) {
             person = activity.getActor();
-        } else if (activity.getObject() instanceof Person) {
-            person = (Person) activity.getObject();
+        } else if (activity.getObject() instanceof PersonModel) {
+            person = (PersonModel) activity.getObject();
         }
         if (null != person) {
             this._id = new WebexId(WebexId.Type.MEMBERSHIP_ID, person.getId() + ":" + WebexId.translate(this._spaceId)).toHydraId();

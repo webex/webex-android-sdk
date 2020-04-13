@@ -22,83 +22,77 @@
 
 package com.ciscowebex.androidsdk.team.internal;
 
-
 import java.util.List;
-import java.util.Map;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
+import com.ciscowebex.androidsdk.internal.Closure;
+import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.team.TeamMembership;
 import com.ciscowebex.androidsdk.team.TeamMembershipClient;
-import com.ciscowebex.androidsdk.utils.http.ListBody;
-import com.ciscowebex.androidsdk.utils.http.ListCallback;
-import com.ciscowebex.androidsdk.utils.http.ObjectCallback;
-import com.ciscowebex.androidsdk.utils.http.ServiceBuilder;
+import com.ciscowebex.androidsdk.internal.model.ItemsModel;
 
+import com.google.gson.reflect.TypeToken;
 import me.helloworld.utils.collection.Maps;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
 public class TeamMembershipClientImpl implements TeamMembershipClient {
 
-    private Authenticator _authenticator;
-
-    private TeamMembershipService _service;
+    private Authenticator authenticator;
 
     public TeamMembershipClientImpl(Authenticator authenticator) {
-        _authenticator = authenticator;
-        _service = new ServiceBuilder().build(TeamMembershipService.class);
+        this.authenticator = authenticator;
     }
 
     public void list(@Nullable String teamId, int max, @NonNull CompletionHandler<List<TeamMembership>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.list(s, teamId, max <= 0 ? null : max), new ListCallback<>(handler));
-    }
-
-    public void create(@NonNull String teamId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<TeamMembership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.create(s, Maps.makeMap("teamId", teamId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator)), new ObjectCallback<>(handler));
+        Service.Hydra.get("team", "memberships")
+                .with("teamId", teamId)
+                .with("max", max <= 0 ? null : String.valueOf(max))
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(new TypeToken<ItemsModel<TeamMembership>>(){}.getType())
+                .error(handler)
+                .async((Closure<ItemsModel<TeamMembership>>) result -> handler.onComplete(ResultImpl.success(result.getItems())));
     }
 
     public void get(@NonNull String membershipId, @NonNull CompletionHandler<TeamMembership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.get(s, membershipId), new ObjectCallback<>(handler));
+        Service.Hydra.get("team", "memberships", membershipId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(TeamMembership.class)
+                .error(handler)
+                .async((Closure<TeamMembership>) result -> handler.onComplete(ResultImpl.success(result)));
+    }
+
+    public void create(@NonNull String teamId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<TeamMembership> handler) {
+        Service.Hydra.post(Maps.makeMap("teamId", teamId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator))
+                .to("team", "memberships")
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(TeamMembership.class)
+                .error(handler)
+                .async((Closure<TeamMembership>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     public void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<TeamMembership> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.update(s, membershipId, Maps.makeMap("isModerator", isModerator)), new ObjectCallback<>(handler));
+        Service.Hydra.put(Maps.makeMap("isModerator", isModerator))
+                .to("team", "memberships", membershipId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .model(TeamMembership.class)
+                .error(handler)
+                .async((Closure<TeamMembership>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 
     public void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s ->
-            _service.delete(s, membershipId), new ObjectCallback<>(handler));
-    }
-
-    private interface TeamMembershipService {
-        @GET("team/memberships")
-        Call<ListBody<TeamMembership>> list(@Header("Authorization") String authorization, @Query("teamId") String teamId, @Query("max") Integer max);
-
-        @POST("team/memberships")
-        Call<TeamMembership> create(@Header("Authorization") String authorization, @Body Map parameters);
-
-        @GET("team/memberships/{membershipId}")
-        Call<TeamMembership> get(@Header("Authorization") String authorization, @Path("membershipId") String membershipId);
-
-        @PUT("team/memberships/{membershipId}")
-        Call<TeamMembership> update(@Header("Authorization") String authorization, @Path("membershipId") String membershipId, @Body Map parameters);
-
-        @DELETE("team/memberships/{membershipId}")
-        Call<Void> delete(@Header("Authorization") String authorization, @Path("membershipId") String membershipId);
+        Service.Hydra.delete("team", "memberships", membershipId)
+                .auth(authenticator)
+                .queue(Queue.main)
+                .error(handler)
+                .async((Closure<Void>) result -> handler.onComplete(ResultImpl.success(result)));
     }
 }

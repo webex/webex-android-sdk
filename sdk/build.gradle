@@ -9,7 +9,8 @@ ext {
     moduleName = 'Cisco Webex Android SDK'
     moduleGroupId = 'com.ciscowebex'
     moduleArtifactId = 'androidsdk'
-    moduleVersion = '2.4.0'
+    moduleVersion = '2.5.0'
+    moduleVersionCode = 25000
     moduleDescription = 'Cisco Webex SDK for Android'
     moduleSiteUrl = 'https://developer.webex.com/getting-started.html'
     moduleProjectUrl = 'https://github.com/webex/webex-android-sdk'
@@ -25,87 +26,54 @@ ext {
     moduleDeveloperOrganizationURL = 'https://www.webex.com/'
 }
 
-jacoco {
-    toolVersion = "0.7.5+"
+Properties properties = new Properties()
+if (project.rootProject.file('local.properties').canRead()) {
+    properties.load(project.rootProject.file("local.properties").newDataInputStream())
 }
 
-task jacocoTestReport(type: JacocoReport, dependsOn: "testDebugUnitTest") {
-    group = "Reporting"
-    description = "Generate Jacoco coverage reports"
-
-    classDirectories = fileTree(
-            dir: '../sdk/build/intermediates/classes/debug',
-            excludes: ['**/R.class',
-                       '**/R$*.class',
-                       '**/*$ViewInjector*.*',
-                       '**/BuildConfig.*',
-                       '**/Manifest*.*']
-    )
-
-    def coverageSourceDirs = ['../sdk/src/main/java']
-    additionalSourceDirs = files(coverageSourceDirs)
-    sourceDirectories = files(coverageSourceDirs)
-    executionData = fileTree(dir: "../sdk", includes: [
-            "jacoco/testDebugUnitTest.exec",
-            "outputs/code-coverage/connected/*.ec"
-    ])
-
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
+kotlin {
 }
 
 android {
     compileSdkVersion 27
     buildToolsVersion "28.0.3"
-
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 27
         testInstrumentationRunner "com.ciscowebex.androidsdk.WebexTestRunner"
         multiDexEnabled true
-        versionCode 1
+        versionCode moduleVersionCode
         versionName moduleVersion
+
         buildConfigField "String", "BUILD_TIME", "\"${buildTime()}\""
         buildConfigField "String", "BUILD_REVISION", "\"${revision()}\""
+        buildConfigField "boolean", "INTEGRATION_TEST", "false"
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
         }
     }
-
     buildTypes {
         release {
             minifyEnabled false
         }
         debug {
-            buildConfigField "String", "CLIENT_ID", getPropertyOrDefault('CLIENT_ID')
-            buildConfigField "String", "CLIENT_SEC", getPropertyOrDefault('CLIENT_SEC')
-            buildConfigField "String", "REDIRECT_URL", getPropertyOrDefault('REDIRECT_URL')
-            buildConfigField "String", "SCOPE", getPropertyOrDefault('SCOPE')
-            buildConfigField "String", "TEST_USER_NAME", getPropertyOrDefault('TEST_USER_NAME')
-            buildConfigField "String", "TEST_USER_EMAIL", getPropertyOrDefault('TEST_USER_EMAIL')
-            buildConfigField "String", "TEST_USER_PWD", getPropertyOrDefault('TEST_USER_PWD')
+            buildConfigField "String", "JWT", getPropertyOrDefault("JWT")
         }
         jenkins {
             initWith debug
             testCoverageEnabled true
         }
     }
-
-    testBuildType "jenkins"
-
+    testBuildType "debug"
     dexOptions {
         preDexLibraries = false
         javaMaxHeapSize "4g"
         dexInProcess false
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
     testOptions {
         unitTests.all {
             testLogging {
@@ -116,24 +84,20 @@ android {
             jacoco.includeNoLocationClasses = true
         }
     }
-    
     if (JavaVersion.current().isJava8Compatible()) {
         tasks.withType(Javadoc) {
             options.addStringOption('Xdoclint:none', '-quiet')
         }
     }
-
     def libraryModuleName = 'sdk'
     def aarName = libraryModuleName + '-debug.aar'
     def outputAarDir = rootProject.file(libraryModuleName + '/build/outputs/aar')
     def outputAarUnzipedDir = rootProject.file(libraryModuleName + '/build/outputs/aar/unziped')
     def aarReleaseFile = rootProject.file(libraryModuleName + '/build/outputs/aar/' + aarName)
-
     task unzipAar(type: Copy) {
         from zipTree(aarReleaseFile)
         into outputAarUnzipedDir
     }
-
     task addLicenseFileInUnzipedAar(type: Copy, dependsOn: 'unzipAar') {
         def fromDir = rootProject.file('.')
         from fromDir
@@ -141,22 +105,22 @@ android {
         include 'LICENSE'
         include 'CISCO_API_LICENSE.pdf'
     }
-
     task reZipAar(type: Zip, dependsOn: 'addLicenseFileInUnzipedAar') {
         from outputAarUnzipedDir
         include '*'
         include '*/*'
+        include '**/**/*'
         archiveName aarName
         destinationDir(outputAarDir)
     }
-
     afterEvaluate {
         bundleReleaseAar.finalizedBy(reZipAar)
         bundleDebugAar.finalizedBy(reZipAar)
     }
-
     packagingOptions {
         exclude 'META-INF/rxjava.properties'
+    }
+    productFlavors {
     }
 }
 
@@ -240,26 +204,29 @@ publishing {
 }
 
 dependencies {
-    // implementation fileTree(dir: 'libs', include: ['*.jar'])
-    compileOnly 'com.google.dagger:dagger-compiler:2.24'
-    kapt 'com.google.dagger:dagger-compiler:2.24'
-    annotationProcessor 'com.google.dagger:dagger-compiler:2.24'
-    implementation('com.ciscowebex:androidsdk_commlib:2.4.0@aar', {
-        transitive = true
-        changing = true
-    })
-    androidTestImplementation 'com.squareup.okhttp3:okhttp:3.8.0'
-    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.8.0'
-    androidTestImplementation 'junit:junit:4.12'
-    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    androidTestImplementation 'org.testng:testng:6.9.6'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation('com.webex:wme4android-release:10.3.1.1@aar')
+    implementation('com.google.code.gson:gson:2.7')
+    implementation('com.github.benoitdion.ln:ln:0.1.2')
+    implementation('com.squareup.okhttp3:okhttp:3.12.0')
+    implementation('com.squareup.okhttp3:logging-interceptor:3.12.0')
+    implementation('com.android.support:support-annotations:27.1.0')
+    implementation('com.android.support:support-compat:27.1.0')
+    implementation('com.nimbusds:nimbus-jose-jwt:2.26')
+    implementation('com.madgag.spongycastle:core:1.54.0.0')
+    implementation('com.madgag.spongycastle:prov:1.54.0.0')
+    implementation('joda-time:joda-time:2.10')
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support:support-annotations:27.1.0'
+    androidTestImplementation 'com.android.support.test:runner:1.0.0'
 }
 
 static def buildTime() {
     return new Date().format("yyyy_MM_dd_HH_mm_ss")
 }
+
+
 
 def revision() {
     def code = new ByteArrayOutputStream()
@@ -305,18 +272,43 @@ task javadoc(type: Javadoc) {
     options.footer('Copyright &#169; 2016&#8211;2020 Cisco System Inc.  All Rights Reserved.')
     exclude '**/BuildConfig.java'
     exclude '**/R.java'
-    exclude '**/internal/*.java'
-    exclude '**/utils/http/**'
-    exclude '**/utils/log/**'
-    exclude '**/utils/Lists.*'
-    exclude '**/utils/Utils.*'
-    exclude '**/utils/WebexId.*'
-    exclude '**/OAuthTestUserAuthenticator.java'
-
+    exclude '**/internal/**'
+    exclude '**/utils/**'
     failOnError false
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
+}
+
+jacoco {
+    toolVersion = "0.7.5+"
+}
+
+task jacocoTestReport(type: JacocoReport, dependsOn: "testDebugUnitTest") {
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports"
+
+    classDirectories = fileTree(
+            dir: '../sdk/build/intermediates/classes/debug',
+            excludes: ['**/R.class',
+                       '**/R$*.class',
+                       '**/*$ViewInjector*.*',
+                       '**/BuildConfig.*',
+                       '**/Manifest*.*']
+    )
+
+    def coverageSourceDirs = ['../sdk/src/main/java']
+    additionalSourceDirs = files(coverageSourceDirs)
+    sourceDirectories = files(coverageSourceDirs)
+    executionData = fileTree(dir: "../sdk", includes: [
+            "jacoco/testDebugUnitTest.exec",
+            "outputs/code-coverage/connected/*.ec"
+    ])
+
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
 }

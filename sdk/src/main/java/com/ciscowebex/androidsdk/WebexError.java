@@ -22,8 +22,12 @@
 
 package com.ciscowebex.androidsdk;
 
+import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
+import okhttp3.ResponseBody;
+
+import java.io.IOException;
 
 /**
  * The enumeration of error types in Cisco Webex Android SDK.
@@ -32,6 +36,25 @@ import me.helloworld.utils.annotation.StringPart;
  */
 public class WebexError<T> {
 
+    public static WebexError from(String message) {
+        return new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, message);
+    }
+
+    public static WebexError from(Throwable t) {
+        return new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, t.toString());
+    }
+
+    public static WebexError from(okhttp3.Response res) {
+        StringBuilder message = new StringBuilder().append(res.code()).append("/").append(res.message());
+        try {
+            ResponseBody body = res.body();
+            message.append("/").append(body == null ? "" : body.string());
+        } catch (IOException e) {
+            Ln.e(e);
+        }
+        return new WebexError(WebexError.ErrorCode.SERVICE_ERROR, message.toString());
+    }
+
     public enum ErrorCode {
         UNEXPECTED_ERROR,
         SERVICE_ERROR,
@@ -39,10 +62,10 @@ public class WebexError<T> {
     }
 
     @StringPart
-    protected ErrorCode _code = null;
+    protected int errorCode = -7000;
 
     @StringPart
-    protected String _message = "";
+    protected String message = "";
 
     protected T _data = null;
 
@@ -58,7 +81,7 @@ public class WebexError<T> {
      * @param errorCode the error code
      */
     public WebexError(ErrorCode errorCode) {
-        _code = errorCode;
+        this.errorCode = -7000 - errorCode.ordinal();
     }
 
     /**
@@ -68,8 +91,19 @@ public class WebexError<T> {
      * @param message   the error message
      */
     public WebexError(ErrorCode errorCode, String message) {
-        _code = errorCode;
-        _message = message;
+        this(errorCode);
+        this.message = message;
+    }
+
+    /**
+     * The constructor with the error code and error message
+     *
+     * @param errorCode the error code
+     * @param message   the error message
+     */
+    public WebexError(int errorCode, String message) {
+        this.errorCode = errorCode;
+        this.message = message;
     }
 
     /**
@@ -80,8 +114,8 @@ public class WebexError<T> {
      * @param data      the error data
      */
     public WebexError(ErrorCode errorCode, String message, T data) {
-        _code = errorCode;
-        _message = message;
+        this(errorCode);
+        this.message = message;
         _data = data;
     }
 
@@ -89,8 +123,8 @@ public class WebexError<T> {
      * @return The code of this error.
      * @since 0.1
      */
-    public ErrorCode getErrorCode() {
-        return _code;
+    public int getErrorCode() {
+        return errorCode;
     }
 
     /**
@@ -98,7 +132,7 @@ public class WebexError<T> {
      * @since 0.1
      */
     public String getErrorMessage() {
-        return _message;
+        return message;
     }
 
     /**

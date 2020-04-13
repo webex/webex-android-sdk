@@ -1,41 +1,63 @@
+/*
+ * Copyright 2016-2020 Cisco Systems Inc
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ciscowebex.androidsdk.message.internal;
 
-import android.net.Uri;
 import android.support.annotation.NonNull;
-import com.cisco.spark.android.model.conversation.File;
-import com.cisco.spark.android.model.conversation.Image;
+import com.ciscowebex.androidsdk.internal.model.FileModel;
+import com.ciscowebex.androidsdk.internal.model.ImageModel;
 import com.ciscowebex.androidsdk.message.RemoteFile;
 
 public class RemoteFileImpl implements RemoteFile {
 
-    public class ThumbnailImpl implements Thumbnail{
+    public static class ThumbnailImpl implements Thumbnail{
 
-        private Image image;
+        private ImageModel image;
         private String mimeType;
 
-        public ThumbnailImpl(@NonNull Image image) {
+        public ThumbnailImpl(@NonNull ImageModel image) {
             this.image = image;
         }
 
-        Image getImage() {
+        ImageModel getImage() {
             return this.image;
         }
 
         public int getWidth() {
-            return image.getWidth();
+            return image == null ? 0 : image.getWidth();
         }
 
         public int getHeight() {
-            return image.getHeight();
+            return image == null ? 0 : image.getHeight();
         }
 
+        @Deprecated
         public String getMimeType() {
             return mimeType;
         }
 
         @Deprecated
         public String getUrl() {
-            return image.getUrl().toString();
+            return image.getUrl();
         }
 
         @Deprecated
@@ -56,17 +78,17 @@ public class RemoteFileImpl implements RemoteFile {
         }
     }
 
-    private File file;
+    private FileModel file;
     private Thumbnail thumbnail;
 
-    public RemoteFileImpl(@NonNull File file) {
+    public RemoteFileImpl(@NonNull FileModel file) {
         this.file = file;
         if (file.getImage() != null) {
             this.thumbnail = new ThumbnailImpl(file.getImage());
         }
     }
 
-    File getFile() {
+    FileModel getFile() {
         return file;
     }
 
@@ -87,7 +109,7 @@ public class RemoteFileImpl implements RemoteFile {
 
     @Override
     public String getUrl() {
-        return file.getUrl().toString();
+        return file.getUrl();
     }
 
     @Override
@@ -121,7 +143,7 @@ public class RemoteFileImpl implements RemoteFile {
     @Override
     @Deprecated
     public void setUrl(String url) {
-        file.setUrl(Uri.parse(url));
+        file.setUrl(url);
     }
 
     @Override

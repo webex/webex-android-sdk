@@ -26,18 +26,11 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-/**
- * @author Allen Xiao<xionxiao@cisco.com>
- * @version 0.1
- */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JWTAuthenticatorTest {
-    private String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbmRyb2lkX3Rlc3R1c2VyXzEiLCJuYW1lIjoiQW5kcm9pZFRlc3RVc2VyMSIsImlzcyI6ImNkNWM5YWY3LThlZDMtNGUxNS05NzA1LTAyNWVmMzBiMWI2YSJ9.eJ99AY9iNDhG4HjDJsY36wgqOnNQSes_PIu0DKBHBzs";
 
     @Test
     public void test() {
-        JWTAuthenticator authenticator = new JWTAuthenticator();
-        authenticator.authorize(auth_token);
-        authenticator.getToken(System.out::println);
+
     }
 }

@@ -22,8 +22,8 @@
 
 package com.ciscowebex.androidsdk.space;
 
-import com.cisco.spark.android.model.conversation.Activity;
 import com.ciscowebex.androidsdk.WebexEvent;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 
 /**
  * Callback to receive the events from a {@link SpaceClient}.
@@ -45,7 +45,7 @@ public interface SpaceObserver {
 
         private Space space;
 
-        protected SpaceCreated(Space space, Activity activity) {
+        protected SpaceCreated(Space space, ActivityModel activity) {
             super(activity);
             this.space = space;
         }
@@ -66,7 +66,7 @@ public interface SpaceObserver {
 
         private Space space;
 
-        protected SpaceUpdated(Space space, Activity activity) {
+        protected SpaceUpdated(Space space, ActivityModel activity) {
             super(activity);
             this.space = space;
         }

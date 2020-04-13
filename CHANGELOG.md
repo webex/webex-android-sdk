@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 2.5.0 Releases
+- `2.5.0` Releases - [2.5.0](#250)
+
 #### 2.4.0 Releases
 - `2.4.0` Releases - [2.4.0](#240)
 
@@ -26,11 +29,24 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
+## [2.5.0](https://github.com/webex/webex-android-sdk/releases/tag/2.5.0)
+Released on 2020-04-01.
+#### Added
+- Support to send/receive the threaded messaging.
+- Support compose and render the active speaker video with other attendee video and all the names in one single view.
+- Support single, filmstrip and grid layouts for the composed video view.
+
+#### Updated
+- Improve dependencies tree.
+- Fixed no video if set screenShare view to null.
+- Fixed crashes when posting file in which name starts with "#" sign.
+- Fixed lock the audio playback when play through bluetooth headset.
+
 ## [2.4.0](https://github.com/webex/webex-android-sdk/releases/tag/2.4.0)
 Released on 2020-01-15.
 #### Added
 - Support to join the meeting where lobby is enabled.
-- Support to let-in waiting people from looby to the meeting.
+- Support to let-in waiting people from lobby to the meeting.
 
 #### Updated
 - Fixed users' audio cannot be heard mute/unmute.

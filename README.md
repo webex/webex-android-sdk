@@ -38,7 +38,7 @@ Assuming you already have an Android project, e.g. _MyWebexApp_, for your Androi
 
     ```groovy
     dependencies { 
-        compile('com.ciscowebex:androidsdk:2.4.0@aar', {
+        compile('com.ciscowebex:androidsdk:2.5.0@aar', {
             transitive = true
         })
     }
@@ -333,8 +333,30 @@ Here are some examples of how to use the Android SDK in your app.
             }
         }));
     ```
+    
+11. Post a threaded message
 
-11. Receive a message
+    ```java
+    webex.message().postToPerson(
+        EmailAddress.fromString("bob@example.com"), 
+        Message.Text.markdown("**Hello**", "<strong>Hello</strong>", "Hello"), 
+        files,
+        parentMessage,
+        new CompletionHandler<Message>() {
+            @Override
+            public void onComplete(Result<Message> result) {
+                if (result.isSuccessful()) {
+                    // message sent success
+                    ...
+                } else {
+                    // message sent failed
+                    ...
+                }
+            }
+        }));
+    ```
+
+12. Receive a message
 
     ```java
     webex.message().setMessageObserver(
@@ -343,6 +365,9 @@ Here are some examples of how to use the Android SDK in your app.
                 if (event instanceof MessageReceived) {
                     Message message = event.getMessage();
                     // new message arrived
+                    if(message.getParent != null){
+                        // threaded message
+                    }
                 } else if (event instanceof MessageDeleted) {
                     // message deleted
                 }
@@ -350,7 +375,7 @@ Here are some examples of how to use the Android SDK in your app.
         }
     );
     ```
-12. Send Read Receipts
+13. Send Read Receipts
 
     ```java
     //Mark all exist messages in space as read
@@ -360,7 +385,7 @@ Here are some examples of how to use the Android SDK in your app.
     webex.message().markAsRead(spaceId, messageId);
     ```
 
-13. Multi-Stream to receive more video streams 
+14. Multi-Stream to receive more video streams 
 
     ```java
     activeCall.setMultiStreamObserver(new MultiStreamObserver() {
@@ -404,7 +429,7 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
     ```
-14. Set MembershipObserver to receive Membership events 
+15. Set MembershipObserver to receive Membership events 
 
     ```java
     webex.memberships().setMembershipObserver(new MembershipObserver() {
@@ -429,7 +454,7 @@ Here are some examples of how to use the Android SDK in your app.
             }
         });
     ```
-15. Set SpaceObserver to receive Space events 
+16. Set SpaceObserver to receive Space events 
 
     ```java
     webex.spaces().setSpaceObserver(new SpaceObserver() {
@@ -448,7 +473,7 @@ Here are some examples of how to use the Android SDK in your app.
             }
         });
     ```
-16. Get space meeting details
+17. Get space meeting details
 
     ```java
     webex.spaces().getMeeting(spaceId, new CompletionHandler<SpaceMeeting>() {
@@ -461,7 +486,7 @@ Here are some examples of how to use the Android SDK in your app.
             }
         });
     ```
-17. Get read status of a space
+18. Get read status of a space
 
     ```java
     webex.spaces().getWithReadStatus(spaceId, new CompletionHandler<SpaceReadStatus>() {
@@ -503,7 +528,7 @@ Assuming you already have an Android project with Spark Android SDK integrated. 
         // compile('com.ciscospark:androidsdk:1.4.0@aar', {
         //     transitive = true
         // })
-        compile('com.ciscowebex:androidsdk:2.3.0@aar', {
+        compile('com.ciscowebex:androidsdk:2.5.0@aar', {
             transitive = true
         })
     }

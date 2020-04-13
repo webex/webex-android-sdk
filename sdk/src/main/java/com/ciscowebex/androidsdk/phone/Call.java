@@ -24,13 +24,11 @@ package com.ciscowebex.androidsdk.phone;
 
 import java.util.List;
 
-import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.cisco.spark.android.locus.model.LocusParticipant;
+import android.util.Size;
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.google.gson.JsonArray;
 
 import android.view.View;
 import android.util.Pair;
@@ -181,19 +179,19 @@ public interface Call {
      * @return The local video render view dimensions (points) of this call.
      * @since 0.1
      */
-    Rect getLocalVideoViewSize();
+    Size getLocalVideoViewSize();
 
     /**
      * @return The remote video render view dimensions (points) of this call.
      * @since 0.1
      */
-    Rect getRemoteVideoViewSize();
+    Size getRemoteVideoViewSize();
 
     /**
      * @return The content sharing render view dimensions (points) of this call.
      * @since 1.3.0
      */
-    Rect getSharingViewSize();
+    Size getSharingViewSize();
 
     /**
      * @return True if the remote party of this call is sending video. Otherwise, false.
@@ -376,6 +374,12 @@ public interface Call {
      * @since 1.4
      */
     boolean isSendingSharing();
+
+    /**
+     * @param sending True if this call is sharing content. Otherwise, false.
+     * @since 2.5.0
+     */
+    void setSendingSharing(boolean sending);
 
     /**
      * Open a new auxiliary stream with a view. The Maximum of auxiliary streams can be opened is 4 currently.

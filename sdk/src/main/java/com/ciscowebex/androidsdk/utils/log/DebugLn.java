@@ -26,10 +26,6 @@ import android.util.Log;
 
 import com.github.benoitdion.ln.BaseLn;
 
-/**
- * Created by zhiyuliu on 03/09/2017.
- */
-
 public class DebugLn extends BaseLn {
     @Override
     public void v(Throwable throwable) {
