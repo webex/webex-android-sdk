@@ -57,7 +57,7 @@ android {
             minifyEnabled false
         }
         debug {
-            buildConfigField "String", "JWT", properties.get("JWT", "")
+            buildConfigField "String", "JWT", getPropertyOrDefault("JWT")
         }
         jenkins {
             initWith debug
