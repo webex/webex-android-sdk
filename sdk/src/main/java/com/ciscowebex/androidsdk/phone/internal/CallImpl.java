@@ -22,6 +22,7 @@
 
 package com.ciscowebex.androidsdk.phone.internal;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
@@ -355,9 +356,9 @@ public class CallImpl implements Call {
                     if (error != null) {
                         Ln.d("Update media failed " + error);
                     }
-                    FloorModel floor = model.getFloor();
-                    if (floor != null && floor.getGranted() != null) {
-                        if (sharingView == null) {
+                    FloorModel floor = model.getGrantedFloor();
+                    if (floor != null) {
+                        if (sharingView != null) {
                             media.joinSharing(floor.getGranted(), false);
                         }
                         else {
@@ -569,8 +570,8 @@ public class CallImpl implements Call {
             }
         }
         media.startCloud(this);
-        if (media.hasSharing() && model.getFloor() != null && model.getFloor().getGranted() != null) {
-            media.joinSharing(model.getFloor().getGranted(), isSharingFromThisDevice());
+        if (media.hasSharing() && model.getGrantedFloor() != null) {
+            media.joinSharing(model.getGrantedFloor().getGranted(), isSharingFromThisDevice());
         }
     }
 
@@ -579,7 +580,7 @@ public class CallImpl implements Call {
             return;
         }
         //stopMedia must run in the main thread. Because WME will remove the videoRender view.
-        if (media.hasSharing() && model.getFloor() != null && model.getFloor().getGranted() != null) {
+        if (media.hasSharing() && model.getGrantedFloor() != null) {
             media.leaveSharing(isSharingFromThisDevice());
         }
         for (AuxStreamImpl stream : streams) {
@@ -701,11 +702,11 @@ public class CallImpl implements Call {
         }
     }
 
-    void leaveSharing(LocusParticipantModel participant, String granted, FloorModel oldFloor) {
+    void leaveSharing(LocusParticipantModel participant, String granted, LocusModel old) {
         if (media == null) {
             return;
         }
-        if (isSharingByModel(oldFloor)) {
+        if (isSharingByModel(old)) {
             if (media.hasSharing()) {
                 media.leaveSharing(true);
             }
@@ -809,71 +810,64 @@ public class CallImpl implements Call {
                         observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(this, !newModule.isRemoteAudioMuted()));
                     }
                 }
-                doFloorUpdate(local.getFloor(), newModule.getFloor());
+                doFloorUpdate(local, newModule);
             }
         });
     }
 
-    void doFloorUpdate(FloorModel old, FloorModel current) {
-        if (current != null && current.isValid()) {
-            if (old == null || !old.isValid()) {
-                if (current.getDisposition() == FloorModel.Disposition.GRANTED) {
-                    joinSharing(current.getBeneficiary(), current.getGranted());
+    void doFloorUpdate(LocusModel old, LocusModel current) {
+        if (current == null || !current.isValid()) {
+            Ln.e("CallImpl.doFloorUpdate: remote is null or valid");
+            return;
+        }
+        if (current.getGrantedFloor() != null){
+            if (old == null || !old.isValid() || old.getGrantedFloor() == null){
+                Ln.d("CallImpl.doFloorUpdate: remote floor granted, join sharing");
+                joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
+            }else if (old.getGrantedFloor() != null){
+                String oldMediaShareType = old.getGrantedMediaShare().getName();
+                String oldMediaShareDeviceUrl = old.getGrantedFloor().getBeneficiary().getDeviceUrl();
+                String currentMediaShareType = current.getGrantedMediaShare().getName();
+                String currentMediaShareDeviceUrl = current.getGrantedFloor().getBeneficiary().getDeviceUrl();
+                String oldResourceUrl = old.getGrantedMediaShare().getResourceUrl();
+                String currentResourceUrl = current.getGrantedMediaShare().getResourceUrl();
+                Ln.d("CallImpl.doFloorUpdate: floor state, remote: %s %s %s, local: %s %s %s",
+                        currentMediaShareType, currentMediaShareDeviceUrl, currentResourceUrl,
+                        oldMediaShareType, oldMediaShareDeviceUrl, oldResourceUrl);
+
+                // Granted is replaced by another type
+                boolean isShareTypeChanged = !oldMediaShareType.equals(currentMediaShareType);
+                // Granted is replaced by another device
+                boolean isMediaShareDeviceUrlChanged = !oldMediaShareDeviceUrl.equals(currentMediaShareDeviceUrl);
+                // Granted is replaced by another whiteboard or a new whiteboard is granted
+                boolean isResourceUrlChanged = !java.util.Objects.equals(oldResourceUrl, currentResourceUrl);
+                if (!isShareTypeChanged && !isMediaShareDeviceUrlChanged && !isResourceUrlChanged) {
+                    Ln.d("CallImpl.doFloorUpdate: floor state is not changed, return");
+                    return;
                 }
-                else if (current.getDisposition() == FloorModel.Disposition.RELEASED) {
-                    leaveSharing(current.getBeneficiary(), current.getGranted(), null);
-                }
-                else {
-                    Ln.d("Failure: floor dispostion is unknown.");
-                }
-            }
-            else {
-                if (old.getDisposition() != current.getDisposition()) {
-                    if (current.getDisposition() == FloorModel.Disposition.GRANTED) {
-                        joinSharing(current.getBeneficiary(), current.getGranted());
-                    }
-                    else if (current.getDisposition() == FloorModel.Disposition.RELEASED) {
-                        leaveSharing(old.getBeneficiary(), old.getGranted(), old);
-                    }
-                    else {
-                        Ln.d("Failure: floor dispostion is unknown.");
-                    }
-                }
-                else if (media != null && Checker.isEqual(old.getGranted(), current.getGranted()) && current.getDisposition() == FloorModel.Disposition.GRANTED) {
-                    if (isSharingByModel(old) && !isSharingByModel(current)) {
-                        if (media.hasSharing()) {
-                            media.leaveSharing(true);
-                            media.joinSharing(current.getGranted(), false);
-                        }
-                        if (observer != null) {
-                            observer.onMediaChanged(new CallObserver.SendingSharingEvent(this, false));
-                            observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(this, true));
-                        }
-                    }
-                    else if (!isSharingByModel(old) && isSharingByModel(current)) {
-                        if (media.hasSharing()) {
-                            media.leaveSharing(false);
-                            media.joinSharing(current.getGranted(), true);
-                        }
-                        if (observer != null) {
-                            observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(this, false));
-                            if (media.isLocalSharingSending()) {
-                                observer.onMediaChanged(new CallObserver.SendingSharingEvent(this, true));
-                            }
-                        }
-                    }
-                    String id = current.getBeneficiary().getId();
-                    if (id != null) {
-                        for (CallMembershipImpl membership : memberships) {
-                            if (Checker.isEqual(membership.getId(), id)) {
-                                if (observer != null) {
-                                    observer.onCallMembershipChanged(new CallObserver.MembershipSendingSharingEvent(this, membership));
-                                }
-                            }
-                        }
-                    }
+
+                // When I am sharing screen, other device start share screen
+                boolean isMySharingReplaced = oldMediaShareType.equals(MediaShareModel.SHARE_CONTENT_TYPE)
+                        && isSharingByModel(old)
+                        && isMediaShareDeviceUrlChanged;
+                // When other device is sharing screen, I start share screen
+                boolean isSharingReplacedByMine = oldMediaShareType.equals(MediaShareModel.SHARE_CONTENT_TYPE)
+                        && isSharingByModel(current)
+                        && isMediaShareDeviceUrlChanged;
+
+                if (isShareTypeChanged || isMySharingReplaced || isSharingReplacedByMine || isResourceUrlChanged) {
+                    Ln.d("CallImpl.doFloorUpdate: share type or resource url or sharing devive changed, leave sharing");
+                    leaveSharing(old.getGrantedFloor().getBeneficiary(), old.getGrantedFloor().getGranted(), old);
+                } else {
+                    Ln.d("CallImpl.doFloorUpdate: only MediaShareDeviceUrlChanged, join sharing");
+                    joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
                 }
             }
+        }else if (old != null && old.isValid() && old.getGrantedFloor() != null){
+            Ln.d("CallImpl.doFloorUpdate: remote released, leave sharing");
+            leaveSharing(old.getGrantedFloor().getBeneficiary(), old.getGrantedFloor().getGranted(), old);
+        }else {
+            Ln.d("CallImpl.doFloorUpdate: no local or remote sharing, do nothing");
         }
     }
 
@@ -1094,17 +1088,16 @@ public class CallImpl implements Call {
     }
 
     boolean isSharingFromThisDevice() {
-        return isSharingByModel(model.getFloor());
+        return isSharingByModel(model);
     }
 
-    boolean isSharingByModel(FloorModel model) {
-        if (model != null && media != null && media.hasSharing() && model.getDisposition() == FloorModel.Disposition.GRANTED) {
-            LocusParticipantModel p = model.getBeneficiary();
+    boolean isSharingByModel(LocusModel model) {
+        if (model != null && model.isValid() && model.getGrantedFloor() != null && media != null && media.hasSharing()) {
+            LocusParticipantModel p = model.getGrantedFloor().getBeneficiary();
             return p != null && Checker.isEqual(device.getDeviceUrl(), p.getDeviceUrl());
         }
         return false;
     }
-
 
     boolean isRemoteLeft() {
         if (isGroup()) {

@@ -66,11 +66,11 @@ class MediaObserver implements WmeObserver {
 
     @Override
     public void onRemoteSharingAvailable(boolean available) {
-        Queue.main.run(() -> {
-            if (call != null && call.getObserver() != null) {
-                call.getObserver().onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, available));
-            }
-        });
+//        Queue.main.run(() -> {
+//            if (call != null && call.getObserver() != null) {
+//                call.getObserver().onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, available));
+//            }
+//        });
     }
 
     @Override

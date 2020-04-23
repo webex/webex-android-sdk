@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MercuryService {
 
-    public interface MecuryListener {
+    public interface MercuryListener {
         void onConnected(@Nullable WebexError error);
         void onDisconnected(@Nullable WebexError error);
         void onEvent(@NonNull MercuryEvent event);
@@ -64,7 +64,7 @@ public class MercuryService {
     private Authenticator authenticator;
     private OkHttpClient client = HttpClient.makeClient();
     private MercuryWebsocketListener websocketListener =  new MercuryWebsocketListener();
-    private MecuryListener mecuryListener;
+    private MercuryListener mercuryListener;
     private Closure<WebexError> onConnected;
 
     private Handler worker = new Handler(Looper.getMainLooper());
@@ -83,9 +83,9 @@ public class MercuryService {
         }
     });
 
-    public MercuryService(Authenticator authenticator, MecuryListener listener) {
+    public MercuryService(Authenticator authenticator, MercuryListener listener) {
         this.authenticator = authenticator;
-        this.mecuryListener = listener;
+        this.mercuryListener = listener;
     }
 
     public void connect(String url, Closure<WebexError> closure) {
@@ -137,8 +137,8 @@ public class MercuryService {
                 WebexError e = error == null ? WebexError.from("Websocket cannot connect") : error;
                 Ln.d("Websocket cannot connect: " + e);
                 onConnected.invoke(e);
-                if (mecuryListener != null) {
-                    mecuryListener.onConnected(e);
+                if (mercuryListener != null) {
+                    mercuryListener.onConnected(e);
                 }
                 onConnected = null;
             }
@@ -146,8 +146,8 @@ public class MercuryService {
                 Ln.d("Websocket is disconnected: " + error);
                 if (websocket == null || error.getErrorCode() == WebSocketStatusCodes.CLOSE_NORMAL.getCode()) {
                     Ln.d("Websocket is disconnected on purpose");
-                    if (mecuryListener != null) {
-                        mecuryListener.onDisconnected(null);
+                    if (mercuryListener != null) {
+                        mercuryListener.onDisconnected(null);
                     }
                 }
                 else {
@@ -180,8 +180,8 @@ public class MercuryService {
                     onConnected.invoke(null);
                     onConnected = null;
                 }
-                if (mecuryListener != null) {
-                    mecuryListener.onConnected(null);
+                if (mercuryListener != null) {
+                    mercuryListener.onConnected(null);
                 }
                 resetReconnect();
             });
@@ -236,8 +236,8 @@ public class MercuryService {
                 if (event instanceof MercuryActivityEvent) {
                     ((MercuryActivityEvent) event).patch(envelope.getHeaders());
                 }
-                if (mecuryListener != null) {
-                    mecuryListener.onEvent(event);
+                if (mercuryListener != null) {
+                    mercuryListener.onEvent(event);
                 }
             } else {
                 Ln.w("Invalid message envelope.");

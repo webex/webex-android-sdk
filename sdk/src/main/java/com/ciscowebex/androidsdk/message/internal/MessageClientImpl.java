@@ -300,7 +300,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
 
     private void doDownload(@NonNull RemoteFileImpl file,
                             @Nullable java.io.File path,
-                            boolean thnumnail,
+                            boolean thumbnail,
                             @Nullable ProgressHandler progressHandler,
                             @NonNull CompletionHandler<Uri> completionHandler) {
         File outFile = path;
@@ -312,8 +312,8 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
         if (file.getDisplayName() != null) {
             name = name + "-" + file.getDisplayName();
         }
-        if (thnumnail) {
-            name = "thumb-" + file.getDisplayName();
+        if (thumbnail) {
+            name = "thumb-" + name;
         }
         outFile = new File(outFile, name);
         try {
@@ -322,7 +322,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 return;
             }
             DownloadFileOperation operation = new DownloadFileOperation(phone.getCredentials().getAuthenticator(), file.getFile(), progressHandler);
-            operation.run(outFile, thnumnail, completionHandler);
+            operation.run(outFile, thumbnail, completionHandler);
         } catch (Throwable t) {
             ResultImpl.errorInMain(completionHandler, t);
         }

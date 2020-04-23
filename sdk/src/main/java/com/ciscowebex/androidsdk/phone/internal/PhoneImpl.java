@@ -48,7 +48,7 @@ import com.github.benoitdion.ln.Ln;
 
 import java.util.*;
 
-public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercuryService.MecuryListener, BackgroundChecker.BackgroundListener {
+public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercuryService.MercuryListener, BackgroundChecker.BackgroundListener {
 
     enum State {
         REGISTERING, REGISTERED, UNREGISTERING, UNREGISTERED

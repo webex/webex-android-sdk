@@ -111,10 +111,9 @@ public class CallMembershipImpl implements CallMembership {
 
     public boolean isSendingSharing() {
         LocusModel model = call.getModel();
-        FloorModel floor = model.getFloor();
-        return floor != null && model.isFloorGranted()
-                && floor.getBeneficiary() != null && Checker.isEqual(floor.getBeneficiary().getId(), getId())
-                && floor.getDisposition() == FloorModel.Disposition.GRANTED;
+        FloorModel floor = model.getGrantedFloor();
+        return floor != null
+                && floor.getBeneficiary() != null && Checker.isEqual(floor.getBeneficiary().getId(), getId());
     }
 
     @Override
