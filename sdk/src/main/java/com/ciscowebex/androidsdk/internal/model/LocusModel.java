@@ -520,25 +520,12 @@ public class LocusModel {
     }
 
     public FloorModel getGrantedFloor() {
-        if (getMediaShares() != null) {
-            for (MediaShareModel mediaShare : getMediaShares()) {
-                if (mediaShare.isValidType() && mediaShare.getFloor() != null && mediaShare.getFloor().getDisposition() == FloorModel.Disposition.GRANTED) {
-                    return mediaShare.getFloor();
-                }
-            }
-        }
-        return null;
+        MediaShareModel model = getGrantedMediaShare();
+        return model == null ? null : model.getFloor();
     }
 
     public boolean isFloorGranted() {
-        if (getMediaShares() != null) {
-            for (MediaShareModel mediaShare : getMediaShares()) {
-                if (mediaShare.isValidType() && mediaShare.getFloor() != null && mediaShare.getFloor().getDisposition() == FloorModel.Disposition.GRANTED) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return getGrantedFloor() != null;
     }
 
     public MediaShareModel getWhiteboardMedia() {
@@ -727,8 +714,7 @@ public class LocusModel {
         return m.getSdp();
     }
 
-    public @Nullable
-    String getMediaShareUrl() {
+    public @Nullable String getMediaShareUrl() {
         if (getMediaShares() != null) {
             for (MediaShareModel mediaShare : getMediaShares()) {
                 if (MediaShareModel.SHARE_CONTENT_TYPE.equals(mediaShare.getName())) {
