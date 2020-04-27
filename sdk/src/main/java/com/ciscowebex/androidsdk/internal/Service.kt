@@ -32,27 +32,27 @@ enum class Service {
 
     Hydra, Region, Wdm, Kms, Locus, Conv, Metrics, CalliopeDiscorey, Common;
 
-    fun get(vararg paths: String?): ServiceReqeust {
-        return ServiceReqeust(this, Request.Builder().get()).to(*paths)
+    fun get(vararg paths: String?): ServiceRequest {
+        return ServiceRequest(this, Request.Builder().get()).to(*paths)
     }
 
-    fun delete(vararg paths: String?): ServiceReqeust {
-        return ServiceReqeust(this, Request.Builder().delete()).to(*paths)
-    }
-
-    @JvmOverloads
-    fun post(o: Any? = null): ServiceReqeust {
-        return ServiceReqeust(this, Request.Builder().post(toBody(o)))
+    fun delete(vararg paths: String?): ServiceRequest {
+        return ServiceRequest(this, Request.Builder().delete()).to(*paths)
     }
 
     @JvmOverloads
-    fun put(o: Any? = null): ServiceReqeust {
-        return ServiceReqeust(this, Request.Builder().put(toBody(o)))
+    fun post(o: Any? = null): ServiceRequest {
+        return ServiceRequest(this, Request.Builder().post(toBody(o)))
     }
 
     @JvmOverloads
-    fun patch(o: Any? = null): ServiceReqeust {
-        return ServiceReqeust(this, Request.Builder().patch(toBody(o)))
+    fun put(o: Any? = null): ServiceRequest {
+        return ServiceRequest(this, Request.Builder().put(toBody(o)))
+    }
+
+    @JvmOverloads
+    fun patch(o: Any? = null): ServiceRequest {
+        return ServiceRequest(this, Request.Builder().patch(toBody(o)))
     }
 
     private fun toBody(o: Any?): RequestBody {

@@ -68,7 +68,7 @@ public class RegisterOperation implements Runnable {
 
             String deviceUrl = Settings.shared.get(Device.DEVICE_URL, null);
             Ln.d("Saved deviceUrl: " + deviceUrl);
-            ServiceReqeust reqeust = Service.Wdm.post(deviceInfo);
+            ServiceRequest reqeust = Service.Wdm.post(deviceInfo);
             Request deviceRequest;
             if (deviceUrl == null) {
                 Ln.d("Creating new device");

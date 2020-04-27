@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
 
-public class ServiceReqeust {
+public class ServiceRequest {
 
     private final Service service;
 
@@ -41,61 +41,61 @@ public class ServiceReqeust {
 
     private Request.Builder builder;
 
-    public ServiceReqeust(Service service, Request.Builder builder) {
+    public ServiceRequest(Service service, Request.Builder builder) {
         this.service = service;
         this.builder = builder;
     }
 
-    public ServiceReqeust url(String url) {
+    public ServiceRequest url(String url) {
         this.url = url;
         return this;
     }
 
-    public ServiceReqeust to(String... paths) {
+    public ServiceRequest to(String... paths) {
         this.paths.addAll(Arrays.asList(paths));
         return this;
     }
 
-    public ServiceReqeust with(String key, String value) {
+    public ServiceRequest with(String key, String value) {
         if (key != null && value != null) {
             queries.put(key, value);
         }
         return this;
     }
 
-    public ServiceReqeust header(String key, String value) {
+    public ServiceRequest header(String key, String value) {
         if (key != null && value != null) {
             builder.header(key, value);
         }
         return this;
     }
 
-    public ServiceReqeust auth(Authenticator authenticator) {
+    public ServiceRequest auth(Authenticator authenticator) {
         this.authenticator = authenticator;
         return this;
     }
 
-    public <M> ServiceReqeust error(CompletionHandler<M> handler) {
+    public <M> ServiceRequest error(CompletionHandler<M> handler) {
         this.errorHandler = handler;
         return this;
     }
 
-    public ServiceReqeust queue(Queue queue) {
+    public ServiceRequest queue(Queue queue) {
         this.queue = queue;
         return this;
     }
 
-    public ServiceReqeust device(Device device) {
+    public ServiceRequest device(Device device) {
         this.device = device;
         return this;
     }
 
-    public ServiceReqeust model(Type typeOfModel) {
+    public ServiceRequest model(Type typeOfModel) {
         this.typeOfModel = typeOfModel;
         return this;
     }
 
-    public <M> ServiceReqeust model(Class<M> typeOfModel) {
+    public <M> ServiceRequest model(Class<M> typeOfModel) {
         this.typeOfModel = typeOfModel;
         return this;
     }

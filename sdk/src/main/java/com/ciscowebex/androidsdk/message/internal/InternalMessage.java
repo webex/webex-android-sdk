@@ -47,6 +47,12 @@ class InternalMessage extends Message {
         }
     }
 
+    static class InternalMessageUpdated extends MessageObserver.MessageUpdated{
+        InternalMessageUpdated(Message message, ActivityModel activity){
+            super(message, activity);
+        }
+    }
+
     InternalMessage(ActivityModel activity, Credentials user, boolean received) {
         super(activity, user, received);
     }

@@ -26,12 +26,15 @@ import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
+
 import com.github.benoitdion.ln.Ln;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
+
 import okhttp3.MediaType;
 
 public class MimeUtils {
@@ -69,6 +72,15 @@ public class MimeUtils {
         } else {
             MimeUtils.ContentType ret = CONTENT_TYPE_BY_EXTENSION.get(getExtension(filename.toLowerCase(Locale.US)));
             return ret == null ? MimeUtils.ContentType.UNKNOWN : ret;
+        }
+    }
+
+    public static MimeUtils.ContentType getContentTypeByMimeType(String mimeType) {
+        if (isEmptyOrGeneric(mimeType)) {
+            return ContentType.UNKNOWN;
+        } else {
+            MimeUtils.ContentType ret = CONTENT_TYPE_BY_EXTENSION.get(getExtensionByMimeType(mimeType));
+            return ret == null ? ContentType.UNKNOWN : ret;
         }
     }
 
@@ -172,7 +184,7 @@ public class MimeUtils {
         }
 
         public boolean shouldTranscode() {
-            switch(this) {
+            switch (this) {
                 case POWERPOINT:
                 case WORD:
                 case PDF:

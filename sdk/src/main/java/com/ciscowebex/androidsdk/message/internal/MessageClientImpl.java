@@ -28,10 +28,12 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.internal.ActivityListener;
 import com.ciscowebex.androidsdk.internal.Closure;
 import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.ServiceRequest;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.internal.crypto.CryptoUtils;
@@ -43,6 +45,7 @@ import com.ciscowebex.androidsdk.phone.internal.PhoneImpl;
 import com.ciscowebex.androidsdk.utils.*;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.reflect.TypeToken;
+
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.Strings;
 import me.helloworld.utils.collection.Maps;
@@ -58,6 +61,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
     private MessageObserver observer;
     private Map<String, String> conversations = new ConcurrentHashMap<>();
     private String uuid = UUID.randomUUID().toString();
+    private Map<String, String> objectAndActivityIds = new HashMap<>();
 
     public MessageClientImpl(Context context, PhoneImpl phone) {
         this.context = context;
@@ -78,6 +82,9 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 Ln.d("The activity without conversation");
                 return;
             }
+            if (isActivityIdNeedCache(activity)){
+                objectAndActivityIds.put(activity.getObject().getId(), activity.getId());
+            }
             String clientTempId = activity.getClientTempId();
             if (clientTempId != null && clientTempId.startsWith(uuid)) {
                 Ln.d("The activity is sent by self");
@@ -94,12 +101,50 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 // TODO Remove the deprecated event in next big release
                 Queue.main.run(() -> observer.onEvent(new InternalMessage.InternalMessageArrived(message, activity)));
             });
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.delete) {
+        } else if (activity.getVerb() == ActivityModel.Verb.delete) {
             String id = new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId();
             MessageObserver.MessageEvent event = new InternalMessage.InternalMessageDeleted(id, activity);
             Queue.main.run(() -> observer.onEvent(event));
+        } else if (activity.getVerb() == ActivityModel.Verb.update) {
+            String conversationId = activity.getConversationId();
+            if (conversationId == null) {
+                Ln.d("The activity without conversation");
+                return;
+            }
+            if (activity.getObject() == null || !objectAndActivityIds.containsKey(activity.getObject().getId())) {
+                Ln.d("The update activity cannot found in cache list.");
+                return;
+            }
+            KeyManager.shared.tryRefresh(conversationId, activity.getEncryptionKeyUrl());
+            KeyManager.shared.getKey(conversationId, phone.getCredentials(), phone.getDevice(), keyResult -> {
+                String originalId = activity.getId();
+                activity.setId(objectAndActivityIds.get(activity.getObject().getId()));
+                objectAndActivityIds.remove(activity.getObject().getId());
+                if (keyResult.getData() != null) {
+                    activity.decrypt(keyResult.getData());
+                }
+                Message message = createMessage(activity, true);
+                MessageObserver.MessageUpdated event = new InternalMessage.InternalMessageUpdated(message, activity);
+                Queue.main.run(() -> observer.onEvent(event));
+                activity.setId(originalId);
+            });
         }
+    }
+
+    private boolean isActivityIdNeedCache(ActivityModel activity) {
+        if (activity.getVerb() == ActivityModel.Verb.share) {
+            if (activity.getObject() != null && activity.getObject().isContent() && activity.getObject() instanceof ContentModel) {
+                ContentModel content = (ContentModel) activity.getObject();
+                if (content.getContentCategory().equals(ContentModel.Category.DOCUMENTS)) {
+                    for (FileModel file : content.getFiles().getItems()) {
+                        if (MimeUtils.getContentTypeByMimeType(file.getMimeType()).shouldTranscode()) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public void list(@NonNull String spaceId, @Nullable Before before, @IntRange(from = 0, to = Integer.MAX_VALUE) int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler) {
@@ -125,11 +170,11 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
     }
 
     private void doList(@NonNull String spaceId,
-                      @Nullable Date date,
-                      @Nullable Mention[] mentions,
-                      @IntRange(from = 0, to = Integer.MAX_VALUE) int max,
-                      @NonNull List<ActivityModel> activities,
-                      @NonNull CompletionHandler<List<Message>> handler) {
+                        @Nullable Date date,
+                        @Nullable Mention[] mentions,
+                        @IntRange(from = 0, to = Integer.MAX_VALUE) int max,
+                        @NonNull List<ActivityModel> activities,
+                        @NonNull CompletionHandler<List<Message>> handler) {
         int queryMax = Math.max(max, max * 2);
         Service.Conv.get(Checker.isEmpty(mentions) ? "activities" : "mentions")
                 .with("conversationId", WebexId.translate(spaceId))
@@ -137,7 +182,8 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 .with(Checker.isEmpty(mentions) ? "maxDate" : "sinceDate", String.valueOf((date == null ? new Date() : date).getTime()))
                 .auth(phone.getAuthenticator())
                 .device(phone.getDevice())
-                .model(new TypeToken<ItemsModel<ActivityModel>>(){}.getType())
+                .model(new TypeToken<ItemsModel<ActivityModel>>() {
+                }.getType())
                 .error(handler)
                 .async((Closure<ItemsModel<ActivityModel>>) items -> {
                     for (ActivityModel model : items.getItems()) {
@@ -159,8 +205,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                             }
                             ResultImpl.inMain(handler, messages);
                         });
-                    }
-                    else {
+                    } else {
                         ActivityModel last = Lists.getLast(items.getItems());
                         doList(spaceId, last == null ? null : last.getPublished(), mentions, max, activities, handler);
                     }
@@ -255,8 +300,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 }
                 doPost(conversationId, (DraftImpl) draft, handler);
             });
-        }
-        else {
+        } else {
             ResultImpl.errorInMain(handler, "Unknown target: " + target);
         }
     }
@@ -349,8 +393,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
             for (Mention mention : draft.getMentions()) {
                 if (mention instanceof Mention.Person) {
                     mentionedPeople.add(Maps.makeMap("objectType", ObjectModel.Type.person, "id", WebexId.translate(((Mention.Person) mention).getPersonId())));
-                }
-                else if (mention instanceof Mention.All) {
+                } else if (mention instanceof Mention.All) {
                     mentionedGroup.add(Maps.makeMap("objectType", ObjectModel.Type.groupMention, "groupType", "all"));
                 }
             }
@@ -378,22 +421,33 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                     ResultImpl.errorInMain(handler, fileModels);
                     return;
                 }
+                String path = "activities";
                 ActivityModel.Verb verb = ActivityModel.Verb.post;
                 if (!Checker.isEmpty(fileModels.getData())) {
                     object.put("objectType", ObjectModel.Type.content);
                     object.put("contentCategory", "documents");
                     object.put("files", Maps.makeMap("items", fileModels.getData()));
                     verb = ActivityModel.Verb.share;
+                    for (LocalFile file : draft.getFiles()) {
+                        if (MimeUtils.getContentTypeByFilename(file.getName()).shouldTranscode()) {
+                            path = "content";
+                            break;
+                        }
+                    }
                 }
                 Map<String, Object> activityMap = new HashMap<>();
                 activityMap.put("verb", verb.name());
                 activityMap.put("clientTempId", uuid + ":" + UUID.randomUUID().toString());
-                activityMap.put("encryptionKeyUrl", key == null ? null :key.getKeyUrl());
+                activityMap.put("encryptionKeyUrl", key == null ? null : key.getKeyUrl());
                 activityMap.put("object", object);
                 activityMap.put("target", target);
                 activityMap.put("parent", parent);
-                Service.Conv.post(activityMap).to("activities")
-                        .auth(phone.getAuthenticator())
+                ServiceRequest request = Service.Conv.post(activityMap).to(path);
+                if (path.equals("content")) {
+                    request.with("transcode", String.valueOf(true))
+                            .with("async", String.valueOf(false));
+                }
+                request.auth(phone.getAuthenticator())
                         .device(phone.getDevice())
                         .model(ActivityModel.class)
                         .error(handler)

@@ -97,6 +97,29 @@ public interface MessageObserver {
     }
 
     /**
+     * The event when an old message has been updated, include received and self sent message.
+     *
+     * @since 2.6.0
+     */
+    class MessageUpdated extends WebexEvent.Base implements MessageEvent {
+        private Message message;
+
+        protected MessageUpdated(Message message, ActivityModel activity) {
+            super(activity);
+            this.message = message;
+        }
+
+        /**
+         * Returns the new updated message, it has same id with the old message.
+         *
+         * @return The new updated message.
+         */
+        public Message getMessage() {
+            return message;
+        }
+    }
+
+    /**
      * Invoked when there is a new {@link MessageEvent}.
      *
      * @param event Message event
