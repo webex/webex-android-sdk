@@ -78,11 +78,13 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     private CallContext callContext;
 
-    private int audioMaxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_AUDIO.getValue();
+    private int audioMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_AUDIO.getValue();
 
-    private int videoMaxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue();
+    private int videoMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue();
 
-    private int sharingMaxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_SESSION.getValue();
+    private int videoMaxTxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue();
+
+    private int sharingMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_SESSION.getValue();
 
     private String hardwareVideoSetting = null;
 
@@ -508,33 +510,73 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     @Override
+    public void setAudioMaxRxBandwidth(int bandwidth) {
+        audioMaxRxBandwidth = bandwidth;
+    }
+
+    @Override
+    public int getAudioMaxRxBandwidth() {
+        return audioMaxRxBandwidth;
+    }
+
+    @Override
+    public void setVideoMaxRxBandwidth(int bandwidth) {
+        videoMaxRxBandwidth = bandwidth;
+    }
+
+    @Override
+    public int getVideoMaxRxBandwidth() {
+        return videoMaxRxBandwidth;
+    }
+
+    @Override
+    public void setVideoMaxTxBandwidth(int bandwidth) {
+        videoMaxTxBandwidth = bandwidth;
+    }
+
+    @Override
+    public int getVideoMaxTxBandwidth() {
+        return videoMaxTxBandwidth;
+    }
+
+    @Override
+    public void setSharingMaxRxBandwidth(int bandwidth) {
+        sharingMaxRxBandwidth = bandwidth;
+    }
+
+    @Override
+    public int getSharingMaxRxBandwidth() {
+        return sharingMaxRxBandwidth;
+    }
+
+    @Override
     public void setAudioMaxBandwidth(int bandwidth) {
-        audioMaxBandwidth = bandwidth;
+        setAudioMaxRxBandwidth(bandwidth);
     }
 
     @Override
     public int getAudioMaxBandwidth() {
-        return audioMaxBandwidth;
+        return getAudioMaxRxBandwidth();
     }
 
     @Override
     public void setVideoMaxBandwidth(int bandwidth) {
-        videoMaxBandwidth = bandwidth;
+        setVideoMaxRxBandwidth(bandwidth);
     }
 
     @Override
     public int getVideoMaxBandwidth() {
-        return videoMaxBandwidth;
+        return getVideoMaxRxBandwidth();
     }
 
     @Override
     public void setSharingMaxBandwidth(int bandwidth) {
-        sharingMaxBandwidth = bandwidth;
+        setSharingMaxRxBandwidth(bandwidth);
     }
 
     @Override
     public int getSharingMaxBandwidth() {
-        return sharingMaxBandwidth;
+        return getSharingMaxRxBandwidth();
     }
 
     @Override
@@ -1030,9 +1072,10 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     private MediaCapability createCapability() {
         MediaCapability capability = new MediaCapability();
-        capability.setAudioMaxBandwidth(getAudioMaxBandwidth());
-        capability.setVideoMaxBandwidth(getVideoMaxBandwidth());
-        capability.setSharingMaxBandwidth(getSharingMaxBandwidth());
+        capability.setAudioMaxRxBandwidth(getAudioMaxRxBandwidth());
+        capability.setVideoMaxRxBandwidth(getVideoMaxRxBandwidth());
+        capability.setVideoMaxTxBandwidth(getVideoMaxTxBandwidth());
+        capability.setSharingMaxRxBandwidth(getSharingMaxRxBandwidth());
         capability.setHardwareCodecEnable(isHardwareAccelerationEnabled());
         capability.setHardwareVideoSetting(getHardwareVideoSettings());
         capability.setAudioEnhancementModels(audioEnhancementModels);

@@ -243,56 +243,74 @@ public interface Phone {
     String getVideoCodecLicenseURL();
 
     /**
-     * Set the max bandwidth for audio in unit bps for the call.
+     * Set the max receivning bandwidth for audio in unit bps for the call.
      * Only effective if set before the start of call.
      * if 0, default value of 64 * 1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_AUDIO}.
-     * @since 1.3.0
+     * @since 2.5.0.2
      */
-    void setAudioMaxBandwidth(int bandwidth);
+    void setAudioMaxRxBandwidth(int bandwidth);
 
     /**
-     * Return the current maximum bandwidth of audio stream.
+     * Return the current maximum receivning bandwidth of audio stream.
      *
-     * @since 1.3.0
+     * @since 2.5.0.2
      */
-    int getAudioMaxBandwidth();
+    int getAudioMaxRxBandwidth();
 
     /**
-     * Set the max bandwidth for video in unit bps for the call.
+     * Set the max receiving bandwidth for video in unit bps for the call.
      * Only effective if set before the start of call.
      * if 0, default value of 2000*1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_90P}, {@link DefaultBandwidth#MAX_BANDWIDTH_180P},
      *                  {@link DefaultBandwidth#MAX_BANDWIDTH_360P}, {@link DefaultBandwidth#MAX_BANDWIDTH_720P}, or {@link DefaultBandwidth#MAX_BANDWIDTH_1080P}.
-     * @since 1.3.0
+     * @since 2.5.0.2
      */
-    void setVideoMaxBandwidth(int bandwidth);
+    void setVideoMaxRxBandwidth(int bandwidth);
 
     /**
-     * Return the current maximum bandwidth of video stream.
+     * Return the current maximum receiving bandwidth of video stream.
      *
-     * @since 1.3.0
+     * @since 2.5.0.2
      */
-    int getVideoMaxBandwidth();
+    int getVideoMaxRxBandwidth();
 
     /**
-     * Set the max bandwidth for content sharing in unit bps for the call.
+     * Set the max sending bandwidth for video in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 2000*1000 is used.
+     *
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_90P}, {@link DefaultBandwidth#MAX_BANDWIDTH_180P},
+     *                  {@link DefaultBandwidth#MAX_BANDWIDTH_360P}, {@link DefaultBandwidth#MAX_BANDWIDTH_720P}, or {@link DefaultBandwidth#MAX_BANDWIDTH_1080P}.
+     * @since 2.5.0.2
+     */
+    void setVideoMaxTxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum sending bandwidth of video stream.
+     *
+     * @since 2.5.0.2
+     */
+    int getVideoMaxTxBandwidth();
+
+    /**
+     * Set the max receiving bandwidth for content sharing in unit bps for the call.
      * Only effective if set before the start of call.
      * if 0, default value of 4000*1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_SESSION}.
-     * @since 1.3.0
+     * @since 2.5.0.2
      */
-    void setSharingMaxBandwidth(int bandwidth);
+    void setSharingMaxRxBandwidth(int bandwidth);
 
     /**
-     * Return the current maximum bandwidth of content sharing stream.
+     * Return the current maximum receiving bandwidth of content sharing stream.
      *
-     * @since 1.3.0
+     * @since 2.5.0.2
      */
-    int getSharingMaxBandwidth();
+    int getSharingMaxRxBandwidth();
 
     /**
      * Return True if Google hardware media codec is turned on for video. Otherwise, false.
@@ -321,5 +339,69 @@ public interface Phone {
      * @since 2.3.0
      */
     void enableAudioEnhancementForModels(List<String> models);
+
+    /**
+     * Set the max bandwidth for audio in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 64 * 1000 is used.
+     *
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_AUDIO}.
+     * @deprecated
+     * @since 1.3.0
+     */
+    @Deprecated
+    void setAudioMaxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum bandwidth of audio stream.
+     *
+     * @deprecated
+     * @since 1.3.0
+     */
+    @Deprecated
+    int getAudioMaxBandwidth();
+
+    /**
+     * Set the max bandwidth for video in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 2000*1000 is used.
+     *
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_90P}, {@link DefaultBandwidth#MAX_BANDWIDTH_180P},
+     *                  {@link DefaultBandwidth#MAX_BANDWIDTH_360P}, {@link DefaultBandwidth#MAX_BANDWIDTH_720P}, or {@link DefaultBandwidth#MAX_BANDWIDTH_1080P}.
+     * @deprecated
+     * @since 1.3.0
+     */
+    @Deprecated
+    void setVideoMaxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum bandwidth of video stream.
+     *
+     * @deprecated
+     * @since 1.3.0
+     */
+    @Deprecated
+    int getVideoMaxBandwidth();
+
+    /**
+     * Set the max bandwidth for content sharing in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 4000*1000 is used.
+     *
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_SESSION}.
+     * @deprecated
+     * @since 1.3.0
+     */
+    @Deprecated
+    void setSharingMaxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum bandwidth of content sharing stream.
+     *
+     * @deprecated
+     * @since 1.3.0
+     */
+    @Deprecated
+    int getSharingMaxBandwidth();
 
 }

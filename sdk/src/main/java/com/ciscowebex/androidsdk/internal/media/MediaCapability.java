@@ -49,11 +49,13 @@ public class MediaCapability {
 
     private static final int DEFAULT_MAX_STREAMS = 4;
 
-    private int audioMaxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_AUDIO.getValue() ;
+    private int audioMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_AUDIO.getValue();
 
-    private int videoMaxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue() ;
+    private int videoMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue();
 
-    private int sharingMaxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_SESSION.getValue() ;
+    private int videoMaxTxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue();
+
+    private int sharingMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_SESSION.getValue();
 
     private String hardwareVideoSetting = DEFAULT_HW_VIDEO_SETTING;
 
@@ -79,21 +81,27 @@ public class MediaCapability {
         setAudioEnhancementModels(null);
     }
 
-    public void setAudioMaxBandwidth(int bandwidth) {
+    public void setAudioMaxRxBandwidth(int bandwidth) {
         if (bandwidth > 0) {
-            this.audioMaxBandwidth = bandwidth;
+            this.audioMaxRxBandwidth = bandwidth;
         }
     }
 
-    public void setVideoMaxBandwidth(int bandwidth) {
+    public void setVideoMaxRxBandwidth(int bandwidth) {
         if (bandwidth > 0) {
-            this.videoMaxBandwidth = bandwidth;
+            this.videoMaxRxBandwidth = bandwidth;
         }
     }
 
-    public void setSharingMaxBandwidth(int bandwidth) {
+    public void setVideoMaxTxBandwidth(int bandwidth) {
         if (bandwidth > 0) {
-            this.sharingMaxBandwidth = bandwidth;
+            this.videoMaxTxBandwidth = bandwidth;
+        }
+    }
+
+    public void setSharingMaxRxBandwidth(int bandwidth) {
+        if (bandwidth > 0) {
+            this.sharingMaxRxBandwidth = bandwidth;
         }
     }
 
@@ -237,14 +245,14 @@ public class MediaCapability {
         config.EnableFec(true);
         config.EnableRecordLossData(false);
         config.EnableClientMix(1);
-        config.SetMaxBandwidth(audioMaxBandwidth);
+        config.SetMaxBandwidth(audioMaxRxBandwidth);
         if (!Checker.isEmpty(audioPlaybackFile)) {
             config.EnableFileCapture(audioPlaybackFile, true);
         }
     }
 
     private void applyConfig(MediaConfig.ShareConfig config) {
-        config.SetMaxBandwidth(sharingMaxBandwidth);
+        config.SetMaxBandwidth(sharingMaxRxBandwidth);
     }
 
     private void applyConfig(MediaConfig.VideoConfig config) {
@@ -253,39 +261,14 @@ public class MediaCapability {
         config.SetPreferedCodec(MediaConfig.WmeCodecType.WmeCodecType_AVC);
         config.SetSelectedCodec(MediaConfig.WmeCodecType.WmeCodecType_AVC);
         config.SetPacketizationMode(MediaConfig.WmePacketizationMode.WmePacketizationMode_1);
-        config.SetMaxBandwidth(videoMaxBandwidth);
-        boolean hw = isHardwareCodecEnable();
-        long hardwareEncoderEnabled = config.EnableHWAcceleration(hw, MediaConfig.WmeHWAccelerationConfig.WmeHWAcceleration_Encoder);
-        long hardwareDecoderEnabled = config.EnableHWAcceleration(hw, MediaConfig.WmeHWAccelerationConfig.WmeHWAcceleration_Decoder);
-        String profileID;
-        int maxMbps, maxFs, maxBr;
-        if (hw && MediaError.succeeded(hardwareEncoderEnabled) && MediaError.succeeded(hardwareDecoderEnabled)) {
-            profileID = "420014";
-            maxMbps = 108000;
-            maxFs = 3600;
-            maxBr = 1500;
-        }
-        else { // 360p
-            profileID = "42000D";
-            maxMbps = 27600;
-            maxFs = 920;
-            maxBr = 1000;
-        }
-        int maxFps = 3000;
-        MediaConfig.WmeVideoCodecCapability videoEncoderCodecCapability = new MediaConfig.WmeVideoCodecCapability();
-        videoEncoderCodecCapability.uProfileLevelID = Long.parseLong(profileID, 16);
-        videoEncoderCodecCapability.max_mbps = maxMbps;
-        videoEncoderCodecCapability.max_fs = maxFs;
-        videoEncoderCodecCapability.max_br = maxBr;
-        videoEncoderCodecCapability.max_fps = maxFps;
-        config.SetEncodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, videoEncoderCodecCapability);
-        MediaConfig.WmeVideoCodecCapability videoDecoderCodecCapability = new MediaConfig.WmeVideoCodecCapability();
-        videoDecoderCodecCapability.uProfileLevelID = Long.parseLong(profileID, 16);
-        videoDecoderCodecCapability.max_mbps = maxMbps;
-        videoDecoderCodecCapability.max_fs = 8160;
-        videoDecoderCodecCapability.max_br = maxBr;
-        videoDecoderCodecCapability.max_fps = maxFps;
-        config.SetDecodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, videoDecoderCodecCapability);
+        config.SetMaxBandwidth(videoMaxRxBandwidth);
+        //        MediaConfig.WmeVideoCodecCapability videoDecoderCodecCapability = new MediaConfig.WmeVideoCodecCapability();
+        //        videoDecoderCodecCapability.uProfileLevelID = Long.parseLong(profileID, 16);
+        //        videoDecoderCodecCapability.max_mbps = maxMbps;
+        //        videoDecoderCodecCapability.max_fs = 8160;
+        //        videoDecoderCodecCapability.max_br = maxBr;
+        //        videoDecoderCodecCapability.max_fps = maxFps;
+        //        config.SetDecodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, videoDecoderCodecCapability);
         config.Disable90PVideo(true);
         config.EnableAVCSimulcast(true);
         config.EnableSelfPreviewHorizontalMirror(true);
@@ -293,6 +276,23 @@ public class MediaCapability {
         if (!Checker.isEmpty(videoPlaybackFile)) {
             config.EnableFileCapture(videoPlaybackFile, true);
         }
-        config.SetPacketizationMode(MediaConfig.WmePacketizationMode.WmePacketizationMode_0);
+        boolean hw = isHardwareCodecEnable();
+        config.EnableHWAcceleration(hw, MediaConfig.WmeHWAccelerationConfig.WmeHWAcceleration_Encoder);
+        config.EnableHWAcceleration(hw, MediaConfig.WmeHWAccelerationConfig.WmeHWAcceleration_Decoder);
+        int bitrates = videoMaxTxBandwidth/1000;
+        int levelId = 0x420016;
+        if (bitrates <= 384) {
+            levelId = 0x42000C;
+        }
+        else if (bitrates <= 768) {
+            levelId = 0x42000D;
+        }
+        MediaConfig.WmeVideoCodecCapability codecCapability = new MediaConfig.WmeVideoCodecCapability();
+        codecCapability.uProfileLevelID = levelId;
+        codecCapability.max_br = bitrates;
+        codecCapability.max_mbps = 0;
+        codecCapability.max_fs = 0;
+        codecCapability.max_fps = 0;
+        config.SetEncodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, codecCapability);
     }
 }
