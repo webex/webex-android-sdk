@@ -291,7 +291,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         Queue.serial.run(() -> {
             stopPreview();
             if (callContext != null) {
-                Ln.w("Already calling");
+                Ln.w("Already calling: " + callContext);
                 Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already calling")));
                 Queue.serial.yield();
                 return;
@@ -304,13 +304,14 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             }
             for (CallImpl call : getCalls()) {
                 if (!call.isGroup() || (call.isGroup() && call.getStatus() == Call.CallStatus.CONNECTED)) {
-                    Ln.e("There are other active calls");
+                    Ln.e("There are other active calls: " + call);
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("There are other active calls")));
                     Queue.serial.yield();
                     return;
                 }
             }
             callContext = new CallContext.Outgoing(dialString, option, callback);
+            Ln.d("CallContext: " + callContext);
             Queue.main.run(this::tryAcquirePermission);
             Queue.serial.yield();
         });
@@ -673,6 +674,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 }
             }
             callContext = new CallContext.Incoming(call, option, callback);
+            Ln.d("CallContext: " + callContext);
             Queue.main.run(this::tryAcquirePermission);
             Queue.serial.yield();
         });
@@ -856,6 +858,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     void startSharing(CallImpl call, CompletionHandler<Void> callback) {
         callContext = new CallContext.Sharing(call, callback);
+        Ln.d("CallContext: " + callContext);
         final Intent intent = new Intent(context, AcquirePermissionActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_SCREEN_SHOT);
