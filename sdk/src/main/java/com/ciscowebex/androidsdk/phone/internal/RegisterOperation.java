@@ -68,17 +68,18 @@ public class RegisterOperation implements Runnable {
 
             String deviceUrl = Settings.shared.get(Device.DEVICE_URL, null);
             Ln.d("Saved deviceUrl: " + deviceUrl);
-            ServiceReqeust reqeust = Service.Wdm.post(deviceInfo);
-            Request deviceRequest;
+            ServiceReqeust request;
             if (deviceUrl == null) {
                 Ln.d("Creating new device");
-                reqeust.to("devices");
+                request = Service.Wdm.post(deviceInfo);
+                request.to("devices");
             }
             else {
                 Ln.d("Updating device");
-                reqeust.url(deviceUrl);
+                request = Service.Wdm.put(deviceInfo);
+                request.url(deviceUrl);
             }
-            reqeust.auth(authenticator).model(DeviceModel.class).error(callback).async((Closure<DeviceModel>) model -> Credentials.auth(authenticator, userResult -> {
+            request.auth(authenticator).model(DeviceModel.class).error(callback).async((Closure<DeviceModel>) model -> Credentials.auth(authenticator, userResult -> {
                 Credentials credentials = userResult.getData();
                 if (credentials == null) {
                     callback.onComplete(ResultImpl.error(userResult.getError()));
