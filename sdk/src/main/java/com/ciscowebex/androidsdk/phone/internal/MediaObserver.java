@@ -32,6 +32,7 @@ import com.ciscowebex.androidsdk.phone.AuxStream;
 import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.phone.CallObserver;
 import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
+import com.ciscowebex.androidsdk.utils.Json;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
 
@@ -241,6 +242,6 @@ class MediaObserver implements WmeObserver {
 
     @Override
     public void onError(MediaError error) {
-        Ln.e("Media Error: " + error);
+        Ln.e("Media Error: " + Json.get().toJson(error));
     }
 }

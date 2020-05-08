@@ -23,6 +23,7 @@
 package com.ciscowebex.androidsdk.internal.media;
 
 import android.view.View;
+import com.ciscowebex.androidsdk.utils.Json;
 import com.github.benoitdion.ln.Ln;
 import com.webex.wme.MediaConnection;
 import com.webex.wme.MediaTrack;
@@ -295,6 +296,13 @@ public class WmeTrack {
                 viewAdded = false;
             }
         }
+    }
+
+    public String debugVideo() {
+        if (track != null && (type == Type.LocalVideo || type == Type.RemoteVideo)) {
+            return Json.get().toJson(track.getVideoTrackStatistics());
+        }
+        return "";
     }
 
     @Override

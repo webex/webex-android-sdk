@@ -188,6 +188,13 @@ public class CallImpl implements Call {
     }
 
     @Override
+    public void setRemoteVideoRenderMode(VideoRenderMode mode) {
+        if (media != null) {
+            media.setRemoteVideoRenderMode(mode);
+        }
+    }
+
+    @Override
     public Size getLocalVideoViewSize() {
         return media == null ? new Size(0, 0) : media.getLocalVideoViewSize();
     }

@@ -29,6 +29,7 @@ import com.cisco.wme.appshare.ScreenShareContext;
 import com.ciscowebex.androidsdk.internal.Closure;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.media.device.MediaDeviceMananger;
+import com.ciscowebex.androidsdk.utils.Json;
 import com.github.benoitdion.ln.Ln;
 import com.webex.wme.*;
 import com.webex.wseclient.WseEngine;
@@ -114,7 +115,6 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
                 remoteSharingTrack.start();
             }
             state = State.CONNECTED;
-
         });
     }
 
@@ -362,6 +362,11 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
         track.removeAllViews();
     }
 
+    public View getRenderView(WmeTrack.Type type) {
+        WmeTrack track = getTrack(type, WMEngine.MAIN_VID);
+        return track == null ? null : track.getRenderView();
+    }
+
     public Size getRenderViewSize(WmeTrack.Type type) {
         return getRenderViewSize(type, WMEngine.MAIN_VID);
     }
@@ -371,9 +376,12 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
         return track == null ? new Size(0, 0) : new Size(track.getVideoWidth(), track.getVideoHeight());
     }
 
-    public View getRenderView(WmeTrack.Type type) {
+    public void setVideoRenderMode(WmeTrack.Type type, MediaTrack.ScalingMode mode) {
         WmeTrack track = getTrack(type, WMEngine.MAIN_VID);
-        return track == null ? null : track.getRenderView();
+        if (track != null && track.getTrack() != null) {
+            Ln.d("Media.setVideoRenderMode: " + mode + ", for " + type);
+            track.getTrack().SetRenderMode(mode);
+        }
     }
 
     public WmeTrack getTrack(WmeTrack.Type type, long vid) {
@@ -946,7 +954,7 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
             if (track != null) {
                 track.setVideoWidth(width);
                 track.setVideoHeight(height);
-                track.updateRenderMode();
+                //track.updateRenderMode();
             }
         }
         else if (mid == WMEngine.Media.Sharing.mid()) {
@@ -959,7 +967,7 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
     }
 
     public void onRenderSizeChanged(int mid, int vid, MediaConnection.MediaDirection direction, MediaConnection.WmeVideoSizeInfo size) {
-        Ln.d("Media.onRenderSizeChanged, mid = " + mid + ", vid = " + vid + ", direction = " + direction);
+        Ln.d("Media.onRenderSizeChanged, mid = " + mid + ", vid = " + vid + ", direction = " + direction + ", size = " + Json.get().toJson(size));
         WmeTrack track = null;
         WMEngine.Media media = WMEngine.Media.from(mid);
         if (media == WMEngine.Media.Video) {

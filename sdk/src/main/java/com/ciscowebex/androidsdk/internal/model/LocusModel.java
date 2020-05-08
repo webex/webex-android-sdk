@@ -202,6 +202,14 @@ public class LocusModel {
     }
 
     @Nullable
+    public LocusParticipantDeviceModel getMyDevice() {
+        if (getSelf() != null) {
+            return getMyDevice(getSelf().getDeviceUrl());
+        }
+        return null;
+    }
+
+    @Nullable
     public LocusParticipantDeviceModel getMyDevice(String deviceUrl) {
         if (deviceUrl != null && getSelf() != null) {
             List<LocusParticipantDeviceModel> deviceList = getSelf().getDevices();

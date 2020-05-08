@@ -122,6 +122,28 @@ public interface Call {
     }
 
     /**
+     * The options to specify how the video adjusts its content to be render in a view.
+     *
+     * @since 2.6.0
+     */
+    enum VideoRenderMode {
+        /**
+         * The option to scale the video to fit the size of the view by maintaining the aspect ratio.
+         *
+         * The black paddings will be added to the remaining area of the view.
+         */
+        Fit,
+        /**
+         * The option to scale the video to fill the size of the view. Some portion of the video may be cropped.
+         */
+        CropFill,
+        /**
+         * The option to scale the video to fit the size of the view by changing the aspect ratio of the video if necessary.
+         */
+        StretchFill
+    }
+
+    /**
      * @return The camera facing mode selected for this call.
      * @since 0.1
      */
@@ -174,6 +196,12 @@ public interface Call {
      * @since 0.1
      */
     CallMembership getTo();
+
+    /**
+     * Specify how the remote video adjusts its content to be render in a view.
+     * @since 2.6.0
+     */
+    void setRemoteVideoRenderMode(VideoRenderMode mode);
 
     /**
      * @return The local video render view dimensions (points) of this call.
