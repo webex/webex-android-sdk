@@ -272,6 +272,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 device = null;
                 credentials = null;
                 Settings.shared.clear(Device.DEVICE_URL);
+                Settings.shared.clear(TokenModel.AUTHENTICATION_INFO);
                 state = State.UNREGISTERED;
                 Queue.main.run(() -> callback.onComplete(result));
                 Queue.serial.yield();
@@ -587,7 +588,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void setHardwareAccelerationEnabled(boolean enable) {
-       hardwareCodecEnable = true;
+       hardwareCodecEnable = enable;
     }
 
     public String getHardwareVideoSettings() {
