@@ -9,8 +9,8 @@ ext {
     moduleName = 'Cisco Webex Android SDK'
     moduleGroupId = 'com.ciscowebex'
     moduleArtifactId = 'androidsdk'
-    moduleVersion = '2.5.0.3-SNAPSHOT'
-    moduleVersionCode = 25003
+    moduleVersion = '2.6.0-SNAPSHOT'
+    moduleVersionCode = 26003
     moduleDescription = 'Cisco Webex SDK for Android'
     moduleSiteUrl = 'https://developer.webex.com/getting-started.html'
     moduleProjectUrl = 'https://github.com/webex/webex-android-sdk'
@@ -205,7 +205,7 @@ publishing {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation('com.webex:wme4android-release:10.3.1.1@aar')
+    implementation('com.webex:wme4android-release:9.7.1.0@aar')
     implementation('com.google.code.gson:gson:2.7')
     implementation('com.github.benoitdion.ln:ln:0.1.2')
     implementation('com.squareup.okhttp3:okhttp:3.12.0')

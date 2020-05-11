@@ -228,11 +228,13 @@ public class MediaCapability {
         config.SetNetworkNotificationParam(MediaConfig.WmeNetworkStatus.WmeNetwork_recovered, MediaConfig.WmeNetworkDirection.DIRECTION_BOTHLINK, 10000);
         config.SetICETimeoutParams(10 * 1000, 10 * 1000, 10 * 1000);
         config.SetQoSMaxLossRatio(0.08f);
-        if (isHardwareCodecEnable()) {
-            config.SetDeviceMediaSettings(hardwareVideoSetting);
-        }
         if (!Checker.isEmpty(deviceSettings)) {
+            Ln.d("Default Settings: " + deviceSettings);
             config.SetDeviceMediaSettings(deviceSettings);
+        }
+        if (isHardwareCodecEnable()) {
+            Ln.d("HW Settings: " + hardwareVideoSetting);
+            config.SetDeviceMediaSettings(hardwareVideoSetting);
         }
         // config.enableTCAEC(false);
         // config.SetShowStunTraceIP(true);
@@ -262,24 +264,20 @@ public class MediaCapability {
         config.SetSelectedCodec(MediaConfig.WmeCodecType.WmeCodecType_AVC);
         config.SetPacketizationMode(MediaConfig.WmePacketizationMode.WmePacketizationMode_1);
         config.SetMaxBandwidth(videoMaxRxBandwidth);
-        //        MediaConfig.WmeVideoCodecCapability videoDecoderCodecCapability = new MediaConfig.WmeVideoCodecCapability();
-        //        videoDecoderCodecCapability.uProfileLevelID = Long.parseLong(profileID, 16);
-        //        videoDecoderCodecCapability.max_mbps = maxMbps;
-        //        videoDecoderCodecCapability.max_fs = 8160;
-        //        videoDecoderCodecCapability.max_br = maxBr;
-        //        videoDecoderCodecCapability.max_fps = maxFps;
-        //        config.SetDecodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, videoDecoderCodecCapability);
-        config.Disable90PVideo(true);
-        config.EnableAVCSimulcast(true);
-        config.EnableSelfPreviewHorizontalMirror(true);
-        //config.SetInitSubscribeCount(maxNumberStreams);
-        if (!Checker.isEmpty(videoPlaybackFile)) {
-            config.EnableFileCapture(videoPlaybackFile, true);
-        }
+
         boolean hw = isHardwareCodecEnable();
         config.EnableHWAcceleration(hw, MediaConfig.WmeHWAccelerationConfig.WmeHWAcceleration_Encoder);
         config.EnableHWAcceleration(hw, MediaConfig.WmeHWAccelerationConfig.WmeHWAcceleration_Decoder);
-        int bitrates = videoMaxTxBandwidth/1000;
+
+        MediaConfig.WmeVideoCodecCapability videoDecoderCodecCapability = new MediaConfig.WmeVideoCodecCapability();
+        videoDecoderCodecCapability.uProfileLevelID = hw ? 0x420016 : 0x42000D;
+        videoDecoderCodecCapability.max_mbps = hw ? MediaSCR.p720.maxMbps : MediaSCR.p360.maxMbps;
+        videoDecoderCodecCapability.max_fs =  MediaSCR.p1080.maxFs; // hw ? MediaSCR.p720.maxFs : MediaSCR.p360.maxFs;
+        videoDecoderCodecCapability.max_br = (hw ? MediaSCR.p720.maxBr : MediaSCR.p360.maxBr)/1000;
+        videoDecoderCodecCapability.max_fps = hw ? MediaSCR.p720.maxFps : MediaSCR.p360.maxFps;
+        config.SetDecodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, videoDecoderCodecCapability);
+
+        int bitrates = videoMaxTxBandwidth / 1000;
         int levelId = 0x420016;
         if (bitrates <= 384) {
             levelId = 0x42000C;
@@ -294,5 +292,13 @@ public class MediaCapability {
         codecCapability.max_fs = 0;
         codecCapability.max_fps = 0;
         config.SetEncodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, codecCapability);
+
+        config.Disable90PVideo(true);
+        config.EnableAVCSimulcast(true);
+        config.EnableSelfPreviewHorizontalMirror(true);
+        //config.SetInitSubscribeCount(maxNumberStreams);
+        if (!Checker.isEmpty(videoPlaybackFile)) {
+            config.EnableFileCapture(videoPlaybackFile, true);
+        }
     }
 }

@@ -587,7 +587,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void setHardwareAccelerationEnabled(boolean enable) {
-       hardwareCodecEnable = true;
+       hardwareCodecEnable = enable;
     }
 
     public String getHardwareVideoSettings() {

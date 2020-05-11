@@ -24,11 +24,11 @@ package com.ciscowebex.androidsdk.internal.media;
 
 public class MediaSCR {
 
-    public static final MediaSCR p90 = new MediaSCR(240, 3000, 150000, 891, 7200, 254, 0, false);
-    public static final MediaSCR p180 = new MediaSCR(396, 3000, 256000, 0, 7200, 255, 0, false);
-    public static final MediaSCR p360 = new MediaSCR(920, 3000, 640000, 0, 27600, 255, 0, false);
-    public static final MediaSCR p720 = new MediaSCR(3600, 3000, 1792000, 0, 108000, 255, 0, false);
-    public static final MediaSCR p1080 = new MediaSCR(8160, 1500, 1500000, 891, 108000, 255, 0, false);
+    public static final MediaSCR p90 = new MediaSCR(60, 3000, 177*1000, 180, 1800, 254, 0, false);
+    public static final MediaSCR p180 = new MediaSCR(240, 3000, 384*1000, 720, 7200, 255, 0, false);
+    public static final MediaSCR p360 = new MediaSCR(920, 3000, 768*1000, 2760, 27600, 255, 0, false);
+    public static final MediaSCR p720 = new MediaSCR(3600, 3000, 2000*1000, 11520, 108000, 255, 0, false);
+    public static final MediaSCR p1080 = new MediaSCR(8160, 3000, 4000*1000, 24300, 245760, 255, 0, false);
 
     public int maxFs;
     public int maxFps;
