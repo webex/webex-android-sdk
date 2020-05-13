@@ -822,6 +822,7 @@ public class CallImpl implements Call {
             Ln.e("CallImpl.doFloorUpdate: remote is null or valid");
             return;
         }
+
         if (current.getGrantedFloor() != null) {
             if (old == null || !old.isValid() || old.getGrantedFloor() == null) {
                 Ln.d("CallImpl.doFloorUpdate: remote floor granted, join sharing");
@@ -860,6 +861,10 @@ public class CallImpl implements Call {
                 if (isShareTypeChanged || isMySharingReplaced || isSharingReplacedByMine || isResourceUrlChanged) {
                     Ln.d("CallImpl.doFloorUpdate: share type or resource url or sharing device changed, leave sharing");
                     leaveSharing(old.getGrantedFloor().getBeneficiary(), old.getGrantedFloor().getGranted(), old);
+                    if (isMySharingReplaced){
+                        Ln.d("CallImpl.doFloorUpdate: my sharing replaced by other's, join sharing");
+                        joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
+                    }
                 } else {
                     Ln.d("CallImpl.doFloorUpdate: only MediaShareDeviceUrlChanged, join sharing");
                     joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
