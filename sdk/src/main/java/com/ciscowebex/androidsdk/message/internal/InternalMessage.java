@@ -26,6 +26,9 @@ import com.ciscowebex.androidsdk.internal.Credentials;
 import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 import com.ciscowebex.androidsdk.message.Message;
 import com.ciscowebex.androidsdk.message.MessageObserver;
+import com.ciscowebex.androidsdk.message.RemoteFile;
+
+import java.util.List;
 
 class InternalMessage extends Message {
 
@@ -47,9 +50,9 @@ class InternalMessage extends Message {
         }
     }
 
-    static class InternalMessageUpdated extends MessageObserver.MessageUpdated{
-        InternalMessageUpdated(Message message, ActivityModel activity){
-            super(message, activity);
+    static class InternalMessageFileThumbnailsUpdated extends MessageObserver.MessageFileThumbnailsUpdated{
+        InternalMessageFileThumbnailsUpdated(ActivityModel activity, String messageId, List<RemoteFile> files){
+            super(activity, messageId, files);
         }
     }
 

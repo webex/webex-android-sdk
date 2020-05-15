@@ -82,7 +82,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 Ln.d("The activity without conversation");
                 return;
             }
-            if (isActivityIdNeedCache(activity)){
+            if (isShouldCacheActivityId(activity)) {
                 objectAndActivityIds.put(activity.getObject().getId(), activity.getId());
             }
             String clientTempId = activity.getClientTempId();
@@ -124,21 +124,23 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                     activity.decrypt(keyResult.getData());
                 }
                 Message message = createMessage(activity, true);
-                MessageObserver.MessageUpdated event = new InternalMessage.InternalMessageUpdated(message, activity);
+                MessageObserver.MessageUpdated event = new InternalMessage.InternalMessageFileThumbnailsUpdated(activity, message.getId(), message.getFiles());
                 Queue.main.run(() -> observer.onEvent(event));
                 activity.setId(originalId);
             });
         }
     }
 
-    private boolean isActivityIdNeedCache(ActivityModel activity) {
+    private boolean isShouldCacheActivityId(ActivityModel activity) {
         if (activity.getVerb() == ActivityModel.Verb.share) {
             if (activity.getObject() != null && activity.getObject().isContent() && activity.getObject() instanceof ContentModel) {
-                ContentModel content = (ContentModel) activity.getObject();
-                if (content.getContentCategory().equals(ContentModel.Category.DOCUMENTS)) {
-                    for (FileModel file : content.getFiles().getItems()) {
-                        if (MimeUtils.getContentTypeByMimeType(file.getMimeType()).shouldTranscode()) {
-                            return true;
+                if (System.currentTimeMillis() - activity.getPublished().getTime() < 3 * 60 * 1000) {
+                    ContentModel content = (ContentModel) activity.getObject();
+                    if (content.getContentCategory().equals(ContentModel.Category.DOCUMENTS)) {
+                        for (FileModel file : content.getFiles().getItems()) {
+                            if (MimeUtils.getContentTypeByMimeType(file.getMimeType()).shouldTranscode()) {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -189,6 +191,9 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                     for (ActivityModel model : items.getItems()) {
                         if (model.getVerb().equals(ActivityModel.Verb.post) || model.getVerb().equals(ActivityModel.Verb.share)) {
                             activities.add(model);
+                            if (isShouldCacheActivityId(model)) {
+                                objectAndActivityIds.put(model.getObject().getId(), model.getId());
+                            }
                             if (activities.size() >= max) {
                                 break;
                             }

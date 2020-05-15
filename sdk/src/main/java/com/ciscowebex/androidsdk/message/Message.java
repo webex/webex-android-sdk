@@ -390,6 +390,16 @@ public class Message {
     }
 
     /**
+     * Update the file list of message.
+     *
+     * @param files The new remote files
+     * @since 2.6.0
+     */
+    public void setFiles(List<RemoteFile> files) {
+        this.remoteFiles = files;
+    }
+
+    /**
      * Checks if this is a reply message.
      *
      * @return true if this is a reply message.
