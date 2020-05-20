@@ -205,7 +205,7 @@ publishing {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation('com.webex:wme4android-release:10.3.1.1@aar')
+    implementation('com.webex:wme4android-release:10.5.1.1@aar')
     implementation('com.google.code.gson:gson:2.7')
     implementation('com.github.benoitdion.ln:ln:0.1.2')
     implementation('com.squareup.okhttp3:okhttp:3.12.0')
