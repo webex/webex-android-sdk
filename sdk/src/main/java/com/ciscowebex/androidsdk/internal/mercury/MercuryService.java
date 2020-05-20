@@ -62,7 +62,7 @@ public class MercuryService {
     private boolean connected = false;
 
     private Authenticator authenticator;
-    private OkHttpClient client = HttpClient.makeClient();
+    private OkHttpClient client = HttpClient.newClient().build();
     private MercuryWebsocketListener websocketListener =  new MercuryWebsocketListener();
     private MercuryListener mercuryListener;
     private Closure<WebexError> onConnected;

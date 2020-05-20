@@ -13,6 +13,7 @@ import com.ciscowebex.androidsdk.utils.http.HttpClient;
 import com.github.benoitdion.ln.Ln;
 import okhttp3.*;
 
+import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -39,7 +40,7 @@ public class ServiceReqeust {
 
     private Type typeOfModel;
 
-    private Request.Builder builder;
+    private final Request.Builder builder;
 
     public ServiceReqeust(Service service, Request.Builder builder) {
         this.service = service;
@@ -117,7 +118,7 @@ public class ServiceReqeust {
         builder.url(url.build());
 
         if (authenticator == null) {
-            async(builder.build(), false, closure);
+            async(HttpClient.defaultClient, builder.build(), false, closure);
         }
         else {
             authenticator.getToken(tokenResult -> {
@@ -126,16 +127,20 @@ public class ServiceReqeust {
                     doError(tokenResult.getError() == null ? WebexError.from("Token is null") : tokenResult.getError());
                 } else {
                     builder.header("Authorization", "Bearer " + token);
-                    async(builder.build(), true, closure);
+                    async(HttpClient.defaultClient, builder.build(), true, closure);
                 }
             });
         }
     }
 
-    private <M> void async(Request request, boolean refresh, Closure<M> closure) {
-        HttpClient.client.newCall(request).enqueue(new Callback() {
+    private <M> void async(OkHttpClient client, Request request, boolean refresh, Closure<M> closure) {
+        client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                if (e instanceof SSLException && !client.connectionSpecs().contains(HttpClient.TLS_SPEC)) {
+                    async(HttpClient.newClient().connectionSpecs(Collections.singletonList(HttpClient.TLS_SPEC)).build(), request, refresh, closure);
+                    return;
+                }
                 doError(WebexError.from(e));
             }
 
@@ -147,7 +152,7 @@ public class ServiceReqeust {
                         if (refreshedToken == null) {
                             doError(refreshResult.getError() == null ? WebexError.from("Token is null") : refreshResult.getError());
                         } else {
-                            async(request.newBuilder().header("Authorization", "Bearer " + refreshedToken).build(), false, closure);
+                            async(client, request.newBuilder().header("Authorization", "Bearer " + refreshedToken).build(), false, closure);
                         }
                     });
                 }

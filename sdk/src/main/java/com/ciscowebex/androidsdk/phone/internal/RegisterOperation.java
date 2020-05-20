@@ -32,7 +32,6 @@ import com.ciscowebex.androidsdk.internal.model.RegionModel;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.collection.Maps;
-import okhttp3.Request;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -37,7 +37,7 @@ public class HttpClient {
 
     private static final int MAX_LENGTH = 1024;
 
-    private static HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> {
+    private static HttpLoggingInterceptor LOGGING_INTERCEPTOR = new HttpLoggingInterceptor(message -> {
         if (message.length() > MAX_LENGTH) {
             int chunkCount = message.length() / MAX_LENGTH;
             for (int i = 0; i <= chunkCount; i++) {
@@ -54,17 +54,18 @@ public class HttpClient {
         }
     });
 
+    public static ConnectionSpec TLS_SPEC = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+            .tlsVersions(TlsVersion.TLS_1_2)
+            .cipherSuites(CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, CipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256)
+            .build();
+
     public static void setLogLevel(HttpLoggingInterceptor.Level level) {
-       loggingInterceptor.setLevel(level);
+        LOGGING_INTERCEPTOR.setLevel(level);
     }
 
-    public static @NonNull OkHttpClient client = makeClient(loggingInterceptor);
+    public static @NonNull OkHttpClient defaultClient = newClient().build();
 
-    public static OkHttpClient makeClient() {
-        return makeClient(loggingInterceptor);
-    }
-
-    public static OkHttpClient makeClient(HttpLoggingInterceptor loggingInterceptor) {
+    public static OkHttpClient.Builder newClient() {
         return new OkHttpClient.Builder()
                 .addInterceptor(new DefaultHeadersInterceptor())
                 .followRedirects(false)
@@ -99,11 +100,10 @@ public class HttpClient {
                         return response;
                     }
                 })
-                .addInterceptor(loggingInterceptor)
+                .addInterceptor(HttpClient.LOGGING_INTERCEPTOR)
                 .readTimeout(3, TimeUnit.MINUTES)
                 .writeTimeout(60, TimeUnit.SECONDS)
-                .connectTimeout(3, TimeUnit.MINUTES)
-                .build();
+                .connectTimeout(3, TimeUnit.MINUTES);
     }
 
 }
