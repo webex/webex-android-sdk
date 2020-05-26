@@ -55,7 +55,7 @@ public class NetworkReachability extends BroadcastReceiver {
     private TimerTask updateNetworkState;
 
     public NetworkReachability(Context context, NetworkReachabilityObserver observer) {
-        this.connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);;
+        this.connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         this.observer = observer;
     }
 
@@ -91,9 +91,6 @@ public class NetworkReachability extends BroadcastReceiver {
         return false;
     }
 
-    public boolean isBehindProxy() {
-        return ProxySelector.getDefault().select(URI.create(Service.Wdm.endpoint(null) + "/ping")).get(0) != Proxy.NO_PROXY;
-    }
 
     public void update() {
         if (updateNetworkState != null) {
@@ -123,7 +120,7 @@ public class NetworkReachability extends BroadcastReceiver {
         boolean isConnected = info.isConnected();
         if (isConnected) {
             boolean currentIsBehindProxy = false;
-            if (isBehindProxy()) {
+            if (NetworkUtils.isBehindProxy()) {
                 currentIsBehindProxy = true;
                 OkHttpClient client = new OkHttpClient().newBuilder().proxyAuthenticator(new ProxyCheckAuthenticator()).build();
                 Request request = new Request.Builder().url(Service.Wdm.endpoint(null) + "/").build();

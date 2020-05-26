@@ -34,6 +34,7 @@ import java.util.Map;
 public class Device {
 
     public static final String DEVICE_URL = "DEVICE_URL";
+    public static final String DEVICE_ID = "DEVICE_ID";
 
     public static final String SPARKBOARD_DEVICE_TYPE = "SPARK_BOARD";
     public static final String SPARKBOARD_MEDIA_ENGINE_TYPE = "ACANO_MEDIA_ENGINE";
@@ -75,6 +76,10 @@ public class Device {
         return deviceModel.getDeviceUrl();
     }
 
+    public String getDeviceIdentifier() {
+        return deviceModel.getDeviceIdentifier();
+    }
+
     public String getWebSocketUrl() {
         return webSocketUrl;
     }
@@ -107,5 +112,15 @@ public class Device {
         json.put("countryCode", getCountryCode());
         json.put("capabilities", Maps.makeMap("groupCallSupported", true, "sdpSupported", true));
         return json;
+    }
+
+    public void store() {
+        Settings.shared.store(Device.DEVICE_URL, getDeviceUrl());
+        Settings.shared.store(Device.DEVICE_ID, getDeviceIdentifier());
+    }
+
+    public void clear() {
+        Settings.shared.clear(Device.DEVICE_URL);
+        Settings.shared.clear(Device.DEVICE_ID);
     }
 }

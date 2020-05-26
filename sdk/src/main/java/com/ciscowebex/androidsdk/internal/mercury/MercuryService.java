@@ -29,6 +29,7 @@ import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.WebexError;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.Closure;
+import com.ciscowebex.androidsdk.internal.ServiceReqeust;
 import com.ciscowebex.androidsdk.internal.queue.BackgroundQueue;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.utils.Json;
@@ -172,7 +173,7 @@ public class MercuryService {
 
         @Override
         public void onOpen(WebSocket webSocket, Response response) {
-            trackingId = response.header("TrackingID");
+            trackingId = response.header(ServiceReqeust.HEADER_TRACKING_ID);
             Ln.i("Mercury connection opened. handshake: %s - %s TrackingId: %s", response.code(), response.message(), trackingId);
             queue.run(() -> {
                 connected = true;
