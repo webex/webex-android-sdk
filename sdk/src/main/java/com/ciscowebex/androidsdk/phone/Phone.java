@@ -330,6 +330,10 @@ public interface Phone {
      */
     void setHardwareAccelerationEnabled(boolean enable);
 
+    boolean isTryToUserCamera2();
+
+    void setTryToUserCamera2(boolean tryToUserCamera2);
+
     /**
      * Turn on audio enhancement for the specified device models. By default,
      * the audio enhancement is enable for Samsung S7/S7Edge/S8/S8+/S9/S9+/S10/S10+/S10e/Note8/Note9.

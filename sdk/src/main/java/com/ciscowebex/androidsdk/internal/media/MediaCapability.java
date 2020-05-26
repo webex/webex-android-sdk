@@ -61,6 +61,8 @@ public class MediaCapability {
 
     private boolean hardwareCodecEnable = false;
 
+    private boolean tryToUserCamera2 = true;
+
     private boolean isAudioEnhancement = false;
 
     private String audioPlaybackFile = "";
@@ -117,6 +119,14 @@ public class MediaCapability {
 
     public void setHardwareCodecEnable(boolean hardwareCodecEnable) {
         this.hardwareCodecEnable = hardwareCodecEnable;
+    }
+
+    public boolean isTryToUserCamera2() {
+        return tryToUserCamera2;
+    }
+
+    public void setTryToUserCamera2(boolean tryToUserCamera2) {
+        this.tryToUserCamera2 = tryToUserCamera2;
     }
 
     public boolean isAudioEnhancement() {
