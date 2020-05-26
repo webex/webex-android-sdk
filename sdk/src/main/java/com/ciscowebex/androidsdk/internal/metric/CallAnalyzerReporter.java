@@ -49,19 +49,19 @@ public class CallAnalyzerReporter {
     }
 
     public void reportClientStartedFromCrash() {
-        Ln.i("reportClientStartedFromCrash");
+        Ln.d("reportClientStartedFromCrash");
         // If we can pass in info on the last call we were in that would be a bonus
         postMetric(getClientEventBuilder().clientCrash().build());
     }
 
     public void reportMediaEngineCrash() {
-        Ln.i("reportMediaEngineCrash");
+        Ln.d("reportMediaEngineCrash");
         // If we can pass in info on the last call we were in that would be a bonus
         postMetric(getClientEventBuilder().mediaEngineCrash().build());
     }
 
     public void reportCallInitiated(CallImpl call) {
-        Ln.i("reportCallInitiated");
+        Ln.d("reportCallInitiated");
         // This SHOULD be reported from the UI the moment you hit the button to initiate a call,
         // but for now I'm putting it in CCS
         postMetric(getClientEventBuilder().addCall(call).callInitiated(call).build());
@@ -69,36 +69,36 @@ public class CallAnalyzerReporter {
 
     // Should be called by: SDK
     public void reportLocalSdpGenerated(CallImpl call) {
-        Ln.i("reportLocalSdpGenerated");
+        Ln.d("reportLocalSdpGenerated");
         postMetric(getClientEventBuilder().addCall(call).localSdpGenerated().build());
     }
 
     public void reportLocalSdpGenereatedError(CallImpl call, long errorCode, String description) {
-        Ln.i("reportLocalSdpGeneratedError");
+        Ln.d("reportLocalSdpGeneratedError");
         postMetric(getClientEventBuilder().addCall(call).localSdpGeneratedFailed(errorCode, description).build());
     }
 
     // Should be called by: SDK
     public void reportJoinRequest(String callId, LocusKeyModel locusKey) {
-        Ln.i("reportJoinRequest");
+        Ln.d("reportJoinRequest");
         postMetric(getClientEventBuilder().addCall(callId, locusKey).joinRequest().addReachabilityStatus(phone.getReachability()).build());
     }
 
     // Should be called by: SDK
     public void reportJoinResponseSuccess(String callId, LocusKeyModel locusKey) {
-        Ln.i("reportJoinResponseSuccess");
+        Ln.d("reportJoinResponseSuccess");
         postMetric(getClientEventBuilder().addCall(callId, locusKey).joinResponse(true).build());
     }
 
     // Should be called by: SDK
     public void reportJoinResponseError(String callId, LocusKeyModel locusKey, int httpCode, @Nullable ErrorDetail detail) {
-        Ln.i("reportJoinResponseError");
+        Ln.d("reportJoinResponseError");
         postMetric(getClientEventBuilder().addCall(callId, locusKey).joinResponse(false).addLocusErrorResponse(true, httpCode, detail).build());
     }
 
     // Should be called by: SDK
     public void reportJoinResponseError(String callId, LocusKeyModel locusKey, String desc) {
-        Ln.i("reportJoinResponseError, network issue");
+        Ln.d("reportJoinResponseError, network issue");
         postMetric(getClientEventBuilder().addCall(callId, locusKey).joinResponse(false).addLocusErrorResponse(true, desc).build());
     }
 
@@ -108,7 +108,7 @@ public class CallAnalyzerReporter {
     }
 
     public void reportMediaCapabilities(CallImpl call, int errorCode) {
-        Ln.i("reportMediaCapabilities");
+        Ln.d("reportMediaCapabilities");
         if (call == null || call.getMedia() == null) {
             Ln.w("Unable to get Media Capabilities.");
             return;
@@ -118,146 +118,146 @@ public class CallAnalyzerReporter {
 
     // Should be called by: SDK
     public void reportFloorGrantRequest(String correlationId, LocusKeyModel locusKey) {
-        Ln.i("reportFloorGrantRequest");
+        Ln.d("reportFloorGrantRequest");
         postMetric(getClientEventBuilder().addCall(correlationId, locusKey).floorGrantRequest().build());
     }
 
     // Should be called by: SDK
     public void reportFloorGrantedLocal(CallImpl call) {
-        Ln.i("reportFloorGrantedLocal");
+        Ln.d("reportFloorGrantedLocal");
         postMetric(getClientEventBuilder().addCall(call).floorGrantedLocal().build());
     }
 
     // Should be called by: SDK
     public void reportMediaEngineReady(CallImpl call) {
-        Ln.i("reportMediaEngineReady");
+        Ln.d("reportMediaEngineReady");
         postMetric(getClientEventBuilder().addCall(call).mediaEngineReady().build());
     }
 
     // Should be called by: SDK
     public void reportRemoteSdpReceived(CallImpl call) {
-        Ln.i("reportRemoteSdpReceived");
+        Ln.d("reportRemoteSdpReceived");
         postMetric(getClientEventBuilder().addCall(call).remoteSDPRx().build());
     }
 
     // Should be called by: SDK
     public void reportClientNotificationReceived(LocusKeyModel locusKey, boolean mercury) {
-        Ln.i("reportClientNotificationReceived");
+        Ln.d("reportClientNotificationReceived");
         postMetric(getClientEventBuilder().addCall(null, locusKey).addTrigger(mercury ? ClientEvent.Trigger.MERCURY_EVENT : ClientEvent.Trigger.OTHER).notificationReceived().build());
     }
 
     // Should be call by: SDK
     public void reportCallDeclined(CallImpl call) {
-        Ln.i("reportCallDeclined");
+        Ln.d("reportCallDeclined");
         postMetric(getClientEventBuilder().addCall(call).callDeclined().build());
     }
 
     // Should be called by: SDK
     public void reportIceStart(CallImpl call) {
-        Ln.i("reportIceStart");
+        Ln.d("reportIceStart");
         postMetric(getClientEventBuilder().addCall(call).iceStart().build());
     }
 
     // Should be called by: SDK
     public void reportIceEnd(CallImpl call, boolean success, List<MediaLine> iceMediaLineList) {
-        Ln.i("reportIceEnd");
+        Ln.d("reportIceEnd");
         postMetric(getClientEventBuilder().addCall(call).iceEnd(success, iceMediaLineList).build());
     }
 
     // Should be called by: SDK
     public void reportMediaRxStart(CallImpl call, WMEngine.Media mediaType, Long csi) {
-        Ln.i("reportMediaRxStart: mediaType=%s", mediaType);
+        Ln.d("reportMediaRxStart: mediaType=%s", mediaType);
         postMetric(getClientEventBuilder().addCall(call).rxMediaStart(mediaType, csi).build());
     }
 
     // Should be called by: SDK
     // Need to clarify if this is whole session stopped, or just a transient stop (i.e. something like WME video blocked)
     public void reportMediaRxStop(CallImpl call, WMEngine.Media mediaType, Integer mediaStatus) {
-        Ln.i("reportMediaRxStop: mediaType=%s, mediaStatus=%d", mediaType, mediaStatus);
+        Ln.d("reportMediaRxStop: mediaType=%s, mediaStatus=%d", mediaType, mediaStatus);
         postMetric(getClientEventBuilder().addCall(call).rxMediaStop(mediaType, mediaStatus).build());
     }
 
     // Should be called by: SDK
     public void reportMediaTxStart(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportMediaTxStart: %s", mediaType);
+        Ln.d("reportMediaTxStart: %s", mediaType);
         postMetric(getClientEventBuilder().addCall(call).txMediaStart(mediaType).build());
     }
 
     // Should be called by: SDK
     // Need to clarify if this is whole session stopped, or just a transient stop  (i.e. something like WME video blocked)
     public void reportMediaTxStop(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportMediaTxStop: %s", mediaType);
+        Ln.d("reportMediaTxStop: %s", mediaType);
         postMetric(getClientEventBuilder().addCall(call).txMediaStop(mediaType).build());
     }
 
     // Should be called by: Client UI
     public void reportMediaRenderStart(CallImpl call, WMEngine.Media mediaType, Long csi) {
-        Ln.i("reportMediaRenderStart: %s", mediaType);
+        Ln.d("reportMediaRenderStart: %s", mediaType);
         postMetric(getClientEventBuilder().addCall(call).mediaRenderStart(mediaType, csi).build());
     }
 
     // Should be called by: Client UI
     public void reportMediaRenderStop(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportMediaRenderStop: %s", mediaType);
+        Ln.d("reportMediaRenderStop: %s", mediaType);
         postMetric(getClientEventBuilder().addCall(call).mediaRenderStop(mediaType).build());
     }
 
     public void reportShareCsiChanged(CallImpl call, Long csi) {
-        Ln.i("reportShareCsiChanged");
+        Ln.d("reportShareCsiChanged");
         postMetric(getClientEventBuilder().addCall(call).shareCsiChanged(csi).build());
     }
 
     // Should be called by: SDK
     public void reportMediaReconnecting(CallImpl call) {
-        Ln.i("reportMediaReconnecting");
+        Ln.d("reportMediaReconnecting");
         postMetric(getClientEventBuilder().addCall(call).mediaReconnecting().build());
     }
 
     // Should be called by: SDK
     public void reportMediaRecovered(CallImpl call, boolean newSession) {
-        Ln.i("reportMediaRecovered");
+        Ln.d("reportMediaRecovered");
         postMetric(getClientEventBuilder().addCall(call).mediaRecovered(newSession).build());
     }
 
     // Should be called by: SDK
     public void reportShareInitiated(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportShareInitiated");
+        Ln.d("reportShareInitiated");
         postMetric(getClientEventBuilder().addCall(call).shareInitiated(mediaType).build());
     }
 
     // Should be called by: SDK
     public void reportShareStopped(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportShareStopped");
+        Ln.d("reportShareStopped");
         postMetric(getClientEventBuilder().addCall(call).shareStopped(mediaType).build());
     }
 
     // Should be called by: Client UI
     public void reportShareSelectedApp(CallImpl call) {
-        Ln.i("reportShareSelectedApp");
+        Ln.d("reportShareSelectedApp");
         postMetric(getClientEventBuilder().addCall(call).shareAppSelected().build());
     }
 
     // Should be called by: Client
     public void reportShareLayoutDisplayed(CallImpl call) {
-        Ln.i("reportShareLayoutDisplayed");
+        Ln.d("reportShareLayoutDisplayed");
         postMetric(getClientEventBuilder().addCall(call).shareDisplayed().build());
     }
 
     // Should be called by: SDK
     public void reportMuted(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportMuted");
+        Ln.d("reportMuted");
         postMetric(getClientEventBuilder().addCall(call).muted(mediaType).build());
     }
 
     // Should be called by: SDK
     public void reportUnmuted(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportUnmuted");
+        Ln.d("reportUnmuted");
         postMetric(getClientEventBuilder().addCall(call).unmuted(mediaType).build());
     }
 
     // Should be called by: SDK
     public void reportCallLeave(CallImpl call) {
-        Ln.i("reportCallLeave");
+        Ln.d("reportCallLeave");
         postMetric(getClientEventBuilder().addCall(call).callLeft(true).build());
     }
 
@@ -266,40 +266,40 @@ public class CallAnalyzerReporter {
 
     // Should be called by: SDK
     public void reportMultistreamScaTx(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportMultistreamScaTx");
+        Ln.d("reportMultistreamScaTx");
         postMetric(getClientEventBuilder().addCall(call).scaTx(mediaType).build());
     }
 
     // Should be called by: SDK
     public void reportMultistreamScaRx(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportMultistreamScaRx");
+        Ln.d("reportMultistreamScaRx");
         postMetric(getClientEventBuilder().addCall(call).scaRx(mediaType).build());
     }
 
     // Should be called by: SDK
     public void reportMultistreamScrTx(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportMultistreamScrTx");
+        Ln.d("reportMultistreamScrTx");
         postMetric(getClientEventBuilder().addCall(call).scrTx(mediaType).build());
     }
 
     // Should be called by: SDK
     public void reportMultistreamScrRx(CallImpl call, WMEngine.Media mediaType) {
-        Ln.i("reportMultistreamScrRx");
+        Ln.d("reportMultistreamScrRx");
         postMetric(getClientEventBuilder().addCall(call).scrRx(mediaType).build());
     }
 
     public void reportNetworkChanged(CallImpl call) {
-        Ln.i("reportNetworkChanged");
+        Ln.d("reportNetworkChanged");
         postMetric(getClientEventBuilder().addCall(call).callNetworkChanged().build());
     }
 
     public void reportAppEnteringBackground(CallImpl call) {
-        Ln.i("reportAppEnteringBackground");
+        Ln.d("reportAppEnteringBackground");
         postMetric(getClientEventBuilder().addCall(call).callAppEnteringBackground().build());
     }
 
     public void reportAppEnteringForeground(CallImpl call) {
-        Ln.i("reportAppEnteringForeground");
+        Ln.d("reportAppEnteringForeground");
         postMetric(getClientEventBuilder().addCall(call).callAppEnteringForeground().build());
     }
 
@@ -307,20 +307,20 @@ public class CallAnalyzerReporter {
 
     // Should be called by: Client?
     public void reportPinPromptShown(CallImpl call) {
-        Ln.i("reportPinPromptShown");
+        Ln.d("reportPinPromptShown");
         // So this should probably come from the UI?
         postMetric(getClientEventBuilder().addCall(call).pinPromptShown().build());
     }
 
     // Should be called by: SDK?
     public void reportPinEntered(CallImpl call) {
-        Ln.i("reportPinEntered");
+        Ln.d("reportPinEntered");
         postMetric(getClientEventBuilder().addCall(call).pinEntered().build());
     }
 
     // Should be called by: SDK or Client?
     public void reportMeetingLobbyEntered(CallImpl call) {
-        Ln.i("reportMeetingLobbyEntered");
+        Ln.d("reportMeetingLobbyEntered");
         // AMBIGUITY: Is this just the "waiting for host" screen, or is it the whole PIN entry +
         // "waiting for host" process. This is TBA in the future
         postMetric(getClientEventBuilder().addCall(call).lobbyEntered().build());
@@ -328,7 +328,7 @@ public class CallAnalyzerReporter {
 
     // Should be called by: SDK or Client?
     public void reportMeetingLobbyExited(CallImpl call) {
-        Ln.i("reportMeetingLobbyExited");
+        Ln.d("reportMeetingLobbyExited");
         // AMBIGUITY: Is this just the "waiting for host" screen, or is it the whole PIN entry +
         // "waiting for host" process. This is TBA in the future
         postMetric(getClientEventBuilder().addCall(call).lobbyExited().build());
@@ -336,12 +336,12 @@ public class CallAnalyzerReporter {
 
     // ---------------------------------------------------------------------------------------------
     public void reportMediaQualityMetrics(CallImpl call, String metrics) {
-        Ln.i("reportMediaQualityMetrics");
+        Ln.d("reportMediaQualityMetrics");
         postMetric(getMediaQualityEventBuilder().addCall(call).setMediaQualityEvent(metrics).build());
     }
 
     public void reportMercuryConnectionStatus(CallImpl call, boolean connected) {
-        Ln.i("reportMercuryConnectionStatus connected=" + connected);
+        Ln.d("reportMercuryConnectionStatus connected=" + connected);
         if (connected) {
             postMetric(getClientEventBuilder().addCall(call).mercuryConnectionRestored().build());
         } else {

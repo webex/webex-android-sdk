@@ -1029,7 +1029,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             return;
         }
         Ln.d("doLocusEvent: " + url);
-        CallAnalyzerReporter.shared.reportClientNotificationReceived(model.getKey(), true);
+        //CallAnalyzerReporter.shared.reportClientNotificationReceived(model.getKey(), true);
         Queue.serial.run(() -> {
             CallImpl call = calls.get(url);
             if (call == null) {

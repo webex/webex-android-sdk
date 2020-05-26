@@ -218,6 +218,7 @@ public class MediaCapability {
     }
 
     private void applyConfig(MediaConfig.GlobalConfig config) {
+        config.EnableMQECallback(true);
         config.EnableICE(true);
         config.EnableSRTP(true);
         config.EnableQos(true);

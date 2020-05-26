@@ -121,6 +121,7 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
                 return;
             }
             this.observer = observer;
+            latestMediaStatusMap.clear();
             deviceManager.register();
             localAudioTrack.start();
             remoteAudioTrack.start();
@@ -136,6 +137,7 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
     public void destroy() {
         Ln.d("Destroy wme media session");
         state = State.DESTROYED;
+        latestMediaStatusMap.clear();
         if (connection != null && this.isMutedByLocal(WmeTrack.Type.LocalAudio)) {
             // Workaround for SPARK-93618, to reset the mute status of WME internal audio engine.
             unmute(WmeTrack.Type.LocalVideo);
@@ -947,6 +949,10 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
     public synchronized void onMediaStatus(int mid, int vid, MediaConnection.MediaStatus status, boolean hasCSI, long csi) {
         WMEngine.Media type = WMEngine.Media.from(mid);
         Ln.d("Media.onMediaStatus, mid = %s (%d) vid = %d (%s) status = %s hasCsi = %s csi = %d", type, mid, vid, MediaHelper.getVideoStreamString(vid), status, hasCSI, csi);
+        if ((type == WMEngine.Media.Video || type == WMEngine.Media.Sharing) && vid == WMEngine.MAIN_VID) {
+            latestMediaStatusMap.put(mid, status.value());
+        }
+
         if (status != MediaConnection.MediaStatus.Available) {
             if (type == WMEngine.Media.Video) {
                 if (vid == WMEngine.MAIN_VID) {
