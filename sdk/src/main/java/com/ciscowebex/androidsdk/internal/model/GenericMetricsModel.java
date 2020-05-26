@@ -7,7 +7,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 public class GenericMetricsModel {
 
     private final LinkedBlockingDeque<GenericMetricModel> metrics = new LinkedBlockingDeque<>();
-    private final Object sync = new Object();
+    private final transient Object sync = new Object();
 
     public GenericMetricsModel() {
     }

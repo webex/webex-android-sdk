@@ -24,6 +24,7 @@ package com.ciscowebex.androidsdk;
 
 import android.app.Application;
 
+import com.cisco.wx2.diagnostic_events.Event;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.reachability.BackgroundChecker;
 import com.ciscowebex.androidsdk.internal.reachability.ForegroundChecker;
@@ -43,6 +44,7 @@ import com.ciscowebex.androidsdk.team.TeamClient;
 import com.ciscowebex.androidsdk.team.TeamMembershipClient;
 import com.ciscowebex.androidsdk.team.internal.TeamClientImpl;
 import com.ciscowebex.androidsdk.team.internal.TeamMembershipClientImpl;
+import com.ciscowebex.androidsdk.utils.Json;
 import com.ciscowebex.androidsdk.utils.UserAgent;
 import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.http.HttpClient;
@@ -113,6 +115,10 @@ public class Webex {
         phone.setChecker(checker);
         setLogLevel(LogLevel.DEBUG);
         Ln.i(UserAgent.value);
+
+        String s = "{\"event\":{\"name\":\"client.media.render.start\",\"canProceed\":true,\"identifiers\":{\"correlationId\":\"4e215cd6-0035-41bb-bfce-4d5520b9afe6\",\"deviceId\":\"76ca4b3d-31e4-4b1a-9bcf-9f029ef0b8b1\",\"locusId\":\"d7926d6b-fd02-3ebe-8f90-5d54e253d262\",\"locusStartTime\":{\"iMillis\":1590514372820},\"locusUrl\":\"https://locus-a.wbx2.com/locus/api/v1/loci/d7926d6b-fd02-3ebe-8f90-5d54e253d262\",\"orgId\":\"1b293533-237c-4376-ae5c-1de2e9d9d557\",\"trackingId\":\"webex-android-sdk_ee5f7f03-c2d2-4fce-987e-371769c0fd0f_142\",\"userId\":\"1431e829-9b47-4100-b981-e4bfcea4f750\"},\"mediaType\":\"video\"},\"eventId\":\"c2fb3b6c-9d8e-46fc-8e06-924c132bfa11\",\"origin\":{\"buildType\":\"prod\",\"localIP\":\"192.168.72.137\",\"mediaEngineSoftwareVersion\":\"10.3.1\",\"name\":\"endpoint\",\"networkType\":\"wifi\",\"userAgent\":\"webex_android_sdk/2.5.0.6-SNAPSHOT(2020_05_27_01_26_47_f62dcb7) (Android 10; HUAWEI HWELE / HUAWEI ELE-AL00;)\",\"usingProxy\":false},\"originTime\":{\"sent\":{\"iMillis\":1590514801957},\"triggered\":{\"iMillis\":1590514801956}},\"version\":1}";
+        Event e = Json.fromJson(s, Event.class);
+        System.out.println(e);
     }
 
     /**

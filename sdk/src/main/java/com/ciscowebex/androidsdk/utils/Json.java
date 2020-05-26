@@ -36,6 +36,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import org.joda.time.Instant;
 
 import java.lang.reflect.Type;
 import java.util.Date;
@@ -71,7 +72,7 @@ public class Json {
     public static Gson buildGson() {
         return new GsonBuilder()
                 .registerTypeAdapter(Date.class, new SimpleAdaptor.DateType())
-                //.registerTypeAdapter(Instant.class, new SimpleAdaptor.InstantType())
+                .registerTypeAdapter(Instant.class, new SimpleAdaptor.InstantType())
                 .registerTypeHierarchyAdapter(Uri.class, new SimpleAdaptor.UriType())
                 .registerTypeHierarchyAdapter(LocusKeyModel.class, new SimpleAdaptor.LocusKeyType())
                 .registerTypeAdapter(MercuryEvent.class, new MercuryEventAdapter())

@@ -581,6 +581,10 @@ public class GenericMetricModel {
         fields = null;
     }
 
+    public Event getEventPayload() {
+        return eventPayload;
+    }
+
     public boolean isDiagnosticEvent() {
         return type.contains(DIAGNOSTIC_TYPE);
     }
