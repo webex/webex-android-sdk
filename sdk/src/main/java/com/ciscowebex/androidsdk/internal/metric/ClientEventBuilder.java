@@ -455,11 +455,13 @@ public class ClientEventBuilder extends DiagnosticsEventBuilder {
     }
 
     public ClientEventBuilder addReachabilityStatus(ReachabilityService linusReachabilityService) {
-        Map<String, ReachabilityModel> results = linusReachabilityService.getFeedback().reachability;
+        Map<String, ReachabilityModel> results = linusReachabilityService.getFeedback() == null ? null : linusReachabilityService.getFeedback().reachability;
         ClientEvent.ReachabilityStatus reachabilityStatus = getReachabilityStatus(results);
-        Map<String, Object> data = new HashMap<>(results.size());
-        for (Map.Entry<String, ReachabilityModel> entry : results.entrySet()) {
-            data.put(entry.getKey(), entry.getValue());
+        Map<String, Object> data = new HashMap<>();
+        if (results != null) {
+            for (Map.Entry<String, ReachabilityModel> entry : results.entrySet()) {
+                data.put(entry.getKey(), entry.getValue());
+            }
         }
         clientEventBuilder.reachabilityStatus(reachabilityStatus)
                 .canProceed(reachabilityStatus != ClientEvent.ReachabilityStatus.ALL_FALSE && reachabilityStatus != ClientEvent.ReachabilityStatus.NONE)

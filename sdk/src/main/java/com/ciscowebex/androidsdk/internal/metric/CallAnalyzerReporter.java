@@ -81,7 +81,8 @@ public class CallAnalyzerReporter {
     // Should be called by: SDK
     public void reportJoinRequest(String callId, LocusKeyModel locusKey) {
         Ln.d("reportJoinRequest");
-        postMetric(getClientEventBuilder().addCall(callId, locusKey).joinRequest().addReachabilityStatus(phone.getReachability()).build());
+        //postMetric(getClientEventBuilder().addCall(callId, locusKey).joinRequest().addReachabilityStatus(phone.getReachability()).build());
+        postMetric(getClientEventBuilder().addCall(callId, locusKey).joinRequest().build());
     }
 
     // Should be called by: SDK

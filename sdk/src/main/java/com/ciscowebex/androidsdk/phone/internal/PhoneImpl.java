@@ -367,7 +367,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                         return;
                     }
                     String correlationId = UUID.randomUUID().toString();
-                    CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
+                    //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
                     if (target.isEndpoint()) {
                         service.call(target.getAddress(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
                             if (callResult.getError() != null || callResult.getData() == null) {
@@ -412,7 +412,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 MediaSession session = engine.createSession(createCapability(), incoming.getOption());
                 String localSdp = session.getLocalSdp();
                 incoming.getCall().setMedia(session);
-                CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
+                //CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
                 service.join(incoming.getCall().getUrl(), incoming.getCall().getCorrelationId(), device, localSdp, incoming.getCall().isGroup() ? incoming.getOption().getLayout() : null, reachability.getFeedback(), joinResult -> {
                     if (joinResult.getError() != null || joinResult.getData() == null) {
                         Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
@@ -778,7 +778,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 Queue.serial.yield();
                 return;
             }
-            MediaInfoModel media = new MediaInfoModel(localSdp == null ? sdp : localSdp, !audio, !video, reachability.getFeedback().reachability);
+            MediaEngineReachabilityModel reachabilities = reachability.getFeedback();
+            MediaInfoModel media = new MediaInfoModel(localSdp == null ? sdp : localSdp, !audio, !video, reachabilities == null ? null : reachabilities.reachability);
             service.update(url, mediaId, device, media, result -> {
                 if (result.getError() != null && result.getData() == null) {
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
