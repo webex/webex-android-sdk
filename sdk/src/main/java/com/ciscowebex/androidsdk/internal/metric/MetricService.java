@@ -32,10 +32,6 @@ public class MetricService {
         queue.run(() -> {
             if (metrics.metricsSize() > 0) {
                 GenericMetricsModel models = new GenericMetricsModel(metrics.popMetrics(100));
-//                for (GenericMetricModel model : models.getMetrics()) {
-//                    model.get
-//                }
-
                 Service.Metrics.post(models).to("clientmetrics")
                         .auth(phone.getAuthenticator())
                         .device(phone.getDevice())
