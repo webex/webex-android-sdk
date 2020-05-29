@@ -331,6 +331,23 @@ public interface Phone {
     void setHardwareAccelerationEnabled(boolean enable);
 
     /**
+     * Returns true if SDK is use android.hardware.camera2.CameraDevice, otherwise, false.
+     * @return true if SDK is use android.hardware.camera2.CameraDevice, otherwise, false.
+     * @since 2.6.0
+     */
+    boolean isCamera2Enabled();
+
+    /**
+     * Set true is use android.hardware.camera2.CameraDevice,
+     * false to use android.hardware.Camera.
+     * Default is true.
+     * This method is invalid on Android API 21
+     * @param enableCamera2 true to try to use android.hardware.camera2.CameraDevice, false to use android.hardware.Camera.
+     * @since 2.6.0
+     */
+    void enableCamera2(boolean enableCamera2);
+
+    /**
      * Turn on audio enhancement for the specified device models. By default,
      * the audio enhancement is enable for Samsung S7/S7Edge/S8/S8+/S9/S9+/S10/S10+/S10e/Note8/Note9.
      *
