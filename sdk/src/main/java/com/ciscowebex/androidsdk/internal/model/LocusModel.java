@@ -179,10 +179,6 @@ public class LocusModel {
         this.aclUrl = aclUrl;
     }
 
-    public String getCallID() {
-        return key.getLocusId();
-    }
-
     public String getUniqueCallID() {
         String locusId = key.getLocusId();
         DateFormat dateFormat = DateUtils.buildIso8601Format();

@@ -58,7 +58,7 @@ public class DiagnosticsEventBuilder {
         if (call != null) {
             identBuilder.correlationId(call.getCorrelationId());
             identBuilder.locusUrl(call.getUrl());
-            identBuilder.locusId(UUID.fromString(call.getModel().getCallID()));
+            identBuilder.locusId(UUID.fromString(call.getModel().getKey().getLocusId()));
             long locusStartTime = call.getConnectedTime();
             if (locusStartTime > TIME_ZERO) {
                 identBuilder.locusStartTime(new Instant(locusStartTime));
