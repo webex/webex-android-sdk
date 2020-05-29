@@ -64,9 +64,9 @@ Assuming you already have an Android project, e.g. _MyWebexApp_, for your Androi
     
 ## Usage
 
-To use the SDK, you will need Cisco Webex integration credentials. If you do not already have a Cisco Webex account, visit the [Cisco Webex for Developers portal](https://developer.webex.com/) to create your account and [register an integration](https://developer.webex.com/docs/integrations#registering-your-integration). Your app will need to authenticate users via an [OAuth](https://oauth.net/) grant flow for existing Cisco Webex users or a [JSON Web Token](https://jwt.io/) for guest users without a Cisco Webex account.
+To use the SDK, you will need Cisco Webex integration credentials. If you do not already have a Cisco Webex account, visit the [Cisco Webex for Developers portal](https://developer.webex.com/) to create your account and [register an integration](https://developer.webex.com/authentication.html#registering-your-integration). Your app will need to authenticate users via an [OAuth](https://oauth.net/) grant flow for existing Cisco Webex users or a [JSON Web Token](https://jwt.io/) for guest users without a Cisco Webex account.
 
-See the [Android SDK area](https://developer.webex.com/docs/sdks/android) of the Cisco Webex for Developers site for more information about this SDK.
+See the [Android SDK area](https://developer.webex.com/sdk-for-android.html) of the Cisco Webex for Developers site for more information about this SDK.
 
 ### Examples
 

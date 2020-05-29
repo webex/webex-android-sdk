@@ -40,7 +40,7 @@ import okhttp3.FormBody;
 /**
  * An <a href="https://oauth.net/2/">OAuth</a> based authentication strategy for authenticating a user on Cisco Webex.
  *
- * @see <a href="https://developer.webex.com/docs/integrations">Cisco Webex Integration</a>
+ * @see <a href="https://developer.webex.com/authentication.html">Cisco Webex Integration</a>
  * @since 0.1
  */
 public class OAuthAuthenticator implements Authenticator {
@@ -59,7 +59,7 @@ public class OAuthAuthenticator implements Authenticator {
      * @param clientSecret the OAuth client secret
      * @param scope        space-separated string representing which permissions the application needs
      * @param redirectUri  the redirect URI that will be called when completing the authentication. This must match the redirect URI registered to your clientId.
-     * @see <a href="https://developer.webex.com/docs/integrations">Cisco Webex Integration</a>
+     * @see <a href="https://developer.webex.com/authentication.html">Cisco Webex Integration</a>
      * @since 0.1
      */
     public OAuthAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri) {

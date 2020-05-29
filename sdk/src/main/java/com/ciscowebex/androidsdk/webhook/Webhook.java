@@ -29,7 +29,7 @@ import com.google.gson.Gson;
 /**
  * A data type presents a Webhook at Cisco Webex for Developer.
  *
- * @see <a href="https://developer.webex.com/docs/api/guides/webhooks">Webhooks Guide</a>
+ * @see <a href="https://developer.webex.com/webhooks-explained.html">Webhook Explained</a>
  * @since 0.1
  */
 public class Webhook {

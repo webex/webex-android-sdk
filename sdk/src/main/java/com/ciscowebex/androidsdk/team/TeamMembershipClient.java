@@ -30,7 +30,7 @@ import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.CompletionHandler;
 
 /**
- * A client wrapper of the Cisco Webex <a href="https://developer.webex.com/docs/api/v1/team-memberships">TeamMemberships REST API</a>
+ * A client wrapper of the Cisco Webex <a href="https://developer.webex.com/resource-team-memberships.html">TeamMemberships REST API</a>
  *
  * @since 0.1
  */

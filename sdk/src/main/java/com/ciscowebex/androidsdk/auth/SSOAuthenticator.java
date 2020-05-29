@@ -22,7 +22,7 @@
  * An Single sign-on [SSO](https://help.webex.com/docs/DOC-9143#reference_E9B2CEDE975E4CD311C56D9B0EF2476C)
  * based authentication strategy used to authenticate a user on Cisco Webex.
  * <p>
- * - see: [Cisco Webex Integration](https://developer.webex.com/docs/integrations)
+ * - see: [Cisco Webex Integration](https://developer.webex.com/authentication.html)
  * - since: 1.3.0
  */
 
@@ -43,7 +43,7 @@ import me.helloworld.utils.Checker;
 /**
  * An Single sign-on <a href="https://help.webex.com/docs/DOC-9143#reference_E9B2CEDE975E4CD311C56D9B0EF2476C">SSO</a> based authentication strategy used to authenticate a user on Cisco Webex.
  *
- * @see <a href="https://developer.webex.com/docs/integrations">Cisco Webex Integration</a>
+ * @see <a href="https://developer.webex.com/authentication.html">Cisco Webex Integration</a>
  * @since 1.3.0
  */
 public class SSOAuthenticator implements Authenticator {
@@ -68,7 +68,7 @@ public class SSOAuthenticator implements Authenticator {
      * @param email The webex email address of the SSO user.
      * @param identityProviderUri parameter identityProviderUri: the URI that will handle authentication claims with webex service on behalf of the hosting application.
      * @param queryItems a collection of additional query items to be appended to the identityProviderUri.
-     * @see <a href="https://developer.webex.com/docs/integrations">Cisco Webex Integration</a>
+     * @see <a href="https://developer.webex.com/authentication.html">Cisco Webex Integration</a>
      * @since 1.3.0
      */
     @Deprecated
