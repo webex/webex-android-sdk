@@ -331,20 +331,21 @@ public interface Phone {
     void setHardwareAccelerationEnabled(boolean enable);
 
     /**
-     * Returns true if SDK is try to use android.hardware.camera2.CameraDevice or false is android.hardware.Camera.
-     * @return true if SDK is try to use android.hardware.camera2.CameraDevice or false is android.hardware.Camera
+     * Returns true if SDK is use android.hardware.camera2.CameraDevice, otherwise, false.
+     * @return true if SDK is use android.hardware.camera2.CameraDevice, otherwise, false.
      * @since 2.6.0
      */
-    boolean isTryToUserCamera2();
+    boolean isCamera2Enabled();
 
     /**
-     * Set true is try to use android.hardware.camera2.CameraDevice,
+     * Set true is use android.hardware.camera2.CameraDevice,
      * false to use android.hardware.Camera.
      * Default is true.
-     * @param tryToUserCamera2 true to try to use android.hardware.camera2.CameraDevice, false to use android.hardware.Camera.
+     * This method is invalid on Android API 21
+     * @param enableCamera2 true to try to use android.hardware.camera2.CameraDevice, false to use android.hardware.Camera.
      * @since 2.6.0
      */
-    void setTryToUserCamera2(boolean tryToUserCamera2);
+    void enableCamera2(boolean enableCamera2);
 
     /**
      * Turn on audio enhancement for the specified device models. By default,

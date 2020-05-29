@@ -790,7 +790,7 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
             if (direction == MediaConnection.MediaDirection.SendOnly) {
                 localVideoTrack.init(track);
                 applyCamera();
-                if (capability.isTryToUserCamera2()){
+                if (capability.isCamera2Enabled()){
                     WseEngine.EnableCamera2(context);
                 }
                 localVideoTrack.start();

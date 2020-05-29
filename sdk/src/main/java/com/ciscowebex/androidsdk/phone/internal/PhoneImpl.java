@@ -90,7 +90,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     private boolean hardwareCodecEnable = false;
 
-    private boolean tryToUserCamera2 = true;
+    private boolean enableCamera2 = true;
 
     private List<String> audioEnhancementModels = null;
 
@@ -593,13 +593,13 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     @Override
-    public boolean isTryToUserCamera2() {
-        return tryToUserCamera2;
+    public boolean isCamera2Enabled() {
+        return enableCamera2;
     }
 
     @Override
-    public void setTryToUserCamera2(boolean tryToUserCamera2) {
-        this.tryToUserCamera2 = tryToUserCamera2;
+    public void enableCamera2(boolean enableCamera2) {
+        this.enableCamera2 = enableCamera2;
     }
 
     public String getHardwareVideoSettings() {
@@ -1094,7 +1094,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         capability.setHardwareCodecEnable(isHardwareAccelerationEnabled());
         capability.setHardwareVideoSetting(getHardwareVideoSettings());
         capability.setAudioEnhancementModels(audioEnhancementModels);
-        capability.setTryToUserCamera2(isTryToUserCamera2());
+        capability.enableCamera2(isCamera2Enabled());
         if (device != null) {
             capability.setDeviceSettings(device.getDeviceSettings());
         }

@@ -61,7 +61,7 @@ public class MediaCapability {
 
     private boolean hardwareCodecEnable = false;
 
-    private boolean tryToUserCamera2 = true;
+    private boolean enableCamera2 = true;
 
     private boolean isAudioEnhancement = false;
 
@@ -121,12 +121,12 @@ public class MediaCapability {
         this.hardwareCodecEnable = hardwareCodecEnable;
     }
 
-    public boolean isTryToUserCamera2() {
-        return tryToUserCamera2;
+    public boolean isCamera2Enabled() {
+        return enableCamera2;
     }
 
-    public void setTryToUserCamera2(boolean tryToUserCamera2) {
-        this.tryToUserCamera2 = tryToUserCamera2;
+    public void enableCamera2(boolean enableCamera2) {
+        this.enableCamera2 = enableCamera2;
     }
 
     public boolean isAudioEnhancement() {
