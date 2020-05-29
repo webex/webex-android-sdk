@@ -12,7 +12,7 @@ ext {
     moduleVersion = '2.6.0-SNAPSHOT'
     moduleVersionCode = 26004
     moduleDescription = 'Cisco Webex SDK for Android'
-    moduleSiteUrl = 'https://developer.webex.com/getting-started.html'
+    moduleSiteUrl = 'https://developer.webex.com/docs/sdks/android'
     moduleProjectUrl = 'https://github.com/webex/webex-android-sdk'
     moduleGitUrl = 'https://github.com/webex/webex-android-sdk/tree/master'
     moduleConnectionUrl = 'scm:git:git://github.com/webex/webex-android-sdk.git'
