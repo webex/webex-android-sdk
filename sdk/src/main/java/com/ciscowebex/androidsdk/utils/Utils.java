@@ -61,18 +61,6 @@ public class Utils {
         return object;
     }
 
-    public static String versionInfo() {
-        String tempUserAgent = String.format("%s/%s (Android %s; %s %s / %s %s;)",
-                Webex.APP_NAME, Webex.APP_VERSION,
-                Build.VERSION.RELEASE,
-                Strings.capitalize(Build.MANUFACTURER),
-                Strings.capitalize(Build.DEVICE),
-                Strings.capitalize(Build.BRAND),
-                Strings.capitalize(Build.MODEL)
-        );
-        return stripInvalidHeaderChars(tempUserAgent);
-    }
-
     public static Map<String, Object> toMap(Object o) {
         Map<String, Object> result = new HashMap<>();
         if (o != null) {
@@ -100,12 +88,6 @@ public class Utils {
             }
         }
         return result;
-    }
-
-    private static final Pattern pattern = Pattern.compile("[^\\x20-\\x7E]");
-
-    public static String stripInvalidHeaderChars(String str) {
-        return pattern.matcher(str).replaceAll("");
     }
 
     public static <T> String join(final String delimiter, final Collection<T> objs) {

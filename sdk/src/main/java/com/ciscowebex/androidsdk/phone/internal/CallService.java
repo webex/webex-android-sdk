@@ -136,8 +136,8 @@ public class CallService {
                 });
     }
 
-    public void call(@NonNull String address, @NonNull String callId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
-        Service.Locus.post(makeBody(callId, layout, device, sdp, address, reachabilities)).to("loci", "call")
+    public void call(@NonNull String address, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
+        Service.Locus.post(makeBody(correlationId, layout, device, sdp, address, reachabilities)).to("loci", "call")
                 .auth(authenticator)
                 .device(device)
                 .queue(Queue.main)
@@ -158,8 +158,8 @@ public class CallService {
                 });
     }
 
-    public void join(@NonNull String url, @NonNull String callId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
-        Service.Locus.post(makeBody(callId, layout, device, sdp, null, reachabilities)).url(url).to("participant")
+    public void join(@NonNull String url, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
+        Service.Locus.post(makeBody(correlationId, layout, device, sdp, null, reachabilities)).url(url).to("participant")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -342,7 +342,7 @@ public class CallService {
                 .async((Closure<LocusMediaResponseModel>) data -> callback.onComplete(ResultImpl.success(null)));
     }
 
-    private Object makeBody(String callId, MediaOption.VideoLayout layout, Device device, String sdp, String callee, MediaEngineReachabilityModel reachabilities) {
+    private Object makeBody(String correlationId, MediaOption.VideoLayout layout, Device device, String sdp, String callee, MediaEngineReachabilityModel reachabilities) {
         Map<String, Object> json = new HashMap<>();
         MediaConnectionModel mc = new MediaConnectionModel();
         mc.setLocalSdp(Json.get().toJson(new MediaInfoModel(sdp, reachabilities == null ? null : reachabilities.reachability)));
@@ -350,7 +350,7 @@ public class CallService {
         json.put("localMedias", Lists.asList(mc));
         json.put("device", device.toJsonMap(layout == MediaOption.VideoLayout.SINGLE ? null : Device.WEB_DEVICE_TYPE));
         json.put("respOnlySdp", true);
-        json.put("correlationId", callId);
+        json.put("correlationId", correlationId);
         if (callee != null) {
             json.put("invitee", Maps.makeMap("address", callee));
             json.put("supportsNativeLobby", true);

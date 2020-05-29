@@ -37,6 +37,7 @@ import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.crypto.KeyManager;
 import com.ciscowebex.androidsdk.internal.mercury.*;
+import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.media.MediaCapability;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
@@ -113,6 +114,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         this.service = new CallService(authenticator);
         this.reachability = new ReachabilityService(this);
         this.metrics = new MetricsService(authenticator);
+        CallAnalyzerReporter.shared.init(this);
     }
 
     public void addActivityListener(ActivityListener listener) {
@@ -137,6 +139,10 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     public MediaEngine getEngine() {
         return engine;
+    }
+
+    public ReachabilityService getReachability() {
+        return reachability;
     }
 
     public void setChecker(BackgroundChecker checker) {
@@ -167,7 +173,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     credentials = data.second;
                     Ln.i("Registered %s with %s", device.getDeviceUrl(), credentials.getPerson());
                     state = State.REGISTERED;
-                    Settings.shared.store(Device.DEVICE_URL, device.getDeviceUrl());
+                    device.store();
                     mercury = new MercuryService(authenticator, this);
                     mercury.connect(device.getWebSocketUrl(), error -> {
                         if (error != null) {
@@ -271,9 +277,9 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     }
                 });
                 mercury.disconnect(true);
+                device.clear();
                 device = null;
                 credentials = null;
-                Settings.shared.clear(Device.DEVICE_URL);
                 state = State.UNREGISTERED;
                 Queue.main.run(() -> callback.onComplete(result));
                 Queue.serial.yield();
@@ -342,7 +348,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public void onMediaPermission(boolean permission) {
         Queue.serial.run(() -> {
-            String callId = UUID.randomUUID().toString();
             if (callContext instanceof CallContext.Outgoing) {
                 CallContext.Outgoing outgoing = (CallContext.Outgoing) callContext;
                 callContext = null;
@@ -363,14 +368,17 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                         Queue.serial.yield();
                         return;
                     }
+                    String correlationId = UUID.randomUUID().toString();
+                    //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
                     if (target.isEndpoint()) {
-                        service.call(target.getAddress(), callId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
+                        service.call(target.getAddress(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
                             if (callResult.getError() != null || callResult.getData() == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(callResult.getError())));
                                 Queue.serial.yield();
+                                CallAnalyzerReporter.shared.reportJoinResponseError(correlationId, null, String.valueOf(callResult.getError()));
                                 return;
                             }
-                            doLocusResponse(new LocusResponse.Call(device, session, callResult.getData(), outgoing.getCallback()), Queue.serial);
+                            doLocusResponse(new LocusResponse.Call(device, correlationId, session, callResult.getData(), outgoing.getCallback()), Queue.serial);
                         });
                     }
                     else {
@@ -381,13 +389,14 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 Queue.serial.yield();
                                 return;
                             }
-                            service.join(url, callId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, joinResult -> {
+                            service.join(url, correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, joinResult -> {
                                 if (joinResult.getError() != null || joinResult.getData() == null) {
                                     Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                                     Queue.serial.yield();
+                                    CallAnalyzerReporter.shared.reportJoinResponseError(correlationId, null, String.valueOf(joinResult.getError()));
                                     return;
                                 }
-                                doLocusResponse(new LocusResponse.Call(device, session, joinResult.getData(), outgoing.getCallback()), Queue.serial);
+                                doLocusResponse(new LocusResponse.Call(device, correlationId, session, joinResult.getData(), outgoing.getCallback()), Queue.serial);
                             });
                         });
                     }
@@ -403,12 +412,14 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     return;
                 }
                 MediaSession session = engine.createSession(createCapability(), incoming.getOption());
-                incoming.getCall().setMedia(session);
                 String localSdp = session.getLocalSdp();
-                service.join(incoming.getCall().getUrl(), callId, device, localSdp, incoming.getCall().isGroup() ? incoming.getOption().getLayout() : null, reachability.getFeedback(), joinResult -> {
+                incoming.getCall().setMedia(session);
+                //CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
+                service.join(incoming.getCall().getUrl(), incoming.getCall().getCorrelationId(), device, localSdp, incoming.getCall().isGroup() ? incoming.getOption().getLayout() : null, reachability.getFeedback(), joinResult -> {
                     if (joinResult.getError() != null || joinResult.getData() == null) {
                         Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                         Queue.serial.yield();
+                        CallAnalyzerReporter.shared.reportJoinResponseError(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey(), String.valueOf(joinResult.getError()));
                         return;
                     }
                     doLocusResponse(new LocusResponse.Answer(incoming.getCall(), joinResult.getData(), incoming.getCallback()), Queue.serial);
@@ -779,7 +790,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 Queue.serial.yield();
                 return;
             }
-            MediaInfoModel media = new MediaInfoModel(localSdp == null ? sdp : localSdp, !audio, !video, reachability.getFeedback().reachability);
+            MediaEngineReachabilityModel reachabilities = reachability.getFeedback();
+            MediaInfoModel media = new MediaInfoModel(localSdp == null ? sdp : localSdp, !audio, !video, reachabilities == null ? null : reachabilities.reachability);
             service.update(url, mediaId, device, media, result -> {
                 if (result.getError() != null && result.getData() == null) {
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
@@ -928,7 +940,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         if (response instanceof LocusResponse.Call) {
             LocusModel model = ((LocusResponse.Call) response).getLocus();
             Ln.d("Connecting call: " + model.getCallUrl());
-            CallImpl call = new CallImpl(model, this, device, ((LocusResponse.Call) response).getSession(), Call.Direction.OUTGOING, !model.isOneOnOne());
+            CallAnalyzerReporter.shared.reportJoinResponseSuccess(((LocusResponse.Call) response).getCorrelationId(), model.getKey());
+            CallImpl call = new CallImpl(((LocusResponse.Call) response).getCorrelationId(), model, this, device, ((LocusResponse.Call) response).getSession(), Call.Direction.OUTGOING, !model.isOneOnOne());
             if (call.isStatusIllegal()) {
                 Ln.d("The previous session did not end");
                 Queue.main.run(() -> {
@@ -953,6 +966,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         }
         else if (response instanceof LocusResponse.Answer) {
             LocusResponse.Answer res = (LocusResponse.Answer) response;
+            CallAnalyzerReporter.shared.reportJoinResponseSuccess(res.getCall().getCorrelationId(), res.getCall().getModel().getKey());
             res.getCall().update(res.getResult());
             if (res.getCallback() != null) {
                 Queue.main.run(() -> res.getCallback().onComplete(ResultImpl.success(null)));
@@ -1028,11 +1042,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             return;
         }
         Ln.d("doLocusEvent: " + url);
+        //CallAnalyzerReporter.shared.reportClientNotificationReceived(model.getKey(), true);
         Queue.serial.run(() -> {
             CallImpl call = calls.get(url);
             if (call == null) {
                 if (device != null && model.isIncomingCall() && model.isValid()) {
-                    CallImpl incoming = new CallImpl(model, this, device, null, Call.Direction.INCOMING, !model.isOneOnOne());
+                    CallImpl incoming = new CallImpl(UUID.randomUUID().toString(), model, this, device, null, Call.Direction.INCOMING, !model.isOneOnOne());
                     addCall(incoming);
                     Ln.d("Receive incoming call: " + incoming.getUrl());
                     Queue.main.run(() -> {

@@ -29,6 +29,8 @@ public class DeviceModel {
 
     private String url;
 
+    private String deviceIdentifier;
+
     private String webSocketUrl;
 
     private String deviceSettingsString;
@@ -37,6 +39,10 @@ public class DeviceModel {
 
     public String getDeviceUrl() {
         return url;
+    }
+
+    public String getDeviceIdentifier() {
+        return deviceIdentifier;
     }
 
     public String getWebSocketUrl() {

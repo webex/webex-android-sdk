@@ -31,6 +31,7 @@ import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.internal.queue.BackgroundQueue;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.UriUtils;
 import com.github.benoitdion.ln.Ln;
@@ -45,10 +46,10 @@ public class KeyManager {
 
     public static KeyManager shared = new KeyManager();
 
-    private BackgroundQueue queue = new BackgroundQueue();
-    private KmsInfoModel kmsInfo;
-    private Map<String, KmsRequestWrapper<KeyObject>> requests = new ConcurrentHashMap<>();
+    private final Queue queue = new BackgroundQueue();
+    private final Map<String, KmsRequestWrapper<KeyObject>> requests = new ConcurrentHashMap<>();
 
+    private KmsInfoModel kmsInfo;
     private KeyObject ephemeralKey;
     private final Map<String, KeyObject> keys = new ConcurrentHashMap<>();
     private final Map<String, String> encryptionUrls = new ConcurrentHashMap<>();
@@ -137,6 +138,7 @@ public class KeyManager {
             }
             getKey(conversationId, result.getData(), credentials, device, callback);
         }));
+
 
     }
 

@@ -35,6 +35,7 @@ import me.helloworld.utils.collection.Maps;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class RegisterOperation implements Runnable {
@@ -70,11 +71,16 @@ public class RegisterOperation implements Runnable {
             ServiceReqeust request;
             if (deviceUrl == null) {
                 Ln.d("Creating new device");
+                deviceInfo.put("deviceIdentifier", UUID.randomUUID().toString());
                 request = Service.Wdm.post(deviceInfo);
                 request.to("devices");
             }
             else {
                 Ln.d("Updating device");
+                String deviceIdentifier = Settings.shared.get(Device.DEVICE_ID, null);
+                if (deviceIdentifier != null) {
+                    deviceInfo.put("deviceIdentifier", deviceIdentifier);
+                }
                 request = Service.Wdm.put(deviceInfo);
                 request.url(deviceUrl);
             }

@@ -67,6 +67,10 @@ public class LocusModel {
     private Uri aclUrl;
     private List<MediaConnectionModel> mediaConnections;
 
+    public LocusKeyModel getKey() {
+        return key;
+    }
+
     public Date getCreated() {
         return created;
     }
@@ -173,6 +177,10 @@ public class LocusModel {
 
     public void setAclUrl(Uri aclUrl) {
         this.aclUrl = aclUrl;
+    }
+
+    public String getCallID() {
+        return key.getLocusId();
     }
 
     public String getUniqueCallID() {

@@ -20,6 +20,8 @@ import java.util.*;
 
 public class ServiceReqeust {
 
+    public static final String HEADER_TRACKING_ID = "TrackingID";
+
     private final Service service;
 
     private String url;
