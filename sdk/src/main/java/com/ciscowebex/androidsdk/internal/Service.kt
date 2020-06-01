@@ -27,10 +27,11 @@ import com.ciscowebex.androidsdk.utils.Json
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
+import java.util.*
 
 enum class Service {
 
-    Hydra, Region, Wdm, Kms, Locus, Conv, Metrics, CalliopeDiscorey, Common;
+    Hydra, Region, U2C, Wdm, Kms, Locus, Conv, Metrics, CalliopeDiscorey, Common;
 
     fun get(vararg paths: String?): ServiceReqeust {
         return ServiceReqeust(this, Request.Builder().get()).to(*paths)
@@ -66,6 +67,7 @@ enum class Service {
     fun endpoint(device: Device?): String {
         return when (this) {
             Region -> "https://ds.ciscospark.com/v1"
+            U2C -> "https://u2c.wbx2.com/u2c/api/v1"
             Wdm -> if (BuildConfig.INTEGRATION_TEST) "https://wdm-intb.ciscospark.com/wdm/api/v1" else "https://wdm-a.wbx2.com/wdm/api/v1"
             Hydra -> if (BuildConfig.INTEGRATION_TEST) "https://apialpha.ciscospark.com/v1" else "https://api.ciscospark.com/v1"
             Locus -> dynamicEndpoint(device, "https://locus-a.wbx2.com/locus/api/v1")
@@ -89,10 +91,10 @@ enum class Service {
 
     private fun key(): String {
         return when (this) {
-            Kms -> "encryptionServiceUrl"
-            Conv -> "conversationServiceUrl"
-            CalliopeDiscorey -> "calliopeDiscoveryServiceUrl"
-            else -> name + "ServiceUrl"
+            Kms -> "encryption"
+            Conv -> "conversation"
+            CalliopeDiscorey -> "calliopeDiscovery"
+            else -> name.toLowerCase(Locale.US)
         }
     }
 }
