@@ -42,10 +42,12 @@ import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
+
+import org.bouncycastle.crypto.digests.MD5Digest;
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.params.KeyParameter;
+
 import me.helloworld.utils.Checker;
-import org.spongycastle.crypto.digests.MD5Digest;
-import org.spongycastle.crypto.macs.HMac;
-import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -66,9 +68,8 @@ public class CryptoUtils {
         if (isInit) {
             return;
         }
-        Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
-        KmsApi.useGson(true);
-        KmsApi.useSpongyCastle(true);
+        Security.removeProvider("BC");
+        Security.insertProviderAt(new org.bouncycastle.jce.provider.BouncyCastleProvider(), 1);
         KmsApi.setLogger(new KmsApiLn());
         isInit = true;
     }
