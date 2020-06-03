@@ -5,11 +5,8 @@ import com.ciscowebex.androidsdk.internal.Closure;
 import com.ciscowebex.androidsdk.internal.Service;
 import com.ciscowebex.androidsdk.internal.model.CalliopeClusterModel;
 import com.ciscowebex.androidsdk.internal.model.MediaEngineReachabilityModel;
-import com.ciscowebex.androidsdk.internal.model.ReachabilityModel;
-import com.ciscowebex.androidsdk.utils.Json;
 import com.ciscowebex.androidsdk.utils.NetworkUtils;
 import com.github.benoitdion.ln.Ln;
-import com.google.gson.reflect.TypeToken;
 import me.helloworld.utils.Checker;
 
 import java.util.List;
@@ -68,8 +65,8 @@ public class ReachabilityService {
             Ln.e("Failure: Not register!");
             return;
         }
-        Service.CalliopeDiscorey.get("clusters")
-                .auth(phone.getAuthenticator()).device(phone.getDevice()).model(CalliopeClusterModel.class)
+        Service.CalliopeDiscorey.homed(phone.getDevice()).get("clusters")
+                .auth(phone.getAuthenticator()).model(CalliopeClusterModel.class)
                 .error((CompletionHandler<CalliopeClusterModel>) error -> Ln.e("Failure: " + error))
                 .async((Closure<CalliopeClusterModel>) model -> {
                     Map<String, Map<String, List<String>>> group = model.getClusterInfo();

@@ -18,8 +18,8 @@ public class MetricsService {
         this.authenticator = authenticator;
     }
 
-    public void post(List<Map<String, String>> metrics) {
-        Service.Metrics.post(Maps.makeMap("metrics", metrics)).to("metrics")
+    public void post(Device device, List<Map<String, String>> metrics) {
+        Service.Metrics.homed(device).post(Maps.makeMap("metrics", metrics)).to("metrics")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .error((CompletionHandler<Void>) result -> Ln.e("" + result.getError()))

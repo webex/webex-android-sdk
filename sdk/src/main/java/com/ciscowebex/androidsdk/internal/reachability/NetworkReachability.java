@@ -36,9 +36,6 @@ import com.github.benoitdion.ln.Ln;
 import okhttp3.*;
 
 import java.io.IOException;
-import java.net.Proxy;
-import java.net.ProxySelector;
-import java.net.URI;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -123,7 +120,7 @@ public class NetworkReachability extends BroadcastReceiver {
             if (NetworkUtils.isBehindProxy()) {
                 currentIsBehindProxy = true;
                 OkHttpClient client = new OkHttpClient().newBuilder().proxyAuthenticator(new ProxyCheckAuthenticator()).build();
-                Request request = new Request.Builder().url(Service.Wdm.endpoint(null) + "/").build();
+                Request request = new Request.Builder().url(Service.Wdm.baseUrl(null) + "/").build();
                 try {
                     Response response = client.newCall(request).execute();
                     Ln.d("response.code() = " + response.code());

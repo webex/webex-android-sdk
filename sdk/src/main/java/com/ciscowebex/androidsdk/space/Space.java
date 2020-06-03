@@ -100,7 +100,7 @@ public class Space {
         _lastActivity = activity.getPublished();
         ObjectModel object = activity.getVerb().equals(ActivityModel.Verb.create) ? activity.getObject() : activity.getTarget();
         if (object instanceof ConversationModel) {
-            _id = new WebexId(WebexId.Type.ROOM_ID, object.getId()).toHydraId();
+            _id = new WebexId(WebexId.Type.ROOM, object.getId()).getBase64Id();
             _isLocked = ((ConversationModel) object).isLocked();
             _type = ((ConversationModel) object).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         }

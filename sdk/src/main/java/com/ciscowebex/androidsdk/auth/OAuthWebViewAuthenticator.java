@@ -114,7 +114,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     }
     
     private String buildCodeGrantUrl() {
-        Uri.Builder builder = Uri.parse(Service.Hydra.endpoint(null)).buildUpon();
+        Uri.Builder builder = Uri.parse(Service.Hydra.baseUrl(null)).buildUpon();
         builder.appendPath("authorize")
                 .appendQueryParameter("response_type", "code")
                 .appendQueryParameter("client_id", authenticator.getClientId())

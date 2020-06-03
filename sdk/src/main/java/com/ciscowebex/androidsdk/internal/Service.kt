@@ -23,69 +23,46 @@
 package com.ciscowebex.androidsdk.internal
 
 import com.ciscowebex.androidsdk.BuildConfig
-import com.ciscowebex.androidsdk.utils.Json
-import okhttp3.MediaType
-import okhttp3.Request
-import okhttp3.RequestBody
 import java.util.*
 
 enum class Service {
 
-    Hydra, Region, U2C, Wdm, Kms, Locus, Conv, Metrics, CalliopeDiscorey, Common;
+    Hydra, Region, U2C, Wdm, Kms, Locus, Conv, Metrics, CalliopeDiscorey, Raw;
 
-    fun get(vararg paths: String?): ServiceReqeust {
-        return ServiceReqeust(this, Request.Builder().get()).to(*paths)
+    fun specific(url : String): ServiceReqeust {
+        return ServiceReqeust(url)
     }
 
-    fun delete(vararg paths: String?): ServiceReqeust {
-        return ServiceReqeust(this, Request.Builder().delete()).to(*paths)
+    fun homed(device: Device? = null): ServiceReqeust {
+        return ServiceReqeust(this.baseUrl(device))
     }
 
-    @JvmOverloads
-    fun post(o: Any? = null): ServiceReqeust {
-        return ServiceReqeust(this, Request.Builder().post(toBody(o)))
+    fun global(): ServiceReqeust {
+        return ServiceReqeust(this.baseUrl())
     }
 
-    @JvmOverloads
-    fun put(o: Any? = null): ServiceReqeust {
-        return ServiceReqeust(this, Request.Builder().put(toBody(o)))
-    }
-
-    @JvmOverloads
-    fun patch(o: Any? = null): ServiceReqeust {
-        return ServiceReqeust(this, Request.Builder().patch(toBody(o)))
-    }
-
-    private fun toBody(o: Any?): RequestBody {
-        return when (o) {
-            null -> RequestBody.create(null, byteArrayOf())
-            is RequestBody -> o
-            else -> RequestBody.create(MediaType.get("application/json; charset=utf-8"), Json.get().toJson(o))
-        }
-    }
-
-    fun endpoint(device: Device?): String {
+    fun baseUrl(device: Device? = null): String {
         return when (this) {
             Region -> "https://ds.ciscospark.com/v1"
             U2C -> "https://u2c.wbx2.com/u2c/api/v1"
             Wdm -> if (BuildConfig.INTEGRATION_TEST) "https://wdm-intb.ciscospark.com/wdm/api/v1" else "https://wdm-a.wbx2.com/wdm/api/v1"
             Hydra -> if (BuildConfig.INTEGRATION_TEST) "https://apialpha.ciscospark.com/v1" else "https://api.ciscospark.com/v1"
-            Locus -> dynamicEndpoint(device, "https://locus-a.wbx2.com/locus/api/v1")
-            Metrics -> dynamicEndpoint(device, "https://metrics-a.wbx2.com/metrics/api/v1")
-            CalliopeDiscorey -> dynamicEndpoint(device, "https://calliope-a.wbx2.com/calliope/api/discovery/v1")
+            Locus -> baseUrl(device, "https://locus-a.wbx2.com/locus/api/v1")
+            Metrics -> baseUrl(device, "https://metrics-a.wbx2.com/metrics/api/v1")
+            CalliopeDiscorey -> baseUrl(device, "https://calliope-a.wbx2.com/calliope/api/discovery/v1")
             Kms -> {
                 val defaultValue = if (BuildConfig.INTEGRATION_TEST) "https://encryption-intb.ciscospark.com/encryption/api/v1" else "https://encryption-a.wbx2.com/encryption/api/v1"
-                dynamicEndpoint(device, defaultValue)
+                baseUrl(device, defaultValue)
             }
             Conv -> {
                 val defaultValue = if (BuildConfig.INTEGRATION_TEST) "https://conversation-intb.ciscospark.com/conversation/api/v1" else "https://conv-a.wbx2.com/conversation/api/v1"
-                dynamicEndpoint(device, defaultValue)
+                baseUrl(device, defaultValue)
             }
             else -> ""
         }
     }
 
-    private fun dynamicEndpoint(device: Device?, defaultValue: String): String {
+    private fun baseUrl(device: Device?, defaultValue: String): String {
         return device?.getServiceUrl(key()) ?: defaultValue
     }
 

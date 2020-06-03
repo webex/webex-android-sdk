@@ -32,13 +32,8 @@ public class MetricService {
         queue.run(() -> {
             if (metrics.metricsSize() > 0) {
                 GenericMetricsModel models = new GenericMetricsModel(metrics.popMetrics(100));
-//                for (GenericMetricModel model : models.getMetrics()) {
-//                    model.get
-//                }
-
-                Service.Metrics.post(models).to("clientmetrics")
+                Service.Metrics.homed(phone.getDevice()).post(models).to("clientmetrics")
                         .auth(phone.getAuthenticator())
-                        .device(phone.getDevice())
                         .queue(queue)
                         .error((CompletionHandler<Void>) result -> Ln.e("" + result.getError()))
                         .async((Closure<Void>) data -> Ln.d("" + data));
@@ -47,9 +42,8 @@ public class MetricService {
     }
 
     public void post(Map<String, String> metric) {
-        queue.run(() -> Service.Metrics.post(Maps.makeMap("metrics", Collections.singletonList(metric))).to("metrics")
+        queue.run(() -> Service.Metrics.homed(phone.getDevice()).post(Maps.makeMap("metrics", Collections.singletonList(metric))).to("metrics")
                 .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
                 .queue(queue)
                 .error((CompletionHandler<Void>) result -> Ln.e("" + result.getError()))
                 .async((Closure<Void>) data -> Ln.e("" + data)));
@@ -57,9 +51,8 @@ public class MetricService {
     }
 
     public void post(List<Map<String, String>> metrics) {
-        queue.run(() -> Service.Metrics.post(Maps.makeMap("metrics", metrics)).to("metrics")
+        queue.run(() -> Service.Metrics.homed(phone.getDevice()).post(Maps.makeMap("metrics", metrics)).to("metrics")
                 .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
                 .queue(queue)
                 .error((CompletionHandler<Void>) result -> Ln.e("" + result.getError()))
                 .async((Closure<Void>) data -> Ln.e("" + data)));

@@ -36,7 +36,6 @@ import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 import com.ciscowebex.androidsdk.internal.model.ConversationModel;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.phone.internal.PhoneImpl;
-import com.ciscowebex.androidsdk.utils.WebexId;
 import com.ciscowebex.androidsdk.space.*;
 import com.ciscowebex.androidsdk.internal.model.ItemsModel;
 
@@ -78,13 +77,12 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void list(@Nullable String teamId, int max, @Nullable Space.SpaceType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Space>> handler) {
-        Service.Hydra.get("rooms")
+        Service.Hydra.global().get("rooms")
                 .with("teamId", teamId)
                 .with("type", type == null ? null : type.serializedName())
                 .with("sortBy", sortBy == null ? null : sortBy.serializedName())
                 .with("max", max <= 0 ? null : String.valueOf(max))
                 .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
                 .queue(Queue.main)
                 .model(new TypeToken<ItemsModel<Space>>(){}.getType())
                 .error(handler)
@@ -93,9 +91,8 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void get(@NonNull String spaceId, @NonNull CompletionHandler<Space> handler) {
-        Service.Hydra.get("rooms", spaceId)
+        Service.Hydra.global().get("rooms/" + spaceId)
                 .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
                 .queue(Queue.main)
                 .model(Space.class)
                 .error(handler)
@@ -104,9 +101,8 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Space> handler) {
-        Service.Hydra.post(Maps.makeMap("title", title, "teamId", teamId)).to("rooms")
+        Service.Hydra.global().post(Maps.makeMap("title", title, "teamId", teamId)).to("rooms")
                 .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
                 .queue(Queue.main)
                 .model(Space.class)
                 .error(handler)
@@ -115,9 +111,8 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void update(@NonNull String spaceId, @NonNull String title, @NonNull CompletionHandler<Space> handler) {
-       Service.Hydra.put(Maps.makeMap("title", title)).to("rooms", spaceId)
+       Service.Hydra.global().put(Maps.makeMap("title", title)).to("rooms/" + spaceId)
                .auth(phone.getAuthenticator())
-               .device(phone.getDevice())
                .queue(Queue.main)
                .model(Space.class)
                .error(handler)
@@ -126,9 +121,8 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void delete(@NonNull String spaceId, @NonNull CompletionHandler<Void> handler) {
-        Service.Hydra.delete("rooms", spaceId)
+        Service.Hydra.global().delete("rooms/" + spaceId)
                 .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
                 .queue(Queue.main)
                 .error(handler)
                 .async((Closure<Void>) result -> handler.onComplete(ResultImpl.success(result)));
@@ -136,9 +130,8 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void getMeetingInfo(@NonNull String spaceId, @NonNull CompletionHandler<SpaceMeetingInfo> handler) {
-        Service.Hydra.get("rooms", spaceId, "meetingInfo")
+        Service.Hydra.global().get("rooms/" + spaceId + "/meetingInfo")
                 .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
                 .queue(Queue.main)
                 .model(SpaceMeetingInfo.class)
                 .error(handler)
@@ -147,14 +140,14 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void getWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<SpaceReadStatus> handler) {
-        Service.Conv.get("conversations", WebexId.translate(spaceId))
+        Identifier conversation = new Identifier(spaceId);
+        Service.Conv.specific(conversation.url(phone.getDevice())).get()
                 .with("uuidEntryFormat", "true")
                 .with("personRefresh", "true")
                 .with("includeParticipants", "false")
                 .with("activitiesLimit", "0")
                 .with("includeConvWithDeletedUserUUID", "false")
                 .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
                 .queue(Queue.main)
                 .model(ConversationModel.class)
                 .error(handler)
@@ -169,7 +162,8 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void listWithReadStatus(int max, @NonNull CompletionHandler<List<SpaceReadStatus>> handler) {
-        Service.Conv.get("conversations")
+        // TODO additionalUrls
+        Service.Conv.homed(phone.getDevice()).get("conversations")
                 .with("uuidEntryFormat", "true")
                 .with("personRefresh", "true")
                 .with("participantsLimit", "0")
@@ -177,7 +171,6 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
                 .with("includeConvWithDeletedUserUUID", "false")
                 .with("conversationsLimit", String.valueOf(max))
                 .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
                 .queue(Queue.main)
                 .model(new TypeToken<ItemsModel<ConversationModel>>(){}.getType())
                 .error(handler)

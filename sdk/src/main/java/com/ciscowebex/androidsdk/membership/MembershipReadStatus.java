@@ -47,7 +47,7 @@ public class MembershipReadStatus {
         if (roomProperties == null) {
             throw new IllegalArgumentException("RoomProperties is null");
         }
-        _lastSeenId = new WebexId(WebexId.Type.MESSAGE_ID, roomProperties.getLastSeenActivityUUID()).toHydraId();
+        _lastSeenId = new WebexId(WebexId.Type.MESSAGE, roomProperties.getLastSeenActivityUUID()).getBase64Id();
         _lastSeenDate = roomProperties.getLastSeenActivityDate();
         _membership = new Membership(conversation, person);
     }

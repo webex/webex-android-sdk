@@ -30,7 +30,6 @@ import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.model.DeviceModel;
 import com.ciscowebex.androidsdk.internal.model.RegionModel;
 import com.ciscowebex.androidsdk.internal.model.ServiceHostModel;
-import com.ciscowebex.androidsdk.utils.Utils;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.collection.Maps;
@@ -53,7 +52,7 @@ public class RegisterOperation implements Runnable {
 
     @Override
     public void run() {
-        Service.Region.get("region").model(RegionModel.class).error(callback).async((Closure<RegionModel>) region -> {
+        Service.Region.global().get("region").model(RegionModel.class).error(callback).async((Closure<RegionModel>) region -> {
             String countryCode = Objects.defaultIfNull(region.getCountryCode(), "US");
             String regionCode = Objects.defaultIfNull(region.getRegionCode(), "US-WEST");
             Map<String, Object> deviceInfo = new HashMap<>();
@@ -77,10 +76,16 @@ public class RegisterOperation implements Runnable {
                     String deviceUrl = Settings.shared.get(Device.DEVICE_URL, null);
                     Ln.d("Saved deviceUrl: " + deviceUrl);
 
-                    boolean fresh = deviceUrl == null;
-                    if (fresh) {
+                    if (deviceUrl == null) {
                         Ln.d("Creating new device");
                         deviceInfo.put("deviceIdentifier", UUID.randomUUID().toString());
+                        Service.U2C.global().get("user/catalog").with("format", "hostMap").auth(authenticator).model(ServiceHostModel.class).error(callback).async((Closure<ServiceHostModel>) host -> {
+                            String url = host.getServiceUrl(Service.Wdm.name().toLowerCase());
+                            Ln.d("WDM Url by U2C: " + url);
+                            ServiceReqeust request = url != null ? Service.Wdm.specific(url) : Service.Wdm.global();
+                            request.auth(authenticator).header("x-catalog-version2", "true").model(DeviceModel.class).error(callback);
+                            request.post(deviceInfo).to("devices").async((Closure<DeviceModel>) model -> callback.onComplete(ResultImpl.success(new Pair<>(new Device(model, region), credentials))));
+                        });
                     }
                     else {
                         Ln.d("Updating device");
@@ -88,31 +93,9 @@ public class RegisterOperation implements Runnable {
                         if (deviceIdentifier != null) {
                             deviceInfo.put("deviceIdentifier", deviceIdentifier);
                         }
-                    }
-                    ServiceReqeust request = fresh ? Service.Wdm.post(deviceInfo) : Service.Wdm.put(deviceInfo);
-                    request.auth(authenticator).header("x-catalog-version2", "true").model(DeviceModel.class).error(callback);
-
-                    if (fresh) {
-                        ServiceReqeust u2c = Service.U2C.get("limited", "catalog").with("format", "hostMap").model(ServiceHostModel.class).error(callback);
-                        String email = Utils.getFirst(credentials.getPerson().getEmails());
-                        String emailhash = email == null ? null : Utils.sha256(email);
-                        if (emailhash != null) {
-                            u2c.with("emailhash", emailhash);
-                        }
-                        else {
-                            u2c.with("userId", credentials.getUserId());
-                        }
-                        u2c.async((Closure<ServiceHostModel>) host -> {
-                            String url = host.getServiceUrl(Service.Wdm.name().toLowerCase());
-                            if (url != null) {
-                                Ln.d("WDM Url by U2C: " + url);
-                                request.url(url);
-                            }
-                            request.to("devices").async((Closure<DeviceModel>) model -> callback.onComplete(ResultImpl.success(new Pair<>(new Device(model, region), credentials))));
-                        });
-                    }
-                    else {
-                        request.url(deviceUrl).async((Closure<DeviceModel>) model -> callback.onComplete(ResultImpl.success(new Pair<>(new Device(model, region), credentials))));
+                        ServiceReqeust request = Service.Wdm.specific(deviceUrl);
+                        request.auth(authenticator).header("x-catalog-version2", "true").model(DeviceModel.class).error(callback);
+                        request.put(deviceInfo).apply().async((Closure<DeviceModel>) model -> callback.onComplete(ResultImpl.success(new Pair<>(new Device(model, region), credentials))));
                     }
                 }
             });

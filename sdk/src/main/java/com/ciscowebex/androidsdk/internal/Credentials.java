@@ -58,8 +58,8 @@ public class Credentials {
 
     public Credentials(Authenticator authenticator, Person person, String token) {
         this.authenticator =authenticator;
-        this.userId = WebexId.translate(person.getId());
-        this.orgId = WebexId.translate(person.getOrgId());
+        this.userId = WebexId.uuid(person.getId());
+        this.orgId = WebexId.uuid(person.getOrgId());
         this.person = person;
         this.token = token;
     }
