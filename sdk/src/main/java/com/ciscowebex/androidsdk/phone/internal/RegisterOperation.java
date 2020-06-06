@@ -66,6 +66,7 @@ public class RegisterOperation implements Runnable {
             deviceInfo.put("systemName", Build.PRODUCT);
             deviceInfo.put("systemVersion", Build.VERSION.RELEASE);
             deviceInfo.put("capabilities", Maps.makeMap("groupCallSupported", Boolean.TRUE, "sdpSupported", Boolean.TRUE));
+            deviceInfo.put("deviceIdentifier", Settings.shared.get(Device.DEVICE_ID, UUID.randomUUID().toString()));
 
             Credentials.auth(authenticator, userResult -> {
                 Credentials credentials = userResult.getData();
@@ -78,7 +79,6 @@ public class RegisterOperation implements Runnable {
 
                     if (deviceUrl == null) {
                         Ln.d("Creating new device");
-                        deviceInfo.put("deviceIdentifier", UUID.randomUUID().toString());
                         Service.U2C.global().get("user/catalog").with("format", "hostMap").auth(authenticator).model(ServiceHostModel.class).error(callback).async((Closure<ServiceHostModel>) host -> {
                             String url = host.getServiceUrl(Service.Wdm.name().toLowerCase());
                             Ln.d("WDM Url by U2C: " + url);
@@ -89,10 +89,6 @@ public class RegisterOperation implements Runnable {
                     }
                     else {
                         Ln.d("Updating device");
-                        String deviceIdentifier = Settings.shared.get(Device.DEVICE_ID, null);
-                        if (deviceIdentifier != null) {
-                            deviceInfo.put("deviceIdentifier", deviceIdentifier);
-                        }
                         ServiceReqeust request = Service.Wdm.specific(deviceUrl);
                         request.auth(authenticator).header("x-catalog-version2", "true").model(DeviceModel.class).error(callback);
                         request.put(deviceInfo).apply().async((Closure<DeviceModel>) model -> callback.onComplete(ResultImpl.success(new Pair<>(new Device(model, region), credentials))));
