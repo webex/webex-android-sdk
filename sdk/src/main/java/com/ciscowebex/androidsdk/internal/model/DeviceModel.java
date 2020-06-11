@@ -35,7 +35,7 @@ public class DeviceModel {
 
     private String deviceSettingsString;
 
-    private Map<String, String> services = new HashMap<>();
+    private ServiceHostModel serviceHostMap;
 
     public String getDeviceUrl() {
         return url;
@@ -54,7 +54,7 @@ public class DeviceModel {
     }
 
     public String getServiceUrl(String key) {
-        return services.get(key);
+        return serviceHostMap == null ? null : serviceHostMap.getServiceUrl(key);
     }
 
 }

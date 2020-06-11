@@ -35,7 +35,7 @@ public class NetworkUtils {
     }
 
     public static boolean isBehindProxy() {
-        return ProxySelector.getDefault().select(URI.create(Service.Wdm.endpoint(null) + "/ping")).get(0) != Proxy.NO_PROXY;
+        return ProxySelector.getDefault().select(URI.create(Service.Wdm.baseUrl(null) + "/ping")).get(0) != Proxy.NO_PROXY;
     }
 
 

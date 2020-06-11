@@ -23,7 +23,6 @@
 package com.ciscowebex.androidsdk.utils;
 
 import android.content.Context;
-import android.os.Build;
 import android.support.annotation.Nullable;
 
 import android.view.WindowManager;
@@ -37,13 +36,13 @@ import com.github.benoitdion.ln.ReleaseLn;
 import com.webex.wme.MediaSessionAPI;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
-import me.helloworld.utils.Strings;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * An utility class.
@@ -104,6 +103,7 @@ public class Utils {
         return buffer.toString();
     }
 
+    @SafeVarargs
     public static <T> String join(final String delimiter, final T... objects) {
         return join(delimiter, Arrays.asList(objects));
     }
@@ -268,6 +268,33 @@ public class Utils {
                 Ln.e("Failed to make directory");
         }
         return logDir;
+    }
+
+    public static String sha256(String s) {
+        if (Checker.isEmpty(s)) {
+            return null;
+        }
+        try {
+            final byte[] hash = MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
+            return hexify(hash);
+        } catch (Exception e) {
+            Ln.e(e, "Hash failed!");
+        }
+        return null;
+    }
+
+    private static String hexify(byte[] hash) {
+        final StringBuilder hashString = new StringBuilder();
+        for (byte aHash : hash) {
+            String hex = Integer.toHexString(aHash);
+            if (hex.length() == 1) {
+                hashString.append('0');
+                hashString.append(hex.charAt(hex.length() - 1));
+            } else {
+                hashString.append(hex.substring(hex.length() - 2));
+            }
+        }
+        return hashString.toString();
     }
 
 }

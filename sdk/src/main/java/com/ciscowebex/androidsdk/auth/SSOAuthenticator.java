@@ -142,7 +142,7 @@ public class SSOAuthenticator implements Authenticator {
      * use their account.
      */
     private String buildCodeGrantUrl() {
-        Uri.Builder orginalUrl = Uri.parse(Service.Hydra.endpoint(null)).buildUpon();
+        Uri.Builder orginalUrl = Uri.parse(Service.Hydra.baseUrl(null)).buildUpon();
         orginalUrl.appendPath("authorize")
                 .appendQueryParameter("response_type", "code")
                 .appendQueryParameter("client_id", authenticator.getClientId())

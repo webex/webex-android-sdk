@@ -67,12 +67,12 @@ public class Membership {
     private Date _created;
 
     protected Membership(ConversationModel conversation, PersonModel person) {
-        _id = new WebexId(WebexId.Type.MEMBERSHIP_ID, person.getId() + ":" + conversation.getId()).toHydraId();
-        _spaceId = new WebexId(WebexId.Type.ROOM_ID, conversation.getId()).toHydraId();
-        _personId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
+        _id = new WebexId(WebexId.Type.MEMBERSHIP, person.getId() + ":" + conversation.getId()).getBase64Id();
+        _spaceId = new WebexId(WebexId.Type.ROOM, conversation.getId()).getBase64Id();
+        _personId = new WebexId(WebexId.Type.PEOPLE, person.getId()).getBase64Id();
         _personEmail = person.getEmail();
         _personDisplayName = person.getDisplayName();
-        _personOrgId = new WebexId(WebexId.Type.ORGANIZATION_ID, person.getOrgId()).toHydraId();
+        _personOrgId = new WebexId(WebexId.Type.ORGANIZATION, person.getOrgId()).getBase64Id();
         PersonModel.RoomPropertiesModel roomProperties = person.getRoomProperties();
         if (roomProperties != null) {
             _isModerator = roomProperties.isModerator();
@@ -84,9 +84,9 @@ public class Membership {
     protected Membership(ActivityModel activity) {
         this._created = activity.getPublished();
         if (activity.getVerb() == ActivityModel.Verb.hide) {
-            this._spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getObject().getId()).toHydraId();
+            this._spaceId = new WebexId(WebexId.Type.ROOM, activity.getObject().getId()).getBase64Id();
         } else {
-            this._spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
+            this._spaceId = new WebexId(WebexId.Type.ROOM, activity.getTarget().getId()).getBase64Id();
         }
         PersonModel person = null;
         if (activity.getVerb() == ActivityModel.Verb.acknowledge) {
@@ -95,11 +95,11 @@ public class Membership {
             person = (PersonModel) activity.getObject();
         }
         if (null != person) {
-            this._id = new WebexId(WebexId.Type.MEMBERSHIP_ID, person.getId() + ":" + WebexId.translate(this._spaceId)).toHydraId();
-            this._personId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
+            this._id = new WebexId(WebexId.Type.MEMBERSHIP, person.getId() + ":" + WebexId.uuid(this._spaceId)).getBase64Id();
+            this._personId = new WebexId(WebexId.Type.PEOPLE, person.getId()).getBase64Id();
             this._personEmail = person.getEmail();
             this._personDisplayName = person.getDisplayName();
-            this._personOrgId = new WebexId(WebexId.Type.ORGANIZATION_ID, person.getOrgId()).toHydraId();
+            this._personOrgId = new WebexId(WebexId.Type.ORGANIZATION, person.getOrgId()).getBase64Id();
             this._isModerator = person.getRoomProperties() != null && person.getRoomProperties().isModerator();
             this._isMonitor = _isModerator;
         }

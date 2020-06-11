@@ -34,7 +34,6 @@ import com.ciscowebex.androidsdk.internal.model.ImageModel;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.message.MessageClient;
 import com.ciscowebex.androidsdk.utils.http.ContentDownloadMonitor;
-import com.github.benoitdion.ln.Ln;
 import okhttp3.Response;
 
 import java.io.*;
@@ -73,7 +72,7 @@ public class DownloadFileOperation {
     }
 
     private void doDownload(String url, SecureContentReference scr, File outFile, CompletionHandler<Uri> callback) {
-        Service.Common.get().url(url).auth(authenticator).model(Response.class).error(callback).async((Closure<Response>) response -> {
+        Service.Raw.specific(url).get().auth(authenticator).model(Response.class).error(callback).async((Closure<Response>) response -> {
             InputStream is = response.body().byteStream();
             if (is == null) {
                 ResultImpl.errorInMain(callback, "Failed downloading from uri: " + url);

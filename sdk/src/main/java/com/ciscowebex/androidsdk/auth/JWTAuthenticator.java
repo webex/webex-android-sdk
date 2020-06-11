@@ -124,7 +124,7 @@ public class JWTAuthenticator implements Authenticator {
             ResultImpl.errorInMain(handler, WebexError.from("JWT is null"));
             return;
         }
-        Service.Hydra.post().to("jwt/login").header("Authorization", jwt).header("Cache-Control", "no-cache")
+        Service.Hydra.global().post().to("jwt/login").header("Authorization", jwt).header("Cache-Control", "no-cache")
                 .queue(Queue.main).model(JWTLoginModel.class).error(handler)
                 .async((Closure<JWTLoginModel>) model -> {
             tokenModel = model.toToken(jwt);

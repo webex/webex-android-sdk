@@ -46,7 +46,7 @@ public class TeamClientImpl implements TeamClient {
     }
 
     public void list(int max, @NonNull CompletionHandler<List<Team>> handler) {
-        Service.Hydra.get("teams").with("max", max <= 0 ? null : String.valueOf(max))
+        Service.Hydra.global().get("teams").with("max", max <= 0 ? null : String.valueOf(max))
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(new TypeToken<ItemsModel<Team>>(){}.getType())
@@ -55,7 +55,7 @@ public class TeamClientImpl implements TeamClient {
     }
 
     public void get(@NonNull String teamId, @NonNull CompletionHandler<Team> handler) {
-        Service.Hydra.get("teams", teamId)
+        Service.Hydra.global().get("teams/" + teamId)
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(Team.class)
@@ -64,7 +64,7 @@ public class TeamClientImpl implements TeamClient {
     }
 
     public void create(@NonNull String name, @NonNull CompletionHandler<Team> handler) {
-        Service.Hydra.post(Maps.makeMap("name", name)).to("teams")
+        Service.Hydra.global().post(Maps.makeMap("name", name)).to("teams")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(Team.class)
@@ -73,7 +73,7 @@ public class TeamClientImpl implements TeamClient {
     }
 
     public void update(@NonNull String teamId, String name, @NonNull CompletionHandler<Team> handler) {
-        Service.Hydra.put(Maps.makeMap("name", name)).to("teams", teamId)
+        Service.Hydra.global().put(Maps.makeMap("name", name)).to("teams/" + teamId)
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(Team.class)
@@ -82,7 +82,7 @@ public class TeamClientImpl implements TeamClient {
     }
 
     public void delete(@NonNull String teamId, @NonNull CompletionHandler<Void> handler) {
-        Service.Hydra.delete("teams", teamId)
+        Service.Hydra.global().delete("teams/" + teamId)
                 .auth(authenticator)
                 .queue(Queue.main)
                 .error(handler)
