@@ -30,6 +30,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
 import android.view.View;
+
 import com.cisco.wme.appshare.ScreenShareContext;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
@@ -291,7 +292,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
-        Ln.d("Dialing: " + dialString + ", " + option.hasVideo());
+        dial(dialString, option, false, null, callback);
+    }
+
+    @Override
+    public void dial(@NonNull String dialString, @NonNull MediaOption option, boolean isModerator, String PIN, @NonNull CompletionHandler<Call> callback) {
+        Ln.d("Dialing: " + dialString + ", isModerator:" + isModerator + ", PIN:" + PIN + ", hasVideo:" + option.hasVideo());
         Queue.serial.run(() -> {
             stopPreview();
             if (callContext != null) {
@@ -314,7 +320,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     return;
                 }
             }
-            callContext = new CallContext.Outgoing(dialString, option, callback);
+            callContext = new CallContext.Outgoing(dialString, option, isModerator, PIN, callback);
             Ln.d("CallContext: " + callContext);
             Queue.main.run(this::tryAcquirePermission);
             Queue.serial.yield();
@@ -367,7 +373,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     String correlationId = UUID.randomUUID().toString();
                     //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
                     if (target.isEndpoint()) {
-                        service.call(target.getAddress(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
+                        service.call(target.getAddress(), outgoing.isModerator(), outgoing.getPIN(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
                             if (callResult.getError() != null || callResult.getData() == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(callResult.getError())));
                                 Queue.serial.yield();
@@ -384,7 +390,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 Queue.serial.yield();
                                 return;
                             }
-                            service.join(url, correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, joinResult -> {
+                            service.join(url, outgoing.isModerator(), outgoing.getPIN(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, joinResult -> {
                                 if (joinResult.getError() != null || joinResult.getData() == null) {
                                     Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                                     Queue.serial.yield();
@@ -409,7 +415,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String localSdp = session.getLocalSdp();
                 incoming.getCall().setMedia(session);
                 //CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
-                service.join(incoming.getCall().getUrl(), incoming.getCall().getCorrelationId(), device, localSdp, incoming.getCall().isGroup() ? incoming.getOption().getLayout() : null, reachability.getFeedback(), joinResult -> {
+                service.join(incoming.getCall().getUrl(), incoming.isModerator(), incoming.getPIN(), incoming.getCall().getCorrelationId(), device, localSdp, incoming.getCall().isGroup() ? incoming.getOption().getLayout() : null, reachability.getFeedback(), joinResult -> {
                     if (joinResult.getError() != null || joinResult.getData() == null) {
                         Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                         Queue.serial.yield();
@@ -659,6 +665,11 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     void answer(CallImpl call, MediaOption option, CompletionHandler<Void> callback) {
+        answer(call, option, false, null, callback);
+    }
+
+    void answer(CallImpl call, MediaOption option, boolean isModerator, String PIN, CompletionHandler<Void> callback) {
+        Ln.d("answer: isModerator:" + isModerator + ", PIN:" + PIN + ", hasVideo:" + option.hasVideo());
         Queue.serial.run(() -> {
             for (CallImpl already : getCalls()) {
                 if (already.getUrl().equals(call.getUrl()) && already.getStatus() == Call.CallStatus.CONNECTED) {
@@ -687,7 +698,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     return;
                 }
             }
-            callContext = new CallContext.Incoming(call, option, callback);
+            callContext = new CallContext.Incoming(call, option, isModerator, PIN, callback);
             Ln.d("CallContext: " + callContext);
             Queue.main.run(this::tryAcquirePermission);
             Queue.serial.yield();

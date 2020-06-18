@@ -22,12 +22,18 @@
 
 package com.ciscowebex.androidsdk;
 
+import android.text.TextUtils;
+
 import com.github.benoitdion.ln.Ln;
+
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 import okhttp3.ResponseBody;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The enumeration of error types in Cisco Webex Android SDK.
@@ -35,6 +41,13 @@ import java.io.IOException;
  * @since 0.1
  */
 public class WebexError<T> {
+    private static final String[] CISCO_SPARK_ERROR_CODES = new String[]{
+            "2423005",  // LOCUS_REQUIRES_MODERATOR_PIN_OR_GUEST
+            "2423006", //LOCUS_REQUIRES_MODERATOR_PIN_OR_GUEST_PIN
+            "2423016", //LOCUS_REQUIRES_MODERATOR_KEY_OR_MEETING_PASSWORD
+            "2423017", //LOCUS_REQUIRES_MODERATOR_KEY_OR_GUEST
+            "2423018" //LOCUS_REQUIRES_MEETING_PASSWORD
+    };
 
     public static WebexError from(String message) {
         return new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, message);
@@ -52,17 +65,29 @@ public class WebexError<T> {
         } catch (IOException e) {
             Ln.e(e);
         }
+        String ciscoSparkErrorCodes = res.header("Cisco-Spark-Error-Codes");
+        if (!TextUtils.isEmpty(ciscoSparkErrorCodes)) {
+            if (Arrays.asList(CISCO_SPARK_ERROR_CODES).contains(ciscoSparkErrorCodes)) {
+                return new WebexError(ErrorCode.HOST_PIN_OR_MEETING_PASSWORD_REQUIRED, message.toString());
+            }
+        }
         return new WebexError(WebexError.ErrorCode.SERVICE_ERROR, message.toString());
     }
 
     public enum ErrorCode {
         UNEXPECTED_ERROR,
         SERVICE_ERROR,
-        PERMISSION_ERROR
+        PERMISSION_ERROR,
+        /**
+         * The host pin or meeting password is required while dialing.
+         */
+        HOST_PIN_OR_MEETING_PASSWORD_REQUIRED
     }
 
     @StringPart
     protected int errorCode = -7000;
+
+    protected ErrorCode errorCodeType;
 
     @StringPart
     protected String message = "";
@@ -82,6 +107,7 @@ public class WebexError<T> {
      */
     public WebexError(ErrorCode errorCode) {
         this.errorCode = -7000 - errorCode.ordinal();
+        this.errorCodeType = errorCode;
     }
 
     /**
@@ -100,10 +126,12 @@ public class WebexError<T> {
      *
      * @param errorCode the error code
      * @param message   the error message
+     * @deprecated
      */
     public WebexError(int errorCode, String message) {
         this.errorCode = errorCode;
         this.message = message;
+        this.errorCodeType = ErrorCode.UNEXPECTED_ERROR;
     }
 
     /**
@@ -122,9 +150,18 @@ public class WebexError<T> {
     /**
      * @return The code of this error.
      * @since 0.1
+     * @deprecated
      */
     public int getErrorCode() {
         return errorCode;
+    }
+
+    /**
+     * @return The type of this error.
+     * @since 2.6.0
+     */
+    public ErrorCode getErrorCodeType() {
+        return errorCodeType;
     }
 
     /**

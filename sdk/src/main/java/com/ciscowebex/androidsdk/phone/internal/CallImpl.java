@@ -27,6 +27,7 @@ import android.support.annotation.Nullable;
 import android.util.Pair;
 import android.util.Size;
 import android.view.View;
+
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
@@ -38,6 +39,7 @@ import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.phone.*;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.github.benoitdion.ln.Ln;
+
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.Objects;
 
@@ -52,7 +54,8 @@ public class CallImpl implements Call {
     private final boolean group;
 
     private final String correlationId;
-    private @Nullable MediaSession media;
+    private @Nullable
+    MediaSession media;
     private CallObserver observer;
     private MultiStreamObserver streamObserver;
     private CallStatus status = CallStatus.INITIATED;
@@ -111,7 +114,8 @@ public class CallImpl implements Call {
         return connectedTime;
     }
 
-    public @Nullable MediaSession getMedia() {
+    public @Nullable
+    MediaSession getMedia() {
         return media;
     }
 
@@ -265,8 +269,7 @@ public class CallImpl implements Call {
         }
         if (sending) {
             CallAnalyzerReporter.shared.reportUnmuted(this, WMEngine.Media.Video);
-        }
-        else {
+        } else {
             CallAnalyzerReporter.shared.reportMuted(this, WMEngine.Media.Video);
         }
     }
@@ -284,8 +287,7 @@ public class CallImpl implements Call {
         }
         if (sending) {
             CallAnalyzerReporter.shared.reportUnmuted(this, WMEngine.Media.Audio);
-        }
-        else {
+        } else {
             CallAnalyzerReporter.shared.reportMuted(this, WMEngine.Media.Audio);
         }
     }
@@ -419,7 +421,12 @@ public class CallImpl implements Call {
 
     @Override
     public void answer(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
-        phone.answer(this, option, callback);
+        answer(option, false, null, callback);
+    }
+
+    @Override
+    public void answer(@NonNull MediaOption option, boolean isModerator, String PIN, @NonNull CompletionHandler<Void> callback) {
+        phone.answer(this, option, isModerator, PIN, callback);
     }
 
     @Override
@@ -910,7 +917,7 @@ public class CallImpl implements Call {
                 if (isShareTypeChanged || isMySharingReplaced || isSharingReplacedByMine || isResourceUrlChanged) {
                     Ln.d("CallImpl.doFloorUpdate: share type or resource url or sharing device changed, leave sharing");
                     leaveSharing(old.getGrantedFloor().getBeneficiary(), old.getGrantedFloor().getGranted(), old);
-                    if (isMySharingReplaced){
+                    if (isMySharingReplaced) {
                         Ln.d("CallImpl.doFloorUpdate: my sharing replaced by other's, join sharing");
                         joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
                     }

@@ -42,11 +42,19 @@ public abstract class CallContext {
 
         private CompletionHandler<Void> callback;
         private CallImpl call;
+        private boolean isModerator;
+        private String PIN;
 
         public Incoming(CallImpl call, MediaOption option, CompletionHandler<Void> callback) {
+            this(call, option, false, null, callback);
+        }
+
+        public Incoming(CallImpl call, MediaOption option, boolean isModerator, String PIN, CompletionHandler<Void> callback) {
             super(option);
             this.callback = callback;
             this.call = call;
+            this.isModerator = isModerator;
+            this.PIN = PIN;
         }
 
         public CompletionHandler<Void> getCallback() {
@@ -56,17 +64,33 @@ public abstract class CallContext {
         public CallImpl getCall() {
             return call;
         }
+
+        public boolean isModerator() {
+            return isModerator;
+        }
+
+        public String getPIN() {
+            return PIN;
+        }
     }
 
     static class Outgoing extends CallContext {
 
         private CompletionHandler<Call> callback;
         private String target;
+        private boolean isModerator;
+        private String PIN;
 
         public Outgoing(String target, MediaOption option, CompletionHandler<Call> callback) {
+            this(target, option, false, null, callback);
+        }
+
+        public Outgoing(String target, MediaOption option, boolean isModerator, String PIN, CompletionHandler<Call> callback) {
             super(option);
             this.target = target;
             this.callback = callback;
+            this.isModerator = isModerator;
+            this.PIN = PIN;
         }
 
         public CompletionHandler<Call> getCallback() {
@@ -77,6 +101,13 @@ public abstract class CallContext {
             return target;
         }
 
+        public boolean isModerator() {
+            return isModerator;
+        }
+
+        public String getPIN() {
+            return PIN;
+        }
     }
 
     static class Sharing extends CallContext {

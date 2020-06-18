@@ -44,7 +44,7 @@ enum class Service {
     fun baseUrl(device: Device? = null): String {
         return when (this) {
             Region -> "https://ds.ciscospark.com/v1"
-            U2C -> "https://u2c.wbx2.com/u2c/api/v1"
+            U2C -> if (BuildConfig.INTEGRATION_TEST) "https://u2c-intb.ciscospark.com/u2c/api/v1" else "https://u2c.wbx2.com/u2c/api/v1"
             Wdm -> if (BuildConfig.INTEGRATION_TEST) "https://wdm-intb.ciscospark.com/wdm/api/v1" else "https://wdm-a.wbx2.com/wdm/api/v1"
             Hydra -> if (BuildConfig.INTEGRATION_TEST) "https://apialpha.ciscospark.com/v1" else "https://api.ciscospark.com/v1"
             Locus -> baseUrl(device, "https://locus-a.wbx2.com/locus/api/v1")

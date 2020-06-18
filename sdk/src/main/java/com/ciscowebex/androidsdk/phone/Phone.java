@@ -198,6 +198,18 @@ public interface Phone {
     void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback);
 
     /**
+     * Makes a call to an intended recipient on behalf of the authenticated user.
+     *
+     * @param dialString Intended recipient address in one of the supported formats.
+     * @param isModerator If true, join the meeting as a moderator.
+     * @param PIN If moderator is true, PIN should be a host key, else PIN should be a meeting password.
+     * @param option     Intended media options - audio only or audio and video - for the call.
+     * @param callback   A closure to be executed when completed.
+     * @since 2.6.0
+     */
+    void dial(@NonNull String dialString, @NonNull MediaOption option, boolean isModerator, String PIN, @NonNull CompletionHandler<Call> callback);
+
+    /**
      * Render a preview of the local party before the call is answered.
      *
      * @param view an UI view for rendering video.

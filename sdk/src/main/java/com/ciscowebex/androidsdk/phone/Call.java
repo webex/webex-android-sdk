@@ -28,6 +28,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import android.util.Size;
+
 import com.ciscowebex.androidsdk.CompletionHandler;
 
 import android.view.View;
@@ -110,7 +111,7 @@ public interface Call {
      *
      * @since 2.4.0
      */
-    enum WaitReason{
+    enum WaitReason {
         /**
          * Waiting in the lobby for the meeting to start.
          */
@@ -129,7 +130,7 @@ public interface Call {
     enum VideoRenderMode {
         /**
          * The option to scale the video to fit the size of the view by maintaining the aspect ratio.
-         *
+         * <p>
          * The black paddings will be added to the remaining area of the view.
          */
         Fit,
@@ -199,6 +200,7 @@ public interface Call {
 
     /**
      * Specify how the remote video adjusts its content to be render in a view.
+     *
      * @since 2.6.0
      */
     void setRemoteVideoRenderMode(VideoRenderMode mode);
@@ -344,6 +346,18 @@ public interface Call {
     void answer(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback);
 
     /**
+     * Answers this call. This can only be invoked when this call is incoming and in ringing status.
+     *
+     * @param option      Intended media options - audio only or audio and video - for the call.
+     * @param isModerator If true, join the meeting as a moderator.
+     * @param PIN If moderator is true, PIN should be a host key, else PIN should be a meeting password.
+     * @param callback    A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
+     * @see CallStatus
+     * @since 2.6.0
+     */
+    void answer(@NonNull MediaOption option, boolean isModerator, String PIN, @NonNull CompletionHandler<Void> callback);
+
+    /**
      * Rejects this call. This can only be invoked when this call is incoming and in ringing status.
      *
      * @param callback A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
@@ -387,12 +401,14 @@ public interface Call {
 
     /**
      * Start content sharing.
+     *
      * @since 1.4
      */
     void startSharing(@NonNull CompletionHandler<Void> callback);
 
     /**
      * Stop content sharing.
+     *
      * @since 1.4
      */
     void stopSharing(@NonNull CompletionHandler<Void> callback);
