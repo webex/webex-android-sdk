@@ -433,6 +433,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 CallImpl call = ((CallContext.Sharing) callContext).getCall();
                 CompletionHandler<Void> callback = ((CallContext.Sharing) callContext).getCallback();
                 callContext = null;
+                if (permission == null){
+                    Ln.e("User canceled");
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("User canceled")));
+                    Queue.serial.yield();
+                    return;
+                }
                 if (call.getMedia() == null || !call.getMedia().hasSharing()) {
                     Ln.e("Media option unsupport content share");
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Media option unsupport content share")));
