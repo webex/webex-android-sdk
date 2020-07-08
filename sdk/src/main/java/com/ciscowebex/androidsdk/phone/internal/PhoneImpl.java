@@ -30,6 +30,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
 import android.view.View;
+
 import com.cisco.wme.appshare.ScreenShareContext;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
@@ -167,8 +168,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     state = State.UNREGISTERED;
                     ResultImpl.errorInMain(callback, result);
                     Queue.serial.yield();
-                }
-                else {
+                } else {
                     device = data.first;
                     credentials = data.second;
                     Ln.i("Registered %s with %s", device.getDeviceUrl(), credentials.getPerson());
@@ -216,14 +216,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     listener.processActivity(model);
                 }
             }
-        }
-        else if (event instanceof MercuryLocusEvent) {
+        } else if (event instanceof MercuryLocusEvent) {
             LocusModel model = ((MercuryLocusEvent) event).getLocus();
             if (model != null) {
                 doLocusEvent(model);
             }
-        }
-        else if (event instanceof MercuryKmsMessageEvent) {
+        } else if (event instanceof MercuryKmsMessageEvent) {
             KmsMessageModel model = ((MercuryKmsMessageEvent) event).getEncryptionKmsMessage();
             if (model != null) {
                 KeyManager.shared.processKmsMessage(model);
@@ -235,10 +233,10 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     public void onTransition(boolean foreground) {
         Ln.d("Status transition: " + foreground);
         Queue.serial.run(() -> {
-            if (mercury != null && calls.size() == 0) {
+            if (mercury != null) {
                 if (foreground) {
                     mercury.tryReconnect();
-                } else {
+                } else if (calls.size() == 0) {
                     mercury.disconnect(false);
                 }
             }
@@ -247,8 +245,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 if (session != null && session.isRunning()) {
                     if (foreground) {
                         session.prepareToLeaveVideoInterruption();
-                    }
-                    else {
+                    } else {
                         session.prepareToEnterVideoInterruption();
                     }
                 }
@@ -380,8 +377,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                             }
                             doLocusResponse(new LocusResponse.Call(device, correlationId, session, callResult.getData(), outgoing.getCallback()), Queue.serial);
                         });
-                    }
-                    else {
+                    } else {
                         service.getOrCreatePermanentLocus(target.getAddress(), device, convResult -> {
                             String url = convResult.getData();
                             if (url == null) {
@@ -401,8 +397,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                         });
                     }
                 });
-            }
-            else if (callContext instanceof CallContext.Incoming) {
+            } else if (callContext instanceof CallContext.Incoming) {
                 CallContext.Incoming incoming = (CallContext.Incoming) callContext;
                 callContext = null;
                 if (!permission) {
@@ -424,8 +419,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     }
                     doLocusResponse(new LocusResponse.Answer(incoming.getCall(), joinResult.getData(), incoming.getCallback()), Queue.serial);
                 });
-            }
-            else {
+            } else {
                 Ln.e("No call context: " + callContext);
                 Queue.serial.yield();
             }
@@ -463,20 +457,19 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String url = mediaShare.getUrl();
                 if (url == null) {
                     Ln.e("Unsupport media share");
-                    Queue.main.run(() ->  callback.onComplete(ResultImpl.error("No MediaShare url")));
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("No MediaShare url")));
                     Queue.serial.yield();
                     return;
                 }
                 service.update(mediaShare, url, device, result -> {
                     if (result.getError() != null) {
-                        Queue.main.run(() ->  callback.onComplete(ResultImpl.error(result.getError())));
+                        Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
                         Queue.serial.yield();
                         return;
                     }
                     doLocusResponse(new LocusResponse.MediaShare(call, FloorModel.Disposition.GRANTED, permission, callback), Queue.serial);
                 });
-            }
-            else {
+            } else {
                 Queue.serial.yield();
             }
         });
@@ -600,7 +593,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void setHardwareAccelerationEnabled(boolean enable) {
-       hardwareCodecEnable = enable;
+        hardwareCodecEnable = enable;
     }
 
     @Override
@@ -688,8 +681,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already connected")));
                     Queue.serial.yield();
                     return;
-                }
-                else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
+                } else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
                     Ln.e("Already disconnected");
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already disconnected")));
                     Queue.serial.yield();
@@ -717,8 +709,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already connected")));
                     Queue.serial.yield();
                     return;
-                }
-                else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
+                } else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
                     Ln.e("Already disconnected");
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already disconnected")));
                     Queue.serial.yield();
@@ -751,7 +742,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 Queue.serial.yield();
                 return;
             }
-            String url = call.getModel().getSelf().getUrl();
+            String url = call.getModel().getSelf() == null ? null : call.getModel().getSelf().getUrl();
             if (url == null) {
                 Ln.e("Missing self participant URL");
                 Queue.main.run(() -> callback.onComplete(ResultImpl.error("Missing self participant URL")));
@@ -764,12 +755,16 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     call.getMedia().leaveSharing(true);
                 }
                 service.leave(url, device, result -> {
-                    if (result.getError() != null) {
+                    if (result.getError() != null && result.getError().getErrorMessage().startsWith("409/Conflict/")) {
+                        WebexError error = new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, "The call is inactive.");
+                        call.end(new CallObserver.CallErrorEvent(call, error));
+                    } else if (result.getError() != null) {
                         Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
                         Queue.serial.yield();
                         return;
                     }
                     doLocusResponse(new LocusResponse.Leave(call, result.getData(), callback), Queue.serial);
+
                 });
             });
 
@@ -833,8 +828,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     Queue.main.run(() -> callback.onComplete(result));
                     Queue.serial.yield();
                 });
-            }
-            else {
+            } else {
                 Queue.main.run(() -> callback.onComplete(ResultImpl.error("unsupported DTMF")));
                 Queue.serial.yield();
             }
@@ -877,7 +871,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             Ln.e("Missing keepAlive URL");
             return;
         }
-        service.keepalive(url, result -> {});
+        service.keepalive(url, result -> {
+        });
     }
 
     void startSharing(CallImpl call, CompletionHandler<Void> callback) {
@@ -956,15 +951,13 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             Queue.main.run(() -> {
                 if (call.getModel().isSelfInLobby()) {
                     call.startKeepAlive();
-                }
-                else {
+                } else {
                     call.startMedia();
                 }
                 ((LocusResponse.Call) response).getCallback().onComplete(ResultImpl.success(call));
                 queue.yield();
             });
-        }
-        else if (response instanceof LocusResponse.Answer) {
+        } else if (response instanceof LocusResponse.Answer) {
             LocusResponse.Answer res = (LocusResponse.Answer) response;
             CallAnalyzerReporter.shared.reportJoinResponseSuccess(res.getCall().getCorrelationId(), res.getCall().getModel().getKey());
             res.getCall().update(res.getResult());
@@ -972,8 +965,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 Queue.main.run(() -> res.getCallback().onComplete(ResultImpl.success(null)));
             }
             queue.yield();
-        }
-        else if (response instanceof LocusResponse.Leave) {
+        } else if (response instanceof LocusResponse.Leave) {
             LocusResponse.Leave res = (LocusResponse.Leave) response;
             LocusModel model = res.getResult();
             if (model != null) {
@@ -983,16 +975,14 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 Queue.main.run(() -> res.getCallback().onComplete(ResultImpl.success(null)));
             }
             queue.yield();
-        }
-        else if (response instanceof LocusResponse.Reject) {
+        } else if (response instanceof LocusResponse.Reject) {
             LocusResponse.Reject res = (LocusResponse.Reject) response;
             res.getCall().end(new CallObserver.LocalDecline(res.getCall()));
             if (res.getCallback() != null) {
                 Queue.main.run(() -> res.getCallback().onComplete(ResultImpl.success(null)));
             }
             queue.yield();
-        }
-        else if (response instanceof LocusResponse.Ack) {
+        } else if (response instanceof LocusResponse.Ack) {
             LocusResponse.Ack res = (LocusResponse.Ack) response;
             res.getCall().setStatus(Call.CallStatus.RINGING);
             Queue.main.run(() -> {
@@ -1005,8 +995,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 }
                 queue.yield();
             });
-        }
-        else if (response instanceof LocusResponse.Update) {
+        } else if (response instanceof LocusResponse.Update) {
             LocusResponse.Update res = (LocusResponse.Update) response;
             LocusModel model = res.getResult();
             if (model != null) {
@@ -1016,8 +1005,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 Queue.main.run(() -> res.getCallback().onComplete(ResultImpl.success(null)));
             }
             queue.yield();
-        }
-        else if (response instanceof LocusResponse.MediaShare) {
+        } else if (response instanceof LocusResponse.MediaShare) {
             LocusResponse.MediaShare res = (LocusResponse.MediaShare) response;
             Queue.main.run(() -> {
                 if (res.getIntent() != null && FloorModel.Disposition.GRANTED == res.getDisposition()) {
@@ -1056,8 +1044,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                             listener.onIncomingCall(incoming);
                         }
                     });
-                }
-                else {
+                } else {
                     Ln.d("Receive incoming call with invalid model");
                 }
                 Queue.serial.yield();
