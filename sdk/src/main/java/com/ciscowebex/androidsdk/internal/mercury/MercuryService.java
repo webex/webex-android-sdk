@@ -76,14 +76,17 @@ public class MercuryService {
     private Runnable reconnectWork = () -> queue.run(new Runnable() {
         @Override
         public void run() {
+            Ln.d("Mercury try to reconnect.");
             if (url != null && !connected) {
-                Ln.d("Mercury try to re-connect.");
                 authenticator.getToken(token -> {
                     Ln.d("Websocket reconnecting: " + url);
                     Request request = new Request.Builder().url(url).header("Authorization", "Bearer " + token.getData()).build();
                     client.dispatcher().cancelAll();
                     websocket = client.newWebSocket(request, websocketListener);
                 });
+            }
+            else {
+                Ln.d("Mercury should not reconnect: " + url + ", connected: " + connected);
             }
         }
     });
