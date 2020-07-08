@@ -140,7 +140,7 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
         latestMediaStatusMap.clear();
         if (connection != null && this.isMutedByLocal(WmeTrack.Type.LocalAudio)) {
             // Workaround for SPARK-93618, to reset the mute status of WME internal audio engine.
-            unmute(WmeTrack.Type.LocalVideo);
+            unmute(WmeTrack.Type.LocalAudio);
         }
         if (localAudioTrack.isReady()) {
             localAudioTrack.stop(true);
