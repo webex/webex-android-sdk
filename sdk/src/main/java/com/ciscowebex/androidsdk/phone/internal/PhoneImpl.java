@@ -233,7 +233,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void onTransition(boolean foreground) {
-        Ln.d("Status transition: " + foreground + "enableBackgroundStream: " + enableBackgroundStream);
+        Ln.d("Status transition: " + foreground + " enableBackgroundStream: " + enableBackgroundStream);
         Queue.serial.run(() -> {
             if (mercury != null) {
                 if (foreground) {
@@ -590,7 +590,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void enableBackgroundStream(boolean enable) {
-        Ln.d("Set  enableBackgroundStream to " + enable);
+        Ln.d("Set enableBackgroundStream to " + enable);
         this.enableBackgroundStream = enable;
     }
 

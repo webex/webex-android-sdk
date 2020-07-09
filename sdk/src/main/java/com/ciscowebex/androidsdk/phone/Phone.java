@@ -424,8 +424,7 @@ public interface Phone {
     /**
      * Set true to keep video stream(include local and remote) when minimize app, else will stop. Default is false.
      * Google recommend release camera when app goes background and resume after app foreground.
-     * When you use picture-in-picture mode in app,
-     * should set this method to true before call and after {@link com.ciscowebex.androidsdk.Webex} initialized.
+     * When you use picture-in-picture mode in app should set this method to true before call.
      *
      * @param enable true to keep video stream when minimize app, else will stop. Default is false.
      * @since 2.6.0
