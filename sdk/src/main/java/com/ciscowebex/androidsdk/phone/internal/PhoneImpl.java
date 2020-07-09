@@ -108,6 +108,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     private BackgroundChecker checker;
 
+    private boolean enableBackgroundStream = false;
+
     public PhoneImpl(Context context, Authenticator authenticator, MediaEngine engine) {
         this.context = context;
         this.authenticator = authenticator;
@@ -231,7 +233,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void onTransition(boolean foreground) {
-        Ln.d("Status transition: " + foreground);
+        Ln.d("Status transition: " + foreground + "enableBackgroundStream: " + enableBackgroundStream);
         Queue.serial.run(() -> {
             if (mercury != null) {
                 if (foreground) {
@@ -245,7 +247,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 if (session != null && session.isRunning()) {
                     if (foreground) {
                         session.prepareToLeaveVideoInterruption();
-                    } else {
+                    } else if (!enableBackgroundStream) {
                         session.prepareToEnterVideoInterruption();
                     }
                 }
@@ -584,6 +586,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public int getSharingMaxBandwidth() {
         return getSharingMaxRxBandwidth();
+    }
+
+    @Override
+    public void enableBackgroundStream(boolean enable) {
+        Ln.d("Set  enableBackgroundStream to " + enable);
+        this.enableBackgroundStream = enable;
     }
 
     @Override
