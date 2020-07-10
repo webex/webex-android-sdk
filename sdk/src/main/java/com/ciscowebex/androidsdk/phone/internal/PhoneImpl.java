@@ -603,13 +603,13 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     @Override
-    public void setAdvanceSetting(AdvancedSetting setting) {
+    public void setAdvancedSetting(AdvancedSetting setting) {
         Ln.d("Set " + setting);
         this.settings.put(setting.getClass(), setting);
     }
 
     @Override
-    public AdvancedSetting getAdvanceSetting(Class<? extends AdvancedSetting> clz) {
+    public AdvancedSetting getAdvancedSetting(Class<? extends AdvancedSetting> clz) {
         return this.settings.get(clz);
     }
 
