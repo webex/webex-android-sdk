@@ -434,10 +434,10 @@ public interface Phone {
     /**
      * @since 2.6.0
      */
-    void setAdvanceSetting(AdvanceSetting setting);
+    void setAdvancedSetting(AdvancedSetting setting);
 
     /**
      * @since 2.6.0
      */
-    AdvanceSetting getAdvanceSetting(Class<? extends AdvanceSetting> clz);
+    AdvancedSetting getAdvancedSetting(Class<? extends AdvancedSetting> clz);
 }

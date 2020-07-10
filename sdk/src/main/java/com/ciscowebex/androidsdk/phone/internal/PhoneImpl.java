@@ -110,7 +110,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     private boolean enableBackgroundStream = false;
 
-    private Map<Class<? extends AdvanceSetting>, AdvanceSetting> settings = new HashMap<>();
+    private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = new HashMap<>();
 
     public PhoneImpl(Context context, Authenticator authenticator, MediaEngine engine) {
         this.context = context;
@@ -603,13 +603,13 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     @Override
-    public void setAdvanceSetting(AdvanceSetting setting) {
+    public void setAdvanceSetting(AdvancedSetting setting) {
         Ln.d("Set " + setting);
         this.settings.put(setting.getClass(), setting);
     }
 
     @Override
-    public AdvanceSetting getAdvanceSetting(Class<? extends AdvanceSetting> clz) {
+    public AdvancedSetting getAdvanceSetting(Class<? extends AdvancedSetting> clz) {
         return this.settings.get(clz);
     }
 

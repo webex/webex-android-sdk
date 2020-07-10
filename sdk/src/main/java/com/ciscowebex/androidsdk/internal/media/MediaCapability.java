@@ -24,7 +24,7 @@ package com.ciscowebex.androidsdk.internal.media;
 
 import android.os.Build;
 import android.os.Environment;
-import com.ciscowebex.androidsdk.phone.AdvanceSetting;
+import com.ciscowebex.androidsdk.phone.AdvancedSetting;
 import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.github.benoitdion.ln.Ln;
@@ -77,7 +77,7 @@ public class MediaCapability {
 
     private WMEngine.Camera camera = WMEngine.Camera.FRONT;
 
-    private Map<Class<? extends AdvanceSetting>, AdvanceSetting> settings = null;
+    private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = null;
 
     private EnumSet<MediaConstraint> constraints = EnumSet.noneOf(MediaConstraint.class);
 
@@ -192,7 +192,7 @@ public class MediaCapability {
         return maxNumberStreams;
     }
 
-    public void setAdvanceSettings(Map<Class<? extends AdvanceSetting>, AdvanceSetting> settings) {
+    public void setAdvanceSettings(Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings) {
         this.settings = settings;
     }
 
@@ -323,7 +323,7 @@ public class MediaCapability {
         }
 
         if (!Checker.isEmpty(this.settings)) {
-            AdvanceSetting.VideoEnableDecoderMosaic setting = (AdvanceSetting.VideoEnableDecoderMosaic) this.settings.get(AdvanceSetting.VideoEnableDecoderMosaic.class);
+            AdvancedSetting.VideoEnableDecoderMosaic setting = (AdvancedSetting.VideoEnableDecoderMosaic) this.settings.get(AdvancedSetting.VideoEnableDecoderMosaic.class);
             JSONObject mParams = new JSONObject();
             if (setting != null && setting.getValue() != setting.getDefaultValue()) {
                 try {

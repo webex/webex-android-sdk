@@ -1,6 +1,6 @@
 package com.ciscowebex.androidsdk.phone;
 
-public abstract class AdvanceSetting<T> {
+public abstract class AdvancedSetting<T> {
 
     private T value;
 
@@ -14,21 +14,21 @@ public abstract class AdvanceSetting<T> {
         return defaultValue;
     }
 
-    protected AdvanceSetting(T value, T defaultValue) {
+    protected AdvancedSetting(T value, T defaultValue) {
         this.value = value;
         this.defaultValue = defaultValue;
     }
 
     @Override
     public String toString() {
-        return "AdvanceSetting{" +
+        return "AdvancedSetting{" +
                 "name=" + this.getClass() +
                 ", value=" + value +
                 ", defaultValue=" + defaultValue +
                 '}';
     }
 
-    public static class VideoEnableDecoderMosaic extends AdvanceSetting<Boolean> {
+    public static class VideoEnableDecoderMosaic extends AdvancedSetting<Boolean> {
 
         public VideoEnableDecoderMosaic(boolean value) {
             super(value, true);
