@@ -603,7 +603,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     @Override
-    public void setAdvanveSetting(AdvanceSetting setting) {
+    public void setAdvanceSetting(AdvanceSetting setting) {
         Ln.d("Set " + setting);
         this.settings.put(setting.getClass(), setting);
     }

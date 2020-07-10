@@ -434,7 +434,7 @@ public interface Phone {
     /**
      * @since 2.6.0
      */
-    void setAdvanveSetting(AdvanceSetting setting);
+    void setAdvanceSetting(AdvanceSetting setting);
 
     /**
      * @since 2.6.0
