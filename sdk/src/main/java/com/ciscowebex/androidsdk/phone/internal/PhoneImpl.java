@@ -436,6 +436,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 CallImpl call = ((CallContext.Sharing) callContext).getCall();
                 CompletionHandler<Void> callback = ((CallContext.Sharing) callContext).getCallback();
                 callContext = null;
+                if (permission == null) {
+                    Ln.e("User canceled");
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("User canceled")));
+                    Queue.serial.yield();
+                    return;
+                }
                 if (call.getMedia() == null || !call.getMedia().hasSharing()) {
                     Ln.e("Media option unsupport content share");
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Media option unsupport content share")));
@@ -786,7 +792,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             if (sdp == null) {
                 sdp = localSdp;
             }
-            String mediaId = call.getModel().getMediaId(device.getDeviceUrl());
+            String mediaId = device == null ? null : call.getModel().getMediaId(device.getDeviceUrl());
             if (url == null || sdp == null || mediaId == null) {
                 Ln.e("Missing media data");
                 Queue.main.run(() -> callback.onComplete(ResultImpl.error("Missing media data")));

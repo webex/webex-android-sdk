@@ -292,6 +292,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
     }
 
     public void markAsRead(@NonNull String spaceId, @NonNull String messageId) {
+        // TODO Find the cluster for the identifier instead of use home cluster always.
         Map<String, Object> body = new HashMap<>();
         body.put("objectType", ObjectModel.Type.activity);
         body.put("verb", ActivityModel.Verb.acknowledge);
@@ -413,6 +414,8 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 return;
             }
             Service.Conv.homed(phone.getDevice()).put().to("conversations/user/" + person)
+                    .with("activitiesLimit", String.valueOf(0))
+                    .with("compact", String.valueOf(true))
                     .auth(phone.getAuthenticator())
                     .queue(Queue.background)
                     .model(ConversationModel.class)
