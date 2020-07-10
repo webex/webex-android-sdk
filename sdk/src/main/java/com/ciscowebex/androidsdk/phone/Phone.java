@@ -430,4 +430,14 @@ public interface Phone {
      * @since 2.6.0
      */
     void enableBackgroundStream(boolean enable);
+
+    /**
+     * @since 2.6.0
+     */
+    void setAdvanveSetting(AdvanceSetting setting);
+
+    /**
+     * @since 2.6.0
+     */
+    AdvanceSetting getAdvanceSetting(Class<? extends AdvanceSetting> clz);
 }

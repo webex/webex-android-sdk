@@ -110,6 +110,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     private boolean enableBackgroundStream = false;
 
+    private Map<Class<? extends AdvanceSetting>, AdvanceSetting> settings = new HashMap<>();
+
     public PhoneImpl(Context context, Authenticator authenticator, MediaEngine engine) {
         this.context = context;
         this.authenticator = authenticator;
@@ -598,6 +600,17 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     public void enableBackgroundStream(boolean enable) {
         Ln.d("Set enableBackgroundStream to " + enable);
         this.enableBackgroundStream = enable;
+    }
+
+    @Override
+    public void setAdvanveSetting(AdvanceSetting setting) {
+        Ln.d("Set " + setting);
+        this.settings.put(setting.getClass(), setting);
+    }
+
+    @Override
+    public AdvanceSetting getAdvanceSetting(Class<? extends AdvanceSetting> clz) {
+        return this.settings.get(clz);
     }
 
     @Override
@@ -1115,6 +1128,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             capability.setDeviceSettings(device.getDeviceSettings());
         }
         capability.setDefaultCamera(WMEngine.Camera.fromFaceMode(getDefaultFacingMode()));
+        capability.setAdvanceSettings(this.settings);
         return capability;
     }
 }
