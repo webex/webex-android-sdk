@@ -5,14 +5,15 @@ import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jose.util.Base64URL;
 import net.minidev.json.JSONObject;
+
+import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.engines.AESLightEngine;
+import org.bouncycastle.crypto.io.InvalidCipherTextIOException;
+import org.bouncycastle.crypto.modes.AEADBlockCipher;
+import org.bouncycastle.crypto.modes.GCMBlockCipher;
+import org.bouncycastle.crypto.params.AEADParameters;
+import org.bouncycastle.crypto.params.KeyParameter;
 import org.jetbrains.annotations.NotNull;
-import org.spongycastle.crypto.InvalidCipherTextException;
-import org.spongycastle.crypto.engines.AESFastEngine;
-import org.spongycastle.crypto.io.InvalidCipherTextIOException;
-import org.spongycastle.crypto.modes.AEADBlockCipher;
-import org.spongycastle.crypto.modes.GCMBlockCipher;
-import org.spongycastle.crypto.params.AEADParameters;
-import org.spongycastle.crypto.params.KeyParameter;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -191,7 +192,7 @@ public class SecureContentReference {
         KeyParameter k = new KeyParameter(getKey());
         byte[] aad = getAAD().getBytes(StandardCharsets.UTF_8);
         AEADParameters params = new AEADParameters(k, 128, getIV(), aad);
-        GCMBlockCipher c = new GCMBlockCipher(new AESFastEngine());
+        GCMBlockCipher c = new GCMBlockCipher(new AESLightEngine());
         c.init(encrypting, params);
         return c;
     }
