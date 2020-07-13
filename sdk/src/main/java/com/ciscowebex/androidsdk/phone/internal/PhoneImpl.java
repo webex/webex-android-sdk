@@ -30,6 +30,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
 import android.view.View;
+
 import com.cisco.wme.appshare.ScreenShareContext;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
@@ -106,6 +107,10 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     private List<ActivityListener> listeners = new ArrayList<>();
 
     private BackgroundChecker checker;
+
+    private boolean enableBackgroundStream = false;
+
+    private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = new HashMap<>();
 
     public PhoneImpl(Context context, Authenticator authenticator, MediaEngine engine) {
         this.context = context;
@@ -230,12 +235,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void onTransition(boolean foreground) {
-        Ln.d("Status transition: " + foreground);
+        Ln.d("Status transition: " + foreground + " enableBackgroundStream: " + enableBackgroundStream);
         Queue.serial.run(() -> {
-            if (mercury != null && calls.size() == 0) {
+            if (mercury != null) {
                 if (foreground) {
                     mercury.tryReconnect();
-                } else {
+                } else if (calls.size() == 0) {
                     mercury.disconnect(false);
                 }
             }
@@ -244,7 +249,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 if (session != null && session.isRunning()) {
                     if (foreground) {
                         session.prepareToLeaveVideoInterruption();
-                    } else {
+                    } else if (!enableBackgroundStream) {
                         session.prepareToEnterVideoInterruption();
                     }
                 }
@@ -433,7 +438,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 CallImpl call = ((CallContext.Sharing) callContext).getCall();
                 CompletionHandler<Void> callback = ((CallContext.Sharing) callContext).getCallback();
                 callContext = null;
-                if (permission == null){
+                if (permission == null) {
                     Ln.e("User canceled");
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("User canceled")));
                     Queue.serial.yield();
@@ -592,6 +597,23 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     @Override
+    public void enableBackgroundStream(boolean enable) {
+        Ln.d("Set enableBackgroundStream to " + enable);
+        this.enableBackgroundStream = enable;
+    }
+
+    @Override
+    public void setAdvancedSetting(AdvancedSetting setting) {
+        Ln.d("Set " + setting);
+        this.settings.put(setting.getClass(), setting);
+    }
+
+    @Override
+    public AdvancedSetting getAdvancedSetting(Class<? extends AdvancedSetting> clz) {
+        return this.settings.get(clz);
+    }
+
+    @Override
     public boolean isHardwareAccelerationEnabled() {
         return hardwareCodecEnable;
     }
@@ -747,7 +769,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 Queue.serial.yield();
                 return;
             }
-            String url = call.getModel().getSelf().getUrl();
+            String url = call.getModel().getSelf() == null ? null : call.getModel().getSelf().getUrl();
             if (url == null) {
                 Ln.e("Missing self participant URL");
                 Queue.main.run(() -> callback.onComplete(ResultImpl.error("Missing self participant URL")));
@@ -760,12 +782,16 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     call.getMedia().leaveSharing(true);
                 }
                 service.leave(url, device, result -> {
-                    if (result.getError() != null) {
+                    if (result.getError() != null && result.getError().getErrorMessage().startsWith("409/Conflict/")) {
+                        WebexError error = new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, "The call is inactive.");
+                        call.end(new CallObserver.CallErrorEvent(call, error));
+                    } else if (result.getError() != null) {
                         Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
                         Queue.serial.yield();
                         return;
                     }
                     doLocusResponse(new LocusResponse.Leave(call, result.getData(), callback), Queue.serial);
+
                 });
             });
 
@@ -1102,6 +1128,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             capability.setDeviceSettings(device.getDeviceSettings());
         }
         capability.setDefaultCamera(WMEngine.Camera.fromFaceMode(getDefaultFacingMode()));
+        capability.setAdvanceSettings(this.settings);
         return capability;
     }
 }

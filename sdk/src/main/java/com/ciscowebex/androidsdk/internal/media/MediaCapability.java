@@ -24,17 +24,17 @@ package com.ciscowebex.androidsdk.internal.media;
 
 import android.os.Build;
 import android.os.Environment;
+import com.ciscowebex.androidsdk.phone.AdvancedSetting;
 import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.github.benoitdion.ln.Ln;
 import com.webex.wme.MediaConfig;
 import com.webex.wme.MediaConnection;
 import me.helloworld.utils.Checker;
+import org.json.JSONObject;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 
 public class MediaCapability {
 
@@ -76,6 +76,8 @@ public class MediaCapability {
     private boolean multistream = true;
 
     private WMEngine.Camera camera = WMEngine.Camera.FRONT;
+
+    private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = null;
 
     private EnumSet<MediaConstraint> constraints = EnumSet.noneOf(MediaConstraint.class);
 
@@ -190,6 +192,10 @@ public class MediaCapability {
         return maxNumberStreams;
     }
 
+    public void setAdvanceSettings(Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings) {
+        this.settings = settings;
+    }
+
     public void addConstraints(MediaConstraint... constraints) {
         if (!Checker.isEmpty(constraints)) {
             this.constraints.addAll(Arrays.asList(constraints));
@@ -221,13 +227,14 @@ public class MediaCapability {
     }
 
     public void setupConnection(MediaConnection connection) {
-        applyConfig(connection.GetGlobalConfig());
-        applyConfig(connection.GetAudioConfig(WMEngine.Media.Audio.mid()));
-        applyConfig(connection.GetVideoConfig(WMEngine.Media.Video.mid()));
-        applyConfig(connection.GetShareConfig(WMEngine.Media.Sharing.mid()));
+        applyGlobalConfig(connection);
+        applyAudioConfig(connection);
+        applyVideoConfig(connection);
+        applySharingConfig(connection);
     }
 
-    private void applyConfig(MediaConfig.GlobalConfig config) {
+    private void applyGlobalConfig(MediaConnection connection) {
+        MediaConfig.GlobalConfig config = connection.GetGlobalConfig();
         config.EnableMQECallback(true);
         config.EnableICE(true);
         config.EnableSRTP(true);
@@ -252,7 +259,8 @@ public class MediaCapability {
         config.EnableFixAudioProcessingArch(true);
     }
 
-    private void applyConfig(MediaConfig.AudioConfig config) {
+    private void applyAudioConfig(MediaConnection connection) {
+        MediaConfig.AudioConfig config = connection.GetAudioConfig(WMEngine.Media.Audio.mid());
         config.SetSelectedCodec(MediaConfig.WmeCodecType.WmeCodecType_OPUS);
         config.SetPreferedCodec(MediaConfig.WmeCodecType.WmeCodecType_OPUS);
         config.EnableFec(true);
@@ -264,11 +272,13 @@ public class MediaCapability {
         }
     }
 
-    private void applyConfig(MediaConfig.ShareConfig config) {
+    private void applySharingConfig(MediaConnection connection) {
+        MediaConfig.ShareConfig config = connection.GetShareConfig(WMEngine.Media.Sharing.mid());
         config.SetMaxBandwidth(sharingMaxRxBandwidth);
     }
 
-    private void applyConfig(MediaConfig.VideoConfig config) {
+    private void applyVideoConfig(MediaConnection connection) {
+        MediaConfig.VideoConfig config = connection.GetVideoConfig(WMEngine.Media.Video.mid());
         config.EnableFec(true);
         config.EnableRecordLossData(false);
         config.SetPreferedCodec(MediaConfig.WmeCodecType.WmeCodecType_AVC);
@@ -310,6 +320,27 @@ public class MediaCapability {
         //config.SetInitSubscribeCount(maxNumberStreams);
         if (!Checker.isEmpty(videoPlaybackFile)) {
             config.EnableFileCapture(videoPlaybackFile, true);
+        }
+
+        if (!Checker.isEmpty(this.settings)) {
+            AdvancedSetting.VideoEnableDecoderMosaic setting = (AdvancedSetting.VideoEnableDecoderMosaic) this.settings.get(AdvancedSetting.VideoEnableDecoderMosaic.class);
+            JSONObject mParams = new JSONObject();
+            if (setting != null && setting.getValue() != setting.getDefaultValue()) {
+                try {
+                    mParams.put("enableDecoderMosaic", false);
+                } catch (Exception e) {
+                    Ln.e(e);
+                }
+            }
+            if (mParams.length() > 0) {
+                JSONObject root = new JSONObject();
+                try {
+                    root.put("video", mParams);
+                } catch (Exception e) {
+                    Ln.e(e);
+                }
+                connection.setParameters(WMEngine.Media.Video.mid(), root.toString());
+            }
         }
     }
 }

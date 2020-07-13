@@ -325,13 +325,13 @@ public interface Phone {
      * since the hardware codec is high depend on android devices, some devices support hardware codec not very well.
      *
      * @param enable True to turn on Google hardware media codec. Otherwise, use OpenH264 software codec.
-     *
      * @since 2.1.1
      */
     void setHardwareAccelerationEnabled(boolean enable);
 
     /**
      * Returns true if SDK is use android.hardware.camera2.CameraDevice, otherwise, false.
+     *
      * @return true if SDK is use android.hardware.camera2.CameraDevice, otherwise, false.
      * @since 2.6.0
      */
@@ -342,6 +342,7 @@ public interface Phone {
      * false to use android.hardware.Camera.
      * Default is true.
      * This method is invalid on Android API 21
+     *
      * @param enableCamera2 true to try to use android.hardware.camera2.CameraDevice, false to use android.hardware.Camera.
      * @since 2.6.0
      */
@@ -352,7 +353,6 @@ public interface Phone {
      * the audio enhancement is enable for Samsung S7/S7Edge/S8/S8+/S9/S9+/S10/S10+/S10e/Note8/Note9.
      *
      * @param models the list of device models, if the list is null or empty, turn off the audio enhancement.
-     *
      * @since 2.3.0
      */
     void enableAudioEnhancementForModels(List<String> models);
@@ -363,8 +363,8 @@ public interface Phone {
      * if 0, default value of 64 * 1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_AUDIO}.
-     * @deprecated
      * @since 1.3.0
+     * @deprecated
      */
     @Deprecated
     void setAudioMaxBandwidth(int bandwidth);
@@ -372,8 +372,8 @@ public interface Phone {
     /**
      * Return the current maximum bandwidth of audio stream.
      *
-     * @deprecated
      * @since 1.3.0
+     * @deprecated
      */
     @Deprecated
     int getAudioMaxBandwidth();
@@ -385,8 +385,8 @@ public interface Phone {
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_90P}, {@link DefaultBandwidth#MAX_BANDWIDTH_180P},
      *                  {@link DefaultBandwidth#MAX_BANDWIDTH_360P}, {@link DefaultBandwidth#MAX_BANDWIDTH_720P}, or {@link DefaultBandwidth#MAX_BANDWIDTH_1080P}.
-     * @deprecated
      * @since 1.3.0
+     * @deprecated
      */
     @Deprecated
     void setVideoMaxBandwidth(int bandwidth);
@@ -394,8 +394,8 @@ public interface Phone {
     /**
      * Return the current maximum bandwidth of video stream.
      *
-     * @deprecated
      * @since 1.3.0
+     * @deprecated
      */
     @Deprecated
     int getVideoMaxBandwidth();
@@ -406,8 +406,8 @@ public interface Phone {
      * if 0, default value of 4000*1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_SESSION}.
-     * @deprecated
      * @since 1.3.0
+     * @deprecated
      */
     @Deprecated
     void setSharingMaxBandwidth(int bandwidth);
@@ -415,10 +415,29 @@ public interface Phone {
     /**
      * Return the current maximum bandwidth of content sharing stream.
      *
-     * @deprecated
      * @since 1.3.0
+     * @deprecated
      */
     @Deprecated
     int getSharingMaxBandwidth();
 
+    /**
+     * Set true to keep video stream(include local and remote) when minimize app, else will stop. Default is false.
+     * Google recommend release camera when app goes background and resume after app foreground.
+     * When you use picture-in-picture mode in app should set this method to true before call.
+     *
+     * @param enable true to keep video stream when minimize app, else will stop. Default is false.
+     * @since 2.6.0
+     */
+    void enableBackgroundStream(boolean enable);
+
+    /**
+     * @since 2.6.0
+     */
+    void setAdvancedSetting(AdvancedSetting setting);
+
+    /**
+     * @since 2.6.0
+     */
+    AdvancedSetting getAdvancedSetting(Class<? extends AdvancedSetting> clz);
 }
