@@ -224,11 +224,14 @@ public class ActivityModel extends ObjectModel {
         ObjectModel object = getObject();
         if (target != null &&  ObjectModel.Type.conversation.equals(target.getObjectType())) {
             return target.getId();
-        } else if (target != null && ObjectModel.Type.team.equals(target.getObjectType())) {
+        }
+        else if (target != null && ObjectModel.Type.team.equals(target.getObjectType())) {
             return ((TeamModel) target).getGeneralConversationUuid();
-        } else if (object != null && ObjectModel.Type.conversation.equals(object.getObjectType())) {
+        }
+        else if (object != null && ObjectModel.Type.conversation.equals(object.getObjectType())) {
             return object.getId();
-        } else if (object != null && ObjectModel.Type.team.equals(object.getObjectType())) {
+        }
+        else if (object != null && ObjectModel.Type.team.equals(object.getObjectType())) {
             return ((TeamModel) object).getGeneralConversationUuid();
         } else {
             return null;

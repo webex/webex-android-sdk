@@ -24,7 +24,6 @@ package com.ciscowebex.androidsdk.utils;
 
 import android.util.Base64;
 import me.helloworld.utils.Checker;
-import me.helloworld.utils.annotation.StringPart;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -33,30 +32,58 @@ public class WebexId {
 
     public enum Type {
 
-        MESSAGE_ID("MESSAGE"),
-        PEOPLE_ID("PEOPLE"),
-        ROOM_ID("ROOM"),
-        MEMBERSHIP_ID("MEMBERSHIP"),
-        ORGANIZATION_ID("ORGANIZATION");
+        UNKNOWN("UNKNOWN"),
+        ALARM("ALARM"),
+        APPLICATION("APPLICATION"),
+        APPLICATION_USAGE("APPLICATION_USAGE"),
+        ATTACHMENT_ACTION("ATTACHMENT_ACTION"),
+        AUTHORIZATION("AUTHORIZATION"),
+        BOT("BOT"),
+        CALL("CALL"),
+        CALL_MEMBERSHIP("CALL_MEMBERSHIP"),
+        CLUSTER("HYBRID_CLUSTER"),
+        CONNECTOR("HYBRID_CONNECTOR"),
+        CONTENT("CONTENT"),
+        DEVICE("DEVICE"),
+        EVENT("EVENT"),
+        FILE("FILE"),
+        FILE_TRANSCODING("FILE_TRANSCODING"),
+        ISSUE("ISSUE"),
+        LICENSE("LICENSE"),
+        LICENSE_TEMPLATE("LICENSE_TEMPLATE"),
+        LOCATION("LOCATION"),
+        MEDIA_AGENT("MEDIA_AGENT"),
+        MEMBERSHIP("MEMBERSHIP"),
+        MESSAGE("MESSAGE"),
+        ORGANIZATION("ORGANIZATION"),
+        ORGANIZATION_GROUP("ORGANIZATION_GROUP"),
+        PEOPLE("PEOPLE"),
+        PLACE("PLACE"),
+        POLICY("POLICY"),
+        RESOURCE_GROUP("RESOURCE_GROUP"),
+        RESOURCE_GROUP_MEMBERSHIP("RESOURCE_GROUP_MEMBERSHIP"),
+        ROLE("ROLE"),
+        ROOM("ROOM"),
+        SITE("SITE"),
+        SUBSCRIPTION("SUBSCRIPTION"),
+        TEAM("TEAM"),
+        TEAM_MEMBERSHIP("TEAM_MEMBERSHIP"),
+        WEBHOOK("WEBHOOK"),
+        WHITEBOARD("WHITEBOARD");
 
-        private String keyword;
+        private final String name;
 
-        Type(String keyword) {
-            this.keyword = keyword;
+        Type(String s) {
+            name = s;
         }
 
-        public String getKeyword() {
-            return keyword;
-        }
-
-        @Override
         public String toString() {
-            return this.getKeyword();
+            return this.name;
         }
 
         public static Type getEnum(String value) {
             for (Type v : values()) {
-                if (v.getKeyword().equalsIgnoreCase(value)) {
+                if (v.name().equalsIgnoreCase(value)) {
                     return v;
                 }
             }
@@ -64,23 +91,14 @@ public class WebexId {
         }
     }
 
-    private String id;
-
-    private Type type;
-
-    public WebexId(Type type, String id) {
-        this.type = type;
-        this.id = id;
+    public static String uuid(String base64Id) {
+        WebexId id = from(base64Id);
+        return id == null ? base64Id : id.getUUID();
     }
 
-    public static String translate(String hydraId) {
-        WebexId id = from(hydraId);
-        return id == null ? hydraId : id.getId();
-    }
-
-    public static WebexId from(String hydraId) {
+    public static WebexId from(String base64Id) {
         try {
-            byte[] bytes = Base64.decode(hydraId, Base64.URL_SAFE);
+            byte[] bytes = Base64.decode(base64Id, Base64.URL_SAFE);
             if (Checker.isEmpty(bytes)) {
                 return null;
             }
@@ -89,36 +107,53 @@ public class WebexId {
                 return null;
             }
             String[] subs = strings.split("/");
-            return new WebexId(Type.getEnum(subs[subs.length - 2]), subs[subs.length - 1]);
+            return new WebexId(subs[subs.length - 3], Type.getEnum(subs[subs.length - 2]), subs[subs.length - 1]);
         } catch (Exception ignored) {
         }
         return null;
     }
 
-    public String toHydraId() {
-        String string = "ciscospark://us/" + type.getKeyword() + "/" + id;
+    private String uuid;
+
+    private Type type;
+
+    private String cluster;
+
+    public WebexId(Type type, String uuid) {
+        this("us", type, uuid);
+    }
+
+    public WebexId(String cluster, Type type, String uuid) {
+        this.type = type;
+        this.uuid = uuid;
+        this.cluster = cluster == null ? "us" : cluster;
+    }
+
+    public String getBase64Id() {
+        String string = "ciscospark://" + cluster + "/" + type.toString() + "/" + uuid;
         return new String(Base64.encode(string.getBytes(), Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP));
     }
 
-    public String getId() {
-        return this.id;
+    public String getUUID() {
+        return this.uuid;
     }
 
     public boolean is(Type type) {
         return this.type == type;
     }
 
+    public boolean belong(String cluster) {
+        return this.cluster.equals(cluster);
+    }
+
     @Override
     public String toString() {
-        return "WebexId{" +
-                "id='" + id + '\'' +
-                ", type=" + type +
-                '}';
+        return getBase64Id();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId());
+        return Objects.hash(getUUID());
     }
 
     @Override
@@ -126,9 +161,9 @@ public class WebexId {
         if (this == o) {
             return true;
         } else if (o instanceof WebexId) {
-            return getId().equals(((WebexId) o).getId());
+            return getUUID().equals(((WebexId) o).getUUID());
         } else if (o instanceof String) {
-            if (getId().equals(o)) {
+            if (getUUID().equals(o)) {
                 return true;
             } else {
                 return this.equals(WebexId.from((String) o));

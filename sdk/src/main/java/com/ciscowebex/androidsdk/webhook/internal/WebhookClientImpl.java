@@ -50,7 +50,7 @@ public class WebhookClientImpl implements WebhookClient {
     }
 
     public void list(int max, @NonNull CompletionHandler<List<Webhook>> handler) {
-        Service.Hydra.get("webhooks")
+        Service.Hydra.global().get("webhooks")
                 .with("max", max <= 0 ? null : String.valueOf(max))
                 .auth(authenticator)
                 .queue(Queue.main)
@@ -60,7 +60,7 @@ public class WebhookClientImpl implements WebhookClient {
     }
 
     public void get(@NonNull String webhookId, @NonNull CompletionHandler<Webhook> handler) {
-        Service.Hydra.get("webhooks", webhookId)
+        Service.Hydra.global().get("webhooks/" + webhookId)
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(Webhook.class)
@@ -69,7 +69,7 @@ public class WebhookClientImpl implements WebhookClient {
     }
 
     public void create(@NonNull String name, @NonNull String targetUrl, @NonNull String resource, @NonNull String event, @Nullable String filter, @Nullable String secret, @NonNull CompletionHandler<Webhook> handler) {
-        Service.Hydra.post(Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl, "filter", filter, "secret", secret, "resource", resource, "event", event))
+        Service.Hydra.global().post(Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl, "filter", filter, "secret", secret, "resource", resource, "event", event))
                 .to("webhooks")
                 .auth(authenticator)
                 .queue(Queue.main)
@@ -79,8 +79,8 @@ public class WebhookClientImpl implements WebhookClient {
     }
 
     public void update(@NonNull String webhookId, @NonNull String name, @NonNull String targetUrl, @NonNull CompletionHandler<Webhook> handler) {
-        Service.Hydra.put(Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl))
-                .to("webhooks", webhookId)
+        Service.Hydra.global().put(Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl))
+                .to("webhooks/" + webhookId)
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(Webhook.class)
@@ -90,8 +90,8 @@ public class WebhookClientImpl implements WebhookClient {
 
     @Override
     public void update(@NonNull String webhookId, @NonNull String name, @NonNull String targetUrl, @Nullable String secret, @Nullable String status, @NonNull CompletionHandler<Webhook> handler) {
-        Service.Hydra.put(Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl, "secret", secret, "status", status))
-                .to("webhooks", webhookId)
+        Service.Hydra.global().put(Maps.makeMap("name", name, KEY_TARGET_URL, targetUrl, "secret", secret, "status", status))
+                .to("webhooks/" + webhookId)
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(Webhook.class)
@@ -100,7 +100,7 @@ public class WebhookClientImpl implements WebhookClient {
     }
 
     public void delete(@NonNull String webhookId, @NonNull CompletionHandler<Void> handler) {
-        Service.Hydra.delete("webhooks", webhookId)
+        Service.Hydra.global().delete("webhooks/" + webhookId)
                 .auth(authenticator)
                 .queue(Queue.main)
                 .error(handler)

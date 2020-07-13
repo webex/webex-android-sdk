@@ -75,7 +75,7 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
             event = new InternalMembership.InternalMembershipUpdated(new InternalMembership(activity), activity);
         }
         else if (activity.getVerb() == ActivityModel.Verb.acknowledge) {
-            event = new InternalMembership.InternalMembershipMessageSeen(new InternalMembership(activity), activity, new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
+            event = new InternalMembership.InternalMembershipMessageSeen(new InternalMembership(activity), activity, new WebexId(WebexId.Type.MESSAGE, activity.getObject().getId()).getBase64Id());
         }
         else {
             event = null;
@@ -87,7 +87,7 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void list(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler) {
-        Service.Hydra.get("memberships")
+        Service.Hydra.global().get("memberships")
                 .with("roomId", spaceId)
                 .with("spaceId", spaceId)
                 .with("personId", personId)
@@ -102,7 +102,7 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void get(@NonNull String membershipId, @NonNull CompletionHandler<Membership> handler) {
-        Service.Hydra.get("memberships", membershipId)
+        Service.Hydra.global().get("memberships/" + membershipId)
                 .auth(phone.getAuthenticator())
                 .queue(Queue.main)
                 .model(Membership.class)
@@ -112,7 +112,7 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void create(@NonNull String spaceId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
-        Service.Hydra.post(Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator))
+        Service.Hydra.global().post(Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator))
                 .to("memberships")
                 .auth(phone.getAuthenticator())
                 .queue(Queue.main)
@@ -123,8 +123,8 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
-        Service.Hydra.put(Maps.makeMap("isModerator", isModerator))
-                .to("memberships", membershipId)
+        Service.Hydra.global().put(Maps.makeMap("isModerator", isModerator))
+                .to("memberships/" + membershipId)
                 .auth(phone.getAuthenticator())
                 .queue(Queue.main)
                 .model(Membership.class)
@@ -134,7 +134,7 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler) {
-        Service.Hydra.delete("memberships", membershipId)
+        Service.Hydra.global().delete("memberships/" + membershipId)
                 .auth(phone.getAuthenticator())
                 .queue(Queue.main)
                 .error(handler)
@@ -143,14 +143,14 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void listWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<List<MembershipReadStatus>> handler) {
-        Service.Conv.get("conversations", WebexId.translate(spaceId))
+        Identifier conversation = new Identifier(spaceId);
+        Service.Conv.specific(conversation.url(phone.getDevice())).get()
                 .with("uuidEntryFormat", "true")
                 .with("personRefresh", "true")
                 .with("includeParticipants", "true")
                 .with("participantAckFilter", "all")
                 .with("activitiesLimit", "0")
                 .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
                 .queue(Queue.main)
                 .model(ConversationModel.class)
                 .error(handler)

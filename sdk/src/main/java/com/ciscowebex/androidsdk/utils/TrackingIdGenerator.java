@@ -30,11 +30,13 @@ import java.util.UUID;
 
 public class TrackingIdGenerator {
 
+    public static final TrackingIdGenerator shared = new TrackingIdGenerator();
+
     private final String base;
     private int counter;
     private String currentTrackingId;
 
-    public TrackingIdGenerator() {
+    private TrackingIdGenerator() {
         base = UUID.randomUUID().toString();
         currentTrackingId = "";
     }
@@ -49,7 +51,7 @@ public class TrackingIdGenerator {
             counter = 0;
         }
         currentTrackingId = trackingId;
-        Ln.report(null, "Tracking-Id: " + currentTrackingId);
+        Ln.report(null, "TrackingId: " + currentTrackingId);
         return trackingId;
     }
 

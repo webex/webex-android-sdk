@@ -47,21 +47,21 @@ public class WMEngine implements StunTraceSink {
     public enum Media {
         Audio, Video, Sharing, Unknown;
 
-        int mid() {
+        public int mid() {
             if (this == Audio) { return 1; }
             else if (this == Video) { return 2; }
             else if (this == Sharing) { return 3; }
             return -1;
         }
 
-        MediaConnection.MediaType type() {
+        public MediaConnection.MediaType type() {
             if (this == Audio) { return MediaConnection.MediaType.Audio; }
             else if (this == Video) { return MediaConnection.MediaType.Video; }
             else if (this == Sharing) { return MediaConnection.MediaType.Sharing; }
             return MediaConnection.MediaType.Unknown;
         }
 
-        static Media from(long mid) {
+        public static Media from(long mid) {
             if (mid == 1) { return Audio; }
             else if (mid == 2) { return Video; }
             else if (mid == 3) { return Sharing; }

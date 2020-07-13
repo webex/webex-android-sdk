@@ -145,20 +145,20 @@ public class BackgroundChecker implements NetworkReachability.NetworkReachabilit
         try {
             if (isInactive()) {
                 listener.onTransition(true);
-                Ln.d("BG->FG: transition");
+                Ln.v("BG->FG: transition");
                 isInactive = false;
                 activenessCondition.signalAll();
             }
             if (isInBackground()) {
                 isInactive = true;
-                Ln.d("FG->BG: transition");
+                Ln.v("FG->BG: transition");
                 listener.onTransition(false);
             }
             cancelChecker();
             checker = Scheduler.schedule(() -> {
                 if (isInBackground()) {
                     isInactive = true;
-                    Ln.d("FG->BG: transition");
+                    Ln.v("FG->BG: transition");
                     listener.onTransition(false);
                 } else {
                     if (!running) {
@@ -167,7 +167,7 @@ public class BackgroundChecker implements NetworkReachability.NetworkReachabilit
                         foregroundActivityDetected();
                     }
                 }
-            }, 10000, true);
+            }, 1000, true);
         } finally {
             syncLock.unlock();
         }
@@ -184,7 +184,7 @@ public class BackgroundChecker implements NetworkReachability.NetworkReachabilit
     public boolean isInBackground() {
         boolean isInForeground = ForegroundChecker.getInstance().isForeground();
         boolean isDeviceInteractive = (powerManager == null || powerManager.isInteractive());
-        Ln.d("isInForeground = %b, isDeviceInteractive = %b", isInForeground, isDeviceInteractive);
+        Ln.v("isInForeground = %b, isDeviceInteractive = %b", isInForeground, isDeviceInteractive);
         return (!isDeviceInteractive || !isInForeground);
     }
 
@@ -219,7 +219,7 @@ public class BackgroundChecker implements NetworkReachability.NetworkReachabilit
                 int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
                 int batteryPct = (int) (100 * level / (float) scale);
-                Ln.d("Battery percentage = %d, charging = %b", batteryPct, isCharging);
+                Ln.v("Battery percentage = %d, charging = %b", batteryPct, isCharging);
             }
         } catch (Exception ex) {
             Ln.w(ex);

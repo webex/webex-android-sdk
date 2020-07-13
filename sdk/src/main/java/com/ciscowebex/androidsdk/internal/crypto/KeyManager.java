@@ -31,6 +31,7 @@ import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.internal.queue.BackgroundQueue;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.UriUtils;
 import com.github.benoitdion.ln.Ln;
@@ -45,10 +46,10 @@ public class KeyManager {
 
     public static KeyManager shared = new KeyManager();
 
-    private BackgroundQueue queue = new BackgroundQueue();
-    private KmsInfoModel kmsInfo;
-    private Map<String, KmsRequestWrapper<KeyObject>> requests = new ConcurrentHashMap<>();
+    private final Queue queue = new BackgroundQueue();
+    private final Map<String, KmsRequestWrapper<KeyObject>> requests = new ConcurrentHashMap<>();
 
+    private KmsInfoModel kmsInfo;
     private KeyObject ephemeralKey;
     private final Map<String, KeyObject> keys = new ConcurrentHashMap<>();
     private final Map<String, String> encryptionUrls = new ConcurrentHashMap<>();
@@ -77,14 +78,14 @@ public class KeyManager {
                         }
                         kmsRequest.getCallback().onComplete(key == null ? ResultImpl.error("Get the illegal key") : ResultImpl.success(key));
                         return;
-                    } else if (!Checker.isEmpty(decryptedKmsMessage.getKeys()) && kmsRequest.getConversationId() != null) {
+                    } else if (!Checker.isEmpty(decryptedKmsMessage.getKeys()) && kmsRequest.getConversation() != null) {
                         KeyObject key = CryptoUtils.convertKmsKeytoKeyObject(decryptedKmsMessage.getKeys().get(0));
                         if (key == null) {
                             kmsRequest.getCallback().onComplete(ResultImpl.error("Get the illegal key"));
                             return;
                         }
                         this.keys.put(key.getKeyUrl(), key);
-                        Set<String> userIds = this.userIds.remove(kmsRequest.getConversationId());
+                        Set<String> userIds = this.userIds.remove(kmsRequest.getConversation().uuid());
                         Device device = kmsRequest.getDevice();
                         Credentials credentials = kmsRequest.getCredentials();
                         getEphemeralKey(credentials, device, ephemeral -> {
@@ -107,12 +108,18 @@ public class KeyManager {
                             params.put("objectType", ObjectModel.Type.activity);
                             params.put("verb", ActivityModel.Verb.updateKey.name());
                             params.put("object", Maps.makeMap("objectType", ObjectModel.Type.conversation, "defaultActivityEncryptionKeyUrl", key.getKeyUrl()));
-                            params.put("target", Maps.makeMap("objectType", ObjectModel.Type.conversation, "id", kmsRequest.getConversationId()));
+                            params.put("target", Maps.makeMap("objectType", ObjectModel.Type.conversation, "id", kmsRequest.getConversation().uuid()));
                             params.put("kmsMessage", encryptedBlob);
-                            Service.Conv.post(params).to("activities").auth(credentials.getAuthenticator()).device(device).queue(queue).model(ActivityModel.class).error(kmsRequest.getCallback())
+                            Service.Conv.homed(device)
+                                    .post(params)
+                                    .to("activities")
+                                    .auth(credentials.getAuthenticator())
+                                    .queue(queue)
+                                    .model(ActivityModel.class)
+                                    .error(kmsRequest.getCallback())
                                     .async((Closure<ActivityModel>) result -> {
-                                        if (kmsRequest.getConversationId() != null) {
-                                            encryptionUrls.put(kmsRequest.getConversationId(), key.getKeyUrl());
+                                        if (kmsRequest.getConversation() != null) {
+                                            encryptionUrls.put(kmsRequest.getConversation().uuid(), key.getKeyUrl());
                                         }
                                         kmsRequest.getCallback().onComplete(ResultImpl.success(key));
                                     });
@@ -123,36 +130,33 @@ public class KeyManager {
         });
     }
 
-    public void tryRefresh(String conversationId, String encryptionUrl) {
-        if (encryptionUrl != null && !Checker.isEqual(this.encryptionUrls.get(conversationId), encryptionUrl)) {
-            encryptionUrls.put(conversationId, encryptionUrl);
+    public void tryRefresh(Identifier conversation, String encryptionUrl) {
+        if (encryptionUrl != null && !Checker.isEqual(this.encryptionUrls.get(conversation.uuid()), encryptionUrl)) {
+            encryptionUrls.put(conversation.uuid(), encryptionUrl);
         }
     }
 
-    public void getKey(String conversationId, Credentials credentials, Device device, CompletionHandler<KeyObject> callback) {
-        queue.run(() -> getEncryptionUrl(conversationId, credentials.getAuthenticator(), device, result -> {
+    public void getKey(Identifier conversation, Credentials credentials, Device device, CompletionHandler<KeyObject> callback) {
+        queue.run(() -> getEncryptionUrl(conversation, credentials.getAuthenticator(), device, result -> {
             if (result.getError() != null) {
                 callback.onComplete(ResultImpl.error(result.getError()));
                 return;
             }
-            getKey(conversationId, result.getData(), credentials, device, callback);
+            getKey(conversation, result.getData(), credentials, device, callback);
         }));
-
     }
 
-    private void getEncryptionUrl(String conversationId, Authenticator authenticator, Device device, CompletionHandler<String> callback) {
+    private void getEncryptionUrl(Identifier conversation, Authenticator authenticator, Device device, CompletionHandler<String> callback) {
         queue.run(() -> {
-            String url = encryptionUrls.get(conversationId);
+            String url = encryptionUrls.get(conversation.uuid());
             if (url != null) {
                 callback.onComplete(ResultImpl.success(url));
                 return;
             }
-
-            Service.Conv.get("conversations", conversationId)
+            Service.Conv.specific(conversation.url(device)).get()
                     .with("includeActivities", String.valueOf(false))
                     .with("includeParticipants", String.valueOf(false))
                     .auth(authenticator)
-                    .device(device)
                     .queue(queue)
                     .model(ConversationModel.class)
                     .error(callback)
@@ -178,17 +182,17 @@ public class KeyManager {
                                     participantUuids.add(person.getUuid());
                                 }
                             }
-                            userIds.put(conversationId, participantUuids);
+                            userIds.put(conversation.uuid(), participantUuids);
                         }
                         if (encryptionUrl != null) {
-                            encryptionUrls.put(conversationId, encryptionUrl);
+                            encryptionUrls.put(conversation.uuid(), encryptionUrl);
                         }
                         callback.onComplete(ResultImpl.success(encryptionUrl));
                     });
         });
     }
 
-    private void getKey(@NonNull String spaceId, @Nullable String encryptionUrl, @NonNull Credentials credentials, @NonNull Device device, @NonNull CompletionHandler<KeyObject> callback) {
+    private void getKey(@NonNull Identifier conversation, @Nullable String encryptionUrl, @NonNull Credentials credentials, @NonNull Device device, @NonNull CompletionHandler<KeyObject> callback) {
         queue.run(() -> {
             KeyObject key = encryptionUrl == null ? null : keys.get(encryptionUrl);
             if (key != null) {
@@ -212,6 +216,11 @@ public class KeyManager {
                     callback.onComplete(ResultImpl.error("Failed generating key request message"));
                     return;
                 }
+                if (ephemeral.getData() == null) {
+                    Ln.d("No ephemeral key");
+                    callback.onComplete(ResultImpl.error("No ephemeral key"));
+                    return;
+                }
                 String encryptedBlob = kmsRequest.asEncryptedBlob(ephemeral.getData().getKeyValueAsJWK());
                 if (Checker.isEmpty(encryptedBlob)) {
                     Ln.d("Generate Key Request is empty");
@@ -222,12 +231,14 @@ public class KeyManager {
                 if (encryptionUrl == null) {
                     wrapper.setDevice(device);
                     wrapper.setCredentials(credentials);
-                    wrapper.setConversationId(spaceId);
+                    wrapper.setConversationId(conversation);
                 }
                 requests.put(requestId, wrapper);
-                Service.Kms.post(Maps.makeMap("kmsMessages", Lists.asList(encryptedBlob), "destination", kmsInfo.getKmsCluster().toString())).to("kms", "messages")
+                Service.Kms.homed(device)
+                        .post(Maps.makeMap("kmsMessages", Lists.asList(encryptedBlob), "destination", kmsInfo.getKmsCluster().toString()))
+                        .to("kms/messages")
                         .header("Cisco-Request-ID", requestId)
-                        .auth(credentials.getAuthenticator()).device(device).queue(queue)
+                        .auth(credentials.getAuthenticator()).queue(queue)
                         .error((CompletionHandler<KeyObject>) result -> {
                             requests.remove(requestId);
                             callback.onComplete(result);
@@ -273,9 +284,12 @@ public class KeyManager {
                 }
                 requests.put(requestId, new KmsRequestWrapper<>(KmsRequestWrapper.RequestType.CREATE_EPHEMERAL_KEY, kmsRequest, callback));
 
-                Service.Kms.post(Maps.makeMap("kmsMessages", encryptedRequest, "destination", kmsInfo.getKmsCluster().toString())).to("kms", "messages")
+                Service.Kms.homed(device)
+                        .post(Maps.makeMap("kmsMessages", encryptedRequest, "destination", kmsInfo.getKmsCluster().toString()))
+                        .to("kms/messages")
                         .header("Cisco-Request-ID", requestId)
-                        .auth(credentials.getAuthenticator()).device(device).queue(queue)
+                        .auth(credentials.getAuthenticator())
+                        .queue(queue)
                         .error((CompletionHandler<KeyObject>) result -> {
                             requests.remove(requestId);
                             callback.onComplete(result);
@@ -290,7 +304,7 @@ public class KeyManager {
             callback.onComplete(ResultImpl.success(kmsInfo));
             return;
         }
-        Service.Kms.get("kms").auth(authenticator).device(device).queue(queue).model(KmsInfoModel.class).error(callback)
+        Service.Kms.homed(device).get("kms").auth(authenticator).queue(queue).model(KmsInfoModel.class).error(callback)
                 .async((Closure<KmsInfoModel>) model -> {
                     kmsInfo = model;
                     callback.onComplete(ResultImpl.success(kmsInfo));

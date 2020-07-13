@@ -52,7 +52,7 @@ public interface WebexEvent {
         protected Base(ActivityModel activity) {
             PersonModel person = activity.getActor();
             if (person != null) {
-                _actorId = new WebexId(WebexId.Type.PEOPLE_ID, person.getId()).toHydraId();
+                _actorId = new WebexId(WebexId.Type.PEOPLE, person.getId()).getBase64Id();
             }
         }
 

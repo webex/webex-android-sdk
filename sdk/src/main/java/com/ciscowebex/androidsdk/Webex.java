@@ -43,6 +43,7 @@ import com.ciscowebex.androidsdk.team.TeamClient;
 import com.ciscowebex.androidsdk.team.TeamMembershipClient;
 import com.ciscowebex.androidsdk.team.internal.TeamClientImpl;
 import com.ciscowebex.androidsdk.team.internal.TeamMembershipClientImpl;
+import com.ciscowebex.androidsdk.utils.UserAgent;
 import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.http.HttpClient;
 import com.ciscowebex.androidsdk.webhook.WebhookClient;
@@ -111,7 +112,7 @@ public class Webex {
         checker = new BackgroundChecker(application, phone);
         phone.setChecker(checker);
         setLogLevel(LogLevel.DEBUG);
-        Ln.i(Utils.versionInfo());
+        Ln.i(UserAgent.value);
     }
 
     /**

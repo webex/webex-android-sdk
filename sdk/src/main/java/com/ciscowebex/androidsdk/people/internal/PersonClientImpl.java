@@ -54,7 +54,7 @@ public class PersonClientImpl implements PersonClient {
     }
 
     public void list(String email, String displayName, String id, String orgId, int max, @NotNull CompletionHandler<List<Person>> handler) {
-        Service.Hydra.get("people")
+        Service.Hydra.global().get("people")
                 .with("email", email)
                 .with("displayName", displayName)
                 .with("id", id)
@@ -68,7 +68,7 @@ public class PersonClientImpl implements PersonClient {
     }
 
     public void get(@NotNull String personId, @NotNull CompletionHandler<Person> handler) {
-        Service.Hydra.get("people", personId)
+        Service.Hydra.global().get("people/" + personId)
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(Person.class)
@@ -77,7 +77,7 @@ public class PersonClientImpl implements PersonClient {
     }
 
     public void getMe(@NotNull CompletionHandler<Person> handler) {
-        Service.Hydra.get("people", "me")
+        Service.Hydra.global().get("people/me")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(Person.class)
@@ -87,8 +87,9 @@ public class PersonClientImpl implements PersonClient {
 
     @Override
     public void create(@NonNull String email, @Nullable String displayName, @Nullable String firstName, @Nullable String lastName, @Nullable String avatar, @Nullable String orgId, @Nullable String roles, @Nullable String licenses, @NonNull CompletionHandler<Person> handler) {
-        Service.Hydra.post(Maps.makeMap("email", email, "displayName", displayName, "firstName", firstName, "lastName", lastName,
-                "avatar", avatar, "orgId", orgId, "roles", roles, "licenses", licenses)).to("people")
+        Service.Hydra.global().post(Maps.makeMap("email", email, "displayName", displayName, "firstName", firstName, "lastName", lastName,
+                "avatar", avatar, "orgId", orgId, "roles", roles, "licenses", licenses))
+                .to("people")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(Person.class)
@@ -98,8 +99,9 @@ public class PersonClientImpl implements PersonClient {
 
     @Override
     public void update(@NonNull String personId, @Nullable String email, @Nullable String displayName, @Nullable String firstName, @Nullable String lastName, @Nullable String avatar, @Nullable String orgId, @Nullable String roles, @Nullable String licenses, @NonNull CompletionHandler<Person> handler) {
-        Service.Hydra.put(Maps.makeMap("email", email, "displayName", displayName, "firstName", firstName, "lastName", lastName,
-                "avatar", avatar, "orgId", orgId, "roles", roles, "licenses", licenses)).to("people", personId)
+        Service.Hydra.global().put(Maps.makeMap("email", email, "displayName", displayName, "firstName", firstName, "lastName", lastName,
+                "avatar", avatar, "orgId", orgId, "roles", roles, "licenses", licenses))
+                .to("people/" + personId)
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(Person.class)
@@ -111,7 +113,7 @@ public class PersonClientImpl implements PersonClient {
 
     @Override
     public void delete(@NonNull String personId, @NonNull CompletionHandler<Void> handler) {
-        Service.Hydra.delete("people", personId)
+        Service.Hydra.global().delete("people/" + personId)
                 .auth(authenticator)
                 .queue(Queue.main)
                 .error(handler)

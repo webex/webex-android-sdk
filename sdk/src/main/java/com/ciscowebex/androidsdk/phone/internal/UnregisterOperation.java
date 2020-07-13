@@ -46,7 +46,7 @@ public class UnregisterOperation implements Runnable {
     public void run() {
         String deviceUrl = device.getDeviceUrl();
         if (deviceUrl != null) {
-            Service.Wdm.delete().url(deviceUrl).auth(authenticator).error(callback).async(data -> callback.onComplete(ResultImpl.success(null)));
+            Service.Wdm.specific(deviceUrl).delete().auth(authenticator).error(callback).async(data -> callback.onComplete(ResultImpl.success(null)));
         }
     }
 }

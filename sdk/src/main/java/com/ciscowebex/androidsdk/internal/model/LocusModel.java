@@ -67,6 +67,10 @@ public class LocusModel {
     private Uri aclUrl;
     private List<MediaConnectionModel> mediaConnections;
 
+    public LocusKeyModel getKey() {
+        return key;
+    }
+
     public Date getCreated() {
         return created;
     }

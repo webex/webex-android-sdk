@@ -51,7 +51,7 @@ public class SpaceReadStatus {
     private Date _lastSeenActivityDate;
 
     protected SpaceReadStatus(ConversationModel conversation) {
-        _id =  new WebexId(WebexId.Type.ROOM_ID, conversation.getId()).toHydraId();
+        _id =  new WebexId(WebexId.Type.ROOM, conversation.getId()).getBase64Id();
         _type = conversation.isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         _lastSeenActivityDate = conversation.getLastSeenActivityDate();
         _lastActivityDate = conversation.getLastReadableActivityDate();

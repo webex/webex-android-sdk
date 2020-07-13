@@ -28,7 +28,6 @@ import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 
 import me.helloworld.utils.Checker;
-import me.helloworld.utils.Objects;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -131,7 +130,7 @@ public class CallMembershipImpl implements CallMembership {
         synchronized (this) {
             this.model = model;
             this.self = Checker.isEqual(model.getId(), call.getModel().getSelfId());
-            this.personId = new WebexId(WebexId.Type.PEOPLE_ID, model.getPerson().getId()).toHydraId();
+            this.personId = new WebexId(WebexId.Type.PEOPLE, model.getPerson().getId()).getBase64Id();
             this.initiator = model.isCreator();
         }
     }

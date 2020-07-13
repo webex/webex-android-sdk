@@ -30,6 +30,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
 import android.view.View;
+
 import com.cisco.wme.appshare.ScreenShareContext;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
@@ -37,6 +38,7 @@ import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.crypto.KeyManager;
 import com.ciscowebex.androidsdk.internal.mercury.*;
+import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.media.MediaCapability;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
@@ -106,6 +108,10 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     private BackgroundChecker checker;
 
+    private boolean enableBackgroundStream = false;
+
+    private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = new HashMap<>();
+
     public PhoneImpl(Context context, Authenticator authenticator, MediaEngine engine) {
         this.context = context;
         this.authenticator = authenticator;
@@ -113,6 +119,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         this.service = new CallService(authenticator);
         this.reachability = new ReachabilityService(this);
         this.metrics = new MetricsService(authenticator);
+        CallAnalyzerReporter.shared.init(this);
     }
 
     public void addActivityListener(ActivityListener listener) {
@@ -139,6 +146,10 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         return engine;
     }
 
+    public ReachabilityService getReachability() {
+        return reachability;
+    }
+
     public void setChecker(BackgroundChecker checker) {
         this.checker = checker;
     }
@@ -161,13 +172,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     state = State.UNREGISTERED;
                     ResultImpl.errorInMain(callback, result);
                     Queue.serial.yield();
-                }
-                else {
+                } else {
                     device = data.first;
                     credentials = data.second;
                     Ln.i("Registered %s with %s", device.getDeviceUrl(), credentials.getPerson());
                     state = State.REGISTERED;
-                    Settings.shared.store(Device.DEVICE_URL, device.getDeviceUrl());
+                    device.store();
                     mercury = new MercuryService(authenticator, this);
                     mercury.connect(device.getWebSocketUrl(), error -> {
                         if (error != null) {
@@ -210,14 +220,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     listener.processActivity(model);
                 }
             }
-        }
-        else if (event instanceof MercuryLocusEvent) {
+        } else if (event instanceof MercuryLocusEvent) {
             LocusModel model = ((MercuryLocusEvent) event).getLocus();
             if (model != null) {
                 doLocusEvent(model);
             }
-        }
-        else if (event instanceof MercuryKmsMessageEvent) {
+        } else if (event instanceof MercuryKmsMessageEvent) {
             KmsMessageModel model = ((MercuryKmsMessageEvent) event).getEncryptionKmsMessage();
             if (model != null) {
                 KeyManager.shared.processKmsMessage(model);
@@ -227,12 +235,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void onTransition(boolean foreground) {
-        Ln.d("Status transition: " + foreground);
+        Ln.d("Status transition: " + foreground + " enableBackgroundStream: " + enableBackgroundStream);
         Queue.serial.run(() -> {
-            if (mercury != null && calls.size() == 0) {
+            if (mercury != null) {
                 if (foreground) {
                     mercury.tryReconnect();
-                } else {
+                } else if (calls.size() == 0) {
                     mercury.disconnect(false);
                 }
             }
@@ -241,8 +249,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 if (session != null && session.isRunning()) {
                     if (foreground) {
                         session.prepareToLeaveVideoInterruption();
-                    }
-                    else {
+                    } else if (!enableBackgroundStream) {
                         session.prepareToEnterVideoInterruption();
                     }
                 }
@@ -271,9 +278,9 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     }
                 });
                 mercury.disconnect(true);
+                device.clear();
                 device = null;
                 credentials = null;
-                Settings.shared.clear(Device.DEVICE_URL);
                 state = State.UNREGISTERED;
                 Queue.main.run(() -> callback.onComplete(result));
                 Queue.serial.yield();
@@ -342,7 +349,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public void onMediaPermission(boolean permission) {
         Queue.serial.run(() -> {
-            String callId = UUID.randomUUID().toString();
             if (callContext instanceof CallContext.Outgoing) {
                 CallContext.Outgoing outgoing = (CallContext.Outgoing) callContext;
                 callContext = null;
@@ -363,17 +369,19 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                         Queue.serial.yield();
                         return;
                     }
+                    String correlationId = UUID.randomUUID().toString();
+                    //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
                     if (target.isEndpoint()) {
-                        service.call(target.getAddress(), callId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
+                        service.call(target.getAddress(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
                             if (callResult.getError() != null || callResult.getData() == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(callResult.getError())));
                                 Queue.serial.yield();
+                                CallAnalyzerReporter.shared.reportJoinResponseError(correlationId, null, String.valueOf(callResult.getError()));
                                 return;
                             }
-                            doLocusResponse(new LocusResponse.Call(device, session, callResult.getData(), outgoing.getCallback()), Queue.serial);
+                            doLocusResponse(new LocusResponse.Call(device, correlationId, session, callResult.getData(), outgoing.getCallback()), Queue.serial);
                         });
-                    }
-                    else {
+                    } else {
                         service.getOrCreatePermanentLocus(target.getAddress(), device, convResult -> {
                             String url = convResult.getData();
                             if (url == null) {
@@ -381,19 +389,19 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 Queue.serial.yield();
                                 return;
                             }
-                            service.join(url, callId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, joinResult -> {
+                            service.join(url, correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, joinResult -> {
                                 if (joinResult.getError() != null || joinResult.getData() == null) {
                                     Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                                     Queue.serial.yield();
+                                    CallAnalyzerReporter.shared.reportJoinResponseError(correlationId, null, String.valueOf(joinResult.getError()));
                                     return;
                                 }
-                                doLocusResponse(new LocusResponse.Call(device, session, joinResult.getData(), outgoing.getCallback()), Queue.serial);
+                                doLocusResponse(new LocusResponse.Call(device, correlationId, session, joinResult.getData(), outgoing.getCallback()), Queue.serial);
                             });
                         });
                     }
                 });
-            }
-            else if (callContext instanceof CallContext.Incoming) {
+            } else if (callContext instanceof CallContext.Incoming) {
                 CallContext.Incoming incoming = (CallContext.Incoming) callContext;
                 callContext = null;
                 if (!permission) {
@@ -403,18 +411,19 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     return;
                 }
                 MediaSession session = engine.createSession(createCapability(), incoming.getOption());
-                incoming.getCall().setMedia(session);
                 String localSdp = session.getLocalSdp();
-                service.join(incoming.getCall().getUrl(), callId, device, localSdp, incoming.getCall().isGroup() ? incoming.getOption().getLayout() : null, reachability.getFeedback(), joinResult -> {
+                incoming.getCall().setMedia(session);
+                //CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
+                service.join(incoming.getCall().getUrl(), incoming.getCall().getCorrelationId(), device, localSdp, incoming.getCall().isGroup() ? incoming.getOption().getLayout() : null, reachability.getFeedback(), joinResult -> {
                     if (joinResult.getError() != null || joinResult.getData() == null) {
                         Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                         Queue.serial.yield();
+                        CallAnalyzerReporter.shared.reportJoinResponseError(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey(), String.valueOf(joinResult.getError()));
                         return;
                     }
                     doLocusResponse(new LocusResponse.Answer(incoming.getCall(), joinResult.getData(), incoming.getCallback()), Queue.serial);
                 });
-            }
-            else {
+            } else {
                 Ln.e("No call context: " + callContext);
                 Queue.serial.yield();
             }
@@ -429,6 +438,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 CallImpl call = ((CallContext.Sharing) callContext).getCall();
                 CompletionHandler<Void> callback = ((CallContext.Sharing) callContext).getCallback();
                 callContext = null;
+                if (permission == null) {
+                    Ln.e("User canceled");
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("User canceled")));
+                    Queue.serial.yield();
+                    return;
+                }
                 if (call.getMedia() == null || !call.getMedia().hasSharing()) {
                     Ln.e("Media option unsupport content share");
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Media option unsupport content share")));
@@ -452,20 +467,19 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String url = mediaShare.getUrl();
                 if (url == null) {
                     Ln.e("Unsupport media share");
-                    Queue.main.run(() ->  callback.onComplete(ResultImpl.error("No MediaShare url")));
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("No MediaShare url")));
                     Queue.serial.yield();
                     return;
                 }
                 service.update(mediaShare, url, device, result -> {
                     if (result.getError() != null) {
-                        Queue.main.run(() ->  callback.onComplete(ResultImpl.error(result.getError())));
+                        Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
                         Queue.serial.yield();
                         return;
                     }
                     doLocusResponse(new LocusResponse.MediaShare(call, FloorModel.Disposition.GRANTED, permission, callback), Queue.serial);
                 });
-            }
-            else {
+            } else {
                 Queue.serial.yield();
             }
         });
@@ -583,13 +597,30 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     @Override
+    public void enableBackgroundStream(boolean enable) {
+        Ln.d("Set enableBackgroundStream to " + enable);
+        this.enableBackgroundStream = enable;
+    }
+
+    @Override
+    public void setAdvancedSetting(AdvancedSetting setting) {
+        Ln.d("Set " + setting);
+        this.settings.put(setting.getClass(), setting);
+    }
+
+    @Override
+    public AdvancedSetting getAdvancedSetting(Class<? extends AdvancedSetting> clz) {
+        return this.settings.get(clz);
+    }
+
+    @Override
     public boolean isHardwareAccelerationEnabled() {
         return hardwareCodecEnable;
     }
 
     @Override
     public void setHardwareAccelerationEnabled(boolean enable) {
-       hardwareCodecEnable = enable;
+        hardwareCodecEnable = enable;
     }
 
     @Override
@@ -677,8 +708,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already connected")));
                     Queue.serial.yield();
                     return;
-                }
-                else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
+                } else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
                     Ln.e("Already disconnected");
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already disconnected")));
                     Queue.serial.yield();
@@ -706,8 +736,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already connected")));
                     Queue.serial.yield();
                     return;
-                }
-                else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
+                } else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
                     Ln.e("Already disconnected");
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already disconnected")));
                     Queue.serial.yield();
@@ -740,7 +769,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 Queue.serial.yield();
                 return;
             }
-            String url = call.getModel().getSelf().getUrl();
+            String url = call.getModel().getSelf() == null ? null : call.getModel().getSelf().getUrl();
             if (url == null) {
                 Ln.e("Missing self participant URL");
                 Queue.main.run(() -> callback.onComplete(ResultImpl.error("Missing self participant URL")));
@@ -753,12 +782,16 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     call.getMedia().leaveSharing(true);
                 }
                 service.leave(url, device, result -> {
-                    if (result.getError() != null) {
+                    if (result.getError() != null && result.getError().getErrorMessage().startsWith("409/Conflict/")) {
+                        WebexError error = new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, "The call is inactive.");
+                        call.end(new CallObserver.CallErrorEvent(call, error));
+                    } else if (result.getError() != null) {
                         Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
                         Queue.serial.yield();
                         return;
                     }
                     doLocusResponse(new LocusResponse.Leave(call, result.getData(), callback), Queue.serial);
+
                 });
             });
 
@@ -772,14 +805,15 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             if (sdp == null) {
                 sdp = localSdp;
             }
-            String mediaId = call.getModel().getMediaId(device.getDeviceUrl());
+            String mediaId = device == null ? null : call.getModel().getMediaId(device.getDeviceUrl());
             if (url == null || sdp == null || mediaId == null) {
                 Ln.e("Missing media data");
                 Queue.main.run(() -> callback.onComplete(ResultImpl.error("Missing media data")));
                 Queue.serial.yield();
                 return;
             }
-            MediaInfoModel media = new MediaInfoModel(localSdp == null ? sdp : localSdp, !audio, !video, reachability.getFeedback().reachability);
+            MediaEngineReachabilityModel reachabilities = reachability.getFeedback();
+            MediaInfoModel media = new MediaInfoModel(localSdp == null ? sdp : localSdp, !audio, !video, reachabilities == null ? null : reachabilities.reachability);
             service.update(url, mediaId, device, media, result -> {
                 if (result.getError() != null && result.getData() == null) {
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
@@ -821,8 +855,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     Queue.main.run(() -> callback.onComplete(result));
                     Queue.serial.yield();
                 });
-            }
-            else {
+            } else {
                 Queue.main.run(() -> callback.onComplete(ResultImpl.error("unsupported DTMF")));
                 Queue.serial.yield();
             }
@@ -856,7 +889,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         feedback.put("type", "GENERIC");
         List<Map<String, String>> list = new ArrayList<>();
         list.add(feedback);
-        metrics.post(list);
+        metrics.post(this.getDevice(), list);
     }
 
     void keepAlive(CallImpl call) {
@@ -865,7 +898,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             Ln.e("Missing keepAlive URL");
             return;
         }
-        service.keepalive(url, result -> {});
+        service.keepalive(url, result -> {
+        });
     }
 
     void startSharing(CallImpl call, CompletionHandler<Void> callback) {
@@ -928,7 +962,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         if (response instanceof LocusResponse.Call) {
             LocusModel model = ((LocusResponse.Call) response).getLocus();
             Ln.d("Connecting call: " + model.getCallUrl());
-            CallImpl call = new CallImpl(model, this, device, ((LocusResponse.Call) response).getSession(), Call.Direction.OUTGOING, !model.isOneOnOne());
+            CallAnalyzerReporter.shared.reportJoinResponseSuccess(((LocusResponse.Call) response).getCorrelationId(), model.getKey());
+            CallImpl call = new CallImpl(((LocusResponse.Call) response).getCorrelationId(), model, this, device, ((LocusResponse.Call) response).getSession(), Call.Direction.OUTGOING, !model.isOneOnOne());
             if (call.isStatusIllegal()) {
                 Ln.d("The previous session did not end");
                 Queue.main.run(() -> {
@@ -943,23 +978,21 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             Queue.main.run(() -> {
                 if (call.getModel().isSelfInLobby()) {
                     call.startKeepAlive();
-                }
-                else {
+                } else {
                     call.startMedia();
                 }
                 ((LocusResponse.Call) response).getCallback().onComplete(ResultImpl.success(call));
                 queue.yield();
             });
-        }
-        else if (response instanceof LocusResponse.Answer) {
+        } else if (response instanceof LocusResponse.Answer) {
             LocusResponse.Answer res = (LocusResponse.Answer) response;
+            CallAnalyzerReporter.shared.reportJoinResponseSuccess(res.getCall().getCorrelationId(), res.getCall().getModel().getKey());
             res.getCall().update(res.getResult());
             if (res.getCallback() != null) {
                 Queue.main.run(() -> res.getCallback().onComplete(ResultImpl.success(null)));
             }
             queue.yield();
-        }
-        else if (response instanceof LocusResponse.Leave) {
+        } else if (response instanceof LocusResponse.Leave) {
             LocusResponse.Leave res = (LocusResponse.Leave) response;
             LocusModel model = res.getResult();
             if (model != null) {
@@ -969,16 +1002,14 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 Queue.main.run(() -> res.getCallback().onComplete(ResultImpl.success(null)));
             }
             queue.yield();
-        }
-        else if (response instanceof LocusResponse.Reject) {
+        } else if (response instanceof LocusResponse.Reject) {
             LocusResponse.Reject res = (LocusResponse.Reject) response;
             res.getCall().end(new CallObserver.LocalDecline(res.getCall()));
             if (res.getCallback() != null) {
                 Queue.main.run(() -> res.getCallback().onComplete(ResultImpl.success(null)));
             }
             queue.yield();
-        }
-        else if (response instanceof LocusResponse.Ack) {
+        } else if (response instanceof LocusResponse.Ack) {
             LocusResponse.Ack res = (LocusResponse.Ack) response;
             res.getCall().setStatus(Call.CallStatus.RINGING);
             Queue.main.run(() -> {
@@ -991,8 +1022,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 }
                 queue.yield();
             });
-        }
-        else if (response instanceof LocusResponse.Update) {
+        } else if (response instanceof LocusResponse.Update) {
             LocusResponse.Update res = (LocusResponse.Update) response;
             LocusModel model = res.getResult();
             if (model != null) {
@@ -1002,8 +1032,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 Queue.main.run(() -> res.getCallback().onComplete(ResultImpl.success(null)));
             }
             queue.yield();
-        }
-        else if (response instanceof LocusResponse.MediaShare) {
+        } else if (response instanceof LocusResponse.MediaShare) {
             LocusResponse.MediaShare res = (LocusResponse.MediaShare) response;
             Queue.main.run(() -> {
                 if (res.getIntent() != null && FloorModel.Disposition.GRANTED == res.getDisposition()) {
@@ -1028,11 +1057,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             return;
         }
         Ln.d("doLocusEvent: " + url);
+        //CallAnalyzerReporter.shared.reportClientNotificationReceived(model.getKey(), true);
         Queue.serial.run(() -> {
             CallImpl call = calls.get(url);
             if (call == null) {
                 if (device != null && model.isIncomingCall() && model.isValid()) {
-                    CallImpl incoming = new CallImpl(model, this, device, null, Call.Direction.INCOMING, !model.isOneOnOne());
+                    CallImpl incoming = new CallImpl(UUID.randomUUID().toString(), model, this, device, null, Call.Direction.INCOMING, !model.isOneOnOne());
                     addCall(incoming);
                     Ln.d("Receive incoming call: " + incoming.getUrl());
                     Queue.main.run(() -> {
@@ -1041,8 +1071,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                             listener.onIncomingCall(incoming);
                         }
                     });
-                }
-                else {
+                } else {
                     Ln.d("Receive incoming call with invalid model");
                 }
                 Queue.serial.yield();
@@ -1099,6 +1128,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             capability.setDeviceSettings(device.getDeviceSettings());
         }
         capability.setDefaultCamera(WMEngine.Camera.fromFaceMode(getDefaultFacingMode()));
+        capability.setAdvanceSettings(this.settings);
         return capability;
     }
 }

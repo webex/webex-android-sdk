@@ -22,7 +22,6 @@
 
 package com.ciscowebex.androidsdk.phone.internal;
 
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
@@ -30,6 +29,8 @@ import android.util.Size;
 import android.view.View;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
+import com.ciscowebex.androidsdk.internal.media.WMEngine;
+import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.queue.Scheduler;
 import com.ciscowebex.androidsdk.internal.Device;
@@ -50,8 +51,8 @@ public class CallImpl implements Call {
     private final Direction direction;
     private final boolean group;
 
-    private @Nullable
-    MediaSession media;
+    private final String correlationId;
+    private @Nullable MediaSession media;
     private CallObserver observer;
     private MultiStreamObserver streamObserver;
     private CallStatus status = CallStatus.INITIATED;
@@ -74,7 +75,10 @@ public class CallImpl implements Call {
     private AtomicInteger predicate = new AtomicInteger(0);
     private AtomicInteger dtmfCorrelation = new AtomicInteger(1);
 
-    public CallImpl(LocusModel model, PhoneImpl phone, Device device, MediaSession media, Direction direction, boolean group) {
+    private long connectedTime = 0;
+
+    public CallImpl(String correlationId, LocusModel model, PhoneImpl phone, Device device, MediaSession media, Direction direction, boolean group) {
+        this.correlationId = correlationId;
         this.phone = phone;
         this.model = model;
         this.device = device;
@@ -82,9 +86,10 @@ public class CallImpl implements Call {
         this.group = (group ? group : !model.isOneOnOne());
         setMedia(media);
         doLocusModel(model);
+        CallAnalyzerReporter.shared.reportCallInitiated(this);
     }
 
-    LocusModel getModel() {
+    public LocusModel getModel() {
         return model;
     }
 
@@ -92,8 +97,21 @@ public class CallImpl implements Call {
         return getModel().getCallUrl();
     }
 
-    @Nullable
-    MediaSession getMedia() {
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public long getConnectedTime() {
+        if (model != null) {
+            Date startTime = model.getFullState().getLastActive();
+            if (startTime != null) {
+                return startTime.getTime();
+            }
+        }
+        return connectedTime;
+    }
+
+    public @Nullable MediaSession getMedia() {
         return media;
     }
 
@@ -102,6 +120,8 @@ public class CallImpl implements Call {
         if (media != null) {
             this.videoViews = media.getVideoViews();
             this.sharingView = media.getSharingView();
+            CallAnalyzerReporter.shared.reportMediaCapabilities(this);
+            CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
         }
     }
 
@@ -112,6 +132,9 @@ public class CallImpl implements Call {
     void setStatus(CallStatus status) {
         Ln.d("Call status changed from " + this.status + " to " + status);
         this.status = status;
+        if (status == CallStatus.CONNECTED) {
+            this.connectedTime = System.currentTimeMillis();
+        }
     }
 
     @Override
@@ -240,6 +263,12 @@ public class CallImpl implements Call {
             media.setLocalVideoSending(sending);
             sendingVideo = sending;
         }
+        if (sending) {
+            CallAnalyzerReporter.shared.reportUnmuted(this, WMEngine.Media.Video);
+        }
+        else {
+            CallAnalyzerReporter.shared.reportMuted(this, WMEngine.Media.Video);
+        }
     }
 
     @Override
@@ -252,6 +281,12 @@ public class CallImpl implements Call {
         if (media != null) {
             media.setLocalAudioSending(sending);
             sendingAudio = sending;
+        }
+        if (sending) {
+            CallAnalyzerReporter.shared.reportUnmuted(this, WMEngine.Media.Audio);
+        }
+        else {
+            CallAnalyzerReporter.shared.reportMuted(this, WMEngine.Media.Audio);
         }
     }
 
@@ -332,6 +367,7 @@ public class CallImpl implements Call {
                 videoViews = views;
                 media.update(new MediaSession.MediaTypeVideo(views));
                 phone.update(this, isSendingAudio(), isSendingVideo(), media.getLocalSdp(), result -> {
+                    CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
                     WebexError error = result.getError();
                     if (error != null) {
                         Ln.d("Update media failed " + error);
@@ -358,6 +394,7 @@ public class CallImpl implements Call {
                 sharingView = view;
                 media.update(new MediaSession.MediaTypeSharing(view));
                 phone.update(this, isSendingAudio(), isSendingVideo(), media.getLocalSdp(), result -> {
+                    CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
                     WebexError error = result.getError();
                     if (error != null) {
                         Ln.d("Update media failed " + error);
@@ -413,6 +450,7 @@ public class CallImpl implements Call {
     @Override
     public void startSharing(@NonNull CompletionHandler<Void> callback) {
         phone.startSharing(this, callback);
+        CallAnalyzerReporter.shared.reportShareInitiated(this, WMEngine.Media.Sharing);
     }
 
     @Override
@@ -580,6 +618,11 @@ public class CallImpl implements Call {
         if (media.hasSharing() && model.getGrantedFloor() != null) {
             media.joinSharing(model.getGrantedFloor().getGranted(), isSharingFromThisDevice());
         }
+
+        CallAnalyzerReporter.shared.reportRemoteSdpReceived(this);
+        CallAnalyzerReporter.shared.reportMediaEngineReady(this);
+        CallAnalyzerReporter.shared.reportIceStart(this);
+
     }
 
     void stopMedia() {
@@ -704,12 +747,14 @@ public class CallImpl implements Call {
                 }
             }
         }
+        CallAnalyzerReporter.shared.reportShareInitiated(this, WMEngine.Media.Sharing);
     }
 
     void leaveSharing(LocusParticipantModel participant, String granted, LocusModel old) {
         if (media == null) {
             return;
         }
+        CallAnalyzerReporter.shared.reportShareStopped(this, WMEngine.Media.Sharing);
         if (isSharingByModel(old)) {
             if (media.hasSharing()) {
                 media.leaveSharing(true);
@@ -756,6 +801,10 @@ public class CallImpl implements Call {
                 observer.onDisconnected(reason);
             }
         });
+        CallAnalyzerReporter.shared.reportCallLeave(this);
+        if (reason instanceof CallObserver.LocalDecline) {
+            CallAnalyzerReporter.shared.reportCallDeclined(this);
+        }
     }
 
     void update(LocusModel remote) {
@@ -950,6 +999,7 @@ public class CallImpl implements Call {
         if ((getStatus() == CallStatus.CONNECTED || getStatus() == CallStatus.RINGING) && media != null && !media.isRunning()) {
             Ln.d("Update SDP before start media");
             phone.update(this, isSendingAudio(), isSendingVideo(), media.getLocalSdp(), result -> {
+                CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
                 if (result.getError() != null) {
                     Ln.d("Update SDP failed: " + result.getError());
                     return;
