@@ -906,7 +906,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         callContext = new CallContext.Sharing(call, callback);
         Ln.d("CallContext: " + callContext);
         final Intent intent = new Intent(context, AcquirePermissionActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
         intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_SCREEN_SHOT);
         context.startActivity(intent);
     }
@@ -952,7 +952,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     private void tryAcquirePermission() {
         final Intent intent = new Intent(context, AcquirePermissionActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
         intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
         context.startActivity(intent);
     }
