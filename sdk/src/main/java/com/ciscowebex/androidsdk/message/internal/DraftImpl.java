@@ -45,6 +45,9 @@ public class DraftImpl implements Message.Draft {
         if (this.files == null) {
             this.files = new ArrayList<>();
         }
+        if (files == null) {
+            return this;
+        }
         this.files.addAll(Arrays.asList(files));
         return this;
     }
@@ -52,6 +55,9 @@ public class DraftImpl implements Message.Draft {
     public Message.Draft addMentions(Mention... mentions) {
         if (this.mentions == null) {
             this.mentions = new ArrayList<>();
+        }
+        if (mentions == null) {
+            return this;
         }
         this.mentions.addAll(Arrays.asList(mentions));
         return this;

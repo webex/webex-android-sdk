@@ -101,22 +101,21 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
     }
 
     public void list(@NonNull String spaceId, @Nullable Before before, @IntRange(from = 0, to = Integer.MAX_VALUE) int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler) {
-        String id = WebexId.uuid(spaceId);
         if (max == 0) {
             ResultImpl.inMain(handler, Collections.emptyList());
             return;
         }
         if (before == null) {
-            doList(id, null, mentions, max, new ArrayList<>(), handler);
+            doList(spaceId, null, mentions, max, new ArrayList<>(), handler);
         } else if (before instanceof Before.Date) {
-            doList(id, ((Before.Date) before).getDate(), mentions, max, new ArrayList<>(), handler);
+            doList(spaceId, ((Before.Date) before).getDate(), mentions, max, new ArrayList<>(), handler);
         } else if (before instanceof Before.Message) {
             get(((Before.Message) before).getMessage(), false, result -> {
                 Message message = result.getData();
                 if (message == null) {
                     ResultImpl.errorInMain(handler, result);
                 } else {
-                    doList(id, message.getCreated(), mentions, max, new ArrayList<>(), handler);
+                    doList(spaceId, message.getCreated(), mentions, max, new ArrayList<>(), handler);
                 }
             });
         }
