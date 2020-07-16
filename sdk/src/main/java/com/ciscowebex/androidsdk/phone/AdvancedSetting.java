@@ -35,4 +35,12 @@ public abstract class AdvancedSetting<T> {
         }
 
     }
+
+    public static class VideoMaxTxFPS extends AdvancedSetting<Integer> {
+
+        public VideoMaxTxFPS(int value) {
+            super(value, 0);
+        }
+    }
+
 }

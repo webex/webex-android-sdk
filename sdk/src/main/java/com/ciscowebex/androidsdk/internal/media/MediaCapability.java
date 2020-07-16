@@ -306,12 +306,21 @@ public class MediaCapability {
         else if (bitrates <= 768) {
             levelId = 0x42000D;
         }
+
+        int fps = 0;
+        if (!Checker.isEmpty(this.settings)) {
+            AdvancedSetting.VideoMaxTxFPS setting = (AdvancedSetting.VideoMaxTxFPS) this.settings.get(AdvancedSetting.VideoMaxTxFPS.class);
+            if (setting != null && setting.getValue() != null && setting.getValue() > 0 && !setting.getValue().equals(setting.getDefaultValue())) {
+                fps = setting.getValue();
+            }
+        }
+
         MediaConfig.WmeVideoCodecCapability codecCapability = new MediaConfig.WmeVideoCodecCapability();
         codecCapability.uProfileLevelID = levelId;
         codecCapability.max_br = bitrates;
         codecCapability.max_mbps = 0;
         codecCapability.max_fs = 0;
-        codecCapability.max_fps = 0;
+        codecCapability.max_fps = fps * 100;
         config.SetEncodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, codecCapability);
 
         config.Disable90PVideo(true);
