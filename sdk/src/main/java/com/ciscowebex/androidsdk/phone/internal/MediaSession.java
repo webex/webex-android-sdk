@@ -29,6 +29,7 @@ import android.view.View;
 import com.ciscowebex.androidsdk.internal.media.*;
 import com.ciscowebex.androidsdk.internal.media.WmeTrack;
 import com.ciscowebex.androidsdk.internal.model.LocusParticipantDeviceModel;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.phone.Phone;
 import com.github.benoitdion.ln.Ln;
@@ -102,19 +103,20 @@ public class MediaSession {
     public void startCloud(CallImpl call) {
         if (!localOnly) {
             session.launch(new MediaObserver(call));
-
-            WmeTrack track = session.getTrack(WmeTrack.Type.RemoteVideo, WMEngine.MAIN_VID);
-            if (track != null && call != null && call.getModel() != null) {
-                LocusParticipantDeviceModel device = call.getModel().getMyDevice();
-                if (device == null) {
-                    Ln.d("Cannot find self device for call: " + call);
-                    return;
+            Queue.main.run(() -> {
+                WmeTrack track = session.getTrack(WmeTrack.Type.RemoteVideo, WMEngine.MAIN_VID);
+                if (track != null && track.getTrack() != null && call != null && call.getModel() != null) {
+                    LocusParticipantDeviceModel device = call.getModel().getMyDevice();
+                    if (device == null) {
+                        Ln.d("Cannot find self device for call: " + call);
+                        return;
+                    }
+                    if (device.isServerComposed()) {
+                        Ln.d("Set the remote video render mode to CropFill for composed video");
+                        track.getTrack().SetRenderMode(MediaTrack.ScalingMode.CropFill);
+                    }
                 }
-                if (device.isServerComposed()) {
-                    Ln.d("Set the remote video render mode to CropFill for composed video");
-                    track.getTrack().SetRenderMode(MediaTrack.ScalingMode.CropFill);
-                }
-            }
+            });
         }
     }
 
