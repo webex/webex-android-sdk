@@ -348,6 +348,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void onMediaPermission(boolean permission) {
+        Ln.d("CallContext: " + callContext);
         Queue.serial.run(() -> {
             if (callContext instanceof CallContext.Outgoing) {
                 CallContext.Outgoing outgoing = (CallContext.Outgoing) callContext;
@@ -414,7 +415,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String localSdp = session.getLocalSdp();
                 incoming.getCall().setMedia(session);
                 //CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
-                service.join(incoming.getCall().getUrl(), incoming.getCall().getCorrelationId(), device, localSdp, incoming.getCall().isGroup() ? incoming.getOption().getLayout() : null, reachability.getFeedback(), joinResult -> {
+                service.join(incoming.getCall().getUrl(), incoming.getCall().getCorrelationId(), device, localSdp, incoming.getOption().getLayout(), reachability.getFeedback(), joinResult -> {
                     if (joinResult.getError() != null || joinResult.getData() == null) {
                         Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                         Queue.serial.yield();

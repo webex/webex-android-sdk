@@ -246,16 +246,16 @@ public class MediaCapability {
         config.SetNetworkNotificationParam(MediaConfig.WmeNetworkStatus.WmeNetwork_recovered, MediaConfig.WmeNetworkDirection.DIRECTION_BOTHLINK, 10000);
         config.SetICETimeoutParams(10 * 1000, 10 * 1000, 10 * 1000);
         config.SetQoSMaxLossRatio(0.08f);
-        if (!Checker.isEmpty(deviceSettings)) {
-            Ln.d("Default Settings: " + deviceSettings);
-            config.SetDeviceMediaSettings(deviceSettings);
-        }
-        if (isHardwareCodecEnable()) {
-            Ln.d("HW Settings: " + hardwareVideoSetting);
-            config.SetDeviceMediaSettings(hardwareVideoSetting);
-        }
-        // config.enableTCAEC(false);
-        // config.SetShowStunTraceIP(true);
+//        if (!Checker.isEmpty(deviceSettings)) {
+//            Ln.d("Default Settings: " + deviceSettings);
+//            config.SetDeviceMediaSettings(deviceSettings);
+//        }
+//        if (isHardwareCodecEnable()) {
+//            Ln.d("HW Settings: " + hardwareVideoSetting);
+//            config.SetDeviceMediaSettings(hardwareVideoSetting);
+//        }
+//        config.enableTCAEC(false);
+//        config.SetShowStunTraceIP(true);
         config.EnableFixAudioProcessingArch(true);
     }
 
@@ -306,8 +306,9 @@ public class MediaCapability {
         else if (bitrates <= 768) {
             levelId = 0x42000D;
         }
+        bitrates = bitrates * 2;
 
-        int fps = 0;
+        int fps = (hw ? MediaSCR.p1080.maxFps : MediaSCR.p720.maxFps) / 100;
         if (!Checker.isEmpty(this.settings)) {
             AdvancedSetting.VideoMaxTxFPS setting = (AdvancedSetting.VideoMaxTxFPS) this.settings.get(AdvancedSetting.VideoMaxTxFPS.class);
             if (setting != null && setting.getValue() != null && setting.getValue() > 0 && !setting.getValue().equals(setting.getDefaultValue())) {
@@ -318,15 +319,14 @@ public class MediaCapability {
         MediaConfig.WmeVideoCodecCapability codecCapability = new MediaConfig.WmeVideoCodecCapability();
         codecCapability.uProfileLevelID = levelId;
         codecCapability.max_br = bitrates;
-        codecCapability.max_mbps = 0;
-        codecCapability.max_fs = 0;
+        codecCapability.max_mbps = hw ? MediaSCR.p1080.maxMbps : MediaSCR.p720.maxMbps;
+        codecCapability.max_fs = hw ? MediaSCR.p1080.maxFs : MediaSCR.p720.maxFs;
         codecCapability.max_fps = fps * 100;
         config.SetEncodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, codecCapability);
 
         config.Disable90PVideo(true);
         config.EnableAVCSimulcast(true);
         config.EnableSelfPreviewHorizontalMirror(true);
-        //config.SetInitSubscribeCount(maxNumberStreams);
         if (!Checker.isEmpty(videoPlaybackFile)) {
             config.EnableFileCapture(videoPlaybackFile, true);
         }
