@@ -316,6 +316,8 @@ public class MediaCapability {
         codecCapability.max_fps = fps * 100;
         config.SetEncodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, codecCapability);
 
+        Ln.d("Video bandwidth: " + videoMaxTxBandwidth + "/" + videoMaxRxBandwidth + "/" + fps);
+
         config.Disable90PVideo(true);
         config.EnableAVCSimulcast(true);
         config.EnableSelfPreviewHorizontalMirror(true);
