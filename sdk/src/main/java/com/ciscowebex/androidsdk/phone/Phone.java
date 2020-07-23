@@ -86,23 +86,23 @@ public interface Phone {
          */
         MAX_BANDWIDTH_360P(768000),
         /**
-         * 2Mbps for 1280x720 resolution
+         * 2.5Mbps for 1280x720 resolution
          *
          * @since 1.3.0
          */
-        MAX_BANDWIDTH_720P(2000000),
+        MAX_BANDWIDTH_720P(2500000),
         /**
-         * 3Mbps for 1920x1080 resolution
+         * 4Mbps for 1920x1080 resolution
          *
          * @since 1.3.0
          */
-        MAX_BANDWIDTH_1080P(3000000),
+        MAX_BANDWIDTH_1080P(4000000),
         /**
-         * 4Mbps data session
+         * 8Mbps data session
          *
          * @since 1.3.0
          */
-        MAX_BANDWIDTH_SESSION(4000000),
+        MAX_BANDWIDTH_SESSION(8000000),
         /**
          * 64kbps for voice
          *

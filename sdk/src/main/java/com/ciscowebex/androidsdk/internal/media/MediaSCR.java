@@ -22,13 +22,31 @@
 
 package com.ciscowebex.androidsdk.internal.media;
 
+import com.ciscowebex.androidsdk.phone.Phone;
+
 public class MediaSCR {
 
-    public static final MediaSCR p90 = new MediaSCR(60, 3000, 177*1000, 180, 1800, 254, 0, false);
-    public static final MediaSCR p180 = new MediaSCR(240, 3000, 384*1000, 720, 7200, 255, 0, false);
-    public static final MediaSCR p360 = new MediaSCR(920, 3000, 768*1000, 2760, 27600, 255, 0, false);
-    public static final MediaSCR p720 = new MediaSCR(3600, 3000, 2000*1000, 11520, 108000, 255, 0, false);
-    public static final MediaSCR p1080 = new MediaSCR(8160, 3000, 4000*1000, 24300, 245760, 255, 0, false);
+    public static final MediaSCR p90 = new MediaSCR(60, 3000, Phone.DefaultBandwidth.MAX_BANDWIDTH_90P.getValue(), 180, 1800, 254, 0, false);
+    public static final MediaSCR p180 = new MediaSCR(240, 3000, Phone.DefaultBandwidth.MAX_BANDWIDTH_180P.getValue(), 720, 7200, 255, 0, false);
+    public static final MediaSCR p360 = new MediaSCR(920, 3000, Phone.DefaultBandwidth.MAX_BANDWIDTH_360P.getValue(), 2760, 27600, 255, 0, false);
+    public static final MediaSCR p720 = new MediaSCR(3600, 3000, Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue(), 11520, 108000, 255, 0, false);
+    public static final MediaSCR p1080 = new MediaSCR(8160, 3000, Phone.DefaultBandwidth.MAX_BANDWIDTH_1080P.getValue(), 24300, 244800, 255, 0, false);
+
+    public static MediaSCR get(int bandwidth) {
+        if (bandwidth <= Phone.DefaultBandwidth.MAX_BANDWIDTH_90P.getValue()) {
+            return p90;
+        }
+        else if (bandwidth <= Phone.DefaultBandwidth.MAX_BANDWIDTH_180P.getValue()) {
+            return p180;
+        }
+        else if (bandwidth <= Phone.DefaultBandwidth.MAX_BANDWIDTH_360P.getValue()) {
+            return p360;
+        }
+        else if (bandwidth <= Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue()) {
+            return p720;
+        }
+        return p1080;
+    }
 
     public int maxFs;
     public int maxFps;
@@ -38,6 +56,7 @@ public class MediaSCR {
     public int priority;
     public int grouping;
     public boolean duplicate;
+    public int levelId;
 
     private MediaSCR(int fs, int fps, int br, int dpb, int mbps, int priority, int grouping, boolean duplicate) {
         this.maxFs = fs;
@@ -48,6 +67,18 @@ public class MediaSCR {
         this.priority = priority;
         this.grouping = grouping;
         this.duplicate = duplicate;
+        if (br <= Phone.DefaultBandwidth.MAX_BANDWIDTH_90P.getValue()) {
+            this.levelId = 0x42000A;
+        }
+        else if (br <= Phone.DefaultBandwidth.MAX_BANDWIDTH_180P.getValue()) {
+            this.levelId = 0x42000C;
+        }
+        else if (br <= Phone.DefaultBandwidth.MAX_BANDWIDTH_360P.getValue()) {
+            this.levelId = 0x42000D;
+        }
+        else {
+            this.levelId = 0x420016;
+        }
     }
 
 }
