@@ -284,23 +284,23 @@ public class MediaCapability {
         config.SetPreferedCodec(MediaConfig.WmeCodecType.WmeCodecType_AVC);
         config.SetSelectedCodec(MediaConfig.WmeCodecType.WmeCodecType_AVC);
         config.SetPacketizationMode(MediaConfig.WmePacketizationMode.WmePacketizationMode_1);
-        config.SetMaxBandwidth(videoMaxRxBandwidth);
-        config.SetInitBandwidth(videoMaxRxBandwidth);
+        config.SetMaxBandwidth(videoMaxRxBandwidth * 2);
 
         boolean hw = isHardwareCodecEnable();
         config.EnableHWAcceleration(hw, MediaConfig.WmeHWAccelerationConfig.WmeHWAcceleration_Encoder);
         config.EnableHWAcceleration(hw, MediaConfig.WmeHWAccelerationConfig.WmeHWAcceleration_Decoder);
 
-        MediaConfig.WmeVideoCodecCapability videoDecoderCodecCapability = new MediaConfig.WmeVideoCodecCapability();
-        videoDecoderCodecCapability.uProfileLevelID = hw ? 0x420016 : 0x42000D;
-        videoDecoderCodecCapability.max_mbps = hw ? MediaSCR.p720.maxMbps : MediaSCR.p360.maxMbps;
-        videoDecoderCodecCapability.max_fs =  MediaSCR.p1080.maxFs; // hw ? MediaSCR.p720.maxFs : MediaSCR.p360.maxFs;
-        videoDecoderCodecCapability.max_br = (hw ? MediaSCR.p720.maxBr : MediaSCR.p360.maxBr)/1000;
-        videoDecoderCodecCapability.max_fps = hw ? MediaSCR.p720.maxFps : MediaSCR.p360.maxFps;
-        config.SetDecodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, videoDecoderCodecCapability);
+        MediaSCR decoderSCR = MediaSCR.get(videoMaxRxBandwidth);
+        MediaConfig.WmeVideoCodecCapability decoderCodec = new MediaConfig.WmeVideoCodecCapability();
+        decoderCodec.uProfileLevelID = decoderSCR.levelId;
+        decoderCodec.max_br = videoMaxRxBandwidth / 1000;
+        decoderCodec.max_mbps = decoderSCR.maxMbps;
+        decoderCodec.max_fs =  decoderSCR.maxFs;
+        decoderCodec.max_fps = decoderSCR.maxFps;
+        config.SetDecodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, decoderCodec);
 
-        MediaSCR scr = MediaSCR.get(videoMaxTxBandwidth);
-        int fps = scr.maxFps / 100;
+        MediaSCR encoderSCR = MediaSCR.get(videoMaxTxBandwidth);
+        int fps = encoderSCR.maxFps / 100;
         if (!Checker.isEmpty(this.settings)) {
             AdvancedSetting.VideoMaxTxFPS setting = (AdvancedSetting.VideoMaxTxFPS) this.settings.get(AdvancedSetting.VideoMaxTxFPS.class);
             if (setting != null && setting.getValue() != null && setting.getValue() > 0 && !setting.getValue().equals(setting.getDefaultValue())) {
@@ -308,16 +308,17 @@ public class MediaCapability {
             }
         }
 
-        MediaConfig.WmeVideoCodecCapability codecCapability = new MediaConfig.WmeVideoCodecCapability();
-        codecCapability.uProfileLevelID = scr.levelId;
-        codecCapability.max_br = videoMaxTxBandwidth / 1000;
-        codecCapability.max_mbps = scr.maxMbps;
-        codecCapability.max_fs = scr.maxFs;
-        codecCapability.max_fps = fps * 100;
-        config.SetEncodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, codecCapability);
+        MediaConfig.WmeVideoCodecCapability encoderCodec = new MediaConfig.WmeVideoCodecCapability();
+        encoderCodec.uProfileLevelID = encoderSCR.levelId;
+        encoderCodec.max_br = videoMaxTxBandwidth / 1000;
+        encoderCodec.max_mbps = encoderSCR.maxMbps;
+        encoderCodec.max_fs = encoderSCR.maxFs;
+        encoderCodec.max_fps = fps * 100;
+        config.SetEncodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, encoderCodec);
 
         Ln.d("Video bandwidth: " + videoMaxTxBandwidth + "/" + videoMaxRxBandwidth + "/" + fps);
 
+        config.EnableCHP(false);
         config.Disable90PVideo(true);
         config.EnableAVCSimulcast(true);
         config.EnableSelfPreviewHorizontalMirror(true);
@@ -345,5 +346,13 @@ public class MediaCapability {
                 connection.setParameters(WMEngine.Media.Video.mid(), root.toString());
             }
         }
+
+        JSONObject root = new JSONObject();
+        try {
+            root.put("enableDPC", true);
+        } catch (Exception e) {
+            Ln.e(e);
+        }
+        connection.setParameters(-1, root.toString());
     }
 }
