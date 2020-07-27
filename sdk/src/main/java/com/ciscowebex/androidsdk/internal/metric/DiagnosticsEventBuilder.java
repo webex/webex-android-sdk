@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.text.TextUtils;
+
 import com.cisco.wx2.diagnostic_events.*;
 import com.ciscowebex.androidsdk.internal.Credentials;
 import com.ciscowebex.androidsdk.internal.model.GenericMetricModel;
@@ -14,6 +15,7 @@ import com.ciscowebex.androidsdk.utils.NetworkUtils;
 import com.ciscowebex.androidsdk.utils.TrackingIdGenerator;
 import com.ciscowebex.androidsdk.utils.UserAgent;
 import com.github.benoitdion.ln.Ln;
+
 import org.joda.time.Instant;
 
 import java.util.UUID;
@@ -47,7 +49,7 @@ public class DiagnosticsEventBuilder {
                 identBuilder.orgId(credentials.getOrgId());
             }
         }
-        if (phone.getDevice().getDeviceIdentifier() != null) {
+        if (phone.getDevice() != null && phone.getDevice().getDeviceIdentifier() != null) {
             identBuilder.deviceId(phone.getDevice().getDeviceIdentifier());
         } else {
             identBuilder.deviceId("-"); // required field. This is far from ideal. Should find something that always has a correct deviceID

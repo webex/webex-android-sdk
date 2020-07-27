@@ -282,7 +282,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 device = null;
                 credentials = null;
                 state = State.UNREGISTERED;
-                Queue.main.run(() -> callback.onComplete(result));
+                if (result.getError() != null && result.getError().getErrorMessage().contains("net")) {
+                    WebexError error = new WebexError(WebexError.ErrorCode.NETWORK_ERROR, "Network error.");
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error(error)));
+                } else {
+                    Queue.main.run(() -> callback.onComplete(result));
+                }
                 Queue.serial.yield();
             }));
         });
@@ -786,13 +791,15 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     if (result.getError() != null && result.getError().getErrorMessage().startsWith("409/Conflict/")) {
                         WebexError error = new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, "The call is inactive.");
                         call.end(new CallObserver.CallErrorEvent(call, error));
+                    } else if (result.getError() != null && result.getError().getErrorMessage().contains("net")) {
+                        WebexError error = new WebexError(WebexError.ErrorCode.NETWORK_ERROR, "Network error.");
+                        call.end(new CallObserver.CallErrorEvent(call, error));
                     } else if (result.getError() != null) {
                         Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
                         Queue.serial.yield();
                         return;
                     }
                     doLocusResponse(new LocusResponse.Leave(call, result.getData(), callback), Queue.serial);
-
                 });
             });
 

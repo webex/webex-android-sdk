@@ -58,7 +58,8 @@ public class WebexError<T> {
     public enum ErrorCode {
         UNEXPECTED_ERROR,
         SERVICE_ERROR,
-        PERMISSION_ERROR
+        PERMISSION_ERROR,
+        NETWORK_ERROR
     }
 
     @StringPart
