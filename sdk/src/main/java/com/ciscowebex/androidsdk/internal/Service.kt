@@ -27,11 +27,7 @@ import java.util.*
 
 enum class Service {
 
-    Hydra, Region, U2C, Wdm, Kms, Locus, Conv, Metrics, CalliopeDiscorey, Raw;
-
-    fun specific(url : String): ServiceReqeust {
-        return ServiceReqeust(url)
-    }
+    Hydra, Region, U2C, Wdm, Kms, Locus, Conv, Metrics, CalliopeDiscorey;
 
     fun homed(device: Device? = null): ServiceReqeust {
         return ServiceReqeust(this.baseUrl(device))
@@ -58,7 +54,6 @@ enum class Service {
                 val defaultValue = if (BuildConfig.INTEGRATION_TEST) "https://conversation-intb.ciscospark.com/conversation/api/v1" else "https://conv-a.wbx2.com/conversation/api/v1"
                 baseUrl(device, defaultValue)
             }
-            else -> ""
         }
     }
 

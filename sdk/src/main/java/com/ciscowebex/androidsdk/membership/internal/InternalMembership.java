@@ -52,7 +52,7 @@ class InternalMembership extends Membership {
         }
     }
 
-    InternalMembership(ActivityModel activity) {
-        super(activity);
+    InternalMembership(ActivityModel activity, String clusterId) {
+        super(activity, clusterId);
     }
 }

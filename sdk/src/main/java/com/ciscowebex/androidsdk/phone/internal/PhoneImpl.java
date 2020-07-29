@@ -362,18 +362,11 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 MediaSession session = engine.createSession(createCapability(), outgoing.getOption());
                 String localSdp = session.getLocalSdp();
                 MediaEngineReachabilityModel reachabilities = reachability.getFeedback();
-                CallService.DialTarget.lookup(outgoing.getTarget(), authenticator, lookupResult -> {
-                    CallService.DialTarget target = lookupResult.getData();
-                    if (target == null) {
-                        Ln.e("Cannot find dial target. " + lookupResult.getError());
-                        Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(lookupResult.getError())));
-                        Queue.serial.yield();
-                        return;
-                    }
+                CallService.DialTarget.lookup(outgoing.getTarget(), authenticator, target -> {
                     String correlationId = UUID.randomUUID().toString();
                     //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
-                    if (target.isEndpoint()) {
-                        service.call(target.getAddress(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
+                    if (target instanceof CallService.CallableTarget) {
+                        service.call(((CallService.CallableTarget) target).getCallee(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
                             if (callResult.getError() != null || callResult.getData() == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(callResult.getError())));
                                 Queue.serial.yield();
@@ -382,8 +375,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                             }
                             doLocusResponse(new LocusResponse.Call(device, correlationId, session, callResult.getData(), outgoing.getCallback()), Queue.serial);
                         });
-                    } else {
-                        service.getOrCreatePermanentLocus(target.getAddress(), device, convResult -> {
+                    } else if (target instanceof CallService.JoinableTarget){
+                        service.getOrCreatePermanentLocus(((CallService.JoinableTarget) target).getConversation(), device, convResult -> {
                             String url = convResult.getData();
                             if (url == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(convResult.getError())));
@@ -400,6 +393,11 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 doLocusResponse(new LocusResponse.Call(device, correlationId, session, joinResult.getData(), outgoing.getCallback()), Queue.serial);
                             });
                         });
+                    }
+                    else {
+                        Ln.e("Cannot find dial target: " + outgoing.getTarget());
+                        Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error("Cannot find dial target: " + outgoing.getTarget())));
+                        Queue.serial.yield();
                     }
                 });
             } else if (callContext instanceof CallContext.Incoming) {

@@ -71,7 +71,6 @@ public class SSOAuthenticator implements Authenticator {
      * @see <a href="https://developer.webex.com/docs/integrations">Cisco Webex Integration</a>
      * @since 1.3.0
      */
-    @Deprecated
     public SSOAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri,
                             @NonNull String email, @NonNull String identityProviderUri, @Nullable Map<String, String> queryItems) {
         authenticator = new OAuthAuthenticator(clientId, clientSecret, scope, redirectUri);

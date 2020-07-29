@@ -21,6 +21,10 @@ import java.util.*;
 
 public class ServiceReqeust {
 
+    public static ServiceReqeust make(String url) {
+        return new ServiceReqeust(url);
+    }
+
     public static class PathableRequest {
 
         private ServiceReqeust reqeust;

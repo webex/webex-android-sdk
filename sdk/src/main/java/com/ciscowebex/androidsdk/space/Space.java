@@ -96,11 +96,11 @@ public class Space {
     @SerializedName("sipAddress")
     private String _sipAddress;
 
-    protected Space(ActivityModel activity) {
+    protected Space(ActivityModel activity, String clusterId) {
         _lastActivity = activity.getPublished();
         ObjectModel object = activity.getVerb().equals(ActivityModel.Verb.create) ? activity.getObject() : activity.getTarget();
         if (object instanceof ConversationModel) {
-            _id = new WebexId(WebexId.Type.ROOM, object.getId()).getBase64Id();
+            _id = new WebexId(WebexId.Type.ROOM, clusterId, object.getId()).getBase64Id();
             _isLocked = ((ConversationModel) object).isLocked();
             _type = ((ConversationModel) object).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         }

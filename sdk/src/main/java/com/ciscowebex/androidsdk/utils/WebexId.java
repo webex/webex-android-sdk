@@ -22,7 +22,11 @@
 
 package com.ciscowebex.androidsdk.utils;
 
+import android.support.annotation.NonNull;
 import android.util.Base64;
+import com.ciscowebex.androidsdk.internal.Device;
+import com.ciscowebex.androidsdk.internal.Service;
+import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
 
 import java.nio.charset.StandardCharsets;
@@ -107,11 +111,15 @@ public class WebexId {
                 return null;
             }
             String[] subs = strings.split("/");
-            return new WebexId(subs[subs.length - 3], Type.getEnum(subs[subs.length - 2]), subs[subs.length - 1]);
+            return new WebexId(Type.getEnum(subs[subs.length - 2]), subs[subs.length - 3], subs[subs.length - 1]);
         } catch (Exception ignored) {
         }
         return null;
     }
+
+    public static String DEFAULT_CLUSTER = "us";
+
+    public static String DEFAULT_CLUSTER_ID = "urn:TEAM:us-east-2_a";
 
     private String uuid;
 
@@ -119,14 +127,10 @@ public class WebexId {
 
     private String cluster;
 
-    public WebexId(Type type, String uuid) {
-        this("us", type, uuid);
-    }
-
-    public WebexId(String cluster, Type type, String uuid) {
+    public WebexId(@NonNull Type type, @NonNull String cluster, @NonNull String uuid) {
         this.type = type;
         this.uuid = uuid;
-        this.cluster = cluster == null ? "us" : cluster;
+        this.cluster = (Checker.isEmpty(cluster) || cluster.equals(DEFAULT_CLUSTER_ID)) ? DEFAULT_CLUSTER : cluster;
     }
 
     public String getBase64Id() {
@@ -142,8 +146,29 @@ public class WebexId {
         return this.type == type;
     }
 
-    public boolean belong(String cluster) {
-        return this.cluster.equals(cluster);
+    public String getCluster() {
+        return this.cluster;
+    }
+
+    public String getClusterId() {
+        return this.cluster.equals(DEFAULT_CLUSTER) ? "urn:TEAM:us-east-2_a" : this.cluster;
+    }
+
+    public String getUrl(Device device) {
+        String key = getClusterId() + ":identityLookup";
+        String url = device.getServiceClusterUrl(key);
+        if (url == null) {
+            Ln.d("Cannot found cluster for " + key + ", use home cluster");
+            url= Service.Conv.baseUrl(device);
+        }
+        if (this.is(WebexId.Type.ROOM)) {
+            return url + "/conversations/" + getUUID();
+        } else if (this.is(WebexId.Type.MESSAGE)) {
+            return url + "/activities/" + getUUID();
+        } else if (this.is(WebexId.Type.TEAM)) {
+            return url + "/teams/" + getUUID();
+        }
+        return null;
     }
 
     @Override

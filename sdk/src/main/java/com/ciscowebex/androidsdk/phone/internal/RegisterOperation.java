@@ -30,6 +30,7 @@ import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.model.DeviceModel;
 import com.ciscowebex.androidsdk.internal.model.RegionModel;
 import com.ciscowebex.androidsdk.internal.model.ServiceHostModel;
+import com.ciscowebex.androidsdk.internal.model.ServicesClusterModel;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.collection.Maps;
@@ -77,22 +78,25 @@ public class RegisterOperation implements Runnable {
                     String deviceUrl = Settings.shared.get(Device.DEVICE_URL, null);
                     Ln.d("Saved deviceUrl: " + deviceUrl);
 
-                    if (deviceUrl == null) {
-                        Ln.d("Creating new device");
-                        Service.U2C.global().get("user/catalog").with("format", "hostMap").auth(authenticator).model(ServiceHostModel.class).error(callback).async((Closure<ServiceHostModel>) host -> {
-                            String url = host.getServiceUrl(Service.Wdm.name().toLowerCase());
-                            Ln.d("WDM Url by U2C: " + url);
-                            ServiceReqeust request = url != null ? Service.Wdm.specific(url) : Service.Wdm.global();
+                    Service.U2C.global().get("catalog").with("format", "serviceList").with("services","identityLookup").auth(authenticator).model(ServicesClusterModel.class).error(callback).async((Closure<ServicesClusterModel>) clusters -> {
+                        Ln.d("Service clusters: " + clusters.getClusterUrls());
+                        if (deviceUrl == null) {
+                            Ln.d("Creating new device");
+                            Service.U2C.global().get("user/catalog").with("format", "hostMap").auth(authenticator).model(ServiceHostModel.class).error(callback).async((Closure<ServiceHostModel>) host -> {
+                                String url = host.getServiceUrl(Service.Wdm.name().toLowerCase());
+                                Ln.d("WDM Url by U2C: " + url);
+                                ServiceReqeust request = url != null ? ServiceReqeust.make(url) : Service.Wdm.global();
+                                request.auth(authenticator).header("x-catalog-version2", "true").model(DeviceModel.class).error(callback);
+                                request.post(deviceInfo).to("devices").async((Closure<DeviceModel>) model -> callback.onComplete(ResultImpl.success(new Pair<>(new Device(model, region, clusters), credentials))));
+                            });
+                        }
+                        else {
+                            Ln.d("Updating device");
+                            ServiceReqeust request = ServiceReqeust.make(deviceUrl);
                             request.auth(authenticator).header("x-catalog-version2", "true").model(DeviceModel.class).error(callback);
-                            request.post(deviceInfo).to("devices").async((Closure<DeviceModel>) model -> callback.onComplete(ResultImpl.success(new Pair<>(new Device(model, region), credentials))));
-                        });
-                    }
-                    else {
-                        Ln.d("Updating device");
-                        ServiceReqeust request = Service.Wdm.specific(deviceUrl);
-                        request.auth(authenticator).header("x-catalog-version2", "true").model(DeviceModel.class).error(callback);
-                        request.put(deviceInfo).apply().async((Closure<DeviceModel>) model -> callback.onComplete(ResultImpl.success(new Pair<>(new Device(model, region), credentials))));
-                    }
+                            request.put(deviceInfo).apply().async((Closure<DeviceModel>) model -> callback.onComplete(ResultImpl.success(new Pair<>(new Device(model, region, clusters), credentials))));
+                        }
+                    });
                 }
             });
         });

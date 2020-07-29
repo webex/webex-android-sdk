@@ -25,7 +25,9 @@ package com.ciscowebex.androidsdk.internal;
 import android.net.Uri;
 import com.ciscowebex.androidsdk.internal.model.DeviceModel;
 import com.ciscowebex.androidsdk.internal.model.RegionModel;
+import com.ciscowebex.androidsdk.internal.model.ServicesClusterModel;
 import com.ciscowebex.androidsdk.utils.Json;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.collection.Maps;
 
@@ -57,13 +59,16 @@ public class Device {
 
     private RegionModel regionModel;
 
+    private Map<String, String> clusterUrls;
+
     private String webSocketUrl;
 
-    public Device(DeviceModel device, RegionModel region) {
+    public Device(DeviceModel device, RegionModel region, ServicesClusterModel cluster) {
         Ln.d("Device: " + Json.get().toJson(device));
         this.deviceType = ANDROID_DEVICE_TYPE;
         this.deviceModel = device;
         this.regionModel = region;
+        this.clusterUrls = cluster.getClusterUrls();
         this.webSocketUrl = deviceModel.getWebSocketUrl();
         if (!this.webSocketUrl.endsWith(MERCURY_REGISTRATION_QUERIES)) {
             try {
@@ -104,6 +109,29 @@ public class Device {
 
     public String getServiceUrl(String key) {
         return deviceModel.getServiceUrl(key);
+    }
+
+    // urn:TEAM:us-west-2_r:identityLookup, https://conv-r.wbx2.com/conversation/api/v1
+    public String getServiceClusterUrl(String serviceClusterId) {
+        return clusterUrls.get(serviceClusterId);
+    }
+
+    public String getIdentityServiceClusterUrl(String urn) {
+        String ret = getServiceClusterUrl(urn + ":identityLookup");
+        if (ret == null) {
+            ret = Service.Conv.baseUrl(this);
+        }
+        return ret;
+    }
+
+    public String getClusterId(String url) {
+        String id = null;
+        for (Map.Entry<String, String> entry : clusterUrls.entrySet()) {
+            if (url.startsWith(entry.getValue())) {
+                return entry.getKey().substring(0, entry.getKey().lastIndexOf(":"));
+            }
+        }
+        return WebexId.DEFAULT_CLUSTER_ID;
     }
 
     public Map<String, Object> toJsonMap(String overwriteType) {

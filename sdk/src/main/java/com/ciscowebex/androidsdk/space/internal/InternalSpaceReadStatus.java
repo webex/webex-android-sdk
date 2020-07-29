@@ -27,8 +27,8 @@ import com.ciscowebex.androidsdk.space.SpaceReadStatus;
 
 class InternalSpaceReadStatus extends SpaceReadStatus {
 
-    InternalSpaceReadStatus(ConversationModel conversation) {
-        super(conversation);
+    InternalSpaceReadStatus(ConversationModel conversation, String clusterId) {
+        super(conversation, clusterId);
     }
 
 }

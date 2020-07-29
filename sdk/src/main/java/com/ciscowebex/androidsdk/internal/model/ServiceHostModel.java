@@ -10,4 +10,5 @@ public class ServiceHostModel {
     public String getServiceUrl(String key) {
         return serviceLinks.get(key);
     }
+
 }

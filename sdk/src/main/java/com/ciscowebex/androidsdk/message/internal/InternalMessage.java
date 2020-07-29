@@ -47,7 +47,7 @@ class InternalMessage extends Message {
         }
     }
 
-    InternalMessage(ActivityModel activity, Credentials user, boolean received) {
-        super(activity, user, received);
+    InternalMessage(ActivityModel activity, Credentials user, String clusterId, boolean received) {
+        super(activity, user, clusterId, received);
     }
 }

@@ -40,8 +40,8 @@ class InternalSpace extends Space {
         }
     }
 
-    InternalSpace(ActivityModel activity) {
-        super(activity);
+    InternalSpace(ActivityModel activity, String clusterId) {
+        super(activity, clusterId);
     }
 
 }

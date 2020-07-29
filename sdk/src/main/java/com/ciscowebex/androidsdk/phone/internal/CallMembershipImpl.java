@@ -130,7 +130,7 @@ public class CallMembershipImpl implements CallMembership {
         synchronized (this) {
             this.model = model;
             this.self = Checker.isEqual(model.getId(), call.getModel().getSelfId());
-            this.personId = new WebexId(WebexId.Type.PEOPLE, model.getPerson().getId()).getBase64Id();
+            this.personId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, model.getPerson().getId()).getBase64Id();
             this.initiator = model.isCreator();
         }
     }

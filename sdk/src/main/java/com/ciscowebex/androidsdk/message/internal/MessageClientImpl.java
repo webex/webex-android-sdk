@@ -27,6 +27,7 @@ import android.net.Uri;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Pair;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
@@ -52,7 +53,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
     private Context context;
     private PhoneImpl phone;
     private MessageObserver observer;
-    private Map<String, Identifier> conversations = new ConcurrentHashMap<>();
+    private Map<String, Pair<String, String>> conversations = new ConcurrentHashMap<>();
     private String uuid = UUID.randomUUID().toString();
 
     public MessageClientImpl(Context context, PhoneImpl phone) {
@@ -68,7 +69,6 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
         if (observer == null) {
             return;
         }
-        // TODO Get cluster id from activity url
         if (activity.getVerb() == ActivityModel.Verb.post || activity.getVerb() == ActivityModel.Verb.share) {
             String conversationId = activity.getConversationId();
             if (conversationId == null) {
@@ -80,13 +80,14 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 Ln.d("The activity is sent by self");
                 return;
             }
-            Identifier identifier = new Identifier(new WebexId(WebexId.Type.ROOM, conversationId));
-            KeyManager.shared.tryRefresh(identifier, activity.getEncryptionKeyUrl());
-            KeyManager.shared.getKey(identifier, phone.getCredentials(), phone.getDevice(), keyResult -> {
+            String convId = activity.getConversationId();
+            String convUrl = activity.getConversationUrl();
+            KeyManager.shared.tryRefresh(convUrl, activity.getEncryptionKeyUrl());
+            KeyManager.shared.getConvEncryptionKey(convUrl, convId, phone.getCredentials(), phone.getDevice(), keyResult -> {
                 if (keyResult.getData() != null) {
                     activity.decrypt(keyResult.getData());
                 }
-                Message message = createMessage(activity, true);
+                Message message = createMessage(activity, phone.getDevice().getClusterId(activity.getUrl()), true);
                 MessageObserver.MessageReceived event = new InternalMessage.InternalMessageReceived(message, activity);
                 Queue.main.run(() -> observer.onEvent(event));
                 // TODO Remove the deprecated event in next big release
@@ -94,7 +95,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
             });
         }
         else if (activity.getVerb() == ActivityModel.Verb.delete) {
-            String id = new WebexId(WebexId.Type.MESSAGE, activity.getObject().getId()).getBase64Id();
+            String id = new WebexId(WebexId.Type.MESSAGE, phone.getDevice().getClusterId(activity.getUrl()), activity.getObject().getId()).getBase64Id();
             MessageObserver.MessageEvent event = new InternalMessage.InternalMessageDeleted(id, activity);
             Queue.main.run(() -> observer.onEvent(event));
         }
@@ -128,11 +129,14 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                       @NonNull List<ActivityModel> activities,
                       @NonNull CompletionHandler<List<Message>> handler) {
         int queryMax = Math.max(max, max * 2);
-        Identifier conversation = new Identifier(spaceId);
-        // TODO Find the cluster for the identifier instead of use home cluster always.
-        Service.Conv.homed(phone.getDevice())
+        WebexId conversation = WebexId.from(spaceId);
+        if (conversation == null) {
+            handler.onComplete(ResultImpl.error("Cannot found the space: " + spaceId));
+            return;
+        }
+        ServiceReqeust.make(phone.getDevice().getIdentityServiceClusterUrl(conversation.getClusterId()))
                 .get(Checker.isEmpty(mentions) ? "activities" : "mentions")
-                .with("conversationId", conversation.uuid())
+                .with("conversationId", conversation.getUUID())
                 .with("limit", String.valueOf(queryMax))
                 .with(Checker.isEmpty(mentions) ? "maxDate" : "sinceDate", String.valueOf((date == null ? new Date() : date).getTime()))
                 .auth(phone.getAuthenticator())
@@ -148,13 +152,13 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                         }
                     }
                     if (activities.size() >= max || items.size() < queryMax) {
-                        KeyManager.shared.getKey(conversation, phone.getCredentials(), phone.getDevice(), keyResult -> {
+                        KeyManager.shared.getConvEncryptionKey(conversation.getUrl(phone.getDevice()), conversation.getUUID(), phone.getCredentials(), phone.getDevice(), keyResult -> {
                             List<Message> messages = new ArrayList<>(activities.size());
                             for (ActivityModel model : activities) {
                                 if (keyResult.getData() != null) {
                                     model.decrypt(keyResult.getData());
                                 }
-                                messages.add(createMessage(model, false));
+                                messages.add(createMessage(model, conversation.getClusterId(), false));
                             }
                             ResultImpl.inMain(handler, messages);
                         });
@@ -171,23 +175,26 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
     }
 
     private void get(@NonNull String messageId, boolean decrypt, @NonNull CompletionHandler<Message> handler) {
-        // TODO Find the cluster for the identifier instead of use home cluster always.
-        Identifier activity = new Identifier(messageId);
-        Service.Conv.homed(phone.getDevice())
-                .get("activities/" + activity.uuid())
+        WebexId activity = WebexId.from(messageId);
+        if (activity == null) {
+            handler.onComplete(ResultImpl.error("Cannot found the message: " + messageId));
+            return;
+        }
+        ServiceReqeust.make(phone.getDevice().getIdentityServiceClusterUrl(activity.getClusterId()))
+                .get("activities/" + activity.getUUID())
                 .auth(phone.getAuthenticator())
                 .model(ActivityModel.class)
                 .error(handler)
                 .async((Closure<ActivityModel>) model -> {
                     if (!decrypt) {
-                        ResultImpl.inMain(handler, createMessage(model, false));
+                        ResultImpl.inMain(handler, createMessage(model, activity.getClusterId(), false));
                         return;
                     }
-                    KeyManager.shared.getKey(new Identifier(new WebexId(WebexId.Type.ROOM, model.getConversationId())), phone.getCredentials(), phone.getDevice(), keyResult -> {
+                    KeyManager.shared.getConvEncryptionKey(model.getEncryptionKeyUrl(), model.getConversationId(), phone.getCredentials(), phone.getDevice(), keyResult -> {
                         if (keyResult.getData() != null) {
                             model.decrypt(keyResult.getData());
                         }
-                        ResultImpl.inMain(handler, createMessage(model, false));
+                        ResultImpl.inMain(handler, createMessage(model, activity.getClusterId(), false));
                     });
                 });
     }
@@ -234,27 +241,28 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
         WebexId webexId = WebexId.from(target);
         if (webexId == null) {
             if (EmailAddress.fromString(target) == null) {
-                doPost(new Identifier(new WebexId(WebexId.Type.ROOM, target)), (DraftImpl) draft, handler);
+                String convUrl = Service.Conv.baseUrl(phone.getDevice()) + "/conversations/" + target;
+                doPost(convUrl, target, (DraftImpl) draft, handler);
             } else {
                 getOrCreateConversationWithPerson(target, result -> {
-                    Identifier conversation = result.getData();
-                    if (conversation == null) {
+                    Pair<String, String> conv = result.getData();
+                    if (conv == null) {
                         ResultImpl.errorInMain(handler, result);
                         return;
                     }
-                    doPost(conversation, (DraftImpl) draft, handler);
+                    doPost(conv.first, conv.second, (DraftImpl) draft, handler);
                 });
             }
         } else if (webexId.is(WebexId.Type.ROOM)) {
-            doPost(new Identifier(webexId), (DraftImpl) draft, handler);
+            doPost(webexId.getUrl(phone.getDevice()), webexId.getUUID(), (DraftImpl) draft, handler);
         } else if (webexId.is(WebexId.Type.PEOPLE)) {
             getOrCreateConversationWithPerson(webexId.getUUID(), result -> {
-                Identifier conversation = result.getData();
-                if (conversation == null) {
+                Pair<String, String> conv = result.getData();
+                if (conv == null) {
                     ResultImpl.errorInMain(handler, result);
                     return;
                 }
-                doPost(conversation, (DraftImpl) draft, handler);
+                doPost(conv.first, conv.second, (DraftImpl) draft, handler);
             });
         }
         else {
@@ -291,13 +299,15 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
     }
 
     public void markAsRead(@NonNull String spaceId, @NonNull String messageId) {
-        // TODO Find the cluster for the identifier instead of use home cluster always.
-        Map<String, Object> body = new HashMap<>();
-        body.put("objectType", ObjectModel.Type.activity);
-        body.put("verb", ActivityModel.Verb.acknowledge);
-        body.put("object", Maps.makeMap("id", WebexId.uuid(messageId), "objectType", ObjectModel.Type.activity));
-        body.put("target", Maps.makeMap("id", WebexId.uuid(spaceId), "objectType", ObjectModel.Type.conversation));
-        Service.Conv.homed(phone.getDevice()).post(body).to("activities").auth(phone.getAuthenticator()).async(null);
+        WebexId conversation = WebexId.from(spaceId);
+        if (conversation != null) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("objectType", ObjectModel.Type.activity);
+            body.put("verb", ActivityModel.Verb.acknowledge);
+            body.put("object", Maps.makeMap("id", WebexId.uuid(messageId), "objectType", ObjectModel.Type.activity));
+            body.put("target", Maps.makeMap("id", WebexId.uuid(spaceId), "objectType", ObjectModel.Type.conversation));
+            ServiceReqeust.make(phone.getDevice().getIdentityServiceClusterUrl(conversation.getClusterId())).post(body).to("activities").auth(phone.getAuthenticator()).async(null);
+        }
     }
 
     private void doDownload(@NonNull RemoteFileImpl file,
@@ -330,10 +340,10 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
         }
     }
 
-    private void doPost(Identifier conversation, DraftImpl draft, CompletionHandler<Message> handler) {
+    private void doPost(String convUrl, String convId, DraftImpl draft, CompletionHandler<Message> handler) {
         Message.Text text = draft.getText();
         Map<String, Object> parent = draft.getParent() == null ? null : Maps.makeMap("id", WebexId.uuid(draft.getParent().getId()), "type", "reply");
-        Map<String, Object> target = Maps.makeMap("id", conversation.uuid(), "objectType", ObjectModel.Type.conversation);
+        Map<String, Object> target = Maps.makeMap("id", convId, "objectType", ObjectModel.Type.conversation);
         Map<String, Object> object = new HashMap<>();
         object.put("objectType", ObjectModel.Type.comment);
         if (text != null) {
@@ -359,7 +369,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 object.put("groupMentions", Maps.makeMap("items", mentionedGroup));
             }
         }
-        KeyManager.shared.getKey(conversation, phone.getCredentials(), phone.getDevice(), keyResult -> {
+        KeyManager.shared.getConvEncryptionKey(convUrl, convId, phone.getCredentials(), phone.getDevice(), keyResult -> {
             if (keyResult.getError() != null) {
                 ResultImpl.errorInMain(handler, keyResult);
                 return;
@@ -371,7 +381,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 object.put("markdown", CryptoUtils.encryptToJwe(key, text.getMarkdown()));
             }
             UploadFileOperations operations = new UploadFileOperations(draft.getFiles());
-            operations.run(phone.getCredentials().getAuthenticator(), phone.getDevice(), conversation, key, fileModels -> {
+            operations.run(phone.getCredentials().getAuthenticator(), phone.getDevice(), convUrl, key, fileModels -> {
                 if (fileModels.getError() != null) {
                     ResultImpl.errorInMain(handler, fileModels);
                     return;
@@ -386,12 +396,11 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 Map<String, Object> activityMap = new HashMap<>();
                 activityMap.put("verb", verb.name());
                 activityMap.put("clientTempId", uuid + ":" + UUID.randomUUID().toString());
-                activityMap.put("encryptionKeyUrl", key == null ? null :key.getKeyUrl());
+                activityMap.put("encryptionKeyUrl", key == null ? null : key.getKeyUrl());
                 activityMap.put("object", object);
                 activityMap.put("target", target);
                 activityMap.put("parent", parent);
-                // TODO Find the cluster for the conv instead of use home cluster always.
-                Service.Conv.specific(conversation.url(phone.getDevice()))
+                ServiceReqeust.make(convUrl)
                         .post(activityMap)
                         .to("activities")
                         .auth(phone.getAuthenticator())
@@ -399,17 +408,17 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                         .error(handler)
                         .async((Closure<ActivityModel>) model -> {
                             model.decrypt(key);
-                            ResultImpl.inMain(handler, createMessage(model, false));
+                            ResultImpl.inMain(handler, createMessage(model, phone.getDevice().getClusterId(model.getUrl()), false));
                         });
             });
         });
     }
 
-    private void getOrCreateConversationWithPerson(String person, CompletionHandler<Identifier> handler) {
+    private void getOrCreateConversationWithPerson(String person, CompletionHandler<Pair<String, String>> handler) {
         Queue.background.run(() -> {
-            Identifier conversion = conversations.get(person);
-            if (conversion != null) {
-                handler.onComplete(ResultImpl.success(conversion));
+            Pair<String, String> conv = conversations.get(person);
+            if (conv != null) {
+                handler.onComplete(ResultImpl.success(conv));
                 return;
             }
             Service.Conv.homed(phone.getDevice()).put().to("conversations/user/" + person)
@@ -420,19 +429,19 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                     .model(ConversationModel.class)
                     .error(handler)
                     .async((Closure<ConversationModel>) model -> {
-                        if (model == null || model.getId() == null) {
+                        if (model == null || model.getUrl() == null || model.getId() == null) {
                             handler.onComplete(ResultImpl.error("Cannot get conversion with the people: " + person));
                             return;
                         }
-                        Identifier identifier = new Identifier(new WebexId(WebexId.Type.ROOM, model.getId()), model.getUrl());
-                        conversations.put(person, identifier);
-                        handler.onComplete(ResultImpl.success(identifier));
+                        Pair<String, String> pair = Pair.create(model.getUrl(), model.getId());
+                        conversations.put(person, pair);
+                        handler.onComplete(ResultImpl.success(pair));
                     });
         });
     }
 
-    private Message createMessage(ActivityModel activity, boolean received) {
-        return activity == null ? null : new InternalMessage(activity, phone.getCredentials(), received);
+    private Message createMessage(ActivityModel activity, String clusterId, boolean received) {
+        return activity == null ? null : new InternalMessage(activity, phone.getCredentials(), clusterId, received);
     }
 
     @Override

@@ -238,6 +238,21 @@ public class ActivityModel extends ObjectModel {
         }
     }
 
+    public String getConversationUrl() {
+        ObjectModel target = getTarget();
+        ObjectModel object = getObject();
+        if (target != null && ObjectModel.Type.conversation.equals(target.getObjectType())) {
+            return target.getUrl();
+        }
+        else if (object != null && ObjectModel.Type.conversation.equals(object.getObjectType())) {
+            return object.getUrl();
+        }
+        else {
+            String activityUrl = this.getUrl();
+            return activityUrl.substring(0, activityUrl.lastIndexOf("/activities/")) + "/conversations/" + getConversationId();
+        }
+    }
+
     @Override
     public String toString() {
         return "Activity " + getId() + " " + getVerb() +

@@ -193,14 +193,17 @@ public class Message {
 
     private ParentModel parent;
 
-    protected Message(ActivityModel activity, Credentials user, boolean received) {
+    private String clusterId;
+
+    protected Message(ActivityModel activity, Credentials user, String clusterId, boolean received) {
         this.activity = activity;
-        this.id = new WebexId(WebexId.Type.MESSAGE, activity.getId()).getBase64Id();
+        this.clusterId = clusterId;
+        this.id = new WebexId(WebexId.Type.MESSAGE, clusterId, activity.getId()).getBase64Id();
         if (activity.getVerb().equals(ActivityModel.Verb.delete) && activity.getObject() != null) {
-            this.id = new WebexId(WebexId.Type.MESSAGE, activity.getObject().getId()).getBase64Id();
+            this.id = new WebexId(WebexId.Type.MESSAGE, clusterId, activity.getObject().getId()).getBase64Id();
         }
         if (activity.getActor() != null) {
-            this.personId = new WebexId(WebexId.Type.PEOPLE, activity.getActor().getId()).getBase64Id();
+            this.personId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, activity.getActor().getId()).getBase64Id();
             this.personEmail = activity.getActor().getEmail();
             this.personDisplayName = activity.getActor().getDisplayName();
         }
@@ -208,22 +211,22 @@ public class Message {
             this.textAsObject = new Text(activity.getObject());
         }
         if (activity.getTarget() instanceof ConversationModel) {
-            this.spaceId = new WebexId(WebexId.Type.ROOM, activity.getTarget().getId()).getBase64Id();
+            this.spaceId = new WebexId(WebexId.Type.ROOM, clusterId, activity.getTarget().getId()).getBase64Id();
             this.spaceType = ((ConversationModel) activity.getTarget()).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         } else if (activity.getTarget() instanceof SpacePropertyModel) {
-            this.spaceId = new WebexId(WebexId.Type.ROOM, activity.getTarget().getId()).getBase64Id();
+            this.spaceId = new WebexId(WebexId.Type.ROOM, clusterId, activity.getTarget().getId()).getBase64Id();
             this.spaceType = ((ConversationModel) activity.getTarget()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         } else if (activity.getTarget() instanceof PersonModel) {
             this.spaceType = Space.SpaceType.DIRECT;
-            this.toPersonId = new WebexId(WebexId.Type.PEOPLE, activity.getTarget().getId()).getBase64Id();
+            this.toPersonId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, activity.getTarget().getId()).getBase64Id();
             this.toPersonEmail = ((PersonModel) activity.getTarget()).getEmail();
         }
         if (this.spaceId == null) {
-            this.spaceId = new WebexId(WebexId.Type.ROOM, activity.getConversationId()).getBase64Id();
+            this.spaceId = new WebexId(WebexId.Type.ROOM, clusterId, activity.getConversationId()).getBase64Id();
         }
         if (user != null) {
             if (this.toPersonId == null && received) {
-                this.toPersonId = new WebexId(WebexId.Type.PEOPLE, user.getUserId()).getBase64Id();
+                this.toPersonId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, user.getUserId()).getBase64Id();
             }
             if (this.toPersonEmail == null && received && user.getPerson() != null) {
                 this.toPersonEmail = Utils.getFirst(user.getPerson().getEmails());
@@ -406,7 +409,7 @@ public class Message {
      * @since 2.5.0
      */
     public String getParentId() {
-        return parent == null ? null : new WebexId(WebexId.Type.MESSAGE, parent.getId()).getBase64Id();
+        return parent == null ? null : new WebexId(WebexId.Type.MESSAGE, clusterId, parent.getId()).getBase64Id();
     }
 
     /**

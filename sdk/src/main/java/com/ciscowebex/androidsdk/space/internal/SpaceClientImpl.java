@@ -39,6 +39,7 @@ import com.ciscowebex.androidsdk.phone.internal.PhoneImpl;
 import com.ciscowebex.androidsdk.space.*;
 import com.ciscowebex.androidsdk.internal.model.ItemsModel;
 
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.google.gson.reflect.TypeToken;
 import me.helloworld.utils.collection.Maps;
 
@@ -62,10 +63,10 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
         }
         final SpaceObserver.SpaceEvent event;
         if (activity.getVerb() == ActivityModel.Verb.create) {
-            event = new InternalSpace.InternalSpaceCeated(new InternalSpace(activity), activity);
+            event = new InternalSpace.InternalSpaceCeated(new InternalSpace(activity, phone.getDevice().getClusterId(activity.getUrl())), activity);
         }
         else if (activity.getVerb() == ActivityModel.Verb.update) {
-            event = new InternalSpace.InternalSpaceUpdated(new InternalSpace(activity), activity);
+            event = new InternalSpace.InternalSpaceUpdated(new InternalSpace(activity, phone.getDevice().getClusterId(activity.getUrl())), activity);
         }
         else {
             event = null;
@@ -140,8 +141,12 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void getWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<SpaceReadStatus> handler) {
-        Identifier conversation = new Identifier(spaceId);
-        Service.Conv.specific(conversation.url(phone.getDevice())).get()
+        WebexId conversation = WebexId.from(spaceId);
+        if (conversation == null) {
+            handler.onComplete(ResultImpl.error("Cannot found the space: " + spaceId));
+            return;
+        }
+        ServiceReqeust.make(conversation.getUrl(phone.getDevice())).get()
                 .with("uuidEntryFormat", "true")
                 .with("personRefresh", "true")
                 .with("includeParticipants", "false")
@@ -156,7 +161,7 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
                         handler.onComplete(ResultImpl.success(null));
                         return;
                     }
-                    handler.onComplete(ResultImpl.success(new InternalSpaceReadStatus(model)));
+                    handler.onComplete(ResultImpl.success(new InternalSpaceReadStatus(model, conversation.getClusterId())));
                 });
     }
 
@@ -181,7 +186,7 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
                     }
                     List<SpaceReadStatus> result = new ArrayList<>();
                     for (ConversationModel conversation : model.getItems()) {
-                        result.add(new InternalSpaceReadStatus(conversation));
+                        result.add(new InternalSpaceReadStatus(conversation, phone.getDevice().getClusterId(conversation.getUrl())));
                     }
                     handler.onComplete(ResultImpl.success(result));
                 });

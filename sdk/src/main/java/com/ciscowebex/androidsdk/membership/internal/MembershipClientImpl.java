@@ -66,16 +66,18 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
         }
         final MembershipObserver.MembershipEvent event;
         if (activity.isAddParticipant()) {
-            event = new InternalMembership.InternalMembershipCreated(new InternalMembership(activity), activity);
+            event = new InternalMembership.InternalMembershipCreated(new InternalMembership(activity, phone.getDevice().getClusterId(activity.getUrl())), activity);
         }
         else if (activity.isLeaveActivity()) {
-            event = new InternalMembership.InternalMembershipDeleted(new InternalMembership(activity), activity);
+            event = new InternalMembership.InternalMembershipDeleted(new InternalMembership(activity, phone.getDevice().getClusterId(activity.getUrl())), activity);
         }
         else if (activity.getVerb() == ActivityModel.Verb.assignModerator || activity.getVerb() == ActivityModel.Verb.unassignModerator) {
-            event = new InternalMembership.InternalMembershipUpdated(new InternalMembership(activity), activity);
+            event = new InternalMembership.InternalMembershipUpdated(new InternalMembership(activity, phone.getDevice().getClusterId(activity.getUrl())), activity);
         }
         else if (activity.getVerb() == ActivityModel.Verb.acknowledge) {
-            event = new InternalMembership.InternalMembershipMessageSeen(new InternalMembership(activity), activity, new WebexId(WebexId.Type.MESSAGE, activity.getObject().getId()).getBase64Id());
+            String clusterId = phone.getDevice().getClusterId(activity.getUrl());
+            event = new InternalMembership.InternalMembershipMessageSeen(new InternalMembership(activity, clusterId), activity,
+                    new WebexId(WebexId.Type.MESSAGE, clusterId, activity.getObject().getId()).getBase64Id());
         }
         else {
             event = null;
@@ -143,30 +145,36 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void listWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<List<MembershipReadStatus>> handler) {
-        Identifier conversation = new Identifier(spaceId);
-        Service.Conv.specific(conversation.url(phone.getDevice())).get()
-                .with("uuidEntryFormat", "true")
-                .with("personRefresh", "true")
-                .with("includeParticipants", "true")
-                .with("participantAckFilter", "all")
-                .with("activitiesLimit", "0")
-                .auth(phone.getAuthenticator())
-                .queue(Queue.main)
-                .model(ConversationModel.class)
-                .error(handler)
-                .async((Closure<ConversationModel>) model -> {
-                    if (model == null) {
-                        handler.onComplete(ResultImpl.success(Collections.emptyList()));
-                        return;
+        WebexId conversation = WebexId.from(spaceId);
+        if (conversation == null) {
+            handler.onComplete(ResultImpl.error("Not found space: " + spaceId));
+            return;
+        }
+        ServiceReqeust.make(conversation.getUrl(phone.getDevice())).get()
+            .with("uuidEntryFormat", "true")
+            .with("personRefresh", "true")
+            .with("includeParticipants", "true")
+            .with("participantAckFilter", "all")
+            .with("activitiesLimit", "0")
+            .auth(phone.getAuthenticator())
+            .queue(Queue.main)
+            .model(ConversationModel.class)
+            .error(handler)
+            .async((Closure<ConversationModel>) model -> {
+                if (model == null) {
+                    handler.onComplete(ResultImpl.success(Collections.emptyList()));
+                    return;
+                }
+                List<MembershipReadStatus> result = new ArrayList<>();
+                String clusterId = phone.getDevice().getClusterId(model.getUrl());
+                for (PersonModel person : model.getParticipants().getItems()) {
+                    try {
+                        result.add(new InternalMembershipReadStatus(model, person, clusterId));
+                    } catch (Throwable ignored) {
                     }
-                    List<MembershipReadStatus> result = new ArrayList<>();
-                    for (PersonModel person : model.getParticipants().getItems()) {
-                        try {
-                            result.add(new InternalMembershipReadStatus(model, person));
-                        } catch (Throwable ignored) {
-                        }
-                    }
-                    handler.onComplete(ResultImpl.success(result));
-                });
+                }
+                handler.onComplete(ResultImpl.success(result));
+            });
+
     }
 }

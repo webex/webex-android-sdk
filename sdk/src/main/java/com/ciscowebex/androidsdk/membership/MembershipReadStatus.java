@@ -42,14 +42,14 @@ public class MembershipReadStatus {
 
     private Date _lastSeenDate;
 
-    protected MembershipReadStatus(ConversationModel conversation, PersonModel person) throws IllegalArgumentException {
+    protected MembershipReadStatus(ConversationModel conversation, PersonModel person, String clusterId) throws IllegalArgumentException {
         PersonModel.RoomPropertiesModel roomProperties = person.getRoomProperties();
         if (roomProperties == null) {
             throw new IllegalArgumentException("RoomProperties is null");
         }
-        _lastSeenId = new WebexId(WebexId.Type.MESSAGE, roomProperties.getLastSeenActivityUUID()).getBase64Id();
+        _lastSeenId = new WebexId(WebexId.Type.MESSAGE, clusterId, roomProperties.getLastSeenActivityUUID()).getBase64Id();
         _lastSeenDate = roomProperties.getLastSeenActivityDate();
-        _membership = new Membership(conversation, person);
+        _membership = new Membership(conversation, person, clusterId);
     }
 
     /**
