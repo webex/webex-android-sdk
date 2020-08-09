@@ -77,7 +77,8 @@ public class WebexError<T> {
         SERVICE_ERROR(-7001),
         PERMISSION_ERROR(-7002),
         HOST_PIN_OR_MEETING_PASSWORD_REQUIRED(-7003),
-        WEBSOCKET_ERROR(-7004);
+        WEBSOCKET_ERROR(-7004),
+        NETWORK_ERROR(-7005);
 
         private int code;
 
