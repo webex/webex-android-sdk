@@ -71,6 +71,8 @@ public class MediaSession {
 
     private boolean localOnly;
 
+    private boolean prepared;
+
     MediaSession(WmeSession session, boolean localOnly) {
         this.session = session;
         this.localOnly = localOnly;
@@ -82,6 +84,14 @@ public class MediaSession {
 
     public boolean isRunning() {
         return session.getState() == WmeSession.State.CONNECTED;
+    }
+
+    public void setPrepared(boolean prepared) {
+        this.prepared = prepared;
+    }
+
+    public boolean isPrepared() {
+        return prepared;
     }
 
     public void startPreview() {

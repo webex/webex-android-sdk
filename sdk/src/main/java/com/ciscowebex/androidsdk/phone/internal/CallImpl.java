@@ -996,8 +996,9 @@ public class CallImpl implements Call {
         if (getStatus() != CallStatus.WAITING) {
             stopKeepAlive();
         }
-        if ((getStatus() == CallStatus.CONNECTED || getStatus() == CallStatus.RINGING) && media != null && !media.isRunning()) {
+        if ((getStatus() == CallStatus.CONNECTED || getStatus() == CallStatus.RINGING) && media != null && !media.isPrepared() && !media.isRunning()) {
             Ln.d("Update SDP before start media");
+            media.setPrepared(true);
             phone.update(this, isSendingAudio(), isSendingVideo(), media.getLocalSdp(), result -> {
                 CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
                 if (result.getError() != null) {
@@ -1010,9 +1011,6 @@ public class CallImpl implements Call {
                     setSendingVideo(sendingVideo);
                     setReceivingAudio(receivingAudio);
                     setReceivingVideo(receivingVideo);
-                    if (getStatus() == CallStatus.CONNECTED && observer != null) {
-                        observer.onConnected(this);
-                    }
                 }
             });
         }
