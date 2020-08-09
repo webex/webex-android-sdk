@@ -24,8 +24,14 @@ package com.ciscowebex.androidsdk.message.internal;
 
 import com.ciscowebex.androidsdk.internal.Credentials;
 import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.ContentModel;
+import com.ciscowebex.androidsdk.internal.model.FileModel;
 import com.ciscowebex.androidsdk.message.Message;
 import com.ciscowebex.androidsdk.message.MessageObserver;
+import com.ciscowebex.androidsdk.message.RemoteFile;
+import com.ciscowebex.androidsdk.utils.MimeUtils;
+
+import java.util.List;
 
 class InternalMessage extends Message {
 
@@ -47,7 +53,33 @@ class InternalMessage extends Message {
         }
     }
 
+    static class InternalMessageFileThumbnailsUpdated extends MessageObserver.MessageFileThumbnailsUpdated{
+        InternalMessageFileThumbnailsUpdated(String message, ActivityModel activity, List<RemoteFile> files){
+            super(message, activity, files);
+        }
+    }
+
     InternalMessage(ActivityModel activity, Credentials user, String clusterId, boolean received) {
         super(activity, user, clusterId, received);
+    }
+
+    boolean isMissingThumbnail() {
+        if (activity.getVerb() == ActivityModel.Verb.share) {
+            if (activity.getObject() != null && activity.getObject().isContent() && activity.getObject() instanceof ContentModel) {
+                ContentModel content = (ContentModel) activity.getObject();
+                if (content.getContentCategory().equals(ContentModel.Category.DOCUMENTS)) {
+                    for (FileModel file : content.getFiles().getItems()) {
+                        if (file.getImage() == null && MimeUtils.getContentTypeByMimeType(file.getMimeType()).shouldTranscode()) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    String getContentId() {
+        return activity.getContentDataId();
     }
 }

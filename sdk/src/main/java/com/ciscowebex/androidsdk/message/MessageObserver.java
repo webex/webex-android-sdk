@@ -3,6 +3,8 @@ package com.ciscowebex.androidsdk.message;
 import com.ciscowebex.androidsdk.WebexEvent;
 import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 
+import java.util.List;
+
 /**
  * Callback to receive the events from a {@link MessageClient}.
  *
@@ -94,6 +96,51 @@ public interface MessageObserver {
             return messageId;
         }
 
+    }
+
+    /**
+     * The event when an old message has been updated, include received and self sent message.
+     *
+     * @since 2.6.0
+     */
+    abstract class MessageUpdated extends WebexEvent.Base implements MessageEvent {
+        private String messageId;
+
+        protected MessageUpdated(String messageId, ActivityModel activity) {
+            super(activity);
+            this.messageId = messageId;
+        }
+
+        /**
+         * Return the updated message ID.
+         * @return The updated message ID.
+         */
+        public String getMessageId() {
+            return messageId;
+        }
+    }
+
+    /**
+     * The file thumbnails of a message has been updated. Should replace the old message's file list.
+     *
+     * @since 2.6.0
+     */
+    class MessageFileThumbnailsUpdated extends MessageUpdated{
+        private List<RemoteFile> files;
+
+        protected MessageFileThumbnailsUpdated(String messageId, ActivityModel activity, List<RemoteFile> files) {
+            super(messageId, activity);
+            this.files = files;
+        }
+
+        /**
+         * Return the updated file(s) list.
+         *
+         * @return The updated file(s) list.
+         */
+        public List<RemoteFile> getFiles() {
+            return files;
+        }
     }
 
     /**

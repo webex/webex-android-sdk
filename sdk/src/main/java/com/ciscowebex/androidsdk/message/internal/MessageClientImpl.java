@@ -55,6 +55,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
     private MessageObserver observer;
     private Map<String, Pair<String, String>> conversations = new ConcurrentHashMap<>();
     private String uuid = UUID.randomUUID().toString();
+    private Map<String, String> cachedMessages = new HashMap<>();
 
     public MessageClientImpl(Context context, PhoneImpl phone) {
         this.context = context;
@@ -87,7 +88,8 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 if (keyResult.getData() != null) {
                     activity.decrypt(keyResult.getData());
                 }
-                Message message = createMessage(activity, phone.getDevice().getClusterId(activity.getUrl()), true);
+                InternalMessage message = createMessage(activity, phone.getDevice().getClusterId(activity.getUrl()), true);
+                cacheMessageIfNeeded(message);
                 MessageObserver.MessageReceived event = new InternalMessage.InternalMessageReceived(message, activity);
                 Queue.main.run(() -> observer.onEvent(event));
                 // TODO Remove the deprecated event in next big release
@@ -96,10 +98,52 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
         }
         else if (activity.getVerb() == ActivityModel.Verb.delete) {
             String id = new WebexId(WebexId.Type.MESSAGE, phone.getDevice().getClusterId(activity.getUrl()), activity.getObject().getId()).getBase64Id();
+            invalidCacheByMessageId(id);
             MessageObserver.MessageEvent event = new InternalMessage.InternalMessageDeleted(id, activity);
             Queue.main.run(() -> observer.onEvent(event));
         }
+        else if (activity.getVerb() == ActivityModel.Verb.update) {
+            String conversationId = activity.getConversationId();
+            if (conversationId == null) {
+                Ln.d("The activity without conversation");
+                return;
+            }
+            String convId = activity.getConversationId();
+            String convUrl = activity.getConversationUrl();
+            KeyManager.shared.tryRefresh(convUrl, activity.getEncryptionKeyUrl());
+            KeyManager.shared.getConvEncryptionKey(convUrl, convId, phone.getCredentials(), phone.getDevice(), keyResult -> {
+                if (keyResult.getData() != null) {
+                    activity.decrypt(keyResult.getData());
+                }
+                Queue.main.run(() -> {
+                    String contentId = activity.getObject().getId();
+                    if (contentId != null) {
+                        String messageId = cachedMessages.get(contentId);
+                        if (messageId != null) {
+                            List<RemoteFile> files = RemoteFileImpl.mapRemoteFiles(activity);
+                            if (!Checker.isEmpty(files)) {
+                                MessageObserver.MessageUpdated event = new InternalMessage.InternalMessageFileThumbnailsUpdated(messageId, activity, files);
+                                observer.onEvent(event);
+                                RemoteFile shouldTranscode = null;
+                                for (RemoteFile f : files) {
+                                    if (f.getThumbnail() == null && MimeUtils.getContentTypeByMimeType(f.getMimeType()).shouldTranscode()) {
+                                        shouldTranscode = f;
+                                        break;
+                                    }
+                                }
+                                if (shouldTranscode == null) {
+                                    cachedMessages.remove(contentId);
+                                }
+                            }
+                        } else {
+                            Ln.d("The update activity cannot found in cache list: " + activity.getObject().getId());
+                        }
+                    }
+                });
+            });
+        }
     }
+
 
     public void list(@NonNull String spaceId, @Nullable Before before, @IntRange(from = 0, to = Integer.MAX_VALUE) int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler) {
         if (max == 0) {
@@ -158,7 +202,9 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                                 if (keyResult.getData() != null) {
                                     model.decrypt(keyResult.getData());
                                 }
-                                messages.add(createMessage(model, conversation.getClusterId(), false));
+                                InternalMessage message = createMessage(model, conversation.getClusterId(), false);
+                                cacheMessageIfNeeded(message);
+                                messages.add(message);
                             }
                             ResultImpl.inMain(handler, messages);
                         });
@@ -194,7 +240,9 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                         if (keyResult.getData() != null) {
                             model.decrypt(keyResult.getData());
                         }
-                        ResultImpl.inMain(handler, createMessage(model, activity.getClusterId(), false));
+                        InternalMessage message = createMessage(model, activity.getClusterId(), false);
+                        cacheMessageIfNeeded(message);
+                        ResultImpl.inMain(handler, message);
                     });
                 });
     }
@@ -205,6 +253,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 .queue(Queue.main)
                 .error(handler)
                 .async((Closure<Void>) data -> handler.onComplete(ResultImpl.success(null)));
+        invalidCacheByMessageId(messageId);
     }
 
     @Override
@@ -400,15 +449,21 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 activityMap.put("object", object);
                 activityMap.put("target", target);
                 activityMap.put("parent", parent);
-                ServiceReqeust.make(convUrl)
-                        .post(activityMap)
-                        .to("activities")
-                        .auth(phone.getAuthenticator())
+                ServiceReqeust request = ServiceReqeust.make(convUrl).post(activityMap).to(verb == ActivityModel.Verb.share ? "content" : "activities");
+                for (LocalFile file : draft.getFiles()) {
+                    if (file.getThumbnail() == null && MimeUtils.getContentTypeByFilename(file.getName()).shouldTranscode()) {
+                        request.with("transcode", String.valueOf(true)).with("async", String.valueOf(false));
+                        break;
+                    }
+                }
+                request.auth(phone.getAuthenticator())
                         .model(ActivityModel.class)
                         .error(handler)
                         .async((Closure<ActivityModel>) model -> {
                             model.decrypt(key);
-                            ResultImpl.inMain(handler, createMessage(model, phone.getDevice().getClusterId(model.getUrl()), false));
+                            InternalMessage message = createMessage(model, phone.getDevice().getClusterId(model.getUrl()), false);
+                            cacheMessageIfNeeded(message);
+                            ResultImpl.inMain(handler, message);
                         });
             });
         });
@@ -440,8 +495,35 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
         });
     }
 
-    private Message createMessage(ActivityModel activity, String clusterId, boolean received) {
+    private InternalMessage createMessage(ActivityModel activity, String clusterId, boolean received) {
         return activity == null ? null : new InternalMessage(activity, phone.getCredentials(), clusterId, received);
+    }
+
+    private void cacheMessageIfNeeded(InternalMessage message) {
+        if (System.currentTimeMillis() - message.getCreated().getTime() < 3 * 60 * 1000 && message.isMissingThumbnail()) {
+            String contentId = message.getContentId();
+            String messageId = message.getId();
+            Queue.main.run(() -> {
+                cachedMessages.put(contentId, messageId);
+                Ln.d("Cache a transcode message, messageId: " + messageId);
+            });
+        }
+    }
+
+    private void invalidCacheByMessageId(String messageId) {
+        Queue.main.run(() -> {
+            String contentId = null;
+            for (Map.Entry<String, String> e : cachedMessages.entrySet()) {
+                if (e.getValue().equals(messageId)) {
+                    contentId = e.getKey();
+                    break;
+                }
+            }
+            if (contentId != null) {
+                cachedMessages.remove(contentId);
+                Ln.d("Invalid cache a transcode message, messageId: " + messageId);
+            }
+        });
     }
 
     @Override

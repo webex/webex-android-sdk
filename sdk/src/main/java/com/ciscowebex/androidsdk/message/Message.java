@@ -22,7 +22,6 @@
 
 package com.ciscowebex.androidsdk.message;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -167,33 +166,33 @@ public class Message {
         }
     }
 
-    private transient ActivityModel activity;
+    protected transient ActivityModel activity;
 
-    private String id;
+    protected String id;
 
-    private String personId;
+    protected String personId;
 
-    private String personEmail;
+    protected String personEmail;
 
-    private String personDisplayName;
+    protected String personDisplayName;
 
-    private String spaceId;
+    protected String spaceId;
 
-    private Space.SpaceType spaceType;
+    protected Space.SpaceType spaceType;
 
-    private String toPersonId;
+    protected String toPersonId;
 
-    private String toPersonEmail;
+    protected String toPersonEmail;
 
-    private boolean isSelfMentioned;
+    protected boolean isSelfMentioned;
 
-    private Text textAsObject;
+    protected Text textAsObject;
 
-    private transient List<RemoteFile> remoteFiles;
+    protected transient List<RemoteFile> remoteFiles;
 
-    private ParentModel parent;
+    protected ParentModel parent;
 
-    private String clusterId;
+    protected String clusterId;
 
     protected Message(ActivityModel activity, Credentials user, String clusterId, boolean received) {
         this.activity = activity;
@@ -215,7 +214,7 @@ public class Message {
             this.spaceType = ((ConversationModel) activity.getTarget()).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         } else if (activity.getTarget() instanceof SpacePropertyModel) {
             this.spaceId = new WebexId(WebexId.Type.ROOM, clusterId, activity.getTarget().getId()).getBase64Id();
-            this.spaceType = ((ConversationModel) activity.getTarget()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+            this.spaceType = ((ConversationModel) activity.getTarget()).containsTag(ConversationModel.Tag.ONE_ON_ONE) ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         } else if (activity.getTarget() instanceof PersonModel) {
             this.spaceType = Space.SpaceType.DIRECT;
             this.toPersonId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, activity.getTarget().getId()).getBase64Id();
@@ -234,16 +233,7 @@ public class Message {
             this.isSelfMentioned = activity.isSelfMention(user, 0);
         }
 
-        ArrayList<RemoteFile> remoteFiles = new ArrayList<>();
-        if (activity.getObject() != null && activity.getObject().isContent()) {
-            ContentModel content = (ContentModel) activity.getObject();
-            ItemsModel<FileModel> files = content.getContentFiles();
-            for (FileModel file : files.getItems()) {
-                RemoteFile remoteFile = new RemoteFileImpl(file);
-                remoteFiles.add(remoteFile);
-            }
-        }
-        this.remoteFiles = remoteFiles;
+        this.remoteFiles = RemoteFileImpl.mapRemoteFiles(activity);
         this.parent = activity.getParent();
     }
 
@@ -422,4 +412,5 @@ public class Message {
         Gson gson = new Gson();
         return gson.toJson(this);
     }
+
 }
