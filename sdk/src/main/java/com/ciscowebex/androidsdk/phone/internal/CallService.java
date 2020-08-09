@@ -119,9 +119,9 @@ public class CallService {
                 });
     }
 
-    public void call(@NonNull String address, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
+    public void call(@NonNull String address, boolean isModerator, @Nullable String PIN, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
         Service.Locus.homed(device)
-                .post(makeBody(correlationId, layout, device, sdp, address, reachabilities))
+                .post(makeBody(correlationId, layout, device, sdp, address, isModerator, PIN, reachabilities))
                 .to("loci/call")
                 .auth(authenticator)
                 .queue(Queue.main)
@@ -136,15 +136,15 @@ public class CallService {
                         callback.onComplete(ResultImpl.success(locus));
                         return;
                     }
-                    if (locus.getSelf() != null) {
+                    if (locus != null && locus.getSelf() != null) {
                         layout(locus.getSelf().getUrl(), device, layout, result -> callback.onComplete(ResultImpl.success(locus)));
                     }
                 });
     }
 
-    public void join(@NonNull String url, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
+    public void join(@NonNull String url, boolean isModerator, @Nullable String PIN, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
         ServiceReqeust.make(url)
-                .post(makeBody(correlationId, layout, device, sdp, null, reachabilities))
+                .post(makeBody(correlationId, layout, device, sdp, null, isModerator, PIN, reachabilities))
                 .to("participant")
                 .auth(authenticator)
                 .queue(Queue.main)
@@ -159,7 +159,7 @@ public class CallService {
                         callback.onComplete(ResultImpl.success(locus));
                         return;
                     }
-                    if (locus.getSelf() != null) {
+                    if (locus != null && locus.getSelf() != null) {
                         layout(locus.getSelf().getUrl(), device, layout, result -> callback.onComplete(ResultImpl.success(locus)));
                     }
                 });
@@ -334,7 +334,7 @@ public class CallService {
                 .async((Closure<LocusMediaResponseModel>) data -> callback.onComplete(ResultImpl.success(null)));
     }
 
-    private Object makeBody(String correlationId, MediaOption.VideoLayout layout, Device device, String sdp, String callee, MediaEngineReachabilityModel reachabilities) {
+    private Object makeBody(String correlationId, MediaOption.VideoLayout layout, Device device, String sdp, String callee, boolean isModerator, String PIN, MediaEngineReachabilityModel reachabilities) {
         Map<String, Object> json = new HashMap<>();
         MediaConnectionModel mc = new MediaConnectionModel();
         mc.setLocalSdp(Json.get().toJson(new MediaInfoModel(sdp, reachabilities == null ? null : reachabilities.reachability)));
@@ -347,6 +347,12 @@ public class CallService {
             json.put("invitee", Maps.makeMap("address", callee));
             json.put("supportsNativeLobby", true);
             json.put("moderator", false);
+        }
+        if (isModerator) {
+            json.put("moderator", isModerator);
+        }
+        if (PIN != null) {
+            json.put("pin", PIN);
         }
         return json;
     }

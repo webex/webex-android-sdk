@@ -202,7 +202,7 @@ public class MercuryService {
         public void onClosed(WebSocket webSocket, int rawCode, String reason) {
             WebSocketStatusCodes code = WebSocketStatusCodes.valueForCode(rawCode);
             Ln.i("Connection closed. Reason: \"%s\", code: %d (%s), TrackingId: %s", reason, rawCode, code.name(), trackingId);
-            onMercuryDisconnected(new WebexError(rawCode, reason));
+            onMercuryDisconnected(new WebexError(WebexError.ErrorCode.WEBSOCKET_ERROR, rawCode + "/" + reason));
         }
 
         @Override

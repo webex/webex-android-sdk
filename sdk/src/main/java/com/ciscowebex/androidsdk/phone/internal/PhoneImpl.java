@@ -366,7 +366,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     String correlationId = UUID.randomUUID().toString();
                     //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
                     if (target instanceof CallService.CallableTarget) {
-                        service.call(((CallService.CallableTarget) target).getCallee(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
+                        service.call(((CallService.CallableTarget) target).getCallee(), outgoing.getOption().isModerator(), outgoing.getOption().getPin(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
                             if (callResult.getError() != null || callResult.getData() == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(callResult.getError())));
                                 Queue.serial.yield();
@@ -383,7 +383,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 Queue.serial.yield();
                                 return;
                             }
-                            service.join(url, correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, joinResult -> {
+                            service.join(url, outgoing.getOption().isModerator(), outgoing.getOption().getPin(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, joinResult -> {
                                 if (joinResult.getError() != null || joinResult.getData() == null) {
                                     Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                                     Queue.serial.yield();
@@ -413,7 +413,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String localSdp = session.getLocalSdp();
                 incoming.getCall().setMedia(session);
                 //CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
-                service.join(incoming.getCall().getUrl(), incoming.getCall().getCorrelationId(), device, localSdp, incoming.getOption().getLayout(), reachability.getFeedback(), joinResult -> {
+                service.join(incoming.getCall().getUrl(), incoming.getOption().isModerator(), incoming.getOption().getPin(), incoming.getCall().getCorrelationId(), device, localSdp, incoming.getOption().getLayout(), reachability.getFeedback(), joinResult -> {
                     if (joinResult.getError() != null || joinResult.getData() == null) {
                         Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                         Queue.serial.yield();
@@ -781,7 +781,9 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     call.getMedia().leaveSharing(true);
                 }
                 service.leave(url, device, result -> {
-                    if (result.getError() != null && result.getError().getErrorMessage().startsWith("409/Conflict/")) {
+                    if (result.getError() != null
+                            && result.getError().getErrorMessage() != null
+                            && result.getError().getErrorMessage().startsWith("409/Conflict/")) {
                         WebexError error = new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, "The call is inactive.");
                         call.end(new CallObserver.CallErrorEvent(call, error));
                     } else if (result.getError() != null) {
