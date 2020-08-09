@@ -31,6 +31,7 @@ import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
 import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
+import com.ciscowebex.androidsdk.internal.queue.NamedRunnable;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.queue.Scheduler;
 import com.ciscowebex.androidsdk.internal.Device;
@@ -76,6 +77,8 @@ public class CallImpl implements Call {
     private AtomicInteger dtmfCorrelation = new AtomicInteger(1);
 
     private long connectedTime = 0;
+
+    private List<NamedRunnable> peddingTasks = new ArrayList<>(1);
 
     public CallImpl(String correlationId, LocusModel model, PhoneImpl phone, Device device, MediaSession media, Direction direction, boolean group) {
         this.correlationId = correlationId;
@@ -169,7 +172,7 @@ public class CallImpl implements Call {
                 } else if (status == CallStatus.WAITING) {
                     Queue.main.run(() -> observer.onWaiting(CallImpl.this, model.getWaitReason()));
                 } else if (status == CallStatus.CONNECTED) {
-                    Queue.main.run(() -> observer.onConnected(CallImpl.this));
+                    CallImpl.this.fireOnConnected();
                 }
             }
             Queue.serial.yield();
@@ -623,6 +626,17 @@ public class CallImpl implements Call {
         CallAnalyzerReporter.shared.reportMediaEngineReady(this);
         CallAnalyzerReporter.shared.reportIceStart(this);
 
+        Queue.main.run(() -> {
+            Iterator<NamedRunnable> it = peddingTasks.iterator();
+            while (it.hasNext()) {
+                NamedRunnable runnable = it.next();
+                if (runnable.getName() == NamedRunnable.Name.FireCallOnConnected) {
+                    it.remove();
+                    runnable.run();
+                    break;
+                }
+            }
+        });
     }
 
     void stopMedia() {
@@ -1057,11 +1071,7 @@ public class CallImpl implements Call {
                 if (isRemoteJoined()) {
                     if (self.isJoined(device.getDeviceUrl())) {
                         setStatus(CallStatus.CONNECTED);
-                        Queue.main.run(() -> {
-                            if (observer != null) {
-                                observer.onConnected(this);
-                            }
-                        });
+                        fireOnConnected();
                     } else if (self.isDeclined(device.getDeviceUrl())) {
                         end(new CallObserver.LocalDecline(this));
                     } else if (self.isJoined()) {
@@ -1083,11 +1093,7 @@ public class CallImpl implements Call {
                                 observer.onRinging(this);
                             }
                             setStatus(CallStatus.CONNECTED);
-                            Queue.main.run(() -> {
-                                if (observer != null) {
-                                    observer.onConnected(this);
-                                }
-                            });
+                            fireOnConnected();
                         });
                     } else {
                         if (isRemoteNotified()) {
@@ -1099,11 +1105,7 @@ public class CallImpl implements Call {
                             });
                         } else if (isRemoteJoined()) {
                             setStatus(CallStatus.CONNECTED);
-                            Queue.main.run(() -> {
-                                if (observer != null) {
-                                    observer.onConnected(this);
-                                }
-                            });
+                            fireOnConnected();
                         } else if (isRemoteDeclined()) {
                             end(new CallObserver.RemoteDecline(this));
                         }
@@ -1193,5 +1195,29 @@ public class CallImpl implements Call {
             }
         }
         return false;
+    }
+
+    private void fireOnConnected() {
+        Queue.main.run(() -> {
+            NamedRunnable runnable = new NamedRunnable() {
+                @Override
+                public Name getName() {
+                    return Name.FireCallOnConnected;
+                }
+
+                @Override
+                public void run() {
+                    if (observer != null) {
+                        observer.onConnected(CallImpl.this);
+                    }
+                }
+            };
+            if (media == null || !media.isRunning()) {
+                peddingTasks.add(runnable);
+            }
+            else {
+                runnable.run();
+            }
+        });
     }
 }
