@@ -165,6 +165,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             state = State.REGISTERING;
             Ln.i("Registering");
             UIEventHandler.get().registerUIEventHandler(context, this);
+            onScreenRotation(Utils.getScreenRotation(context));
             Queue.serial.run(new RegisterOperation(authenticator, result -> {
                 Pair<Device, Credentials> data = result.getData();
                 if (data == null) {

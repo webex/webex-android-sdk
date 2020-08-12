@@ -41,7 +41,7 @@ public class UIEventHandler {
 
     static class UIEventBroadcastReceiver extends BroadcastReceiver {
 
-        private int rotation;
+        private int rotation = -1;
 
         private EventObserver observer;
 
