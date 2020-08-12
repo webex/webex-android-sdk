@@ -3,8 +3,10 @@ package com.ciscowebex.androidsdk.internal.metric;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.text.TextUtils;
 import com.cisco.wx2.diagnostic_events.*;
+import com.ciscowebex.androidsdk.Webex;
 import com.ciscowebex.androidsdk.internal.Credentials;
 import com.ciscowebex.androidsdk.internal.model.GenericMetricModel;
 import com.ciscowebex.androidsdk.internal.model.LocusKeyModel;
@@ -134,9 +136,25 @@ public class DiagnosticsEventBuilder {
                     .localIP(NetworkUtils.getLocalIpAddress())
                     .usingProxy(NetworkUtils.isBehindProxy())
                     .mediaEngineSoftwareVersion(getStandardMediaEngineVersion(phone.getEngine().getVersion()))
+                    .clientInfo(buildClientInfo())
                     .build();
         } catch (ValidationException e) {
             Ln.e(e, "Failed to build valid origin property for event");
+            Ln.e(e.getValidationError().getErrors().toString());
+            return null;
+        }
+    }
+
+    private ClientInfo buildClientInfo() {
+        try {
+            return ClientInfo.builder()
+                    .clientType(ClientType.TEAMS_CLIENT)
+                    .os(ClientInfo.Os.ANDROID)
+                    .osVersion(Build.VERSION.RELEASE)
+                    .subClientType(SubClientType.WEB_APP)
+                    .build();
+        } catch (ValidationException e) {
+            Ln.e(e, "Failed to build valid clientInfo property for event");
             Ln.e(e.getValidationError().getErrors().toString());
             return null;
         }
