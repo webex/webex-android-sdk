@@ -450,10 +450,12 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 activityMap.put("target", target);
                 activityMap.put("parent", parent);
                 ServiceReqeust request = ServiceReqeust.make(convUrl).post(activityMap).to(verb == ActivityModel.Verb.share ? "content" : "activities");
-                for (LocalFile file : draft.getFiles()) {
-                    if (file.getThumbnail() == null && MimeUtils.getContentTypeByFilename(file.getName()).shouldTranscode()) {
-                        request.with("transcode", String.valueOf(true)).with("async", String.valueOf(false));
-                        break;
+                if (!Checker.isEmpty(draft.getFiles())) {
+                    for (LocalFile file : draft.getFiles()) {
+                        if (file.getThumbnail() == null && MimeUtils.getContentTypeByFilename(file.getName()).shouldTranscode()) {
+                            request.with("transcode", String.valueOf(true)).with("async", String.valueOf(false));
+                            break;
+                        }
                     }
                 }
                 request.auth(phone.getAuthenticator())
