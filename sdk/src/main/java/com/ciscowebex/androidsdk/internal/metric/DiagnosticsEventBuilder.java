@@ -151,7 +151,7 @@ public class DiagnosticsEventBuilder {
                     .clientType(ClientType.TEAMS_CLIENT)
                     .os(ClientInfo.Os.ANDROID)
                     .osVersion(Build.VERSION.RELEASE)
-                    .subClientType(SubClientType.WEB_APP)
+                    //.subClientType(SubClientType.WEB_APP)
                     .build();
         } catch (ValidationException e) {
             Ln.e(e, "Failed to build valid clientInfo property for event");
