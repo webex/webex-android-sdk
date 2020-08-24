@@ -404,7 +404,7 @@ public class LocusModel {
                 LocusParticipantDeviceModel selfDevice = getMyDevice(deviceUrl);
                 if (selfDevice != null && selfDevice.getIntent() != null && selfDevice.getIntent().getAssociatedWith() != null) {
                     LocusParticipantModel associatedParticipant = getParticipant(Uri.parse(selfDevice.getIntent().getAssociatedWith()));
-                    if (associatedParticipant != null && associatedParticipant.isDeviceType(Device.WEBEX_SHARE_TYPE)) {
+                    if (associatedParticipant != null && associatedParticipant.isDeviceType(Device.Type.WEBEX_SHARE)) {
                         if (associatedParticipant.isInLobby()) {
                             isInLobby = true;
                         }
@@ -428,7 +428,7 @@ public class LocusModel {
                 for (LocusParticipantDeviceModel device : locusParticipant.getDevices()) {
                     if (device != null && device.getIntent() != null && device.getIntent().getAssociatedWith() != null) {
                         LocusParticipantModel associatedParticipant = getParticipant(Uri.parse(device.getIntent().getAssociatedWith()));
-                        if (associatedParticipant != null && associatedParticipant.isDeviceType(Device.WEBEX_SHARE_TYPE) &&
+                        if (associatedParticipant != null && associatedParticipant.isDeviceType(Device.Type.WEBEX_SHARE) &&
                                 associatedParticipant.getState() == LocusParticipantModel.State.JOINED) {
                             return true;
                         }
@@ -599,7 +599,7 @@ public class LocusModel {
             for (LocusParticipantDeviceModel device : devices) {
                 // Find a SIP device and points to the provisional device and vice versa and is also either
                 // joined or in the lobby state.
-                if (Device.SIP_DEVICE_TYPE.equalsIgnoreCase(device.getDeviceType()) &&
+                if (Device.Type.SIP.getTypeName().equalsIgnoreCase(device.getDeviceType()) &&
                         provisionalDevice.getFinalUrl().equals(device.getUrl()) &&
                         provisionalDevice.getUrl().equals(device.getProvisionalUrl())) {
                     isConnected = isJoinedFromThisDevice(device.getUrl());

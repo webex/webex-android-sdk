@@ -45,7 +45,7 @@ public class MediaQualityBuilder extends DiagnosticsEventBuilder {
             MQESourceMetadata.Builder metadata = MQESourceMetadata.builder();
             metadata.applicationSoftwareType(BuildConfig.APPLICATION_ID)
                     .applicationSoftwareVersion(BuildConfig.VERSION_NAME)
-                    .mediaEngineSoftwareType(Device.ANDROID_MEDIA_ENGINE_TYPE)
+                    .mediaEngineSoftwareType(Device.Type.ANDROID_MEDIA_ENGINE.getTypeName())
                     .mediaEngineSoftwareVersion(getStandardMediaEngineVersion(phone.getEngine().getVersion()))
                     .startTime(utcTime.toString());
             // convert WME media quality metrics to MQEInterval

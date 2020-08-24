@@ -340,7 +340,7 @@ public class CallService {
         mc.setLocalSdp(Json.get().toJson(new MediaInfoModel(sdp, reachabilities == null ? null : reachabilities.reachability)));
         mc.setType("SDP");
         json.put("localMedias", Lists.asList(mc));
-        json.put("device", device.toJsonMap(layout == MediaOption.VideoLayout.SINGLE ? null : Device.WEB_DEVICE_TYPE));
+        json.put("device", device.toJsonMap(layout == MediaOption.VideoLayout.SINGLE ? null : Device.Type.WEB_CLIENT.getTypeName()));
         json.put("respOnlySdp", true);
         json.put("correlationId", correlationId);
         if (callee != null) {

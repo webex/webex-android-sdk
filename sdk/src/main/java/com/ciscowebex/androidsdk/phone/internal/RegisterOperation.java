@@ -57,7 +57,7 @@ public class RegisterOperation implements Runnable {
             String countryCode = Objects.defaultIfNull(region.getCountryCode(), "US");
             String regionCode = Objects.defaultIfNull(region.getRegionCode(), "US-WEST");
             Map<String, Object> deviceInfo = new HashMap<>();
-            deviceInfo.put("deviceType", Device.ANDROID_DEVICE_TYPE);
+            deviceInfo.put("deviceType", Device.Type.ANDROID_SDK.getTypeName());
             deviceInfo.put("countryCode", countryCode);
             deviceInfo.put("regionCode", regionCode);
             deviceInfo.put("ttl", String.valueOf(TimeUnit.DAYS.toSeconds(180)));
