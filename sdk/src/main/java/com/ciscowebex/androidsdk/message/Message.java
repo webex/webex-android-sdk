@@ -22,18 +22,32 @@
 
 package com.ciscowebex.androidsdk.message;
 
-import java.util.Date;
-import java.util.List;
-
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
+
 import com.ciscowebex.androidsdk.internal.Credentials;
-import com.ciscowebex.androidsdk.internal.model.*;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.ConversationModel;
+import com.ciscowebex.androidsdk.internal.model.MarkdownableModel;
+import com.ciscowebex.androidsdk.internal.model.ObjectModel;
+import com.ciscowebex.androidsdk.internal.model.ParentModel;
+import com.ciscowebex.androidsdk.internal.model.PersonModel;
+import com.ciscowebex.androidsdk.internal.model.SpacePropertyModel;
 import com.ciscowebex.androidsdk.message.internal.DraftImpl;
 import com.ciscowebex.androidsdk.message.internal.RemoteFileImpl;
+import com.ciscowebex.androidsdk.space.Space;
 import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.WebexId;
-import com.ciscowebex.androidsdk.space.Space;
 import com.google.gson.Gson;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * This class represents a Message on Cisco Webex.
@@ -105,7 +119,7 @@ public class Message {
         /**
          * Make a Text object for the html.
          *
-         * @param html the text with the html markup.
+         * @param html  the text with the html markup.
          * @param plain the alternate plain text for cases that do not support html markup.
          */
         public static Text html(String html, String plain) {
@@ -116,12 +130,17 @@ public class Message {
          * Make a Text object for the markdown.
          *
          * @param markdown the text with the markdown markup.
-         * @param html the html text for how to render the markdown. This will be optional in the future.
-         * @param plain the alternate plain text for cases that do not support markdown and html markup.
+         * @param html     the html text for how to render the markdown. This will be optional in the future.
+         * @param plain    the alternate plain text for cases that do not support markdown and html markup.
          */
         public static Text markdown(String markdown, String html, String plain) {
             return new Text(plain, html, markdown);
         }
+
+        private static final String MENTION_TAG = "spark-mention";
+        private static final String MENTION_OBJECT_TYPE = "data-object-type";
+        private static final String MENTION_PERSON_TYPE = "person";
+        private static final String MENTION_OBJECT_ID = "data-object-id";
 
         private String plain;
 
@@ -135,12 +154,35 @@ public class Message {
             this.markdown = markdown;
         }
 
-        private Text(@NonNull ObjectModel object) {
+        private Text(@NonNull ObjectModel object, String clusterId) {
             this.plain = object.getDisplayName();
             this.html = object.getContent();
+            this.html = convertPeopleId(this.html, clusterId);
             if (object instanceof MarkdownableModel) {
                 this.markdown = ((MarkdownableModel) object).getMarkdown();
             }
+        }
+
+        private String convertPeopleId(String html, String clusterId) {
+            if (!TextUtils.isEmpty(html)) {
+                Document doc = Jsoup.parse(html, "", Parser.xmlParser());
+                for (Element e : doc.getElementsByTag(MENTION_TAG)) {
+                    Attributes attributes = e.attributes();
+                    String objectType = attributes.get(MENTION_OBJECT_TYPE);
+                    if (objectType != null && objectType.equalsIgnoreCase(MENTION_PERSON_TYPE)) {
+                        String uuid = attributes.get(MENTION_OBJECT_ID);
+                        if (!TextUtils.isEmpty(uuid)) {
+                            String base64Id = new WebexId(WebexId.Type.PEOPLE, clusterId, uuid).getBase64Id();
+                            if (!TextUtils.isEmpty(base64Id)) {
+                                attributes.put(MENTION_OBJECT_ID, base64Id);
+                            }
+                        }
+                    }
+                }
+                doc.outputSettings().prettyPrint(false);
+                return doc.outerHtml();
+            }
+            return html;
         }
 
         /**
@@ -152,7 +194,6 @@ public class Message {
 
         /**
          * Returns the html if exist.
-         *
          */
         public String getHtml() {
             return html;
@@ -186,9 +227,13 @@ public class Message {
 
     protected boolean isSelfMentioned;
 
+    protected boolean isAllMentioned;
+
     protected Text textAsObject;
 
     protected transient List<RemoteFile> remoteFiles;
+
+    protected transient List<Mention.Person> mentionedPersons;
 
     protected ParentModel parent;
 
@@ -207,7 +252,7 @@ public class Message {
             this.personDisplayName = activity.getActor().getDisplayName();
         }
         if (activity.getObject() != null) {
-            this.textAsObject = new Text(activity.getObject());
+            this.textAsObject = new Text(activity.getObject(), clusterId);
         }
         if (activity.getTarget() instanceof ConversationModel) {
             this.spaceId = new WebexId(WebexId.Type.ROOM, clusterId, activity.getTarget().getId()).getBase64Id();
@@ -232,8 +277,9 @@ public class Message {
             }
             this.isSelfMentioned = activity.isSelfMention(user, 0);
         }
-
+        this.isAllMentioned = activity.isAllMention(0);
         this.remoteFiles = RemoteFileImpl.mapRemoteFiles(activity);
+        this.mentionedPersons = activity.getMentionedPersons();
         this.parent = activity.getParent();
     }
 
@@ -362,6 +408,16 @@ public class Message {
     }
 
     /**
+     * Returns true if the message mentioned all people in space.
+     *
+     * @return True if the message mentioned all people in space.
+     * @since 2.6.0
+     */
+    public boolean isAllMentioned() {
+        return this.isAllMentioned;
+    }
+
+    /**
      * Returns a list of files attached to this message.
      *
      * @return A list of files attached to this message.
@@ -400,6 +456,15 @@ public class Message {
      */
     public String getParentId() {
         return parent == null ? null : new WebexId(WebexId.Type.MESSAGE, clusterId, parent.getId()).getBase64Id();
+    }
+
+    /**
+     * Returns the mentioned person id list. Empty list means no person mentioned or ALL people mentioned.
+     * Use this method with {@link Message#isAllMentioned()}
+     * @return The mentioned person id list.
+     */
+    public List<Mention.Person> getMentionedPersons() {
+        return mentionedPersons;
     }
 
     /**

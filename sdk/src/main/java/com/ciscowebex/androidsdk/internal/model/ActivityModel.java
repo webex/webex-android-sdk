@@ -23,11 +23,16 @@
 package com.ciscowebex.androidsdk.internal.model;
 
 import android.support.annotation.NonNull;
+
 import com.ciscowebex.androidsdk.internal.Credentials;
 import com.ciscowebex.androidsdk.internal.crypto.KeyObject;
-import me.helloworld.utils.Checker;
+import com.ciscowebex.androidsdk.message.Mention;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+
+import me.helloworld.utils.Checker;
 
 public class ActivityModel extends ObjectModel {
 
@@ -36,7 +41,7 @@ public class ActivityModel extends ObjectModel {
         mute, unmute, favorite, unfavorite, share, start, join, decline, reject,
         cancel, terminate, schedule, hide, unhide, lock, unlock, assignModerator, unassignModerator,
         delete, tombstone, archive, unarchive,
-        tag, untag, assign,  unassign, noops,
+        tag, untag, assign, unassign, noops,
         addMicroappInstance, deleteMicroappInstance, set, unset
     }
 
@@ -141,7 +146,7 @@ public class ActivityModel extends ObjectModel {
     }
 
     public boolean isShareImage() {
-        return verb == Verb.share && object instanceof ContentModel &&  ((ContentModel) object).isImage();
+        return verb == Verb.share && object instanceof ContentModel && ((ContentModel) object).isImage();
     }
 
     public boolean isUpdateTitleAndSummaryActivity() {
@@ -222,16 +227,13 @@ public class ActivityModel extends ObjectModel {
     public String getConversationId() {
         ObjectModel target = getTarget();
         ObjectModel object = getObject();
-        if (target != null &&  ObjectModel.Type.conversation.equals(target.getObjectType())) {
+        if (target != null && ObjectModel.Type.conversation.equals(target.getObjectType())) {
             return target.getId();
-        }
-        else if (target != null && ObjectModel.Type.team.equals(target.getObjectType())) {
+        } else if (target != null && ObjectModel.Type.team.equals(target.getObjectType())) {
             return ((TeamModel) target).getGeneralConversationUuid();
-        }
-        else if (object != null && ObjectModel.Type.conversation.equals(object.getObjectType())) {
+        } else if (object != null && ObjectModel.Type.conversation.equals(object.getObjectType())) {
             return object.getId();
-        }
-        else if (object != null && ObjectModel.Type.team.equals(object.getObjectType())) {
+        } else if (object != null && ObjectModel.Type.team.equals(object.getObjectType())) {
             return ((TeamModel) object).getGeneralConversationUuid();
         } else {
             return null;
@@ -243,11 +245,9 @@ public class ActivityModel extends ObjectModel {
         ObjectModel object = getObject();
         if (target != null && ObjectModel.Type.conversation.equals(target.getObjectType())) {
             return target.getUrl();
-        }
-        else if (object != null && ObjectModel.Type.conversation.equals(object.getObjectType())) {
+        } else if (object != null && ObjectModel.Type.conversation.equals(object.getObjectType())) {
             return object.getUrl();
-        }
-        else {
+        } else {
             String activityUrl = this.getUrl();
             return activityUrl.substring(0, activityUrl.lastIndexOf("/activities/")) + "/conversations/" + getConversationId();
         }
@@ -300,6 +300,23 @@ public class ActivityModel extends ObjectModel {
         return isPersonallyMentioned(credentials) || isIncludedInGroupMention(credentials, lastJoinedDate);
     }
 
+    public boolean isAllMention(long lastJoinedDate) {
+        if (!(getObject() instanceof MentionableModel)) {
+            return false;
+        }
+        MentionableModel object = (MentionableModel) getObject();
+        if (object.getGroupMentions() == null || object.getGroupMentions().size() == 0) {
+            return false;
+        }
+        for (GroupMentionModel mention : object.getGroupMentions().getItems()) {
+            if (mention.getGroupType() == GroupMentionModel.Type.ALL &&
+                    getPublished().getTime() >= lastJoinedDate) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isPersonallyMentioned(@NonNull Credentials user) {
         if (!(getObject() instanceof MentionableModel)) {
             return false;
@@ -317,7 +334,7 @@ public class ActivityModel extends ObjectModel {
     }
 
     private boolean isIncludedInGroupMention(@NonNull Credentials credentials, long lastJoinedDate) {
-        if (!(getObject() instanceof  MentionableModel)) {
+        if (!(getObject() instanceof MentionableModel)) {
             return false;
         }
         MentionableModel object = (MentionableModel) getObject();
@@ -333,5 +350,18 @@ public class ActivityModel extends ObjectModel {
             }
         }
         return false;
+    }
+
+    public List<Mention.Person> getMentionedPersons() {
+        List<Mention.Person> persons = new ArrayList<>();
+        if ((getObject() instanceof MentionableModel)) {
+            MentionableModel object = (MentionableModel) getObject();
+            if (object.getMentions() != null) {
+                for (PersonModel mention : object.getMentions().getItems()) {
+                    persons.add(new Mention.Person(mention.getId()));
+                }
+            }
+        }
+        return persons;
     }
 }
