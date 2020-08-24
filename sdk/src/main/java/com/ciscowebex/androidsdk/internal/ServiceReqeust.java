@@ -17,6 +17,7 @@ import okhttp3.*;
 import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.SocketException;
 import java.util.*;
 
 public class ServiceReqeust {
@@ -185,7 +186,7 @@ public class ServiceReqeust {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                if (e instanceof SSLException && !client.connectionSpecs().contains(HttpClient.TLS_SPEC)) {
+                if ((e instanceof SSLException || e instanceof SocketException) && !client.connectionSpecs().contains(HttpClient.TLS_SPEC)) {
                     async(HttpClient.newClient().connectionSpecs(Collections.singletonList(HttpClient.TLS_SPEC)).build(), request, refresh, closure);
                     return;
                 }
