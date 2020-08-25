@@ -922,8 +922,9 @@ public class CallImpl implements Call {
                         && isMediaShareDeviceUrlChanged;
 
                 if (isShareTypeChanged || isMySharingReplaced || isSharingReplacedByMine || isResourceUrlChanged) {
-                    Ln.d("CallImpl.doFloorUpdate: share type or resource url or sharing device changed, leave sharing");
+                    Ln.d("CallImpl.doFloorUpdate: share type or resource url or sharing device changed, leave and join sharing");
                     leaveSharing(old.getGrantedFloor().getBeneficiary(), old.getGrantedFloor().getGranted(), old);
+                    joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
                     if (isMySharingReplaced){
                         Ln.d("CallImpl.doFloorUpdate: my sharing replaced by other's, join sharing");
                         joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
