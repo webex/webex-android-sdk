@@ -236,7 +236,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                         ResultImpl.inMain(handler, createMessage(model, activity.getClusterId(), false));
                         return;
                     }
-                    KeyManager.shared.getConvEncryptionKey(model.getEncryptionKeyUrl(), model.getConversationId(), phone.getCredentials(), phone.getDevice(), keyResult -> {
+                    KeyManager.shared.getConvEncryptionKey(model.getConversationUrl(), model.getConversationId(), phone.getCredentials(), phone.getDevice(), keyResult -> {
                         if (keyResult.getData() != null) {
                             model.decrypt(keyResult.getData());
                         }
