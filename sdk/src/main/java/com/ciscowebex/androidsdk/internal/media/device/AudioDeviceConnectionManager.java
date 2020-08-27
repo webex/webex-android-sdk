@@ -183,25 +183,25 @@ public class AudioDeviceConnectionManager {
     }
 
     public void updateAudioVolume() {
-        int streamType;
-        if (audioManager.getMode() == AudioManager.MODE_IN_COMMUNICATION || audioManager.getMode() == AudioManager.MODE_IN_CALL) {
-            if (audioManager.isBluetoothScoOn()) {
-                streamType = STREAM_BLUETOOTH_SCO;
-            } else {
-                streamType = AudioManager.STREAM_VOICE_CALL;
-            }
-        } else {
-            streamType = AudioManager.STREAM_MUSIC;
-        }
-
-        int currentVol = audioManager.getStreamVolume(streamType);
-        int maxVol = audioManager.getStreamMaxVolume(streamType);
-        int volSetting = (65535 * currentVol) / maxVol;
-        Ln.d("updateAudioVolume: streamType=%s; set volume to=%s(%s/%s)", streamType, volSetting, currentVol, maxVol);
-        WmeSession session = mediaEngine == null ? null : mediaEngine.getSession();
-        if (session != null) {
-            session.setAudioVolume(volSetting);
-        }
+//        int streamType;
+//        if (audioManager.getMode() == AudioManager.MODE_IN_COMMUNICATION || audioManager.getMode() == AudioManager.MODE_IN_CALL) {
+//            if (audioManager.isBluetoothScoOn()) {
+//                streamType = STREAM_BLUETOOTH_SCO;
+//            } else {
+//                streamType = AudioManager.STREAM_VOICE_CALL;
+//            }
+//        } else {
+//            streamType = AudioManager.STREAM_MUSIC;
+//        }
+//
+//        int currentVol = audioManager.getStreamVolume(streamType);
+//        int maxVol = audioManager.getStreamMaxVolume(streamType);
+//        int volSetting = (65535 * currentVol) / maxVol;
+//        Ln.d("updateAudioVolume: streamType=%s; set volume to=%s(%s/%s)", streamType, volSetting, currentVol, maxVol);
+//        WmeSession session = mediaEngine == null ? null : mediaEngine.getSession();
+//        if (session != null) {
+//            session.setAudioVolume(volSetting);
+//        }
     }
 
     private boolean isBTHeadsetConnected() {
