@@ -27,6 +27,7 @@ import android.support.annotation.Nullable;
 import android.util.Pair;
 import android.util.Size;
 import android.view.View;
+
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
@@ -39,6 +40,7 @@ import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.phone.*;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.github.benoitdion.ln.Ln;
+
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.Objects;
 
@@ -53,7 +55,8 @@ public class CallImpl implements Call {
     private final boolean group;
 
     private final String correlationId;
-    private @Nullable MediaSession media;
+    private @Nullable
+    MediaSession media;
     private CallObserver observer;
     private MultiStreamObserver streamObserver;
     private CallStatus status = CallStatus.INITIATED;
@@ -114,7 +117,8 @@ public class CallImpl implements Call {
         return connectedTime;
     }
 
-    public @Nullable MediaSession getMedia() {
+    public @Nullable
+    MediaSession getMedia() {
         return media;
     }
 
@@ -268,8 +272,7 @@ public class CallImpl implements Call {
         }
         if (sending) {
             CallAnalyzerReporter.shared.reportUnmuted(this, WMEngine.Media.Video);
-        }
-        else {
+        } else {
             CallAnalyzerReporter.shared.reportMuted(this, WMEngine.Media.Video);
         }
     }
@@ -287,8 +290,7 @@ public class CallImpl implements Call {
         }
         if (sending) {
             CallAnalyzerReporter.shared.reportUnmuted(this, WMEngine.Media.Audio);
-        }
-        else {
+        } else {
             CallAnalyzerReporter.shared.reportMuted(this, WMEngine.Media.Audio);
         }
     }
@@ -925,7 +927,7 @@ public class CallImpl implements Call {
                     Ln.d("CallImpl.doFloorUpdate: share type or resource url or sharing device changed, leave and join sharing");
                     leaveSharing(old.getGrantedFloor().getBeneficiary(), old.getGrantedFloor().getGranted(), old);
                     joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
-                    if (isMySharingReplaced){
+                    if (isMySharingReplaced) {
                         Ln.d("CallImpl.doFloorUpdate: my sharing replaced by other's, join sharing");
                         joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
                     }
@@ -1080,7 +1082,7 @@ public class CallImpl implements Call {
                     } else if (self.isDeclined()) {
                         end(new CallObserver.OtherDeclined(this));
                     }
-                } else if (isRemoteDeclined() || isRemoteLeft()) {
+                } else if (isRemoteDeclined() || isRemoteLeft() || isRemoteAllDeclinedOrLeftOrIdle()) {
                     end(new CallObserver.RemoteCancel(this));
                 }
             } else if (getDirection() == Direction.OUTGOING) {
@@ -1165,9 +1167,21 @@ public class CallImpl implements Call {
         return true;
     }
 
+    boolean isRemoteAllDeclinedOrLeftOrIdle() {
+        for (CallMembershipImpl membership : memberships) {
+            if (!membership.isSelf() &&
+                    (membership.getState() != CallMembership.State.DECLINED
+                            && membership.getState() != CallMembership.State.LEFT
+                            && membership.getState() != CallMembership.State.IDLE)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     boolean isRemoteJoined() {
         if (isGroup()) {
-            return true;
+            return isRemoteContainsJoined();
         }
         for (CallMembershipImpl membership : memberships) {
             if (!membership.isSelf() && membership.getState() != CallMembership.State.JOINED) {
@@ -1175,6 +1189,15 @@ public class CallImpl implements Call {
             }
         }
         return true;
+    }
+
+    boolean isRemoteContainsJoined() {
+        for (CallMembershipImpl membership : memberships) {
+            if (!membership.isSelf() && membership.getState() == CallMembership.State.JOINED) {
+                return true;
+            }
+        }
+        return false;
     }
 
     boolean isRemoteNotified() {
@@ -1215,8 +1238,7 @@ public class CallImpl implements Call {
             };
             if (media == null || !media.isRunning()) {
                 peddingTasks.add(runnable);
-            }
-            else {
+            } else {
                 runnable.run();
             }
         });
