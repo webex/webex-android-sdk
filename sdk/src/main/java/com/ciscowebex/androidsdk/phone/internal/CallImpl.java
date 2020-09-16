@@ -1068,6 +1068,9 @@ public class CallImpl implements Call {
         if (self == null) {
             return;
         }
+        if (model.isScheduledCall()) {
+            return;
+        }
         CallStatus status = getStatus();
         if (status == CallStatus.INITIATED || status == CallStatus.RINGING || status == CallStatus.WAITING) {
             if (getDirection() == Direction.INCOMING) {

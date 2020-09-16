@@ -642,6 +642,11 @@ public class LocusModel {
         return false;
     }
 
+    public boolean isScheduledCall() {
+        LocusStateModel model = getFullState();
+        return model != null && model.getType() == LocusStateModel.Type.MEETING;
+    }
+
     public boolean isSelfInLobby() {
         LocusSelfModel self = getSelf();
         if (self == null) {
@@ -726,7 +731,8 @@ public class LocusModel {
         return m.getSdp();
     }
 
-    public @Nullable String getMediaShareUrl() {
+    public @Nullable
+    String getMediaShareUrl() {
         if (getMediaShares() != null) {
             for (MediaShareModel mediaShare : getMediaShares()) {
                 if (MediaShareModel.SHARE_CONTENT_TYPE.equals(mediaShare.getName())) {

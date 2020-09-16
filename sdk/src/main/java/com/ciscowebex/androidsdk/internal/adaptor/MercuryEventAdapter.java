@@ -26,11 +26,12 @@ import com.ciscowebex.androidsdk.internal.mercury.*;
 import com.ciscowebex.androidsdk.utils.Json;
 import com.github.benoitdion.ln.Ln;
 import com.google.gson.*;
+
 import me.helloworld.utils.Checker;
 
 import java.lang.reflect.Type;
 
-public class MercuryEventAdapter implements JsonDeserializer<MercuryEvent>  {
+public class MercuryEventAdapter implements JsonDeserializer<MercuryEvent> {
 
     public static class MercuryEventTypeAdapter implements JsonDeserializer<MercuryEvent.Type>, JsonSerializer<MercuryEvent.Type> {
 
@@ -62,24 +63,24 @@ public class MercuryEventAdapter implements JsonDeserializer<MercuryEvent>  {
         MercuryEvent event = null;
         if (eventType.equals(MercuryEvent.Type.CONVERSATION_ACTIVITY.phrase())) {
             event = jsonDeserializationContext.deserialize(jsonElement, MercuryActivityEvent.class);
-        }
-        else if (eventType.equals(MercuryEvent.Type.KMS_MESSAGE.phrase())) {
+        } else if (eventType.equals(MercuryEvent.Type.KMS_MESSAGE.phrase())) {
             event = jsonDeserializationContext.deserialize(jsonElement, MercuryKmsMessageEvent.class);
-        }
-        else if (eventType.equals(MercuryEvent.Type.KEY_PUSH.phrase())) {
+        } else if (eventType.equals(MercuryEvent.Type.KEY_PUSH.phrase())) {
             jsonElement = Json.extractJsonObjectFromString(jsonElement);
             event = jsonDeserializationContext.deserialize(jsonElement, MercuryKmsPushEvent.class);
-        }
-        else if (eventType.equals(MercuryEvent.Type.KMS_ACK.phrase())) {
+        } else if (eventType.equals(MercuryEvent.Type.KMS_ACK.phrase())) {
             event = jsonDeserializationContext.deserialize(jsonElement, MercuryKmsAckEvent.class);
-        }
-        else if (eventType.startsWith("locus")) {
+        } else if (eventType.startsWith("locus")) {
             event = jsonDeserializationContext.deserialize(jsonElement, MercuryLocusEvent.class);
-        }
-        else if (eventType.equals(MercuryEvent.Type.START_TYPING.phrase()) || eventType.equals(MercuryEvent.Type.STOP_TYPING.phrase())) {
+        } else if (eventType.equals(MercuryEvent.Type.START_TYPING.phrase()) || eventType.equals(MercuryEvent.Type.STOP_TYPING.phrase())) {
             event = jsonDeserializationContext.deserialize(jsonElement, MercuryTypingEvent.class);
-        }
-        else {
+        } else if (eventType.equals(MercuryEvent.Type.CALENDAR_MEETING_CREATE.phrase())
+                || eventType.equals(MercuryEvent.Type.CALENDAR_MEETING_CREATE_MINIMAL.phrase())
+                || eventType.equals(MercuryEvent.Type.CALENDAR_MEETING_UPDATE.phrase())
+                || eventType.equals(MercuryEvent.Type.CALENDAR_MEETING_UPDATE_MINIMAL.phrase())
+                || eventType.equals(MercuryEvent.Type.CALENDAR_MEETING_DELETE.phrase())) {
+            event = jsonDeserializationContext.deserialize(jsonElement, MercuryMeetingEvent.class);
+        } else {
             Ln.d("Unsupport mercury event: %s", eventType);
         }
         return event;

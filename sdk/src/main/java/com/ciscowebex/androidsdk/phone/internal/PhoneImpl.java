@@ -35,20 +35,50 @@ import com.cisco.wme.appshare.ScreenShareContext;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.*;
+import com.ciscowebex.androidsdk.internal.AcquirePermissionActivity;
+import com.ciscowebex.androidsdk.internal.ActivityListener;
+import com.ciscowebex.androidsdk.internal.Credentials;
+import com.ciscowebex.androidsdk.internal.Device;
+import com.ciscowebex.androidsdk.internal.MetricsService;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.internal.crypto.KeyManager;
-import com.ciscowebex.androidsdk.internal.mercury.*;
-import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
-import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.media.MediaCapability;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
-import com.ciscowebex.androidsdk.internal.model.*;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryActivityEvent;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryEvent;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryKmsMessageEvent;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryLocusEvent;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryMeetingEvent;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryService;
+import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.CalendarMeeting;
+import com.ciscowebex.androidsdk.internal.model.FloorModel;
+import com.ciscowebex.androidsdk.internal.model.KmsMessageModel;
+import com.ciscowebex.androidsdk.internal.model.LocusModel;
+import com.ciscowebex.androidsdk.internal.model.LocusScheduledMeetingModel;
+import com.ciscowebex.androidsdk.internal.model.LocusSequenceModel;
+import com.ciscowebex.androidsdk.internal.model.MediaEngineReachabilityModel;
+import com.ciscowebex.androidsdk.internal.model.MediaInfoModel;
+import com.ciscowebex.androidsdk.internal.model.MediaShareModel;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.reachability.BackgroundChecker;
-import com.ciscowebex.androidsdk.phone.*;
+import com.ciscowebex.androidsdk.phone.AdvancedSetting;
+import com.ciscowebex.androidsdk.phone.Call;
+import com.ciscowebex.androidsdk.phone.CallMembership;
+import com.ciscowebex.androidsdk.phone.CallObserver;
+import com.ciscowebex.androidsdk.phone.MediaOption;
+import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Utils;
 import com.github.benoitdion.ln.Ln;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercuryService.MercuryListener, BackgroundChecker.BackgroundListener {
 
@@ -59,6 +89,10 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     private FacingMode facingMode = FacingMode.USER;
 
     private IncomingCallListener incomingCallListener;
+
+    private CalendarMeetingListener calendarMeetingListener;
+
+    private ScheduledCallListener scheduledCallListener;
 
     private final Context context;
 
@@ -231,6 +265,11 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             if (model != null) {
                 KeyManager.shared.processKmsMessage(model);
             }
+        } else if (event instanceof MercuryMeetingEvent) {
+            CalendarMeeting calendarMeeting = ((MercuryMeetingEvent) event).getCalendarMeeting();
+            if (calendarMeeting != null) {
+                doCalendarMeetingEvent(calendarMeeting);
+            }
         }
     }
 
@@ -383,7 +422,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                             }
                             doLocusResponse(new LocusResponse.Call(device, correlationId, session, callResult.getData(), outgoing.getCallback()), Queue.serial);
                         });
-                    } else if (target instanceof CallService.JoinableTarget){
+                    } else if (target instanceof CallService.JoinableTarget) {
                         service.getOrCreatePermanentLocus(((CallService.JoinableTarget) target).getConversation(), device, convResult -> {
                             String url = convResult.getData();
                             if (url == null) {
@@ -401,8 +440,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 doLocusResponse(new LocusResponse.Call(device, correlationId, session, joinResult.getData(), outgoing.getCallback()), Queue.serial);
                             });
                         });
-                    }
-                    else {
+                    } else {
                         Ln.e("Cannot find dial target: " + outgoing.getTarget());
                         Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error("Cannot find dial target: " + outgoing.getTarget())));
                         Queue.serial.yield();
@@ -491,6 +529,26 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             }
         });
 
+    }
+
+    @Override
+    public CalendarMeetingListener getCalendarMeetingListener() {
+        return calendarMeetingListener;
+    }
+
+    @Override
+    public void setCalendarMeetingListener(CalendarMeetingListener listener) {
+        this.calendarMeetingListener = listener;
+    }
+
+    @Override
+    public ScheduledCallListener getScheduledCallListener() {
+        return scheduledCallListener;
+    }
+
+    @Override
+    public void setScheduledCallListener(ScheduledCallListener listener) {
+        this.scheduledCallListener = listener;
     }
 
     @Override
@@ -796,16 +854,14 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                         String message = result.getError().getErrorMessage();
                         if (message != null && message.startsWith("409/Conflict/")) {
                             newError = new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, message);
-                        }
-                        else if (message != null && message.contains("net")) {
-                            newError =  new WebexError(WebexError.ErrorCode.NETWORK_ERROR, message);
+                        } else if (message != null && message.contains("net")) {
+                            newError = new WebexError(WebexError.ErrorCode.NETWORK_ERROR, message);
                         }
                         if (newError == null) {
                             Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
                             Queue.serial.yield();
                             return;
-                        }
-                        else {
+                        } else {
                             call.end(new CallObserver.CallErrorEvent(call, newError));
                         }
                     }
@@ -1064,6 +1120,15 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         }
     }
 
+    private void doCalendarMeetingEvent(CalendarMeeting calendarMeeting) {
+        Queue.main.run(() -> {
+            CalendarMeetingListener listener = getCalendarMeetingListener();
+            if (listener != null) {
+                listener.onCalendarMeeting(calendarMeeting);
+            }
+        });
+    }
+
     private void doLocusEvent(LocusModel model) {
         if (model == null) {
             Ln.d("No CallModel");
@@ -1089,6 +1154,16 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                             listener.onIncomingCall(incoming);
                         }
                     });
+                } else if (device != null && model.isScheduledCall() && model.isValid()) {
+                    CallImpl scheduled = new CallImpl(UUID.randomUUID().toString(), model, this, device, null, Call.Direction.INCOMING, !model.isOneOnOne());
+                    addCall(scheduled);
+                    Ln.d("Receive scheduled call: " + scheduled.getUrl());
+                    Queue.main.run(() -> {
+                        ScheduledCallListener listener = getScheduledCallListener();
+                        if (listener != null) {
+                            listener.onScheduledCall(new ScheduledCallListener.ScheduledCallReceived(scheduled, model));
+                        }
+                    });
                 } else {
                     Ln.d("Receive incoming call with invalid model");
                 }
@@ -1096,6 +1171,18 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 return;
             }
             call.update(model);
+            if (model.isScheduledCall()) {
+                Queue.main.run(() -> {
+                    ScheduledCallListener listener = getScheduledCallListener();
+                    if (listener != null) {
+                        if (model.getMeeting().isRemoved()) {
+                            listener.onScheduledCall(new ScheduledCallListener.ScheduledCallRemoved(call, model));
+                        } else {
+                            listener.onScheduledCall(new ScheduledCallListener.ScheduledCallUpdated(call, model));
+                        }
+                    }
+                });
+            }
             Queue.serial.yield();
         });
 

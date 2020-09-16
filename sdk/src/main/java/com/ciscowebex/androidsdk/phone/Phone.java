@@ -27,7 +27,12 @@ import android.support.annotation.NonNull;
 import android.view.View;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.internal.model.CalendarMeeting;
+import com.ciscowebex.androidsdk.internal.model.LocusModel;
+import com.ciscowebex.androidsdk.internal.model.LocusScheduledMeetingModel;
+import com.ciscowebex.androidsdk.utils.WebexId;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -120,6 +125,85 @@ public interface Phone {
             return id;
         }
     }
+
+    interface CalendarMeetingListener {
+        void onCalendarMeeting(CalendarMeeting calendarMeeting);
+    }
+
+    CalendarMeetingListener getCalendarMeetingListener();
+
+    void setCalendarMeetingListener(CalendarMeetingListener listener);
+
+    interface ScheduledCallListener {
+        class ScheduledCallEvent extends CallObserver.AbstractCallEvent {
+            private LocusModel model;
+
+            protected ScheduledCallEvent(Call call, LocusModel model) {
+                super(call);
+                this.model = model;
+            }
+
+            public String getHostId() {
+                return new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, model.getHost().getId()).getBase64Id();
+            }
+
+            public String getHostName() {
+                return model.getHost().getName();
+            }
+
+            public String getScheduledId() {
+                return model.getMeeting().getMeetingId();
+            }
+
+            public Date getStartTime() {
+                return model.getMeeting().getStartTime();
+            }
+
+            public int getDurationMinutes() {
+                return model.getMeeting().getDurationMinutes();
+            }
+
+            public boolean isHostJoined(){return model.isHostJoined();}
+
+            public int getJoinedAndInLobbyParticipantCount(){
+                return model.getJoinedAndInLobbyParticipantCount(); }
+        }
+
+        class ScheduledCallReceived extends ScheduledCallEvent {
+
+            public ScheduledCallReceived(Call call, LocusModel model) {
+                super(call, model);
+            }
+
+            public Call join(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
+                getCall().answer(option, callback);
+                return getCall();
+            }
+        }
+
+        class ScheduledCallUpdated extends ScheduledCallEvent {
+            public ScheduledCallUpdated(Call call, LocusModel model) {
+                super(call, model);
+            }
+
+            public Call join(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
+                getCall().answer(option, callback);
+                return getCall();
+            }
+        }
+
+        class ScheduledCallRemoved extends ScheduledCallEvent {
+            public ScheduledCallRemoved(Call call, LocusModel model) {
+                super(call, model);
+            }
+        }
+
+        void onScheduledCall(ScheduledCallEvent event);
+    }
+
+    ScheduledCallListener getScheduledCallListener();
+
+    void setScheduledCallListener(ScheduledCallListener listener);
 
     /**
      * The interface for a listener for incoming call
