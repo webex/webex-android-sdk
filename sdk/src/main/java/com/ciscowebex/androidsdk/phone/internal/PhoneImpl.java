@@ -90,8 +90,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     private IncomingCallListener incomingCallListener;
 
-    private CalendarMeetingListener calendarMeetingListener;
-
     private ScheduledCallListener scheduledCallListener;
 
     private final Context context;
@@ -529,16 +527,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             }
         });
 
-    }
-
-    @Override
-    public CalendarMeetingListener getCalendarMeetingListener() {
-        return calendarMeetingListener;
-    }
-
-    @Override
-    public void setCalendarMeetingListener(CalendarMeetingListener listener) {
-        this.calendarMeetingListener = listener;
     }
 
     @Override
@@ -1121,12 +1109,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     private void doCalendarMeetingEvent(CalendarMeeting calendarMeeting) {
-        Queue.main.run(() -> {
-            CalendarMeetingListener listener = getCalendarMeetingListener();
-            if (listener != null) {
-                listener.onCalendarMeeting(calendarMeeting);
-            }
-        });
     }
 
     private void doLocusEvent(LocusModel model) {
@@ -1177,6 +1159,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     if (listener != null) {
                         if (model.getMeeting().isRemoved()) {
                             listener.onScheduledCall(new ScheduledCallListener.ScheduledCallRemoved(call, model));
+                            calls.remove(call);
                         } else {
                             listener.onScheduledCall(new ScheduledCallListener.ScheduledCallUpdated(call, model));
                         }

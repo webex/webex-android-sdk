@@ -30,22 +30,41 @@ import android.view.View;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
+import com.ciscowebex.androidsdk.internal.Device;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
 import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
+import com.ciscowebex.androidsdk.internal.model.FloorModel;
+import com.ciscowebex.androidsdk.internal.model.LocusModel;
+import com.ciscowebex.androidsdk.internal.model.LocusParticipantModel;
+import com.ciscowebex.androidsdk.internal.model.LocusSelfModel;
+import com.ciscowebex.androidsdk.internal.model.LocusSequenceModel;
+import com.ciscowebex.androidsdk.internal.model.MediaConnectionModel;
+import com.ciscowebex.androidsdk.internal.model.MediaShareModel;
 import com.ciscowebex.androidsdk.internal.queue.NamedRunnable;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.queue.Scheduler;
-import com.ciscowebex.androidsdk.internal.Device;
-import com.ciscowebex.androidsdk.internal.model.*;
-import com.ciscowebex.androidsdk.phone.*;
+import com.ciscowebex.androidsdk.phone.AuxStream;
+import com.ciscowebex.androidsdk.phone.Call;
+import com.ciscowebex.androidsdk.phone.CallMembership;
+import com.ciscowebex.androidsdk.phone.CallObserver;
+import com.ciscowebex.androidsdk.phone.MediaOption;
+import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
+import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.github.benoitdion.ln.Ln;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.Objects;
-
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class CallImpl implements Call {
 
@@ -1085,8 +1104,16 @@ public class CallImpl implements Call {
                     } else if (self.isDeclined()) {
                         end(new CallObserver.OtherDeclined(this));
                     }
-                } else if (isRemoteDeclined() || isRemoteLeft() || isRemoteAllDeclinedOrLeftOrIdle()) {
-                    end(new CallObserver.RemoteCancel(this));
+                } else {
+                    if (isGroup()) {
+                        if (isAllDeclinedOrLeftOrIdle()) {
+                            end(new CallObserver.RemoteCancel(this));
+                        }
+                    } else {
+                        if (isRemoteDeclined() || isRemoteLeft()) {
+                            end(new CallObserver.RemoteCancel(this));
+                        }
+                    }
                 }
             } else if (getDirection() == Direction.OUTGOING) {
                 if (self.isLefted(device.getDeviceUrl())) {
@@ -1170,12 +1197,11 @@ public class CallImpl implements Call {
         return true;
     }
 
-    boolean isRemoteAllDeclinedOrLeftOrIdle() {
+    boolean isAllDeclinedOrLeftOrIdle() {
         for (CallMembershipImpl membership : memberships) {
-            if (!membership.isSelf() &&
-                    (membership.getState() != CallMembership.State.DECLINED
-                            && membership.getState() != CallMembership.State.LEFT
-                            && membership.getState() != CallMembership.State.IDLE)) {
+            if ((membership.getState() != CallMembership.State.DECLINED
+                    && membership.getState() != CallMembership.State.LEFT
+                    && membership.getState() != CallMembership.State.IDLE)) {
                 return false;
             }
         }

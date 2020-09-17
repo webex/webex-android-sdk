@@ -27,9 +27,9 @@ import android.support.annotation.NonNull;
 import android.view.View;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.internal.model.CalendarMeeting;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.internal.model.LocusModel;
-import com.ciscowebex.androidsdk.internal.model.LocusScheduledMeetingModel;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.utils.WebexId;
 
 import java.util.Date;
@@ -126,83 +126,187 @@ public interface Phone {
         }
     }
 
-    interface CalendarMeetingListener {
-        void onCalendarMeeting(CalendarMeeting calendarMeeting);
-    }
-
-    CalendarMeetingListener getCalendarMeetingListener();
-
-    void setCalendarMeetingListener(CalendarMeetingListener listener);
-
+    /**
+     * The interface for a listener for scheduled call
+     *
+     * @since 2.6.0
+     */
     interface ScheduledCallListener {
-        class ScheduledCallEvent extends CallObserver.AbstractCallEvent {
+        abstract class ScheduledCallEvent {
+            private Call call;
             private LocusModel model;
 
             protected ScheduledCallEvent(Call call, LocusModel model) {
-                super(call);
+                this.call = call;
                 this.model = model;
             }
 
+            protected Call getCall() {
+                return call;
+            }
+
+            /**
+             * Get the host id of this scheduled call.
+             *
+             * @return the host id of this scheduled call.
+             * @since 2.6.0
+             */
             public String getHostId() {
                 return new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, model.getHost().getId()).getBase64Id();
             }
 
+            /**
+             * Get the host name of this scheduled call.
+             *
+             * @return the host name of this scheduled call.
+             * @since 2.6.0
+             */
             public String getHostName() {
                 return model.getHost().getName();
             }
 
-            public String getScheduledId() {
+            /**
+             * Get the id of this scheduled call.
+             *
+             * @return the id of this scheduled call.
+             * @since 2.6.0
+             */
+            public String getScheduledCallId() {
                 return model.getMeeting().getMeetingId();
             }
 
+            /**
+             * Get the start time of this scheduled call.
+             *
+             * @return the start time of this scheduled call.
+             * @since 2.6.0
+             */
             public Date getStartTime() {
                 return model.getMeeting().getStartTime();
             }
 
+            /**
+             * Get the duration of this scheduled call.
+             *
+             * @return the duration of this scheduled call.
+             * @since 2.6.0
+             */
             public int getDurationMinutes() {
                 return model.getMeeting().getDurationMinutes();
             }
 
-            public boolean isHostJoined(){return model.isHostJoined();}
+            /**
+             * Get whether the host has joined scheduled call.
+             *
+             * @return whether the host has joined scheduled call.
+             * @since 2.6.0
+             */
+            public boolean isHostJoined() {
+                return model.isHostJoined();
+            }
 
-            public int getJoinedAndInLobbyParticipantCount(){
-                return model.getJoinedAndInLobbyParticipantCount(); }
+            /**
+             * Get the count of participants joined and in lobby.
+             *
+             * @return the count of participants joined and in lobby.
+             * @since 2.6.0
+             */
+            public int getJoinedAndInLobbyParticipantCount() {
+                return model.getJoinedAndInLobbyParticipantCount();
+            }
         }
 
+        /**
+         * Event when receive a scheduled call
+         *
+         * @since 2.6.0
+         */
         class ScheduledCallReceived extends ScheduledCallEvent {
 
             public ScheduledCallReceived(Call call, LocusModel model) {
                 super(call, model);
             }
 
-            public Call join(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
-                getCall().answer(option, callback);
-                return getCall();
+            /**
+             * Join the scheduled call, will get a {@link Call} object when join success.
+             *
+             * @param option   {@link MediaOption} of the call.
+             * @param callback a {@link CompletionHandler} to get join result.
+             * @since 2.6.0
+             */
+            public void join(@NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
+                getCall().answer(option, result -> {
+                    Queue.main.run(() -> {
+                        if (result.getError() != null || result.getData() == null)
+                            callback.onComplete(ResultImpl.error(result));
+                        else
+                            callback.onComplete((ResultImpl.success(getCall())));
+                    });
+                });
+
             }
         }
 
+        /**
+         * Event when the scheduled call has updated
+         *
+         * @since 2.6.0
+         */
         class ScheduledCallUpdated extends ScheduledCallEvent {
             public ScheduledCallUpdated(Call call, LocusModel model) {
                 super(call, model);
             }
 
-            public Call join(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
-                getCall().answer(option, callback);
-                return getCall();
+            /**
+             * Join the scheduled call, will get a {@link Call} object when join success.
+             *
+             * @param option   {@link MediaOption} of the call.
+             * @param callback a {@link CompletionHandler} to get join result.
+             * @since 2.6.0
+             */
+            public void join(@NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
+                getCall().answer(option, result -> {
+                    Queue.main.run(() -> {
+                        if (result.getError() != null || result.getData() == null)
+                            callback.onComplete(ResultImpl.error(result.getError()));
+                        else
+                            callback.onComplete((ResultImpl.success(getCall())));
+                    });
+                });
             }
         }
 
+        /**
+         * Event when the scheduled call has removed
+         *
+         * @since 2.6.0
+         */
         class ScheduledCallRemoved extends ScheduledCallEvent {
             public ScheduledCallRemoved(Call call, LocusModel model) {
                 super(call, model);
             }
         }
 
+        /**
+         * Callback when receive scheduled call event.
+         *
+         * @param event incoming call
+         */
         void onScheduledCall(ScheduledCallEvent event);
     }
 
+    /**
+     * The listener for scheduled call
+     *
+     * @since 2.6.0
+     */
     ScheduledCallListener getScheduledCallListener();
 
+    /**
+     * Set the listener to listen to the scheduled call event to this Phone.
+     *
+     * @since 2.6.0
+     */
     void setScheduledCallListener(ScheduledCallListener listener);
 
     /**
