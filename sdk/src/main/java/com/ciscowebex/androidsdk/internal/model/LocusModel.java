@@ -33,11 +33,15 @@ import com.ciscowebex.androidsdk.utils.DateUtils;
 import com.ciscowebex.androidsdk.utils.Json;
 import com.google.gson.annotations.SerializedName;
 
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.Objects;
-
-import java.text.DateFormat;
-import java.util.*;
 
 public class LocusModel {
 
@@ -105,6 +109,12 @@ public class LocusModel {
             if (!part.isRemoved())
                 filtered.add(part);
         }
+        return filtered;
+    }
+
+    public List<LocusParticipantModel> getAllParticipants() {
+        ArrayList<LocusParticipantModel> filtered = new ArrayList<>(participants.size());
+        filtered.addAll(participants);
         return filtered;
     }
 
@@ -726,7 +736,8 @@ public class LocusModel {
         return m.getSdp();
     }
 
-    public @Nullable String getMediaShareUrl() {
+    public @Nullable
+    String getMediaShareUrl() {
         if (getMediaShares() != null) {
             for (MediaShareModel mediaShare : getMediaShares()) {
                 if (MediaShareModel.SHARE_CONTENT_TYPE.equals(mediaShare.getName())) {

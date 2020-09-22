@@ -944,7 +944,7 @@ public class CallImpl implements Call {
     void doLocusModel(LocusModel model) {
         Ln.d("doLocusModel: " + model.getCallUrl());
         this.model = model;
-        List<LocusParticipantModel> participants = Objects.defaultIfNull(model.getParticipants(), Collections.emptyList());
+        List<LocusParticipantModel> participants = Objects.defaultIfNull(model.getAllParticipants(), Collections.emptyList());
         List<CallMembershipImpl> oldMemberships = this.memberships;
         List<CallMembershipImpl> newMemberships = new ArrayList<>();
         List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
