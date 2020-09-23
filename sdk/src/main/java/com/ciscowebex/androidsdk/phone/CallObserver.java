@@ -83,6 +83,14 @@ public interface CallObserver {
     void onCallMembershipChanged(CallMembershipChangedEvent event);
 
     /**
+     * Callback when the `Call` is scheduled call and the schedule has been changed.
+     *
+     * @param call Call
+     * @since 2.6.0
+     */
+    void onScheduleChanged(Call call);
+
+    /**
      * Base class for the event of a call
      *
      * @since 0.1

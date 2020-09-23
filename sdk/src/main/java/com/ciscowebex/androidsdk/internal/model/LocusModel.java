@@ -64,6 +64,7 @@ public class LocusModel {
     private String conversationUrl;
     private LocusDescriptionModel info;
     private LocusScheduledMeetingModel meeting;
+    private List<LocusScheduledMeetingModel> meetings;
     private Uri aclUrl;
     private List<MediaConnectionModel> mediaConnections;
 
@@ -96,7 +97,7 @@ public class LocusModel {
     }
 
     public List<LocusParticipantModel> getRawParticipants() {
-        return participants;
+        return Collections.unmodifiableList(participants);
     }
 
     public List<LocusParticipantModel> getParticipants() {
@@ -141,10 +142,8 @@ public class LocusModel {
         this.mediaConnections = mediaConnections;
     }
 
-    @Nullable
-    @Deprecated
     public String getConversationUrl() {
-        return conversationUrl;
+        return (conversationUrl == null && info != null) ? info.getConversationUrl() : conversationUrl;
     }
 
     public LocusDescriptionModel getInfo() {
@@ -153,6 +152,10 @@ public class LocusModel {
 
     public LocusScheduledMeetingModel getMeeting() {
         return meeting;
+    }
+
+    public List<LocusScheduledMeetingModel> getMeetings() {
+        return meetings;
     }
 
     /**
@@ -627,19 +630,31 @@ public class LocusModel {
 
     public boolean isOneOnOne() {
         LocusStateModel model = getFullState();
-        return model != null && model.getType() != LocusStateModel.Type.MEETING;
+        return (model != null && model.getType() != LocusStateModel.Type.MEETING) || isOneOnOneMeeting();
+    }
+
+    public boolean isOneOnOneMeeting() {
+        LocusStateModel model = getFullState();
+        if (model != null && model.getType() == LocusStateModel.Type.MEETING) {
+            LocusDescriptionModel info = getInfo();
+            return info != null && info.getLocusTags().contains(LocusTag.ONE_ON_ONE_MEETING);
+        }
+        return false;
     }
 
     public boolean isIncomingCall() {
-        LocusStateModel model = getFullState();
-        if (model != null && model.getState() == LocusStateModel.State.ACTIVE) {
-            LocusSelfModel self = getSelf();
-            if (self != null) {
-                AlertTypeModel alert = self.getAlertType();
-                return alert != null && AlertTypeModel.ALERT_FULL.equalsIgnoreCase(alert.getAction());
-            }
+        LocusStateModel full = getFullState();
+        if (full == null) {
+            return false;
         }
-        return false;
+        AlertTypeModel alert = (getSelf() == null) ? null : getSelf().getAlertType();
+        return (full.getState() == LocusStateModel.State.ACTIVE && alert != null && AlertTypeModel.ALERT_FULL.equalsIgnoreCase(alert.getAction()))
+                || ((full.getState() == LocusStateModel.State.ACTIVE || full.getState() == LocusStateModel.State.INITIALIZING) && getMeeting() != null);
+    }
+
+    public boolean isInactive() {
+        LocusStateModel model = getFullState();
+        return  model != null && model.getState() == LocusStateModel.State.INACTIVE;
     }
 
     public boolean isSelfInLobby() {
@@ -805,7 +820,12 @@ public class LocusModel {
             participants.addAll(this.participants);
         }
         if (!Checker.isEmpty(model.participants)) {
-            participants.addAll(model.participants);
+            for (LocusParticipantModel participant : model.participants) {
+                participants.remove(participant);
+                if (!participant.isRemoved()) {
+                    participants.add(participant);
+                }
+            }
         }
         ret.participants = new ArrayList<>(participants);
         return ret;

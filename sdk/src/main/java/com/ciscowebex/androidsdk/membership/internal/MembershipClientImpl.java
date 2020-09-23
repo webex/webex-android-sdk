@@ -32,7 +32,6 @@ import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
-import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 import com.ciscowebex.androidsdk.internal.model.ConversationModel;
 import com.ciscowebex.androidsdk.internal.model.PersonModel;
 import com.ciscowebex.androidsdk.membership.Membership;
@@ -46,10 +45,9 @@ import com.ciscowebex.androidsdk.internal.model.ItemsModel;
 import com.google.gson.reflect.TypeToken;
 import me.helloworld.utils.collection.Maps;
 
-public class MembershipClientImpl implements MembershipClient, ActivityListener {
+public class MembershipClientImpl implements MembershipClient {
 
     private PhoneImpl phone;
-    private MembershipObserver observer;
 
     public MembershipClientImpl(PhoneImpl phone) {
         this.phone = phone;
@@ -57,34 +55,7 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void setMembershipObserver(MembershipObserver observer) {
-        this.observer = observer;
-    }
-
-    public void processActivity(@NonNull ActivityModel activity) {
-        if (observer == null) {
-            return;
-        }
-        final MembershipObserver.MembershipEvent event;
-        if (activity.isAddParticipant()) {
-            event = new InternalMembership.InternalMembershipCreated(new InternalMembership(activity, phone.getDevice().getClusterId(activity.getUrl())), activity);
-        }
-        else if (activity.isLeaveActivity()) {
-            event = new InternalMembership.InternalMembershipDeleted(new InternalMembership(activity, phone.getDevice().getClusterId(activity.getUrl())), activity);
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.assignModerator || activity.getVerb() == ActivityModel.Verb.unassignModerator) {
-            event = new InternalMembership.InternalMembershipUpdated(new InternalMembership(activity, phone.getDevice().getClusterId(activity.getUrl())), activity);
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.acknowledge) {
-            String clusterId = phone.getDevice().getClusterId(activity.getUrl());
-            event = new InternalMembership.InternalMembershipMessageSeen(new InternalMembership(activity, clusterId), activity,
-                    new WebexId(WebexId.Type.MESSAGE, clusterId, activity.getObject().getId()).getBase64Id());
-        }
-        else {
-            event = null;
-        }
-        if (event != null) {
-            Queue.main.run(() -> observer.onEvent(event));
-        }
+        phone.setMembershipObserver(observer);
     }
 
     @Override

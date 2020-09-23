@@ -22,9 +22,6 @@
 
 package com.ciscowebex.androidsdk.internal.model;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class DeviceModel {
 
     private String url;

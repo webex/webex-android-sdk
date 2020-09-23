@@ -33,28 +33,28 @@ import com.ciscowebex.androidsdk.utils.MimeUtils;
 
 import java.util.List;
 
-class InternalMessage extends Message {
+public class InternalMessage extends Message {
 
-    static class InternalMessageArrived extends MessageObserver.MessageArrived {
-        InternalMessageArrived(Message message, ActivityModel activity) {
+    public static class InternalMessageArrived extends MessageObserver.MessageArrived {
+        public InternalMessageArrived(Message message, ActivityModel activity) {
             super(message, activity);
         }
     }
 
-    static class InternalMessageReceived extends MessageObserver.MessageReceived {
-        InternalMessageReceived(Message message, ActivityModel activity) {
+    public static class InternalMessageReceived extends MessageObserver.MessageReceived {
+        public InternalMessageReceived(Message message, ActivityModel activity) {
             super(message, activity);
         }
     }
 
-    static class InternalMessageDeleted extends MessageObserver.MessageDeleted {
-        InternalMessageDeleted(String message, ActivityModel activity) {
+    public static class InternalMessageDeleted extends MessageObserver.MessageDeleted {
+        public InternalMessageDeleted(String message, ActivityModel activity) {
             super(message, activity);
         }
     }
 
-    static class InternalMessageFileThumbnailsUpdated extends MessageObserver.MessageFileThumbnailsUpdated{
-        InternalMessageFileThumbnailsUpdated(String message, ActivityModel activity, List<RemoteFile> files){
+    public static class InternalMessageFileThumbnailsUpdated extends MessageObserver.MessageFileThumbnailsUpdated{
+        public InternalMessageFileThumbnailsUpdated(String message, ActivityModel activity, List<RemoteFile> files){
             super(message, activity, files);
         }
     }

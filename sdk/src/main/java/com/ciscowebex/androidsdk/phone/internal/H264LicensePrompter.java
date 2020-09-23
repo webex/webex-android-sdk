@@ -28,54 +28,44 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
+import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.internal.Settings;
+import com.ciscowebex.androidsdk.phone.Phone;
 import com.github.benoitdion.ln.Ln;
 
 public class H264LicensePrompter {
 
-    private static final String STR_ENABLE_HINT = "To enable video calls, activate a free video license (H.264 AVC) from Cisco. By selecting 'Activate', you accept the Cisco End User License Agreement and Notices.";
-    private static final String STR_LICENSE_URL= "http://www.openh264.org/BINARY_LICENSE.txt";
+    public static final String LICENSE_TEXT = "To enable video calls, activate a free video license (H.264 AVC) from Cisco. By selecting 'Activate', you accept the Cisco End User License Agreement and Notices.";
 
-    public interface CompletionHandler<T> {
-        void onComplete(T result);
-    }
+    public static final String LICENSE_URL = "http://www.openh264.org/BINARY_LICENSE.txt";
 
     H264LicensePrompter() {
     }
 
-    String getLicense() {
-        return STR_ENABLE_HINT;
-    }
-
-    String getLicenseURL() {
-        return STR_LICENSE_URL;
-    }
-
-    void check(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Boolean> handler) {
+    void check(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Phone.H264LicenseAction> handler) {
         if (isVideoLicenseActivated() || isVideoLicenseActivationDisabled()) {
-            handler.onComplete(true);
+            handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.ACCEPT));
         } else {
             Context context = builder.getContext();
             builder.setTitle("Activate License");
-            builder.setMessage(getLicense());
+            builder.setMessage(LICENSE_TEXT);
             builder.setPositiveButton("Activate", (dialog, which) -> {
                 Ln.i("Video license has been activated");
                 setVideoLicenseActivated(true);
-                handler.onComplete(true);
+                handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.ACCEPT));
             });
 
             builder.setNegativeButton("Cancel", (dialog, which) -> {
                 Ln.i("Video license has not been activated");
                 dialog.cancel();
-                handler.onComplete(false);
+                handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.DECLINE));
             });
 
             builder.setNeutralButton("View License", (dialog, which) -> {
                 Ln.i("Video license opened for viewing");
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getLicenseURL()));
-                context.startActivity(browserIntent);
                 dialog.cancel();
-                handler.onComplete(false);
+                handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.VIEW_LICENSE));
             });
             AlertDialog diag = builder.create();
             diag.show();

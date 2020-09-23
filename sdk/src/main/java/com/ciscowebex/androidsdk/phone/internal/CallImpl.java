@@ -38,6 +38,7 @@ import com.ciscowebex.androidsdk.internal.Device;
 import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.phone.*;
 import com.ciscowebex.androidsdk.utils.Lists;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.Objects;
@@ -63,6 +64,7 @@ public class CallImpl implements Call {
     private List<AuxStreamImpl> streams = new ArrayList<>();
     private CallMembershipImpl activeSpeaker;
     private int availableStreamCount = 0;
+    private Set<CallSchedule> schedules = null;
 
     private boolean sendingVideo = true;
     private boolean sendingAudio = true;
@@ -185,6 +187,12 @@ public class CallImpl implements Call {
     }
 
     @Override
+    public String getSpaceId() {
+        WebexId space = (this.model == null) ? null : WebexId.from(this.model.getConversationUrl(), this.device);
+        return space == null ? null : space.getBase64Id();
+    }
+
+    @Override
     public List<CallMembership> getMemberships() {
         synchronized (this) {
             return Collections.unmodifiableList(memberships);
@@ -214,10 +222,22 @@ public class CallImpl implements Call {
     }
 
     @Override
+    public Set<CallSchedule> getSchedules() {
+        synchronized (this) {
+            return schedules == null ? null :  Collections.unmodifiableSet(schedules);
+        }
+    }
+
+    @Override
     public void setRemoteVideoRenderMode(VideoRenderMode mode) {
         if (media != null) {
             media.setRemoteVideoRenderMode(mode);
         }
+    }
+
+    @Override
+    public void setVideoLayout(MediaOption.VideoLayout layout) {
+        this.phone.layout(this, layout);
     }
 
     @Override
@@ -922,8 +942,9 @@ public class CallImpl implements Call {
                         && isMediaShareDeviceUrlChanged;
 
                 if (isShareTypeChanged || isMySharingReplaced || isSharingReplacedByMine || isResourceUrlChanged) {
-                    Ln.d("CallImpl.doFloorUpdate: share type or resource url or sharing device changed, leave sharing");
+                    Ln.d("CallImpl.doFloorUpdate: share type or resource url or sharing device changed, leave and join sharing");
                     leaveSharing(old.getGrantedFloor().getBeneficiary(), old.getGrantedFloor().getGranted(), old);
+                    joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
                     if (isMySharingReplaced){
                         Ln.d("CallImpl.doFloorUpdate: my sharing replaced by other's, join sharing");
                         joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
@@ -944,7 +965,24 @@ public class CallImpl implements Call {
     void doLocusModel(LocusModel model) {
         Ln.d("doLocusModel: " + model.getCallUrl());
         this.model = model;
-        List<LocusParticipantModel> participants = Objects.defaultIfNull(model.getParticipants(), Collections.emptyList());
+        List<LocusScheduledMeetingModel> meetings = model.getMeetings();
+        Set<CallSchedule> oldSchedules = this.schedules;
+        Set<CallSchedule> newSchedules = null;
+        if (meetings != null) {
+            newSchedules = new TreeSet<>();
+            for (LocusScheduledMeetingModel meeting : meetings) {
+                newSchedules.add(new InternalCallSchedule(meeting, model.getFullState()));
+            }
+        }
+        if (!Lists.isEquals(oldSchedules, newSchedules)) {
+            Queue.main.run(() -> {
+                if (observer != null) {
+                    observer.onScheduleChanged(this);
+                }
+            });
+        }
+
+        List<LocusParticipantModel> participants = Objects.defaultIfNull(model.getRawParticipants(), Collections.emptyList());
         List<CallMembershipImpl> oldMemberships = this.memberships;
         List<CallMembershipImpl> newMemberships = new ArrayList<>();
         List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
@@ -1078,10 +1116,15 @@ public class CallImpl implements Call {
                         end(new CallObserver.OtherConnected(this));
                     } else if (self.isDeclined()) {
                         end(new CallObserver.OtherDeclined(this));
+                    } else if (model.isInactive()) {
+                        end(new CallObserver.RemoteCancel(this));
                     }
                 } else if (isRemoteDeclined() || isRemoteLeft()) {
                     end(new CallObserver.RemoteCancel(this));
                 }
+//                else if (model.isInactive()) {
+//                    end(new CallObserver.RemoteCancel(this));
+//                }
             } else if (getDirection() == Direction.OUTGOING) {
                 if (self.isLefted(device.getDeviceUrl())) {
                     end(new CallObserver.LocalCancel(this));
@@ -1166,6 +1209,12 @@ public class CallImpl implements Call {
 
     boolean isRemoteJoined() {
         if (isGroup()) {
+//            for (CallMembershipImpl membership : memberships) {
+//                if (!membership.isSelf() && membership.getState() == CallMembership.State.JOINED) {
+//                    return true;
+//                }
+//            }
+//            return false;
             return true;
         }
         for (CallMembershipImpl membership : memberships) {

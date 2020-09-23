@@ -26,14 +26,14 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
 import android.view.View;
 
 import com.cisco.wme.appshare.ScreenShareContext;
-import com.ciscowebex.androidsdk.CompletionHandler;
-import com.ciscowebex.androidsdk.WebexError;
+import com.ciscowebex.androidsdk.*;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.crypto.KeyManager;
@@ -44,8 +44,18 @@ import com.ciscowebex.androidsdk.internal.media.MediaCapability;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
 import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.internal.reachability.BackgroundChecker;
+import com.ciscowebex.androidsdk.membership.MembershipObserver;
+import com.ciscowebex.androidsdk.membership.internal.InternalMembership;
+import com.ciscowebex.androidsdk.message.Message;
+import com.ciscowebex.androidsdk.message.MessageObserver;
+import com.ciscowebex.androidsdk.message.internal.InternalMessage;
+import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
 import com.ciscowebex.androidsdk.phone.*;
+import com.ciscowebex.androidsdk.space.Space;
+import com.ciscowebex.androidsdk.space.SpaceObserver;
+import com.ciscowebex.androidsdk.space.internal.InternalSpace;
 import com.ciscowebex.androidsdk.utils.Utils;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 
 import java.util.*;
@@ -56,63 +66,45 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         REGISTERING, REGISTERED, UNREGISTERING, UNREGISTERED
     }
 
+
     private FacingMode facingMode = FacingMode.USER;
-
     private IncomingCallListener incomingCallListener;
-
+    private final Webex webex;
     private final Context context;
-
     private final Authenticator authenticator;
-
     private Device device;
-
     private Credentials credentials;
-
     private MercuryService mercury;
-
     private final H264LicensePrompter prompter = new H264LicensePrompter();
-
     private State state = State.UNREGISTERED;
-
     private MediaEngine engine;
-
     private Map<String, CallImpl> calls = new HashMap<>();
-
     private CallContext callContext;
-
-    private int audioMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_AUDIO.getValue();
-
-    private int videoMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue();
-
-    private int videoMaxTxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue();
-
-    private int sharingMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_SESSION.getValue();
-
-    private String hardwareVideoSetting = null;
-
-    private boolean hardwareCodecEnable = false;
-
-    private boolean enableCamera2 = true;
-
-    private List<String> audioEnhancementModels = null;
-
     private final CallService service;
-
     private final ReachabilityService reachability;
-
     private final MetricsService metrics;
-
     private MediaSession previewSession;
-
-    private List<ActivityListener> listeners = new ArrayList<>();
-
     private BackgroundChecker checker;
 
+    private int audioMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_AUDIO.getValue();
+    private int videoMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue();
+    private int videoMaxTxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_720P.getValue();
+    private int sharingMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_SESSION.getValue();
+    private String hardwareVideoSetting = null;
+    private boolean hardwareCodecEnable = false;
+    private boolean enableCamera2 = true;
+    private List<String> audioEnhancementModels = null;
+    private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = new HashMap<>();
     private boolean enableBackgroundStream = false;
 
-    private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = new HashMap<>();
+    private String uuid = UUID.randomUUID().toString();
+    private boolean canceled = false;
+    private MembershipObserver membershipObserver;
+    private SpaceObserver spaceObserver;
+    private MessageObserver messageObserver;
 
-    public PhoneImpl(Context context, Authenticator authenticator, MediaEngine engine) {
+    public PhoneImpl(Context context, Webex webex, Authenticator authenticator, MediaEngine engine) {
+        this.webex = webex;
         this.context = context;
         this.authenticator = authenticator;
         this.engine = engine;
@@ -122,8 +114,16 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         CallAnalyzerReporter.shared.init(this);
     }
 
-    public void addActivityListener(ActivityListener listener) {
-        listeners.add(listener);
+    public void setMembershipObserver(MembershipObserver membershipObserver) {
+        this.membershipObserver = membershipObserver;
+    }
+
+    public void setSpaceObserver(SpaceObserver spaceObserver) {
+        this.spaceObserver = spaceObserver;
+    }
+
+    public void setMessageObserver(MessageObserver messageObserver) {
+        this.messageObserver = messageObserver;
     }
 
     public Context getContext() {
@@ -152,6 +152,10 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     public void setChecker(BackgroundChecker checker) {
         this.checker = checker;
+    }
+
+    public String getPhoneId() {
+        return this.uuid;
     }
 
     @Override
@@ -215,17 +219,9 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public void onEvent(@NonNull MercuryEvent event) {
         if (event instanceof MercuryActivityEvent) {
-            ActivityModel model = ((MercuryActivityEvent) event).getActivity();
-            if (model != null) {
-                for (ActivityListener listener : listeners) {
-                    listener.processActivity(model);
-                }
-            }
+            doActivityEvent(((MercuryActivityEvent) event).getActivity());
         } else if (event instanceof MercuryLocusEvent) {
-            LocusModel model = ((MercuryLocusEvent) event).getLocus();
-            if (model != null) {
-                doLocusEvent(model);
-            }
+            doLocusEvent(((MercuryLocusEvent) event).getLocus());
         } else if (event instanceof MercuryKmsMessageEvent) {
             KmsMessageModel model = ((MercuryKmsMessageEvent) event).getEncryptionKmsMessage();
             if (model != null) {
@@ -305,6 +301,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
         Ln.d("Dialing: " + dialString + ", " + option.hasVideo());
+        this.canceled = false;
         Queue.serial.run(() -> {
             stopPreview();
             if (callContext != null) {
@@ -320,7 +317,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 return;
             }
             for (CallImpl call : getCalls()) {
-                if (!call.isGroup() || (call.isGroup() && call.getStatus() == Call.CallStatus.CONNECTED)) {
+                if (call.getStatus() == Call.CallStatus.CONNECTED) {
                     Ln.e("There are other active calls: " + call);
                     Queue.main.run(() -> callback.onComplete(ResultImpl.error("There are other active calls")));
                     Queue.serial.yield();
@@ -371,6 +368,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String localSdp = session.getLocalSdp();
                 MediaEngineReachabilityModel reachabilities = reachability.getFeedback();
                 CallService.DialTarget.lookup(outgoing.getTarget(), authenticator, target -> {
+                    if (this.canceled) {
+                        this.canceled = false;
+                        Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error("The call be canceled by user")));
+                        Queue.serial.yield();
+                        return;
+                    }
                     String correlationId = UUID.randomUUID().toString();
                     //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
                     if (target instanceof CallService.CallableTarget) {
@@ -385,6 +388,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                         });
                     } else if (target instanceof CallService.JoinableTarget){
                         service.getOrCreatePermanentLocus(((CallService.JoinableTarget) target).getConversation(), device, convResult -> {
+                            if (this.canceled) {
+                                this.canceled = false;
+                                Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error("The call be canceled by user")));
+                                Queue.serial.yield();
+                                return;
+                            }
                             String url = convResult.getData();
                             if (url == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(convResult.getError())));
@@ -514,8 +523,23 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     @Override
-    public void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Boolean> callback) {
-        prompter.check(builder, result -> callback.onComplete(ResultImpl.success(result)));
+    public void cancel() {
+        this.canceled = true;
+    }
+
+    @Override
+    public void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @Nullable CompletionHandler<H264LicenseAction> callback) {
+        this.prompter.check(builder, result -> {
+            if (callback == null) {
+                if (result.getData() == H264LicenseAction.VIEW_LICENSE) {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(H264LicensePrompter.LICENSE_URL));
+                    this.getContext().startActivity(browserIntent);
+                }
+            }
+            else {
+                callback.onComplete(result);
+            }
+        });
     }
 
     @Override
@@ -525,12 +549,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public String getVideoCodecLicense() {
-        return prompter.getLicense();
+        return H264LicensePrompter.LICENSE_TEXT;
     }
 
     @Override
     public String getVideoCodecLicenseURL() {
-        return prompter.getLicenseURL();
+        return H264LicensePrompter.LICENSE_URL;
     }
 
     @Override
@@ -816,6 +840,19 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         });
     }
 
+    void layout(CallImpl call, MediaOption.VideoLayout layout) {
+        Queue.serial.run(() -> {
+            String url = call.getModel().getSelf() == null ? null : call.getModel().getSelf().getUrl();
+            if (url == null) {
+                Ln.e("Missing self participant URL");
+                Queue.serial.yield();
+            }
+            else {
+                service.layout(url, device, layout, result -> Queue.serial.yield());
+            }
+        });
+    }
+
     void update(CallImpl call, boolean audio, boolean video, String localSdp, CompletionHandler<Void> callback) {
         Queue.serial.run(() -> {
             String url = call.getModel().getSelf().getMediaBaseUrl();
@@ -993,6 +1030,13 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 return;
             }
             addCall(call);
+            if (this.canceled) {
+                this.canceled = false;
+                Queue.main.run(() -> ((LocusResponse.Call) response).getCallback().onComplete(ResultImpl.error("The call be canceled by user")));
+                this.hangup(call, result -> Ln.d("Call was hung up due to validate dial"));
+                queue.yield();
+                return;
+            }
             Queue.main.run(() -> {
                 if (call.getModel().isSelfInLobby()) {
                     call.startKeepAlive();
@@ -1066,12 +1110,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     private void doLocusEvent(LocusModel model) {
         if (model == null) {
-            Ln.d("No CallModel");
+            Ln.d("No LocusModel");
             return;
         }
         String url = model.getCallUrl();
         if (url == null) {
-            Ln.d("CallModel is missing call url");
+            Ln.d("LocusModel is missing call url");
             return;
         }
         Ln.d("doLocusEvent: " + url);
@@ -1098,7 +1142,94 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             call.update(model);
             Queue.serial.yield();
         });
+    }
 
+    private void doActivityEvent(ActivityModel activity) {
+        if (activity == null) {
+            Ln.d("No ActivityModel");
+            return;
+        }
+        String url = activity.getUrl();
+        if (url == null) {
+            Ln.d("ActivityModel is missing call url");
+            return;
+        }
+        Ln.d("doActivityEvent: " + url);
+        if (activity.getClientTempId() != null && activity.getClientTempId().startsWith(this.getPhoneId())) {
+            Ln.d("The activity is sent by self");
+            return;
+        }
+        String clusterId = this.device.getClusterId(url);
+
+        ActivityModel.Verb verb = activity.getVerb();
+        ObjectModel target = activity.getTarget();
+        ObjectModel object = activity.getObject();
+
+        if (verb == ActivityModel.Verb.add
+                && object != null && object.isPerson()
+                && target != null && target.isConversation()) {
+            fire(new InternalMembership.InternalMembershipCreated(new InternalMembership(activity, clusterId), activity));
+        }
+        else if (verb == ActivityModel.Verb.leave
+                && (object == null || object.isPerson())
+                && target != null && target.isConversation()) {
+            fire(new InternalMembership.InternalMembershipDeleted(new InternalMembership(activity, clusterId), activity));
+        }
+        else if ((activity.getVerb() == ActivityModel.Verb.assignModerator || activity.getVerb() == ActivityModel.Verb.unassignModerator)
+                && object != null && object.isPerson()
+                && target != null && target.isConversation()) {
+            fire(new InternalMembership.InternalMembershipUpdated(new InternalMembership(activity, clusterId), activity));
+        }
+        else if (activity.getVerb() == ActivityModel.Verb.acknowledge
+                && object != null && object.isActivity() && object.getId() != null
+                && target != null && target.isConversation()) {
+            fire(new InternalMembership.InternalMembershipMessageSeen(new InternalMembership(activity, clusterId), activity, new WebexId(WebexId.Type.MESSAGE, clusterId, object.getId()).getBase64Id()));
+        }
+        else if (activity.getVerb() == ActivityModel.Verb.create
+                && object != null && object.isConversation() && object.getId() != null) {
+            String base64Id = new WebexId(WebexId.Type.ROOM, clusterId, object.getId()).getBase64Id();
+            webex.spaces().get(base64Id, result -> fire(result.getData() == null ? null : new InternalSpace.InternalSpaceCeated(result.getData(), activity)));
+        }
+        else if (activity.getVerb() == ActivityModel.Verb.update
+                && object != null && object.isConversation()
+                && target != null && target.isConversation() && target.getId() != null) {
+            String base64Id = new WebexId(WebexId.Type.ROOM, clusterId, object.getId()).getBase64Id();
+            webex.spaces().get(base64Id, result -> fire(result.getData() == null ? null : new InternalSpace.InternalSpaceUpdated(result.getData(), activity)));
+        }
+        else if ((activity.getVerb() == ActivityModel.Verb.post || activity.getVerb() == ActivityModel.Verb.share)
+                && activity.getConversationId() != null && activity.getConversationUrl() != null) {
+            ((MessageClientImpl) webex.messages()).doMessageReveived(activity, clusterId, message -> {
+                fire(new InternalMessage.InternalMessageReceived(message, activity));
+                // TODO Remove the deprecated event in next big release
+                fire(new InternalMessage.InternalMessageArrived(message, activity));
+            });
+         }
+        else if (activity.getVerb() == ActivityModel.Verb.update
+                && activity.getConversationId() != null && activity.getConversationUrl() != null
+                && object != null && object.isContent() && object.getId() != null) {
+            ((MessageClientImpl) webex.messages()).doMessageUpdated(activity, this::fire);
+        }
+        else if (activity.getVerb() == ActivityModel.Verb.delete
+                && object != null && object.isActivity() && object.getId() != null) {
+            fire(new InternalMessage.InternalMessageDeleted(((MessageClientImpl) webex.messages()).doMessageDeleted(object.getId(), clusterId), activity));
+        }
+        else {
+            Ln.d("Not a valid activity: " + url);
+        }
+    }
+
+    private void fire(WebexEvent event) {
+        Queue.main.run(() -> {
+            if (event instanceof MembershipObserver.MembershipEvent && membershipObserver != null) {
+                membershipObserver.onEvent((MembershipObserver.MembershipEvent) event);
+            }
+            else if (event instanceof SpaceObserver.SpaceEvent && spaceObserver != null) {
+                spaceObserver.onEvent((SpaceObserver.SpaceEvent) event);
+            }
+            else if (event instanceof MessageObserver.MessageEvent && messageObserver != null) {
+                messageObserver.onEvent((MessageObserver.MessageEvent) event);
+            }
+        });
     }
 
     void addCall(CallImpl call) {
@@ -1111,25 +1242,23 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         this.calls.remove(call.getUrl());
     }
 
-    CallService getService() {
+    public CallService getService() {
         return service;
     }
 
     void listActiveCalls() {
         Ln.d("Fetch call infos");
-        if (device != null) {
-            service.list(device, result -> {
-                List<LocusModel> models = result.getData();
-                if (models == null) {
-                    Ln.d("Failure: " + result.getError());
-                    return;
-                }
-                for (LocusModel model : models) {
-                    doLocusEvent(model);
-                }
-                Ln.d("Success: fetch call infos");
-            });
-        }
+        service.list(device, result -> {
+            List<LocusModel> models = result.getData();
+            if (models == null) {
+                Ln.d("Failure: " + result.getError());
+                return;
+            }
+            for (LocusModel model : models) {
+                doLocusEvent(model);
+            }
+            Ln.d("Success: fetch call infos");
+        });
     }
 
     private MediaCapability createCapability() {

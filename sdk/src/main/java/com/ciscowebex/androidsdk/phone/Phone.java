@@ -24,6 +24,7 @@ package com.ciscowebex.androidsdk.phone;
 
 import android.app.AlertDialog;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
@@ -122,6 +123,13 @@ public interface Phone {
     }
 
     /**
+     * @since 2.6.0
+     */
+    enum H264LicenseAction {
+        ACCEPT, DECLINE, VIEW_LICENSE
+    }
+
+    /**
      * The interface for a listener for incoming call
      *
      * @since 0.1
@@ -216,10 +224,10 @@ public interface Phone {
      * Pops up an Alert for the end user to approve the use of H.264 codec license from Cisco Systems, Inc.
      *
      * @param builder  AlertDialog builder
-     * @param callback A closure to be executed when completed. true if the user approve the license , otherwise false.
+     * @param callback A closure to be executed when completed.
      * @since 0.1
      */
-    void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Boolean> callback);
+    void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @Nullable CompletionHandler<H264LicenseAction> callback);
 
     /**
      * Prevents the SDK from poping up an Alert for the end user to approve the use of H.264 video codec license from Cisco Systems, Inc.
@@ -440,4 +448,11 @@ public interface Phone {
      * @since 2.6.0
      */
     AdvancedSetting getAdvancedSetting(Class<? extends AdvancedSetting> clz);
+
+    /**
+     * Cancel the currently outgoing call that has not been connected.
+     *
+     * @since 2.6.0
+     */
+    void cancel();
 }

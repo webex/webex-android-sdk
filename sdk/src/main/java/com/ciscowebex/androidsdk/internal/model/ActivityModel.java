@@ -26,7 +26,6 @@ import android.support.annotation.NonNull;
 import com.ciscowebex.androidsdk.internal.Credentials;
 import com.ciscowebex.androidsdk.internal.crypto.KeyObject;
 import me.helloworld.utils.Checker;
-
 import java.util.Comparator;
 
 public class ActivityModel extends ObjectModel {
@@ -108,14 +107,6 @@ public class ActivityModel extends ObjectModel {
         return person != null && personId.equals(person.getId());
     }
 
-    public boolean isAddParticipant() {
-        return verb == Verb.add && object != null && object.isPerson() && target != null && target.isConversation();
-    }
-
-    public boolean isCreateConversation() {
-        return verb == Verb.create && object != null && object.isConversation();
-    }
-
     public boolean isTag() {
         return verb == Verb.tag && object != null && object.isConversation();
     }
@@ -162,14 +153,6 @@ public class ActivityModel extends ObjectModel {
 
     public boolean isLocusActivity() {
         return object != null && object.isLocus();
-    }
-
-    public boolean isLeaveActivity() {
-        return verb == Verb.leave && (object == null || object.isPerson()) && target != null && target.isConversation();
-    }
-
-    public boolean isUpdateContent() {
-        return verb == Verb.update && object != null && object.isContent();
     }
 
     public boolean isUpdateKeyActivity() {
@@ -296,8 +279,25 @@ public class ActivityModel extends ObjectModel {
         return ret;
     }
 
-    public boolean isSelfMention(@NonNull Credentials credentials, long lastJoinedDate) {
+    public boolean isSelfMentioned(@NonNull Credentials credentials, long lastJoinedDate) {
         return isPersonallyMentioned(credentials) || isIncludedInGroupMention(credentials, lastJoinedDate);
+    }
+
+    public boolean isAllMentioned(long lastJoinedDate) {
+        if (!(getObject() instanceof MentionableModel)) {
+            return false;
+        }
+        MentionableModel object = (MentionableModel) getObject();
+        if (object.getGroupMentions() == null || object.getGroupMentions().size() == 0) {
+            return false;
+        }
+        for (GroupMentionModel mention : object.getGroupMentions().getItems()) {
+            if (mention.getGroupType() == GroupMentionModel.Type.ALL &&
+                    getPublished().getTime() >= lastJoinedDate) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isPersonallyMentioned(@NonNull Credentials user) {

@@ -78,7 +78,7 @@ public class Membership {
             _isModerator = roomProperties.isModerator();
             _isMonitor = _isModerator;
         }
-        _created = null; // created is not available in the conversations payload
+        _created = person.getPublished();
     }
 
     protected Membership(ActivityModel activity, String clusterId) {

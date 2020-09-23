@@ -102,13 +102,10 @@ public class Webex {
         }
         this.authenticator = authenticator;
         engine = new MediaEngine(application.getApplicationContext(), LogLevel.DEBUG);
-        phone = new PhoneImpl(application.getApplicationContext(), authenticator, engine);
+        phone = new PhoneImpl(application.getApplicationContext(), this, authenticator, engine);
         messages = new MessageClientImpl(application.getApplicationContext(), phone);
         memberships = new MembershipClientImpl(phone);
         spaces = new SpaceClientImpl(phone);
-        phone.addActivityListener(messages);
-        phone.addActivityListener(memberships);
-        phone.addActivityListener(spaces);
         checker = new BackgroundChecker(application, phone);
         phone.setChecker(checker);
         setLogLevel(LogLevel.DEBUG);

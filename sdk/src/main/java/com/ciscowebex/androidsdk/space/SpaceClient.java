@@ -152,4 +152,12 @@ public interface SpaceClient {
      */
     void listWithReadStatus(int max, @NonNull CompletionHandler<List<SpaceReadStatus>> handler);
 
+    /**
+     * Returns a list of spaces in which there are active calls.
+     *
+     * @param handler A closure to be executed once the request has finished.
+     * @since 2.6.0
+     */
+    void listWithActiveCalls(@NonNull CompletionHandler<List<String>> handler);
+
 }

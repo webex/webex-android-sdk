@@ -257,7 +257,7 @@ public class CallService {
                 });
     }
 
-    public void list(@NonNull Device device, @NonNull CompletionHandler<List<LocusModel>> callback) {
+    public void list(@Nullable Device device, @NonNull CompletionHandler<List<LocusModel>> callback) {
         Service.Locus.homed(device).get("loci")
                 .auth(authenticator)
                 .queue(Queue.main)

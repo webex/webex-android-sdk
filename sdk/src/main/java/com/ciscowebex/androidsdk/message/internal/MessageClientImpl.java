@@ -48,13 +48,11 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MessageClientImpl implements MessageClient, ActivityListener {
+public class MessageClientImpl implements MessageClient {
 
     private Context context;
     private PhoneImpl phone;
-    private MessageObserver observer;
     private Map<String, Pair<String, String>> conversations = new ConcurrentHashMap<>();
-    private String uuid = UUID.randomUUID().toString();
     private Map<String, String> cachedMessages = new HashMap<>();
 
     public MessageClientImpl(Context context, PhoneImpl phone) {
@@ -63,87 +61,62 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
     }
 
     public void setMessageObserver(MessageObserver observer) {
-        this.observer = observer;
+        this.phone.setMessageObserver(observer);
     }
 
-    public void processActivity(ActivityModel activity) {
-        if (observer == null) {
-            return;
-        }
-        if (activity.getVerb() == ActivityModel.Verb.post || activity.getVerb() == ActivityModel.Verb.share) {
-            String conversationId = activity.getConversationId();
-            if (conversationId == null) {
-                Ln.d("The activity without conversation");
-                return;
+    public void doMessageReveived(ActivityModel activity, String clusterId, Closure<Message> closure) {
+        String convId = activity.getConversationId();
+        String convUrl = activity.getConversationUrl();
+        KeyManager.shared.tryRefresh(convUrl, activity.getEncryptionKeyUrl());
+        KeyManager.shared.getConvEncryptionKey(convUrl, convId, phone.getCredentials(), phone.getDevice(), keyResult -> {
+            if (keyResult.getData() != null) {
+                activity.decrypt(keyResult.getData());
             }
-            String clientTempId = activity.getClientTempId();
-            if (clientTempId != null && clientTempId.startsWith(uuid)) {
-                Ln.d("The activity is sent by self");
-                return;
+            InternalMessage message = createMessage(activity, clusterId, true);
+            cacheMessageIfNeeded(message);
+            closure.invoke(message);
+        });
+    }
+
+    public void doMessageUpdated(ActivityModel activity, Closure<MessageObserver.MessageEvent> closure) {
+        String convId = activity.getConversationId();
+        String convUrl = activity.getConversationUrl();
+        String contentId = activity.getObject().getId();
+        KeyManager.shared.tryRefresh(convUrl, activity.getEncryptionKeyUrl());
+        KeyManager.shared.getConvEncryptionKey(convUrl, convId, phone.getCredentials(), phone.getDevice(), keyResult -> {
+            if (keyResult.getData() != null) {
+                activity.decrypt(keyResult.getData());
             }
-            String convId = activity.getConversationId();
-            String convUrl = activity.getConversationUrl();
-            KeyManager.shared.tryRefresh(convUrl, activity.getEncryptionKeyUrl());
-            KeyManager.shared.getConvEncryptionKey(convUrl, convId, phone.getCredentials(), phone.getDevice(), keyResult -> {
-                if (keyResult.getData() != null) {
-                    activity.decrypt(keyResult.getData());
-                }
-                InternalMessage message = createMessage(activity, phone.getDevice().getClusterId(activity.getUrl()), true);
-                cacheMessageIfNeeded(message);
-                MessageObserver.MessageReceived event = new InternalMessage.InternalMessageReceived(message, activity);
-                Queue.main.run(() -> observer.onEvent(event));
-                // TODO Remove the deprecated event in next big release
-                Queue.main.run(() -> observer.onEvent(new InternalMessage.InternalMessageArrived(message, activity)));
-            });
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.delete) {
-            String id = new WebexId(WebexId.Type.MESSAGE, phone.getDevice().getClusterId(activity.getUrl()), activity.getObject().getId()).getBase64Id();
-            invalidCacheByMessageId(id);
-            MessageObserver.MessageEvent event = new InternalMessage.InternalMessageDeleted(id, activity);
-            Queue.main.run(() -> observer.onEvent(event));
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.update) {
-            String conversationId = activity.getConversationId();
-            if (conversationId == null) {
-                Ln.d("The activity without conversation");
-                return;
-            }
-            String convId = activity.getConversationId();
-            String convUrl = activity.getConversationUrl();
-            KeyManager.shared.tryRefresh(convUrl, activity.getEncryptionKeyUrl());
-            KeyManager.shared.getConvEncryptionKey(convUrl, convId, phone.getCredentials(), phone.getDevice(), keyResult -> {
-                if (keyResult.getData() != null) {
-                    activity.decrypt(keyResult.getData());
-                }
-                Queue.main.run(() -> {
-                    String contentId = activity.getObject().getId();
-                    if (contentId != null) {
-                        String messageId = cachedMessages.get(contentId);
-                        if (messageId != null) {
-                            List<RemoteFile> files = RemoteFileImpl.mapRemoteFiles(activity);
-                            if (!Checker.isEmpty(files)) {
-                                MessageObserver.MessageUpdated event = new InternalMessage.InternalMessageFileThumbnailsUpdated(messageId, activity, files);
-                                observer.onEvent(event);
-                                RemoteFile shouldTranscode = null;
-                                for (RemoteFile f : files) {
-                                    if (f.getThumbnail() == null && MimeUtils.getContentTypeByMimeType(f.getMimeType()).shouldTranscode()) {
-                                        shouldTranscode = f;
-                                        break;
-                                    }
-                                }
-                                if (shouldTranscode == null) {
-                                    cachedMessages.remove(contentId);
-                                }
+            Queue.main.run(() -> {
+                String messageId = cachedMessages.get(contentId);
+                if (messageId != null) {
+                    List<RemoteFile> files = RemoteFileImpl.mapRemoteFiles(activity);
+                    if (!Checker.isEmpty(files)) {
+                        RemoteFile shouldTranscode = null;
+                        for (RemoteFile f : files) {
+                            if (f.getThumbnail() == null && MimeUtils.getContentTypeByMimeType(f.getMimeType()).shouldTranscode()) {
+                                shouldTranscode = f;
+                                break;
                             }
-                        } else {
-                            Ln.d("The update activity cannot found in cache list: " + activity.getObject().getId());
                         }
+                        if (shouldTranscode == null) {
+                            cachedMessages.remove(contentId);
+                        }
+                        MessageObserver.MessageUpdated event = new InternalMessage.InternalMessageFileThumbnailsUpdated(messageId, activity, files);
+                        closure.invoke(event);
                     }
-                });
+                } else {
+                    Ln.d("The update activity cannot found in cache list: " + contentId);
+                }
             });
-        }
+        });
     }
 
+    public String doMessageDeleted(String uuid, String clusterId) {
+        String messageId = new WebexId(WebexId.Type.MESSAGE, clusterId, uuid).getBase64Id();
+        invalidCacheByMessageId(messageId);
+        return messageId;
+    }
 
     public void list(@NonNull String spaceId, @Nullable Before before, @IntRange(from = 0, to = Integer.MAX_VALUE) int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler) {
         if (max == 0) {
@@ -444,7 +417,7 @@ public class MessageClientImpl implements MessageClient, ActivityListener {
                 }
                 Map<String, Object> activityMap = new HashMap<>();
                 activityMap.put("verb", verb.name());
-                activityMap.put("clientTempId", uuid + ":" + UUID.randomUUID().toString());
+                activityMap.put("clientTempId", phone.getPhoneId() + ":" + UUID.randomUUID().toString());
                 activityMap.put("encryptionKeyUrl", key == null ? null : key.getKeyUrl());
                 activityMap.put("object", object);
                 activityMap.put("target", target);

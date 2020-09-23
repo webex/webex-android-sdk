@@ -31,9 +31,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.internal.*;
-import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 import com.ciscowebex.androidsdk.internal.model.ConversationModel;
+import com.ciscowebex.androidsdk.internal.model.LocusModel;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.phone.internal.PhoneImpl;
 import com.ciscowebex.androidsdk.space.*;
@@ -41,12 +42,12 @@ import com.ciscowebex.androidsdk.internal.model.ItemsModel;
 
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.google.gson.reflect.TypeToken;
+import me.helloworld.utils.Objects;
 import me.helloworld.utils.collection.Maps;
 
-public class SpaceClientImpl implements SpaceClient, ActivityListener {
+public class SpaceClientImpl implements SpaceClient {
 
     private final PhoneImpl phone;
-    private SpaceObserver observer;
 
     public SpaceClientImpl(PhoneImpl phone) {
         this.phone = phone;
@@ -54,26 +55,7 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
 
     @Override
     public void setSpaceObserver(SpaceObserver observer) {
-        this.observer = observer;
-    }
-
-    public void processActivity(@NonNull ActivityModel activity) {
-        if (observer == null) {
-            return;
-        }
-        final SpaceObserver.SpaceEvent event;
-        if (activity.getVerb() == ActivityModel.Verb.create) {
-            event = new InternalSpace.InternalSpaceCeated(new InternalSpace(activity, phone.getDevice().getClusterId(activity.getUrl())), activity);
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.update) {
-            event = new InternalSpace.InternalSpaceUpdated(new InternalSpace(activity, phone.getDevice().getClusterId(activity.getUrl())), activity);
-        }
-        else {
-            event = null;
-        }
-        if (event != null) {
-            Queue.main.run(() -> observer.onEvent(event));
-        }
+        this.phone.setSpaceObserver(observer);
     }
 
     @Override
@@ -190,5 +172,26 @@ public class SpaceClientImpl implements SpaceClient, ActivityListener {
                     }
                     handler.onComplete(ResultImpl.success(result));
                 });
+    }
+
+    @Override
+    public void listWithActiveCalls(@NonNull CompletionHandler<List<String>> handler) {
+        this.phone.getService().list(phone.getDevice(), result -> {
+            if (result.isSuccessful()) {
+                List<LocusModel> models = Objects.defaultIfNull(result.getData(), Collections.emptyList());
+                List<String> spaces = new ArrayList<>();
+                for (LocusModel model : models) {
+                    String convUrl = model.getConversationUrl();
+                    if (!model.isOneOnOne() && convUrl != null) {
+                        WebexId space = WebexId.from(convUrl, phone.getDevice());
+                        spaces.add(space.getBase64Id());
+                    }
+                }
+                ResultImpl.inMain(handler, spaces);
+            }
+            else {
+                ResultImpl.errorInMain(handler, result);
+            }
+        });
     }
 }

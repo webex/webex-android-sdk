@@ -23,6 +23,7 @@
 package com.ciscowebex.androidsdk.utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -98,5 +99,23 @@ public final class Lists {
      */
     public static <T> boolean isEmpty( final List<T> list ) {
         return list == null || list.isEmpty();
+    }
+
+    public static <T> boolean isEquals(Collection<T> left, Collection<T> right) {
+        if (left == null && right == null) {
+            return true;
+        }
+        if (left == null || right == null) {
+            return false;
+        }
+        if (left.size() != right.size()) {
+            return false;
+        }
+        for (T e : left) {
+            if (!right.contains(e)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

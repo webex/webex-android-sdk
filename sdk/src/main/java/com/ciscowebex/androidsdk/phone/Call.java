@@ -23,6 +23,7 @@
 package com.ciscowebex.androidsdk.phone;
 
 import java.util.List;
+import java.util.Set;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -180,6 +181,12 @@ public interface Call {
     CallObserver getObserver();
 
     /**
+     * @return the associated space of this call
+     * @since 2.6.0
+     */
+    String getSpaceId();
+
+    /**
      * @return Call Memberships represent participants in this call.
      * @since 0.1
      */
@@ -198,10 +205,22 @@ public interface Call {
     CallMembership getTo();
 
     /**
+     * @return The schedules of this call if this call is a scheduled call.
+     * @since 2.6.0
+     */
+    Set<CallSchedule> getSchedules();
+
+    /**
      * Specify how the remote video adjusts its content to be render in a view.
      * @since 2.6.0
      */
     void setRemoteVideoRenderMode(VideoRenderMode mode);
+
+    /**
+     * Specify the video layout for the active speaker and other attendees in the group video meeting.
+     * @since 2.6.0
+     */
+    void setVideoLayout(MediaOption.VideoLayout layout);
 
     /**
      * @return The local video render view dimensions (points) of this call.

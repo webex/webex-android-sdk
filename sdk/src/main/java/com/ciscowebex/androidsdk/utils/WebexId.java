@@ -23,11 +23,14 @@
 package com.ciscowebex.androidsdk.utils;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Base64;
+import com.ciscowebex.androidsdk.Webex;
 import com.ciscowebex.androidsdk.internal.Device;
 import com.ciscowebex.androidsdk.internal.Service;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
+import me.helloworld.utils.Strings;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -91,7 +94,7 @@ public class WebexId {
                     return v;
                 }
             }
-            throw new IllegalArgumentException();
+            return null;
         }
     }
 
@@ -111,8 +114,19 @@ public class WebexId {
                 return null;
             }
             String[] subs = strings.split("/");
-            return new WebexId(Type.getEnum(subs[subs.length - 2]), subs[subs.length - 3], subs[subs.length - 1]);
+            Type type = Type.getEnum(subs[subs.length - 2]);
+            if (type == null) {
+                return null;
+            }
+            return new WebexId(type, subs[subs.length - 3], subs[subs.length - 1]);
         } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    public static WebexId from(String convUrl, Device device) {
+        if (convUrl != null && convUrl.startsWith("https://conv")) {
+            return new WebexId(Type.ROOM, device == null ? null : device.getClusterId(convUrl), Strings.rightAfterLast(convUrl, "/"));
         }
         return null;
     }
@@ -127,7 +141,7 @@ public class WebexId {
 
     private String cluster;
 
-    public WebexId(@NonNull Type type, @NonNull String cluster, @NonNull String uuid) {
+    public WebexId(@NonNull Type type, @Nullable String cluster, @NonNull String uuid) {
         this.type = type;
         this.uuid = uuid;
         this.cluster = (Checker.isEmpty(cluster) || cluster.equals(DEFAULT_CLUSTER_ID)) ? DEFAULT_CLUSTER : cluster;
