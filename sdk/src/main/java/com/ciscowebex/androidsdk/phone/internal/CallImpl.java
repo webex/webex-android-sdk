@@ -975,6 +975,7 @@ public class CallImpl implements Call {
             }
         }
         if (!Lists.isEquals(oldSchedules, newSchedules)) {
+            this.schedules = newSchedules;
             Queue.main.run(() -> {
                 if (observer != null) {
                     observer.onScheduleChanged(this);
