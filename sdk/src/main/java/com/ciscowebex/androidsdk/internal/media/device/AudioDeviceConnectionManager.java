@@ -234,7 +234,7 @@ public class AudioDeviceConnectionManager {
         audioManager.stopBluetoothSco();
         audioManager.setSpeakerphoneOn(true);
         //int mode = isAudioEnhancement() ? android.media.AudioManager.MODE_IN_COMMUNICATION : android.media.AudioManager.MODE_NORMAL;
-        audioManager.setMode(AudioManager.MODE_IN_CALL);
+        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
     }
 
     private void playThroughEarpiece() {

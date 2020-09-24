@@ -250,6 +250,10 @@ public class MediaCapability {
 //            Ln.d("Default Settings: " + deviceSettings);
 //            config.SetDeviceMediaSettings(deviceSettings);
 //        }
+
+        // For SPARK-166469
+        config.SetDeviceMediaSettings("{\"audio\": {\"AECType\": 2,\"Version\": 4, \"AudioMode\": 2, \"CaptureMode\": 20, \"PlaybackMode\": 12}}");
+
         if (isHardwareCodecEnable()) {
             Ln.d("HW Settings: " + hardwareVideoSetting);
             config.SetDeviceMediaSettings(hardwareVideoSetting);
