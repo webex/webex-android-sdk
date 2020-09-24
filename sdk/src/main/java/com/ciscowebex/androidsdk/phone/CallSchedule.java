@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.internal.model.LocusScheduledMeetingModel;
 import com.ciscowebex.androidsdk.internal.model.LocusStateModel;
 import com.ciscowebex.androidsdk.utils.DateUtils;
-import me.helloworld.utils.annotation.StringPart;
 
 import java.util.Date;
 import java.util.Objects;
@@ -20,8 +19,6 @@ public class CallSchedule implements Comparable<CallSchedule> {
 
     private Date start;
     private Date end;
-    private int count;
-    private boolean removed;
 
     /**
      * Start time.
@@ -42,8 +39,6 @@ public class CallSchedule implements Comparable<CallSchedule> {
     }
 
     protected CallSchedule(@NonNull LocusScheduledMeetingModel meeting, @Nullable LocusStateModel state) {
-        this.count = state == null ? 0 : state.getCount();
-        this.removed = meeting.isRemoved();
         this.start = meeting.getStartTime();
         if (this.start != null) {
             this.end = DateUtils.addMinutesToDate(meeting.getDurationMinutes(), this.start);
@@ -61,7 +56,7 @@ public class CallSchedule implements Comparable<CallSchedule> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(start, end, count, removed);
+        return Objects.hash(start, end);
     }
 
     @Override
@@ -69,8 +64,6 @@ public class CallSchedule implements Comparable<CallSchedule> {
         return "CallSchedule{" +
                 "start=" + start +
                 ", end=" + end +
-                ", count=" + count +
-                ", removed=" + removed +
                 '}';
     }
 
