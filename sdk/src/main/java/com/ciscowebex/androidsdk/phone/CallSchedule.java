@@ -55,9 +55,7 @@ public class CallSchedule implements Comparable<CallSchedule> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CallSchedule that = (CallSchedule) o;
-        return count == that.count &&
-                removed == that.removed &&
-                Objects.equals(start, that.start) &&
+        return Objects.equals(start, that.start) &&
                 Objects.equals(end, that.end);
     }
 
