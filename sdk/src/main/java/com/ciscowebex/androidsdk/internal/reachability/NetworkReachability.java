@@ -118,7 +118,7 @@ public class NetworkReachability extends BroadcastReceiver {
         boolean isConnected = info.isConnected();
         if (isConnected) {
             boolean currentIsBehindProxy = false;
-            //if (NetworkUtils.isBehindProxy()) {
+            if (NetworkUtils.isBehindProxy()) {
                 currentIsBehindProxy = true;
                 Queue.background.run(() -> {
                     OkHttpClient client = new OkHttpClient().newBuilder().proxyAuthenticator(new ProxyCheckAuthenticator()).build();
@@ -130,7 +130,7 @@ public class NetworkReachability extends BroadcastReceiver {
                         Ln.d("proxyRequiresAuth: " + currentNetworkConnectionStatus.isProxyRequiresAuth());
                     }
                 });
-            //}
+            }
             int currentNetworkType  = info.getType();
             String currentIPAddress = NetworkUtils.getLocalIpAddress();
             NetworkConnectionStatus oldNetworkConnectionStatus = currentNetworkConnectionStatus;
