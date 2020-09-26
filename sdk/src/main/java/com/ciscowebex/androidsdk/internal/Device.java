@@ -38,15 +38,10 @@ public class Device {
 
     public enum Type {
 
-        SPARKBOARD("SPARK_BOARD"),
-        SPARKBOARD_MEDIA_ENGINE("ACANO_MEDIA_ENGINE"),
         ANDROID_CLIENT("ANDROID"),
         ANDROID_MEDIA_ENGINE("WME"),
         ANDROID_SDK("TEAMS_SDK_ANDROID"),
         WEB_CLIENT("WEB"),
-        UC("UC"),
-        TP("TP_ENDPOINT"),
-        PROVISIONAL("PROVISIONAL"),
         SIP("SIP"),
         WEBEX("WEBEX"),
         WEBEX_SHARE("SPARK_SHARE");
