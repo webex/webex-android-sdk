@@ -127,10 +127,6 @@ public class MediaCapability {
         return enableCamera2;
     }
 
-    public void enableCamera2(boolean enableCamera2) {
-        this.enableCamera2 = enableCamera2;
-    }
-
     public boolean isAudioEnhancement() {
         return isAudioEnhancement;
     }
@@ -307,7 +303,7 @@ public class MediaCapability {
         int fps = encoderSCR.maxFps / 100;
         if (!Checker.isEmpty(this.settings)) {
             AdvancedSetting.VideoMaxTxFPS setting = (AdvancedSetting.VideoMaxTxFPS) this.settings.get(AdvancedSetting.VideoMaxTxFPS.class);
-            if (setting != null && setting.getValue() != null && setting.getValue() > 0 && !setting.getValue().equals(setting.getDefaultValue())) {
+            if (setting != null && setting.getValue() != null && setting.getValue() > 0 && !setting.getValue().equals(AdvancedSetting.VideoMaxTxFPS.defaultVaule)) {
                 fps = setting.getValue();
             }
         }
@@ -331,11 +327,11 @@ public class MediaCapability {
         }
 
         if (!Checker.isEmpty(this.settings)) {
-            AdvancedSetting.VideoEnableDecoderMosaic setting = (AdvancedSetting.VideoEnableDecoderMosaic) this.settings.get(AdvancedSetting.VideoEnableDecoderMosaic.class);
+            AdvancedSetting.VideoEnableDecoderMosaic mosaic = (AdvancedSetting.VideoEnableDecoderMosaic) this.settings.get(AdvancedSetting.VideoEnableDecoderMosaic.class);
             JSONObject mParams = new JSONObject();
-            if (setting != null && setting.getValue() != setting.getDefaultValue()) {
+            if (mosaic != null && mosaic.getValue() != AdvancedSetting.VideoEnableDecoderMosaic.defaultVaule) {
                 try {
-                    mParams.put("enableDecoderMosaic", false);
+                    mParams.put("enableDecoderMosaic", mosaic.getValue());
                 } catch (Exception e) {
                     Ln.e(e);
                 }
@@ -349,6 +345,11 @@ public class MediaCapability {
                 }
                 connection.setParameters(WMEngine.Media.Video.mid(), root.toString());
             }
+
+            AdvancedSetting.VideoEnableCamera2 camera2 = (AdvancedSetting.VideoEnableCamera2) this.settings.get(AdvancedSetting.VideoEnableCamera2.class);
+            this.enableCamera2 = camera2 == null ? AdvancedSetting.VideoEnableCamera2.defaultVaule : camera2.getValue();
+
+
         }
 
         JSONObject root = new JSONObject();

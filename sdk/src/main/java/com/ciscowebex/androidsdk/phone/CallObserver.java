@@ -40,7 +40,9 @@ public interface CallObserver {
      * @param reason The reason why the call is waiting.
      * @since 2.4.0
      */
-    void onWaiting(Call call, Call.WaitReason reason);
+    default void onWaiting(Call call, Call.WaitReason reason) {
+
+    }
 
     /**
      * Callback when remote participant(s) is ringing.
@@ -48,7 +50,9 @@ public interface CallObserver {
      * @param call Call
      * @since 0.1
      */
-    void onRinging(Call call);
+    default void onRinging(Call call) {
+
+    }
 
     /**
      * Callback when remote participant(s) answered and the call is connected.
@@ -56,7 +60,9 @@ public interface CallObserver {
      * @param call Call
      * @since 0.1
      */
-    void onConnected(Call call);
+    default void onConnected(Call call) {
+
+    }
 
     /**
      * Callback when the call is disconnected (hangup, cancelled, get declined or other self device pickup the call).
@@ -64,7 +70,9 @@ public interface CallObserver {
      * @param event event
      * @since 0.1
      */
-    void onDisconnected(CallDisconnectedEvent event);
+    default void onDisconnected(CallDisconnectedEvent event) {
+
+    }
 
     /**
      * Callback when the media types of the call have changed.
@@ -72,7 +80,9 @@ public interface CallObserver {
      * @param event event
      * @since 0.1
      */
-    void onMediaChanged(MediaChangedEvent event);
+    default void onMediaChanged(MediaChangedEvent event) {
+
+    }
 
     /**
      * Callback when the memberships of this call have changed.
@@ -80,15 +90,19 @@ public interface CallObserver {
      * @param event event
      * @since 1.3.0
      */
-    void onCallMembershipChanged(CallMembershipChangedEvent event);
+    default void onCallMembershipChanged(CallMembershipChangedEvent event) {
+
+    }
 
     /**
-     * Callback when the `Call` is scheduled call and the schedule has been changed.
+     * Callback when the `Call` is scheduled call and the schedules of the call has been changed.
      *
      * @param call Call
      * @since 2.6.0
      */
-    void onScheduleChanged(Call call);
+    default void onScheduleChanged(Call call) {
+
+    }
 
     /**
      * Base class for the event of a call

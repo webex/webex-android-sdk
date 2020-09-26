@@ -37,6 +37,7 @@ public class UIEventHandler {
         void onMediaPermission(boolean permission);
 
         void onScreenCapturePermission(Intent permission);
+
     }
 
     static class UIEventBroadcastReceiver extends BroadcastReceiver {

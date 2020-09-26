@@ -79,7 +79,7 @@ public class Device {
 
     public Device(DeviceModel device, RegionModel region, ServicesClusterModel cluster) {
         Ln.d("Device: " + Json.get().toJson(device));
-        this.deviceType = Type.ANDROID_CLIENT.getTypeName();
+        this.deviceType = Type.ANDROID_SDK.getTypeName();
         this.deviceModel = device;
         this.regionModel = region;
         this.clusterUrls = cluster.getClusterUrls();

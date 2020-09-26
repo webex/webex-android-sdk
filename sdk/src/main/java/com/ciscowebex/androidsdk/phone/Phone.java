@@ -123,10 +123,23 @@ public interface Phone {
     }
 
     /**
+     * The options for H.264 video codec license from Cisco Systems, Inc
+     *
      * @since 2.6.0
      */
     enum H264LicenseAction {
-        ACCEPT, DECLINE, VIEW_LICENSE
+        /**
+         * Indicates that the end user has accepted the term.
+         */
+        ACCEPT,
+        /**
+         * Indicates that the end user declined the term.
+         */
+        DECLINE,
+        /**
+         * Indicates that the end user wants to view the license.
+         */
+        VIEW_LICENSE
     }
 
     /**
@@ -256,14 +269,14 @@ public interface Phone {
      * if 0, default value of 64 * 1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_AUDIO}.
-     * @since 2.5.0.2
+     * @since 2.6.0
      */
     void setAudioMaxRxBandwidth(int bandwidth);
 
     /**
      * Return the current maximum receivning bandwidth of audio stream.
      *
-     * @since 2.5.0.2
+     * @since 2.6.0
      */
     int getAudioMaxRxBandwidth();
 
@@ -274,14 +287,14 @@ public interface Phone {
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_90P}, {@link DefaultBandwidth#MAX_BANDWIDTH_180P},
      *                  {@link DefaultBandwidth#MAX_BANDWIDTH_360P}, {@link DefaultBandwidth#MAX_BANDWIDTH_720P}, or {@link DefaultBandwidth#MAX_BANDWIDTH_1080P}.
-     * @since 2.5.0.2
+     * @since 2.6.0
      */
     void setVideoMaxRxBandwidth(int bandwidth);
 
     /**
      * Return the current maximum receiving bandwidth of video stream.
      *
-     * @since 2.5.0.2
+     * @since 2.6.0
      */
     int getVideoMaxRxBandwidth();
 
@@ -292,14 +305,14 @@ public interface Phone {
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_90P}, {@link DefaultBandwidth#MAX_BANDWIDTH_180P},
      *                  {@link DefaultBandwidth#MAX_BANDWIDTH_360P}, {@link DefaultBandwidth#MAX_BANDWIDTH_720P}, or {@link DefaultBandwidth#MAX_BANDWIDTH_1080P}.
-     * @since 2.5.0.2
+     * @since 2.6.0
      */
     void setVideoMaxTxBandwidth(int bandwidth);
 
     /**
      * Return the current maximum sending bandwidth of video stream.
      *
-     * @since 2.5.0.2
+     * @since 2.6.0
      */
     int getVideoMaxTxBandwidth();
 
@@ -309,14 +322,14 @@ public interface Phone {
      * if 0, default value of 4000*1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_SESSION}.
-     * @since 2.5.0.2
+     * @since 2.6.0
      */
     void setSharingMaxRxBandwidth(int bandwidth);
 
     /**
      * Return the current maximum receiving bandwidth of content sharing stream.
      *
-     * @since 2.5.0.2
+     * @since 2.6.0
      */
     int getSharingMaxRxBandwidth();
 
@@ -336,25 +349,6 @@ public interface Phone {
      * @since 2.1.1
      */
     void setHardwareAccelerationEnabled(boolean enable);
-
-    /**
-     * Returns true if SDK is use android.hardware.camera2.CameraDevice, otherwise, false.
-     *
-     * @return true if SDK is use android.hardware.camera2.CameraDevice, otherwise, false.
-     * @since 2.6.0
-     */
-    boolean isCamera2Enabled();
-
-    /**
-     * Set true is use android.hardware.camera2.CameraDevice,
-     * false to use android.hardware.Camera.
-     * Default is true.
-     * This method is invalid on Android API 21
-     *
-     * @param enableCamera2 true to try to use android.hardware.camera2.CameraDevice, false to use android.hardware.Camera.
-     * @since 2.6.0
-     */
-    void enableCamera2(boolean enableCamera2);
 
     /**
      * Turn on audio enhancement for the specified device models. By default,
@@ -440,11 +434,21 @@ public interface Phone {
     void enableBackgroundStream(boolean enable);
 
     /**
+     * Set advanced setings for call. Only effective if set before the start of call.
+     *
+     * For example, Phone.setAdvancedSetting(new VideoMaxTxFPS(30));
+     *
+     * @see AdvancedSetting
      * @since 2.6.0
      */
     void setAdvancedSetting(AdvancedSetting setting);
 
     /**
+     * Returns value of the advanced seting that has been set.
+     *
+     * For example, AdvancedSetting setting = Phone.getAdvancedSetting(VideoMaxTxFPS.class);
+     *
+     * @see AdvancedSetting
      * @since 2.6.0
      */
     AdvancedSetting getAdvancedSetting(Class<? extends AdvancedSetting> clz);

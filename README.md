@@ -38,7 +38,7 @@ Assuming you already have an Android project, e.g. _MyWebexApp_, for your Androi
 
     ```groovy
     dependencies { 
-        compile('com.ciscowebex:androidsdk:2.5.0@aar', {
+        compile('com.ciscowebex:androidsdk:2.6.0@aar', {
             transitive = true
         })
     }
@@ -194,11 +194,6 @@ Here are some examples of how to use the Android SDK in your app.
                     public void onMediaChanged(MediaChangedEvent mediaChangedEvent) {
 
                     }
-                    
-                    @Override
-                    public void onWaiting(Call call, Call.WaitReason waitReason) {
-        
-                    }
                 });
             }
             else {
@@ -228,6 +223,7 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
     ```
+   
 7. Make an space call:
 
     ```java
@@ -429,6 +425,7 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
     ```
+    
 15. Set MembershipObserver to receive Membership events 
 
     ```java
@@ -454,6 +451,7 @@ Here are some examples of how to use the Android SDK in your app.
             }
         });
     ```
+    
 16. Set SpaceObserver to receive Space events 
 
     ```java
@@ -473,6 +471,7 @@ Here are some examples of how to use the Android SDK in your app.
             }
         });
     ```
+    
 17. Get space meeting details
 
     ```java
@@ -499,6 +498,7 @@ Here are some examples of how to use the Android SDK in your app.
             }
         });
     ```
+    
 ## Migrating from Cisco Spark Android SDK
 
 The purpose of this guide is to help you to migrate from Cisco Spark Android SDK to Cisco Webex Android SDK.

@@ -128,9 +128,9 @@ public interface Call {
      * @since 2.6.0
      */
     enum VideoRenderMode {
+
         /**
          * The option to scale the video to fit the size of the view by maintaining the aspect ratio.
-         *
          * The black paddings will be added to the remaining area of the view.
          */
         Fit,
@@ -181,7 +181,8 @@ public interface Call {
     CallObserver getObserver();
 
     /**
-     * @return the associated space of this call
+     * Return the associated space of this call
+     *
      * @since 2.6.0
      */
     String getSpaceId();
@@ -205,19 +206,23 @@ public interface Call {
     CallMembership getTo();
 
     /**
-     * @return The schedules of this call if this call is a scheduled call.
+     * Returns the schedules of this call if this call has one or more schedules.
+     * If the call isn't a scheduled call, the method will returns null.
+     *
      * @since 2.6.0
      */
     Set<CallSchedule> getSchedules();
 
     /**
      * Specify how the remote video adjusts its content to be render in a view.
+     *
      * @since 2.6.0
      */
     void setRemoteVideoRenderMode(VideoRenderMode mode);
 
     /**
      * Specify the video layout for the active speaker and other attendees in the group video meeting.
+     *
      * @since 2.6.0
      */
     void setVideoLayout(MediaOption.VideoLayout layout);

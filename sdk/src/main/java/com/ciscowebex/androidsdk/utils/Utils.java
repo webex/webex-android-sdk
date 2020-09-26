@@ -297,4 +297,12 @@ public class Utils {
         return hashString.toString();
     }
 
+    public static <K, V> V getOrDefault(Map<K, V> map, K key, V defaultValue) {
+        if (key == null) {
+            return defaultValue;
+        }
+        V v = map.get(key);
+        return v == null ? defaultValue : v;
+    }
+
 }

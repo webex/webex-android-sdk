@@ -46,12 +46,10 @@ import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.internal.reachability.BackgroundChecker;
 import com.ciscowebex.androidsdk.membership.MembershipObserver;
 import com.ciscowebex.androidsdk.membership.internal.InternalMembership;
-import com.ciscowebex.androidsdk.message.Message;
 import com.ciscowebex.androidsdk.message.MessageObserver;
 import com.ciscowebex.androidsdk.message.internal.InternalMessage;
 import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
 import com.ciscowebex.androidsdk.phone.*;
-import com.ciscowebex.androidsdk.space.Space;
 import com.ciscowebex.androidsdk.space.SpaceObserver;
 import com.ciscowebex.androidsdk.space.internal.InternalSpace;
 import com.ciscowebex.androidsdk.utils.Utils;
@@ -65,7 +63,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     enum State {
         REGISTERING, REGISTERED, UNREGISTERING, UNREGISTERED
     }
-
 
     private FacingMode facingMode = FacingMode.USER;
     private IncomingCallListener incomingCallListener;
@@ -92,7 +89,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     private int sharingMaxRxBandwidth = Phone.DefaultBandwidth.MAX_BANDWIDTH_SESSION.getValue();
     private String hardwareVideoSetting = null;
     private boolean hardwareCodecEnable = false;
-    private boolean enableCamera2 = true;
     private List<String> audioEnhancementModels = null;
     private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = new HashMap<>();
     private boolean enableBackgroundStream = false;
@@ -279,11 +275,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 device = null;
                 credentials = null;
                 state = State.UNREGISTERED;
-                if (result.getError() != null
-                        && result.getError().getErrorMessage() != null
-                        && result.getError().getErrorMessage().contains("net")) {
-                    WebexError error = new WebexError(WebexError.ErrorCode.NETWORK_ERROR, result.getError().getErrorMessage());
-                    Queue.main.run(() -> callback.onComplete(ResultImpl.error(error)));
+                if (result.getError() != null && result.getError().is(WebexError.ErrorCode.NETWORK_ERROR)) {
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
                 } else {
                     Queue.main.run(() -> callback.onComplete(result));
                 }
@@ -301,33 +294,48 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
         Ln.d("Dialing: " + dialString + ", " + option.hasVideo());
-        this.canceled = false;
-        Queue.serial.run(() -> {
-            stopPreview();
-            if (callContext != null) {
-                Ln.w("Already calling: " + callContext);
-                Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already calling")));
-                Queue.serial.yield();
-                return;
-            }
-            if (device == null) {
-                Ln.e("Unregistered device");
-                Queue.main.run(() -> callback.onComplete(ResultImpl.error("Unregistered device")));
-                Queue.serial.yield();
-                return;
-            }
-            for (CallImpl call : getCalls()) {
-                if (call.getStatus() == Call.CallStatus.CONNECTED) {
-                    Ln.e("There are other active calls: " + call);
-                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("There are other active calls")));
+        prompter.check(getContext(), null, result -> {
+            H264LicenseAction action = result.getData();
+            if (action == null || action == H264LicenseAction.ACCEPT) {
+                this.canceled = false;
+                Queue.serial.run(() -> {
+                    stopPreview();
+                    if (callContext != null) {
+                        Ln.w("Already calling: " + callContext);
+                        Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already calling")));
+                        Queue.serial.yield();
+                        return;
+                    }
+                    if (device == null) {
+                        Ln.e("Unregistered device");
+                        Queue.main.run(() -> callback.onComplete(ResultImpl.error("Unregistered device")));
+                        Queue.serial.yield();
+                        return;
+                    }
+                    for (CallImpl call : getCalls()) {
+                        if (call.getStatus() == Call.CallStatus.CONNECTED) {
+                            Ln.e("There are other active calls: " + call);
+                            Queue.main.run(() -> callback.onComplete(ResultImpl.error("There are other active calls")));
+                            Queue.serial.yield();
+                            return;
+                        }
+                    }
+                    callContext = new CallContext.Outgoing(dialString, option, callback);
+                    Ln.d("CallContext: " + callContext);
+                    Queue.main.run(this::tryAcquirePermission);
                     Queue.serial.yield();
-                    return;
-                }
+                });
             }
-            callContext = new CallContext.Outgoing(dialString, option, callback);
-            Ln.d("CallContext: " + callContext);
-            Queue.main.run(this::tryAcquirePermission);
-            Queue.serial.yield();
+            else if (action == H264LicenseAction.DECLINE) {
+                Ln.d("Decline H264 license");
+                ResultImpl.errorInMain(callback, WebexError.from(WebexError.ErrorCode.DECLINE_H264_LICENSE));
+            }
+            else if (action == H264LicenseAction.VIEW_LICENSE) {
+                Ln.d("View H264 license");
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(H264LicensePrompter.LICENSE_URL));
+                this.getContext().startActivity(browserIntent);
+                ResultImpl.errorInMain(callback, WebexError.from(WebexError.ErrorCode.VIEW_H264_LICENSE));
+            }
         });
     }
 
@@ -377,7 +385,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     String correlationId = UUID.randomUUID().toString();
                     //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
                     if (target instanceof CallService.CallableTarget) {
-                        service.call(((CallService.CallableTarget) target).getCallee(), outgoing.getOption().isModerator(), outgoing.getOption().getPin(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, callResult -> {
+                        service.call(((CallService.CallableTarget) target).getCallee(), outgoing.getOption(), correlationId, device, localSdp,reachabilities, callResult -> {
                             if (callResult.getError() != null || callResult.getData() == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(callResult.getError())));
                                 Queue.serial.yield();
@@ -400,7 +408,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 Queue.serial.yield();
                                 return;
                             }
-                            service.join(url, outgoing.getOption().isModerator(), outgoing.getOption().getPin(), correlationId, device, localSdp, outgoing.getOption().getLayout(), reachabilities, joinResult -> {
+                            service.join(url, outgoing.getOption(), correlationId, device, localSdp, reachabilities, joinResult -> {
                                 if (joinResult.getError() != null || joinResult.getData() == null) {
                                     Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                                     Queue.serial.yield();
@@ -430,7 +438,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String localSdp = session.getLocalSdp();
                 incoming.getCall().setMedia(session);
                 //CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
-                service.join(incoming.getCall().getUrl(), incoming.getOption().isModerator(), incoming.getOption().getPin(), incoming.getCall().getCorrelationId(), device, localSdp, incoming.getOption().getLayout(), reachability.getFeedback(), joinResult -> {
+                service.join(incoming.getCall().getUrl(), incoming.getOption(), incoming.getCall().getCorrelationId(), device, localSdp, reachability.getFeedback(), joinResult -> {
                     if (joinResult.getError() != null || joinResult.getData() == null) {
                         Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                         Queue.serial.yield();
@@ -529,7 +537,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @Nullable CompletionHandler<H264LicenseAction> callback) {
-        this.prompter.check(builder, result -> {
+        this.prompter.check(getContext(), builder, result -> {
             if (callback == null) {
                 if (result.getData() == H264LicenseAction.VIEW_LICENSE) {
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(H264LicensePrompter.LICENSE_URL));
@@ -654,16 +662,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         hardwareCodecEnable = enable;
     }
 
-    @Override
-    public boolean isCamera2Enabled() {
-        return enableCamera2;
-    }
-
-    @Override
-    public void enableCamera2(boolean enableCamera2) {
-        this.enableCamera2 = enableCamera2;
-    }
-
     public String getHardwareVideoSettings() {
         return hardwareVideoSetting;
     }
@@ -718,38 +716,53 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     void answer(CallImpl call, MediaOption option, CompletionHandler<Void> callback) {
-        Queue.serial.run(() -> {
-            for (CallImpl already : getCalls()) {
-                if (already.getUrl().equals(call.getUrl()) && already.getStatus() == Call.CallStatus.CONNECTED) {
-                    Ln.e("There are other active calls");
-                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("There are other active calls")));
+        prompter.check(getContext(), null, result -> {
+            H264LicenseAction action = result.getData();
+            if (action == null || action == H264LicenseAction.ACCEPT) {
+                Queue.serial.run(() -> {
+                    for (CallImpl already : getCalls()) {
+                        if (already.getUrl().equals(call.getUrl()) && already.getStatus() == Call.CallStatus.CONNECTED) {
+                            Ln.e("There are other active calls");
+                            Queue.main.run(() -> callback.onComplete(ResultImpl.error("There are other active calls")));
+                            Queue.serial.yield();
+                            return;
+                        }
+                    }
+                    if (call.getDirection() == Call.Direction.OUTGOING) {
+                        Ln.e("Unsupport function for outgoing call");
+                        Queue.main.run(() -> callback.onComplete(ResultImpl.error("Unsupport function for outgoing call")));
+                        Queue.serial.yield();
+                        return;
+                    }
+                    if (call.getDirection() == Call.Direction.INCOMING) {
+                        if (call.getStatus() == Call.CallStatus.CONNECTED) {
+                            Ln.e("Already connected");
+                            Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already connected")));
+                            Queue.serial.yield();
+                            return;
+                        } else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
+                            Ln.e("Already disconnected");
+                            Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already disconnected")));
+                            Queue.serial.yield();
+                            return;
+                        }
+                    }
+                    callContext = new CallContext.Incoming(call, option, callback);
+                    Ln.d("CallContext: " + callContext);
+                    Queue.main.run(this::tryAcquirePermission);
                     Queue.serial.yield();
-                    return;
-                }
+                });
             }
-            if (call.getDirection() == Call.Direction.OUTGOING) {
-                Ln.e("Unsupport function for outgoing call");
-                Queue.main.run(() -> callback.onComplete(ResultImpl.error("Unsupport function for outgoing call")));
-                Queue.serial.yield();
-                return;
+            else if (action == H264LicenseAction.DECLINE) {
+                Ln.d("Decline H264 license");
+                ResultImpl.errorInMain(callback, WebexError.from(WebexError.ErrorCode.DECLINE_H264_LICENSE));
             }
-            if (call.getDirection() == Call.Direction.INCOMING) {
-                if (call.getStatus() == Call.CallStatus.CONNECTED) {
-                    Ln.e("Already connected");
-                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already connected")));
-                    Queue.serial.yield();
-                    return;
-                } else if (call.getStatus() == Call.CallStatus.DISCONNECTED) {
-                    Ln.e("Already disconnected");
-                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already disconnected")));
-                    Queue.serial.yield();
-                    return;
-                }
+            else if (action == H264LicenseAction.VIEW_LICENSE) {
+                Ln.d("View H264 license");
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(H264LicensePrompter.LICENSE_URL));
+                this.getContext().startActivity(browserIntent);
+                ResultImpl.errorInMain(callback, WebexError.from(WebexError.ErrorCode.VIEW_H264_LICENSE));
             }
-            callContext = new CallContext.Incoming(call, option, callback);
-            Ln.d("CallContext: " + callContext);
-            Queue.main.run(this::tryAcquirePermission);
-            Queue.serial.yield();
         });
     }
 
@@ -815,22 +828,15 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     }
                 }
                 service.leave(url, device, result -> {
-                    if (result.getError() != null) {
-                        WebexError newError = null;
-                        String message = result.getError().getErrorMessage();
-                        if (message != null && message.startsWith("409/Conflict/")) {
-                            newError = new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, message);
-                        }
-                        else if (message != null && message.contains("net")) {
-                            newError =  new WebexError(WebexError.ErrorCode.NETWORK_ERROR, message);
-                        }
-                        if (newError == null) {
-                            Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
-                            Queue.serial.yield();
-                            return;
+                    WebexError error = result.getError();
+                    if (error != null) {
+                        if (error.is(WebexError.ErrorCode.CONFLICT_ERROR) || error.is(WebexError.ErrorCode.NETWORK_ERROR)) {
+                            call.end(new CallObserver.CallErrorEvent(call, error));
                         }
                         else {
-                            call.end(new CallObserver.CallErrorEvent(call, newError));
+                            Queue.main.run(() -> callback.onComplete(ResultImpl.error(error)));
+                            Queue.serial.yield();
+                            return;
                         }
                     }
                     doLocusResponse(new LocusResponse.Leave(call, result.getData(), callback), Queue.serial);
@@ -1022,7 +1028,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             if (call.isStatusIllegal()) {
                 Ln.d("The previous session did not end");
                 Queue.main.run(() -> {
-                    WebexError error = new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, "The previous session did not end");
+                    WebexError error = WebexError.from("The previous session did not end");
                     ((LocusResponse.Call) response).getCallback().onComplete(ResultImpl.error(error));
                     call.end(new CallObserver.CallErrorEvent(call, error));
                     queue.yield();
@@ -1270,7 +1276,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         capability.setHardwareCodecEnable(isHardwareAccelerationEnabled());
         capability.setHardwareVideoSetting(getHardwareVideoSettings());
         capability.setAudioEnhancementModels(audioEnhancementModels);
-        capability.enableCamera2(isCamera2Enabled());
         if (device != null) {
             capability.setDeviceSettings(device.getDeviceSettings());
         }

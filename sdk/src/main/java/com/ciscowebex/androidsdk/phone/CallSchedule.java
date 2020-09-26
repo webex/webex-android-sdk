@@ -21,7 +21,7 @@ public class CallSchedule implements Comparable<CallSchedule> {
     private Date end;
 
     /**
-     * Start time.
+     * Start time of the call is scheduled.
      *
      * @since 2.6.0
      */
@@ -30,7 +30,7 @@ public class CallSchedule implements Comparable<CallSchedule> {
     }
 
     /**
-     * End time.
+     * End time of the call is scheduled.
      *
      * @since 2.6.0
      */

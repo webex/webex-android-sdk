@@ -119,9 +119,9 @@ public class CallService {
                 });
     }
 
-    public void call(@NonNull String address, boolean isModerator, @Nullable String PIN, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
+    public void call(@NonNull String address, @NonNull MediaOption option, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
         Service.Locus.homed(device)
-                .post(makeBody(correlationId, layout, device, sdp, address, isModerator, PIN, reachabilities))
+                .post(makeBody(correlationId, device, sdp, address, option, reachabilities))
                 .to("loci/call")
                 .auth(authenticator)
                 .queue(Queue.main)
@@ -132,19 +132,19 @@ public class CallService {
                     if (locus != null && model.getMediaConnections() != null) {
                         locus.setMediaConnections(model.getMediaConnections());
                     }
-                    if (layout == null) {
+                    if (option.getLayout() == null) {
                         callback.onComplete(ResultImpl.success(locus));
                         return;
                     }
                     if (locus != null && locus.getSelf() != null) {
-                        layout(locus.getSelf().getUrl(), device, layout, result -> callback.onComplete(ResultImpl.success(locus)));
+                        layout(locus.getSelf().getUrl(), device, option.getLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
                     }
                 });
     }
 
-    public void join(@NonNull String url, boolean isModerator, @Nullable String PIN, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
+    public void join(@NonNull String url, @NonNull MediaOption option, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
         ServiceReqeust.make(url)
-                .post(makeBody(correlationId, layout, device, sdp, null, isModerator, PIN, reachabilities))
+                .post(makeBody(correlationId, device, sdp, null, option, reachabilities))
                 .to("participant")
                 .auth(authenticator)
                 .queue(Queue.main)
@@ -155,12 +155,12 @@ public class CallService {
                     if (locus != null && model.getMediaConnections() != null) {
                         locus.setMediaConnections(model.getMediaConnections());
                     }
-                    if (layout == null) {
+                    if (option.getLayout() == null) {
                         callback.onComplete(ResultImpl.success(locus));
                         return;
                     }
                     if (locus != null && locus.getSelf() != null) {
-                        layout(locus.getSelf().getUrl(), device, layout, result -> callback.onComplete(ResultImpl.success(locus)));
+                        layout(locus.getSelf().getUrl(), device, option.getLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
                     }
                 });
     }
@@ -334,25 +334,27 @@ public class CallService {
                 .async((Closure<LocusMediaResponseModel>) data -> callback.onComplete(ResultImpl.success(null)));
     }
 
-    private Object makeBody(String correlationId, MediaOption.VideoLayout layout, Device device, String sdp, String callee, boolean isModerator, String PIN, MediaEngineReachabilityModel reachabilities) {
+    private Object makeBody(String correlationId, Device device, String sdp, String callee, MediaOption option, MediaEngineReachabilityModel reachabilities) {
         Map<String, Object> json = new HashMap<>();
         MediaConnectionModel mc = new MediaConnectionModel();
         mc.setLocalSdp(Json.get().toJson(new MediaInfoModel(sdp, reachabilities == null ? null : reachabilities.reachability)));
         mc.setType("SDP");
         json.put("localMedias", Lists.asList(mc));
-        json.put("device", device.toJsonMap(layout == MediaOption.VideoLayout.SINGLE ? null : Device.Type.WEB_CLIENT.getTypeName()));
+        json.put("device", device.toJsonMap(Device.Type.WEB_CLIENT.getTypeName()));
         json.put("respOnlySdp", true);
         json.put("correlationId", correlationId);
-        if (callee != null) {
+        if (callee == null) {
+            if (option.isModerator()) {
+                json.put("moderator", true);
+            }
+            if (option.getPin() != null) {
+                json.put("pin", option.getPin());
+            }
+        }
+        else {
             json.put("invitee", Maps.makeMap("address", callee));
             json.put("supportsNativeLobby", true);
             json.put("moderator", false);
-        }
-        if (isModerator) {
-            json.put("moderator", isModerator);
-        }
-        if (PIN != null) {
-            json.put("pin", PIN);
         }
         return json;
     }

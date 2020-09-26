@@ -397,9 +397,8 @@ public class Message {
     }
 
     /**
-     * Returns true if the message mentioned all people in space.
+     * Returns true if the message mentioned everyone in space.
      *
-     * @return True if the message mentioned all people in space.
      * @since 2.6.0
      */
     public boolean isAllMentioned() {
@@ -407,7 +406,7 @@ public class Message {
     }
 
     /**
-     * Returns the mentions if the message mentioned people in space.
+     * Returns all people mentioned in the message
      *
      * @return The mentions.
      * @since 2.6.0

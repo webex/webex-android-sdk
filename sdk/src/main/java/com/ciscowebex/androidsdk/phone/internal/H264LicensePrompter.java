@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
+import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.internal.Settings;
@@ -43,33 +44,45 @@ public class H264LicensePrompter {
     H264LicensePrompter() {
     }
 
-    void check(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Phone.H264LicenseAction> handler) {
+    void check(@NonNull Context context, @Nullable AlertDialog.Builder builder, @NonNull CompletionHandler<Phone.H264LicenseAction> handler) {
         if (isVideoLicenseActivated() || isVideoLicenseActivationDisabled()) {
             handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.ACCEPT));
-        } else {
-            Context context = builder.getContext();
-            builder.setTitle("Activate License");
-            builder.setMessage(LICENSE_TEXT);
-            builder.setPositiveButton("Activate", (dialog, which) -> {
-                Ln.i("Video license has been activated");
-                setVideoLicenseActivated(true);
-                handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.ACCEPT));
-            });
-
-            builder.setNegativeButton("Cancel", (dialog, which) -> {
-                Ln.i("Video license has not been activated");
-                dialog.cancel();
-                handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.DECLINE));
-            });
-
-            builder.setNeutralButton("View License", (dialog, which) -> {
-                Ln.i("Video license opened for viewing");
-                dialog.cancel();
-                handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.VIEW_LICENSE));
-            });
-            AlertDialog diag = builder.create();
-            diag.show();
         }
+        else if (builder == null) {
+            H264LicensePrompterActivity.PROMPTER = this;
+            H264LicensePrompterActivity.CALLBACK = handler;
+            final Intent intent = new Intent(context, H264LicensePrompterActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+            context.startActivity(intent);
+        }
+        else {
+            showUI(builder, handler);
+        }
+    }
+
+    void showUI(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Phone.H264LicenseAction> handler) {
+        Context context = builder.getContext();
+        builder.setTitle("Activate License");
+        builder.setMessage(LICENSE_TEXT);
+        builder.setPositiveButton("Activate", (dialog, which) -> {
+            Ln.i("Video license has been activated");
+            setVideoLicenseActivated(true);
+            handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.ACCEPT));
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            Ln.i("Video license has not been activated");
+            dialog.cancel();
+            handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.DECLINE));
+        });
+
+        builder.setNeutralButton("View License", (dialog, which) -> {
+            Ln.i("Video license opened for viewing");
+            dialog.cancel();
+            handler.onComplete(ResultImpl.success(Phone.H264LicenseAction.VIEW_LICENSE));
+        });
+        AlertDialog diag = builder.create();
+        diag.show();
     }
 
     boolean isVideoLicenseActivationDisabled() {

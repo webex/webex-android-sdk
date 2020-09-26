@@ -22,15 +22,15 @@
 
 package com.ciscowebex.androidsdk;
 
-import android.text.TextUtils;
-import com.ciscowebex.androidsdk.utils.Lists;
+import com.ciscowebex.androidsdk.utils.Utils;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Objects;
 import me.helloworld.utils.annotation.StringPart;
 import okhttp3.ResponseBody;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The enumeration of error types in Cisco Webex Android SDK.
@@ -39,13 +39,14 @@ import java.util.List;
  */
 public class WebexError<T> {
 
-    private static final List<String> WEBEX_SERVICE_ERROR_CODES = Lists.asList(
-            "2423005",  // LOCUS_REQUIRES_MODERATOR_PIN_OR_GUEST
-            "2423006", //LOCUS_REQUIRES_MODERATOR_PIN_OR_GUEST_PIN
-            "2423016", //LOCUS_REQUIRES_MODERATOR_KEY_OR_MEETING_PASSWORD
-            "2423017", //LOCUS_REQUIRES_MODERATOR_KEY_OR_GUEST
-            "2423018" //LOCUS_REQUIRES_MEETING_PASSWORD
-    );
+    private static final Map<String, ErrorCode> WEBEX_SERVICE_ERRORS = new HashMap<>();
+    static {
+        WEBEX_SERVICE_ERRORS.put("2423005", ErrorCode.HOST_PIN_OR_MEETING_PASSWORD_REQUIRED); // LOCUS_REQUIRES_MODERATOR_PIN_OR_GUEST
+        WEBEX_SERVICE_ERRORS.put("2423006", ErrorCode.HOST_PIN_OR_MEETING_PASSWORD_REQUIRED); //LOCUS_REQUIRES_MODERATOR_PIN_OR_GUEST_PIN
+        WEBEX_SERVICE_ERRORS.put("2423016", ErrorCode.HOST_PIN_OR_MEETING_PASSWORD_REQUIRED); //LOCUS_REQUIRES_MODERATOR_KEY_OR_MEETING_PASSWORD
+        WEBEX_SERVICE_ERRORS.put("2423017", ErrorCode.HOST_PIN_OR_MEETING_PASSWORD_REQUIRED); //LOCUS_REQUIRES_MODERATOR_KEY_OR_GUEST
+        WEBEX_SERVICE_ERRORS.put("2423018", ErrorCode.HOST_PIN_OR_MEETING_PASSWORD_REQUIRED); //LOCUS_REQUIRES_MEETING_PASSWORD
+    }
 
     public static WebexError from(String message) {
         return new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, message);
@@ -53,6 +54,10 @@ public class WebexError<T> {
 
     public static WebexError from(Throwable t) {
         return new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, t.toString());
+    }
+
+    public static WebexError from(ErrorCode code) {
+        return new WebexError(code);
     }
 
     public static WebexError from(okhttp3.Response res) {
@@ -63,22 +68,20 @@ public class WebexError<T> {
         } catch (IOException e) {
             Ln.e(e);
         }
-        String code = res.header("Cisco-Spark-Error-Codes");
-        if (!TextUtils.isEmpty(code)) {
-            if (WEBEX_SERVICE_ERROR_CODES.contains(code)) {
-                return new WebexError(ErrorCode.HOST_PIN_OR_MEETING_PASSWORD_REQUIRED, message.toString());
-            }
-        }
-        return new WebexError(WebexError.ErrorCode.SERVICE_ERROR, message.toString());
+        ErrorCode code = Utils.getOrDefault(WEBEX_SERVICE_ERRORS, res.header("Cisco-Spark-Error-Codes"), ErrorCode.SERVICE_ERROR);
+        return new WebexError(code, message.toString());
     }
 
     public enum ErrorCode {
+
         UNEXPECTED_ERROR(-7000),
         SERVICE_ERROR(-7001),
-        PERMISSION_ERROR(-7002),
+        CONFLICT_ERROR(-7002),
         HOST_PIN_OR_MEETING_PASSWORD_REQUIRED(-7003),
         WEBSOCKET_ERROR(-7004),
-        NETWORK_ERROR(-7005);
+        NETWORK_ERROR(-7005),
+        DECLINE_H264_LICENSE(-7006),
+        VIEW_H264_LICENSE(-7007);
 
         private int code;
 
@@ -134,8 +137,16 @@ public class WebexError<T> {
      * @param data      the error data
      */
     public WebexError(ErrorCode errorCode, String message, T data) {
-        this.errorCode = errorCode;
         this.message = message;
+        if (message != null && message.startsWith("409/Conflict/")) {
+            this.errorCode = ErrorCode.CONFLICT_ERROR;
+        }
+        else if (message != null && message.contains("net")) {
+            this.errorCode = ErrorCode.NETWORK_ERROR;
+        }
+        else {
+            this.errorCode = errorCode;
+        }
         this._data = data;
     }
 
@@ -161,6 +172,15 @@ public class WebexError<T> {
      */
     public T getData() {
         return _data;
+    }
+
+    /**
+     * Check the error type.
+     *
+     * @since 2.6.0
+     */
+    public boolean is(ErrorCode code) {
+        return errorCode == code;
     }
 
     @Override

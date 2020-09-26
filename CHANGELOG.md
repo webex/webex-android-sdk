@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 2.6.0 Releases
+- `2.6.0` Releases - [2.6.0](#260)
+
 #### 2.5.0 Releases
 - `2.5.0` Releases - [2.5.0](#250)
 
@@ -29,6 +32,43 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
+## [2.6.0](https://github.com/webex/webex-android-sdk/releases/tag/2.6.0)
+Released on 2020-09-28.
+#### Added
+- Support for incoming call notifications for scheduled sapce call.
+- Support for being notified of the end of a space call.
+- Support to join password-protected meetings.
+- Support receiving annotation from the Webex Teams Client.
+- Add a new API `Call.setVideoLayout(VideoLayout)` to change the video layout during a call.
+- Add a new API `Call.setRemoteVideoRenderMode(VideoRenderMode)` to specify how the remote video adjusts its content to be render in a view.
+- Add a new API `Phone.setAdvancedSetting(new VideoMaxTxFPS(Int))` to change the max sending fps for video.
+- Add a new API `Phone.enableBackgroundStream(boolean)` to let control whether the app can continue video streaming when app in background.
+- Add a new API `SpaceClient.listWithActiveCalls` to get a list of spaces that have ongoing call.
+- Add a new API `Message.isAllMentioned` to check if the message mentioned everyone in space.
+- Add a new API `Message.getMentions` to get all people mentioned in the message.
+- Popup H.264 license warning by default when first call.
+
+#### Updated
+- Improved video and audio quality
+- API enhancements to improve bandwidth control.
+- Fixed crash when behind the proxy.
+- Fixed receiving calls failing after declining a space call.
+- Fixed self view is rotated 90° if the call is started in landscape mode.
+- Fixed previous messages are not listed.
+- Fixed volume up/down key cannot control call volume directly.
+- Fixed user in EMEAR org cannot message and call the user in US org.
+- Fixed could not get thumbnail of the WORD, POWERPOINT, EXCEL and PDF file in the message.
+- Fixed undesired OnConnectEvent callback is received twice.
+- Fixed local and remote views are stuck/frozen.
+- Fixed black screen when enable hardware codec.
+- Fixed NullPointerException when post messages.
+- Fixed cannot list messages in space for some case.
+- Fixed annotations not received by some users in a space call.
+- Fixed hangup fail when the the app is switched between the foreground and the background.
+- Fixed SSLHandshake on Android 7.
+- Fixed video isn't going full screen.
+
+
 ## [2.5.0](https://github.com/webex/webex-android-sdk/releases/tag/2.5.0)
 Released on 2020-04-01.
 #### Added
