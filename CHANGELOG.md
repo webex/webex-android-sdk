@@ -42,6 +42,7 @@ Released on 2020-09-28.
 - Add a new API `Call.setVideoLayout(VideoLayout)` to change the video layout during a call.
 - Add a new API `Call.setRemoteVideoRenderMode(VideoRenderMode)` to specify how the remote video adjusts its content to be render in a view.
 - Add a new API `Phone.setAdvancedSetting(new VideoMaxTxFPS(Int))` to change the max sending fps for video.
+- Add a new API `Phone.setAdvancedSetting(new VideoEnableCamera2(Boolean))` to enable(disable) android.hardware.camera2.
 - Add a new API `Phone.enableBackgroundStream(boolean)` to let control whether the app can continue video streaming when app in background.
 - Add a new API `SpaceClient.listWithActiveCalls` to get a list of spaces that have ongoing call.
 - Add a new API `Message.isAllMentioned` to check if the message mentioned everyone in space.
