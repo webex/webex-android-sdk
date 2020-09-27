@@ -9,8 +9,8 @@ ext {
     moduleName = 'Cisco Webex Android SDK'
     moduleGroupId = 'com.ciscowebex'
     moduleArtifactId = 'androidsdk'
-    moduleVersion = '2.5.0'
-    moduleVersionCode = 25000
+    moduleVersion = '2.6.0'
+    moduleVersionCode = 26024
     moduleDescription = 'Cisco Webex SDK for Android'
     moduleSiteUrl = 'https://developer.webex.com/docs/sdks/android'
     moduleProjectUrl = 'https://github.com/webex/webex-android-sdk'
@@ -185,7 +185,7 @@ publishing {
     repositories {
         maven {
             name 'DevSnapshot'
-            url "http://engci-maven.cisco.com/artifactory/webexsdk-SNAPSHOT/"
+            url "https://engci-maven.cisco.com/artifactory/webexsdk-SNAPSHOT/"
             credentials {
                 username repo_username
                 password repo_password
@@ -194,7 +194,7 @@ publishing {
 
         maven {
             name 'Release'
-            url "http://engci-maven.cisco.com/artifactory/webexsdk/"
+            url "https://engci-maven.cisco.com/artifactory/webexsdk/"
             credentials {
                 username repo_username
                 password repo_password
@@ -204,19 +204,18 @@ publishing {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation('com.webex:wme4android-release:10.3.1.1@aar')
-    implementation('com.google.code.gson:gson:2.7')
-    implementation('com.github.benoitdion.ln:ln:0.1.2')
-    implementation('com.squareup.okhttp3:okhttp:3.12.0')
-    implementation('com.squareup.okhttp3:logging-interceptor:3.12.0')
-    implementation('com.android.support:support-annotations:27.1.0')
-    implementation('com.android.support:support-compat:27.1.0')
-    implementation('com.nimbusds:nimbus-jose-jwt:2.26')
-    implementation('com.madgag.spongycastle:core:1.54.0.0')
-    implementation('com.madgag.spongycastle:prov:1.54.0.0')
-    implementation('joda-time:joda-time:2.10')
-
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.webex:wme4android-release:10.8.5.0@aar'
+    implementation 'com.google.code.gson:gson:2.7'
+    implementation 'com.github.benoitdion.ln:ln:0.1.2'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.0'
+    implementation 'com.android.support:support-annotations:27.1.0'
+    implementation 'com.android.support:support-compat:27.1.0'
+    implementation 'com.nimbusds:nimbus-jose-jwt:8.17.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.65'
+    implementation 'joda-time:joda-time:2.10'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support:support-annotations:27.1.0'
     androidTestImplementation 'com.android.support.test:runner:1.0.0'

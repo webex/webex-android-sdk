@@ -103,7 +103,7 @@ public class AudioDeviceConnectionManager {
             }
             int playbackStreamType = session == null ? AudioManager.STREAM_VOICE_CALL : session.getAudioPlaybackStreamType().getValue();
             Ln.i("requestAudioFocus playbackStreamType(%s)", playbackStreamType);
-            audioManager.requestAudioFocus(null, playbackStreamType, android.media.AudioManager.AUDIOFOCUS_GAIN);
+            audioManager.requestAudioFocus(null, playbackStreamType, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         } catch (Throwable t) {
             Ln.e(t);
         }
@@ -161,7 +161,8 @@ public class AudioDeviceConnectionManager {
                 Ln.d("playThroughWiredHeadset");
                 audioManager.stopBluetoothSco();
                 audioManager.setSpeakerphoneOn(false);
-                audioManager.setMode(isAudioEnhancement() ? android.media.AudioManager.MODE_IN_COMMUNICATION : android.media.AudioManager.MODE_NORMAL);
+                //int mode = isAudioEnhancement() ? android.media.AudioManager.MODE_IN_COMMUNICATION : android.media.AudioManager.MODE_NORMAL;
+                audioManager.setMode(android.media.AudioManager.MODE_IN_COMMUNICATION);
             }
             else if (status == ConnectionStatus.BLUETOOTH) {
                 Ln.d("playThroughBluetooth");
@@ -182,25 +183,25 @@ public class AudioDeviceConnectionManager {
     }
 
     public void updateAudioVolume() {
-        int streamType;
-        if (audioManager.getMode() == AudioManager.MODE_IN_COMMUNICATION) {
-            if (audioManager.isBluetoothScoOn()) {
-                streamType = STREAM_BLUETOOTH_SCO;
-            } else {
-                streamType = AudioManager.STREAM_VOICE_CALL;
-            }
-        } else {
-            streamType = AudioManager.STREAM_MUSIC;
-        }
-
-        int currentVol = audioManager.getStreamVolume(streamType);
-        int maxVol = audioManager.getStreamMaxVolume(streamType);
-        int volSetting = (65535 * currentVol) / maxVol;
-        Ln.d("updateAudioVolume: streamType=%s; set volume to=%s(%s/%s)", streamType, volSetting, currentVol, maxVol);
-        WmeSession session = mediaEngine == null ? null : mediaEngine.getSession();
-        if (session != null) {
-            session.setAudioVolume(volSetting);
-        }
+//        int streamType;
+//        if (audioManager.getMode() == AudioManager.MODE_IN_COMMUNICATION || audioManager.getMode() == AudioManager.MODE_IN_CALL) {
+//            if (audioManager.isBluetoothScoOn()) {
+//                streamType = STREAM_BLUETOOTH_SCO;
+//            } else {
+//                streamType = AudioManager.STREAM_VOICE_CALL;
+//            }
+//        } else {
+//            streamType = AudioManager.STREAM_MUSIC;
+//        }
+//
+//        int currentVol = audioManager.getStreamVolume(streamType);
+//        int maxVol = audioManager.getStreamMaxVolume(streamType);
+//        int volSetting = (65535 * currentVol) / maxVol;
+//        Ln.d("updateAudioVolume: streamType=%s; set volume to=%s(%s/%s)", streamType, volSetting, currentVol, maxVol);
+//        WmeSession session = mediaEngine == null ? null : mediaEngine.getSession();
+//        if (session != null) {
+//            session.setAudioVolume(volSetting);
+//        }
     }
 
     private boolean isBTHeadsetConnected() {
@@ -232,8 +233,8 @@ public class AudioDeviceConnectionManager {
         Ln.d("playThroughSpeakerPhone");
         audioManager.stopBluetoothSco();
         audioManager.setSpeakerphoneOn(true);
-        int mode = isAudioEnhancement() ? android.media.AudioManager.MODE_IN_COMMUNICATION : android.media.AudioManager.MODE_NORMAL;
-        audioManager.setMode(mode);
+        //int mode = isAudioEnhancement() ? android.media.AudioManager.MODE_IN_COMMUNICATION : android.media.AudioManager.MODE_NORMAL;
+        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
     }
 
     private void playThroughEarpiece() {

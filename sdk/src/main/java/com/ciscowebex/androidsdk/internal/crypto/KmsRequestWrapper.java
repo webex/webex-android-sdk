@@ -26,6 +26,7 @@ import com.cisco.wx2.sdk.kms.KmsRequest;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.internal.Credentials;
 import com.ciscowebex.androidsdk.internal.Device;
+import com.ciscowebex.androidsdk.utils.WebexId;
 
 public class KmsRequestWrapper<T> {
 
@@ -34,13 +35,14 @@ public class KmsRequestWrapper<T> {
         CREATE_EPHEMERAL_KEY,
         GET_KEYS,
         PING,
-        CREATE_RESOURCE;
+        CREATE_RESOURCE
     }
 
     private RequestType type;
     private KmsRequest kmsRequest;
     private CompletionHandler<T> callback;
-    private String conversationId;
+    private String convUrl;
+    private String convId;
     private Device device;
     private Credentials credentials;
 
@@ -50,8 +52,12 @@ public class KmsRequestWrapper<T> {
         this.callback = callback;
     }
 
-    public void setConversationId(String conversationId) {
-        this.conversationId = conversationId;
+    public void setConvUrl(String convUrl) {
+        this.convUrl = convUrl;
+    }
+
+    public void setConvId(String convId) {
+        this.convId = convId;
     }
 
     public void setDevice(Device device) {
@@ -78,8 +84,12 @@ public class KmsRequestWrapper<T> {
         return kmsRequest;
     }
 
-    public String getConversationId() {
-        return conversationId;
+    public String getConvUrl() {
+        return convUrl;
+    }
+
+    public String getConvId() {
+        return convId;
     }
 
     public CompletionHandler<T> getCallback() {

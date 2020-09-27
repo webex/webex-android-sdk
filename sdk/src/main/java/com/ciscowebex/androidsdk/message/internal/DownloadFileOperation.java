@@ -28,14 +28,15 @@ import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.Closure;
 import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.ServiceReqeust;
 import com.ciscowebex.androidsdk.internal.crypto.SecureContentReference;
 import com.ciscowebex.androidsdk.internal.model.FileModel;
 import com.ciscowebex.androidsdk.internal.model.ImageModel;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.message.MessageClient;
 import com.ciscowebex.androidsdk.utils.http.ContentDownloadMonitor;
-import com.github.benoitdion.ln.Ln;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import java.io.*;
 
@@ -73,12 +74,13 @@ public class DownloadFileOperation {
     }
 
     private void doDownload(String url, SecureContentReference scr, File outFile, CompletionHandler<Uri> callback) {
-        Service.Common.get().url(url).auth(authenticator).model(Response.class).error(callback).async((Closure<Response>) response -> {
-            InputStream is = response.body().byteStream();
-            if (is == null) {
+        ServiceReqeust.make(url).get().auth(authenticator).model(Response.class).error(callback).async((Closure<Response>) response -> {
+            ResponseBody body = response.body();
+            if (body == null) {
                 ResultImpl.errorInMain(callback, "Failed downloading from uri: " + url);
                 return;
             }
+            InputStream is = body.byteStream();
             InputStream in = scr != null ? scr.decrypt(is) : is;
             try {
                 OutputStream out = new FileOutputStream(outFile);

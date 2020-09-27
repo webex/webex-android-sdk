@@ -23,6 +23,8 @@
 package com.ciscowebex.androidsdk.internal.media;
 
 import android.view.View;
+import com.ciscowebex.androidsdk.utils.Json;
+import com.github.benoitdion.ln.Ln;
 import com.webex.wme.MediaTrack;
 
 import java.util.Arrays;
@@ -41,6 +43,7 @@ public class MediaHelper {
     }
 
     public static void requestSCR(MediaTrack track, MediaSCR p) {
+        Ln.d("Request " + Json.get().toJson(p) + "for " + track);
         track.RequestVideo(p.maxFs, p.maxFps, p.maxBr, p.maxDpb, p.maxMbps, p.priority, p.grouping, p.duplicate);
     }
 

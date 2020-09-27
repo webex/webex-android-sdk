@@ -52,12 +52,14 @@ public class Credentials {
 
     private Authenticator authenticator;
     private String userId;
+    private String orgId;
     private Person person;
     private String token;
 
     public Credentials(Authenticator authenticator, Person person, String token) {
         this.authenticator =authenticator;
-        this.userId = WebexId.translate(person.getId());
+        this.userId = WebexId.uuid(person.getId());
+        this.orgId = WebexId.uuid(person.getOrgId());
         this.person = person;
         this.token = token;
     }
@@ -68,6 +70,10 @@ public class Credentials {
 
     public String getUserId() {
         return userId;
+    }
+
+    public String getOrgId() {
+        return orgId;
     }
 
     public Person getPerson() {

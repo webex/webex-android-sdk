@@ -25,8 +25,11 @@ package com.ciscowebex.androidsdk.message;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.internal.Credentials;
 import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.message.internal.DraftImpl;
@@ -35,6 +38,7 @@ import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.ciscowebex.androidsdk.space.Space;
 import com.google.gson.Gson;
+import me.helloworld.utils.Checker;
 
 /**
  * This class represents a Message on Cisco Webex.
@@ -124,6 +128,8 @@ public class Message {
             return new Text(plain, html, markdown);
         }
 
+        private static final String REGEX = "data-object-type=\"([a-zA-Z]*)\"\\s+data-object-id=\"([0-9a-zA-Z-]+)\"";
+
         private String plain;
 
         private String html;
@@ -136,12 +142,35 @@ public class Message {
             this.markdown = markdown;
         }
 
-        private Text(@NonNull ObjectModel object) {
+        private Text(@NonNull ObjectModel object, @NonNull String clusterId) {
             this.plain = object.getDisplayName();
-            this.html = object.getContent();
+            this.html = reformatHtml(object.getContent(), clusterId);
             if (object instanceof MarkdownableModel) {
                 this.markdown = ((MarkdownableModel) object).getMarkdown();
             }
+        }
+
+        private String reformatHtml(@Nullable String html, @NonNull String clusterId) {
+            if (!Checker.isEmpty(html)) {
+                Pattern pattern = Pattern.compile(REGEX, Pattern.CASE_INSENSITIVE);
+                Matcher matcher = pattern.matcher(html);
+                while (matcher.find()) {
+                    if (matcher.groupCount() == 2) {
+                        String typeString = matcher.group(1);
+                        String uuid = matcher.group(2);
+                        if (!Checker.isEmpty(typeString) && !Checker.isEmpty(uuid)) {
+                            WebexId.Type type = typeString.equalsIgnoreCase("person") ? WebexId.Type.PEOPLE : WebexId.Type.getEnum(typeString);
+                            if (type != null) {
+                                String base64Id = new WebexId(type, clusterId, uuid).getBase64Id();
+                                if (!Checker.isEmpty(base64Id)) {
+                                    html = html.replace(uuid, base64Id);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return html;
         }
 
         /**
@@ -167,80 +196,79 @@ public class Message {
         }
     }
 
-    private transient ActivityModel activity;
+    protected transient ActivityModel activity;
 
-    private String id;
+    protected String id;
 
-    private String personId;
+    protected String personId;
 
-    private String personEmail;
+    protected String personEmail;
 
-    private String personDisplayName;
+    protected String personDisplayName;
 
-    private String spaceId;
+    protected String spaceId;
 
-    private Space.SpaceType spaceType;
+    protected Space.SpaceType spaceType;
 
-    private String toPersonId;
+    protected String toPersonId;
 
-    private String toPersonEmail;
+    protected String toPersonEmail;
 
-    private boolean isSelfMentioned;
+    protected boolean isSelfMentioned;
 
-    private Text textAsObject;
+    protected boolean isAllMentioned;
 
-    private transient List<RemoteFile> remoteFiles;
+    protected transient List<Mention> mentions;
 
-    private ParentModel parent;
+    protected Text textAsObject;
 
-    protected Message(ActivityModel activity, Credentials user, boolean received) {
+    protected transient List<RemoteFile> remoteFiles;
+
+    protected ParentModel parent;
+
+    protected String clusterId;
+
+    protected Message(ActivityModel activity, Credentials user, String clusterId, boolean received) {
         this.activity = activity;
-        this.id = new WebexId(WebexId.Type.MESSAGE_ID, activity.getId()).toHydraId();
+        this.clusterId = clusterId;
+        this.id = new WebexId(WebexId.Type.MESSAGE, clusterId, activity.getId()).getBase64Id();
         if (activity.getVerb().equals(ActivityModel.Verb.delete) && activity.getObject() != null) {
-            this.id = new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId();
+            this.id = new WebexId(WebexId.Type.MESSAGE, clusterId, activity.getObject().getId()).getBase64Id();
         }
         if (activity.getActor() != null) {
-            this.personId = new WebexId(WebexId.Type.PEOPLE_ID, activity.getActor().getId()).toHydraId();
+            this.personId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, activity.getActor().getId()).getBase64Id();
             this.personEmail = activity.getActor().getEmail();
             this.personDisplayName = activity.getActor().getDisplayName();
         }
         if (activity.getObject() != null) {
-            this.textAsObject = new Text(activity.getObject());
+            this.textAsObject = new Text(activity.getObject(), clusterId);
         }
         if (activity.getTarget() instanceof ConversationModel) {
-            this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
+            this.spaceId = new WebexId(WebexId.Type.ROOM, clusterId, activity.getTarget().getId()).getBase64Id();
             this.spaceType = ((ConversationModel) activity.getTarget()).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         } else if (activity.getTarget() instanceof SpacePropertyModel) {
-            this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getTarget().getId()).toHydraId();
-            this.spaceType = ((ConversationModel) activity.getTarget()).getTags().contains("ONE_ON_ONE") ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
+            this.spaceId = new WebexId(WebexId.Type.ROOM, clusterId, activity.getTarget().getId()).getBase64Id();
+            this.spaceType = ((ConversationModel) activity.getTarget()).containsTag(ConversationModel.Tag.ONE_ON_ONE) ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         } else if (activity.getTarget() instanceof PersonModel) {
             this.spaceType = Space.SpaceType.DIRECT;
-            this.toPersonId = new WebexId(WebexId.Type.PEOPLE_ID, activity.getTarget().getId()).toHydraId();
+            this.toPersonId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, activity.getTarget().getId()).getBase64Id();
             this.toPersonEmail = ((PersonModel) activity.getTarget()).getEmail();
         }
         if (this.spaceId == null) {
-            this.spaceId = new WebexId(WebexId.Type.ROOM_ID, activity.getConversationId()).toHydraId();
+            this.spaceId = new WebexId(WebexId.Type.ROOM, clusterId, activity.getConversationId()).getBase64Id();
         }
         if (user != null) {
             if (this.toPersonId == null && received) {
-                this.toPersonId = new WebexId(WebexId.Type.PEOPLE_ID, user.getUserId()).toHydraId();
+                this.toPersonId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, user.getUserId()).getBase64Id();
             }
             if (this.toPersonEmail == null && received && user.getPerson() != null) {
                 this.toPersonEmail = Utils.getFirst(user.getPerson().getEmails());
             }
-            this.isSelfMentioned = activity.isSelfMention(user, 0);
+            this.isSelfMentioned = activity.isSelfMentioned(user, 0);
         }
-
-        ArrayList<RemoteFile> remoteFiles = new ArrayList<>();
-        if (activity.getObject() != null && activity.getObject().isContent()) {
-            ContentModel content = (ContentModel) activity.getObject();
-            ItemsModel<FileModel> files = content.getContentFiles();
-            for (FileModel file : files.getItems()) {
-                RemoteFile remoteFile = new RemoteFileImpl(file);
-                remoteFiles.add(remoteFile);
-            }
-        }
-        this.remoteFiles = remoteFiles;
+        this.isAllMentioned = activity.isAllMentioned(0);
+        this.mentions = getMentions(activity.getObject());
+        this.remoteFiles = RemoteFileImpl.mapRemoteFiles(activity);
         this.parent = activity.getParent();
     }
 
@@ -369,6 +397,25 @@ public class Message {
     }
 
     /**
+     * Returns true if the message mentioned everyone in space.
+     *
+     * @since 2.6.0
+     */
+    public boolean isAllMentioned() {
+        return this.isAllMentioned;
+    }
+
+    /**
+     * Returns all people mentioned in the message
+     *
+     * @return The mentions.
+     * @since 2.6.0
+     */
+    public List<Mention> getMentions() {
+        return mentions;
+    }
+
+    /**
      * Returns a list of files attached to this message.
      *
      * @return A list of files attached to this message.
@@ -406,7 +453,7 @@ public class Message {
      * @since 2.5.0
      */
     public String getParentId() {
-        return parent == null ? null : new WebexId(WebexId.Type.MESSAGE_ID, parent.getId()).toHydraId();
+        return parent == null ? null : new WebexId(WebexId.Type.MESSAGE, clusterId, parent.getId()).getBase64Id();
     }
 
     /**
@@ -419,4 +466,24 @@ public class Message {
         Gson gson = new Gson();
         return gson.toJson(this);
     }
+
+    private List<Mention> getMentions(ObjectModel object) {
+        List<Mention> ret = new ArrayList<>();
+        if (object instanceof MentionableModel) {
+            MentionableModel mentionable = (MentionableModel) object;
+            if (mentionable.getMentions() != null && mentionable.getMentions().size() > 0) {
+                for (PersonModel mention : mentionable.getMentions().getItems()) {
+                    if (mention.getId() != null) {
+                        ret.add(new Mention.Person(new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER_ID, mention.getId()).getBase64Id()));
+                    }
+                }
+            }
+            if (mentionable.getGroupMentions() != null && mentionable.getGroupMentions().size() > 0) {
+                ret.add(new Mention.All());
+            }
+        }
+        return ret;
+    }
+
+
 }

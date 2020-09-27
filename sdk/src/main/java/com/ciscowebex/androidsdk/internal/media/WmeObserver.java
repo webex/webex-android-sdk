@@ -23,6 +23,9 @@
 package com.ciscowebex.androidsdk.internal.media;
 
 import android.util.Size;
+import com.cisco.wx2.diagnostic_events.MediaLine;
+
+import java.util.List;
 
 public interface WmeObserver {
 
@@ -41,4 +44,16 @@ public interface WmeObserver {
     void onCameraSwitched();
 
     void onError(MediaError error);
+
+    void onICEComplete();
+    void onICEFailed();
+    void onICEReportReady(boolean connectSuccess, List<MediaLine> mediaLines);
+    void onMediaQualityMetricsReady(String eventMetric);
+    void onMediaError(int mid, int vid, int errorCode);
+
+    void onMediaRxStart(WMEngine.Media media, Long csi);
+    void onMediaRxStop(WMEngine.Media media, Integer mediaStatus);
+    void onMediaTxStart(WMEngine.Media media);
+    void onMediaTxStop(WMEngine.Media media);
+    void onMediaBlocked(WMEngine.Media media, boolean blocked);
 }

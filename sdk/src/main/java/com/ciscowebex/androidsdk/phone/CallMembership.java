@@ -27,7 +27,7 @@ package com.ciscowebex.androidsdk.phone;
  *
  * @since 0.1
  */
-public interface CallMembership {
+public interface  CallMembership {
 
     /**
      * The enumeration of the status of the person in the membership.

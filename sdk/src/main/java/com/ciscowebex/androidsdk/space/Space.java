@@ -96,16 +96,6 @@ public class Space {
     @SerializedName("sipAddress")
     private String _sipAddress;
 
-    protected Space(ActivityModel activity) {
-        _lastActivity = activity.getPublished();
-        ObjectModel object = activity.getVerb().equals(ActivityModel.Verb.create) ? activity.getObject() : activity.getTarget();
-        if (object instanceof ConversationModel) {
-            _id = new WebexId(WebexId.Type.ROOM_ID, object.getId()).toHydraId();
-            _isLocked = ((ConversationModel) object).isLocked();
-            _type = ((ConversationModel) object).isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
-        }
-    }
-
     /**
      * @return The identifier of this space.
      * @since 0.1

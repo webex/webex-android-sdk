@@ -26,11 +26,13 @@ import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
+
 import com.ciscowebex.androidsdk.internal.Device;
 import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.utils.DateUtils;
 import com.ciscowebex.androidsdk.utils.Json;
 import com.google.gson.annotations.SerializedName;
+
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.Objects;
 
@@ -62,8 +64,13 @@ public class LocusModel {
     private String conversationUrl;
     private LocusDescriptionModel info;
     private LocusScheduledMeetingModel meeting;
+    private List<LocusScheduledMeetingModel> meetings;
     private Uri aclUrl;
     private List<MediaConnectionModel> mediaConnections;
+
+    public LocusKeyModel getKey() {
+        return key;
+    }
 
     public Date getCreated() {
         return created;
@@ -90,7 +97,7 @@ public class LocusModel {
     }
 
     public List<LocusParticipantModel> getRawParticipants() {
-        return participants;
+        return Collections.unmodifiableList(participants);
     }
 
     public List<LocusParticipantModel> getParticipants() {
@@ -135,10 +142,8 @@ public class LocusModel {
         this.mediaConnections = mediaConnections;
     }
 
-    @Nullable
-    @Deprecated
     public String getConversationUrl() {
-        return conversationUrl;
+        return (conversationUrl == null && info != null) ? info.getConversationUrl() : conversationUrl;
     }
 
     public LocusDescriptionModel getInfo() {
@@ -149,12 +154,16 @@ public class LocusModel {
         return meeting;
     }
 
+    public List<LocusScheduledMeetingModel> getMeetings() {
+        return meetings;
+    }
+
     /**
      * NOTE TO USERS: When this method returns false it has two separate, distinct meanings.
-     *
-     *     1. The meeting object on the DTO is null
-     *     2. The meeting object is non-null, and is inactive.
-     *
+     * <p>
+     * 1. The meeting object on the DTO is null
+     * 2. The meeting object is non-null, and is inactive.
+     * <p>
      * If you do not know if (1) from above is not the case based on prior processing then this method
      * should be called in conjunction with {@link #getMeeting()} to see if the object is null or not.
      * Do not assume that because this reports false that there is an inactive meeting object
@@ -200,6 +209,14 @@ public class LocusModel {
     }
 
     @Nullable
+    public LocusParticipantDeviceModel getMyDevice() {
+        if (getSelf() != null) {
+            return getMyDevice(getSelf().getDeviceUrl());
+        }
+        return null;
+    }
+
+    @Nullable
     public LocusParticipantDeviceModel getMyDevice(String deviceUrl) {
         if (deviceUrl != null && getSelf() != null) {
             List<LocusParticipantDeviceModel> deviceList = getSelf().getDevices();
@@ -237,6 +254,7 @@ public class LocusModel {
      * The call must be initiated between Cisco Spark app user and a cellular/landline network or vice versa
      * This call must not be a PMR call, one of the participant the cellular/landline network must be external, and
      * the participant's primary display name must be a telephone number
+     *
      * @return
      */
     @Nullable
@@ -257,17 +275,17 @@ public class LocusModel {
 
     /**
      * Counts the number of participants with type=USER or type=RESOURCE_ROOM who are joined or in lobby
-     *
+     * <p>
      * If a user is observing a resource we remove that room from the count.
-     *
+     * <p>
      * We only count a room if it's not being observed, and we count everyone observing the room as a participant
-     *
+     * <p>
      * Bob and Alice is observing Batcave
      * Charlie is joined from android
      * Mayflower is a room joined without any observers
-     *
+     * <p>
      * Count Bob, Alice, Charlie and Mayflower (Ignore Batcave)
-     *
+     * <p>
      * Tests in common/LocusTest
      *
      * @return joinedAndInLobbyParticipants
@@ -389,7 +407,7 @@ public class LocusModel {
                 LocusParticipantDeviceModel selfDevice = getMyDevice(deviceUrl);
                 if (selfDevice != null && selfDevice.getIntent() != null && selfDevice.getIntent().getAssociatedWith() != null) {
                     LocusParticipantModel associatedParticipant = getParticipant(Uri.parse(selfDevice.getIntent().getAssociatedWith()));
-                    if (associatedParticipant != null && associatedParticipant.isDeviceType(Device.WEBEX_SHARE_TYPE)) {
+                    if (associatedParticipant != null && associatedParticipant.isDeviceType(Device.Type.WEBEX_SHARE)) {
                         if (associatedParticipant.isInLobby()) {
                             isInLobby = true;
                         }
@@ -413,7 +431,7 @@ public class LocusModel {
                 for (LocusParticipantDeviceModel device : locusParticipant.getDevices()) {
                     if (device != null && device.getIntent() != null && device.getIntent().getAssociatedWith() != null) {
                         LocusParticipantModel associatedParticipant = getParticipant(Uri.parse(device.getIntent().getAssociatedWith()));
-                        if (associatedParticipant != null && associatedParticipant.isDeviceType(Device.WEBEX_SHARE_TYPE) &&
+                        if (associatedParticipant != null && associatedParticipant.isDeviceType(Device.Type.WEBEX_SHARE) &&
                                 associatedParticipant.getState() == LocusParticipantModel.State.JOINED) {
                             return true;
                         }
@@ -505,31 +523,24 @@ public class LocusModel {
         return false;
     }
 
-    public FloorModel getGrantedFloor() {
+    public MediaShareModel getGrantedMediaShare() {
         if (getMediaShares() != null) {
             for (MediaShareModel mediaShare : getMediaShares()) {
                 if (mediaShare.isValidType() && mediaShare.getFloor() != null && mediaShare.getFloor().getDisposition() == FloorModel.Disposition.GRANTED) {
-                    return mediaShare.getFloor();
+                    return mediaShare;
                 }
             }
         }
         return null;
     }
 
-    public boolean isFloorGranted() {
-        FloorModel floor = getFloor();
-        return floor != null && floor.getDisposition() == FloorModel.Disposition.GRANTED;
+    public FloorModel getGrantedFloor() {
+        MediaShareModel model = getGrantedMediaShare();
+        return model == null ? null : model.getFloor();
     }
 
-    public boolean isFloorReleased() {
-        if (getMediaShares() != null) {
-            for (MediaShareModel mediaShare : getMediaShares()) {
-                if (mediaShare.isValidType() && mediaShare.getFloor() != null && mediaShare.getFloor().getDisposition() == FloorModel.Disposition.RELEASED) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public boolean isFloorGranted() {
+        return getGrantedFloor() != null;
     }
 
     public MediaShareModel getWhiteboardMedia() {
@@ -541,18 +552,6 @@ public class LocusModel {
             }
         }
         return null;
-    }
-
-    public LocusParticipantModel getFloorBeneficiary() {
-        FloorModel floor = getFloor();
-        return floor != null ? floor.getBeneficiary() : null;
-    }
-
-    public void setFloorBeneficiary(LocusParticipantModel participant) {
-        FloorModel floor = getFloor();
-        if (floor != null) {
-            floor.setBeneficiary(participant);
-        }
     }
 
     public boolean isHeld() {
@@ -580,6 +579,7 @@ public class LocusModel {
      * And another separate locus for one-on-one scheduled space meetings.
      * Having two separate loci allows us to have one-on-one scheduled meetings with sharable meeting link while maintaining the current one-on-one private call feature.
      * One-on-one scheduled space meetings (OBTPs) will have ONE_ON_ONE_MEETING locus tag to identify them
+     *
      * @return
      */
     public boolean isOneOnOneSpaceObtp() {
@@ -602,7 +602,7 @@ public class LocusModel {
             for (LocusParticipantDeviceModel device : devices) {
                 // Find a SIP device and points to the provisional device and vice versa and is also either
                 // joined or in the lobby state.
-                if (Device.SIP_DEVICE_TYPE.equalsIgnoreCase(device.getDeviceType()) &&
+                if (Device.Type.SIP.getTypeName().equalsIgnoreCase(device.getDeviceType()) &&
                         provisionalDevice.getFinalUrl().equals(device.getUrl()) &&
                         provisionalDevice.getUrl().equals(device.getProvisionalUrl())) {
                     isConnected = isJoinedFromThisDevice(device.getUrl());
@@ -630,19 +630,31 @@ public class LocusModel {
 
     public boolean isOneOnOne() {
         LocusStateModel model = getFullState();
-        return model != null && model.getType() != LocusStateModel.Type.MEETING;
+        return (model != null && model.getType() != LocusStateModel.Type.MEETING) || isOneOnOneMeeting();
+    }
+
+    public boolean isOneOnOneMeeting() {
+        LocusStateModel model = getFullState();
+        if (model != null && model.getType() == LocusStateModel.Type.MEETING) {
+            LocusDescriptionModel info = getInfo();
+            return info != null && info.getLocusTags().contains(LocusTag.ONE_ON_ONE_MEETING);
+        }
+        return false;
     }
 
     public boolean isIncomingCall() {
-        LocusStateModel model = getFullState();
-        if (model != null && model.getState() == LocusStateModel.State.ACTIVE) {
-            LocusSelfModel self = getSelf();
-            if (self != null) {
-                AlertTypeModel alert = self.getAlertType();
-                return alert != null && AlertTypeModel.ALERT_FULL.equalsIgnoreCase(alert.getAction());
-            }
+        LocusStateModel full = getFullState();
+        if (full == null) {
+            return false;
         }
-        return false;
+        AlertTypeModel alert = (getSelf() == null) ? null : getSelf().getAlertType();
+        return (full.getState() == LocusStateModel.State.ACTIVE && alert != null && AlertTypeModel.ALERT_FULL.equalsIgnoreCase(alert.getAction()))
+                || ((full.getState() == LocusStateModel.State.ACTIVE || full.getState() == LocusStateModel.State.INITIALIZING) && getMeeting() != null);
+    }
+
+    public boolean isInactive() {
+        LocusStateModel model = getFullState();
+        return  model != null && model.getState() == LocusStateModel.State.INACTIVE;
     }
 
     public boolean isSelfInLobby() {
@@ -729,20 +741,6 @@ public class LocusModel {
         return m.getSdp();
     }
 
-    public @Nullable FloorModel getFloor() {
-        if (getMediaShares() != null) {
-            for (MediaShareModel mediaShare : getMediaShares()) {
-                if (MediaShareModel.SHARE_CONTENT_TYPE.equals(mediaShare.getName())) {
-                    FloorModel floor = mediaShare.getFloor();
-                    if (floor != null && floor.getGranted() != null) {
-                        return floor;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
     public @Nullable String getMediaShareUrl() {
         if (getMediaShares() != null) {
             for (MediaShareModel mediaShare : getMediaShares()) {
@@ -796,7 +794,7 @@ public class LocusModel {
         if (model != null && model.isActive()) {
             return Call.WaitReason.WAITING_FOR_ADMITTING;
         }
-        return  Call.WaitReason.MEETING_NOT_START;
+        return Call.WaitReason.MEETING_NOT_START;
     }
 
     public LocusModel applyDelta(LocusModel model) {
@@ -822,7 +820,12 @@ public class LocusModel {
             participants.addAll(this.participants);
         }
         if (!Checker.isEmpty(model.participants)) {
-            participants.addAll(model.participants);
+            for (LocusParticipantModel participant : model.participants) {
+                participants.remove(participant);
+                if (!participant.isRemoved()) {
+                    participants.add(participant);
+                }
+            }
         }
         ret.participants = new ArrayList<>(participants);
         return ret;

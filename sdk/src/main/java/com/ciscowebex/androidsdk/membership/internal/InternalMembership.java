@@ -26,33 +26,33 @@ import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 import com.ciscowebex.androidsdk.membership.Membership;
 import com.ciscowebex.androidsdk.membership.MembershipObserver;
 
-class InternalMembership extends Membership {
+public class InternalMembership extends Membership {
 
-    static class InternalMembershipCreated extends MembershipObserver.MembershipCreated {
-        InternalMembershipCreated(Membership membership, ActivityModel activity) {
+    public static class InternalMembershipCreated extends MembershipObserver.MembershipCreated {
+        public InternalMembershipCreated(Membership membership, ActivityModel activity) {
             super(membership, activity);
         }
     }
 
-    static class InternalMembershipDeleted extends MembershipObserver.MembershipDeleted {
-        InternalMembershipDeleted(Membership membership, ActivityModel activity) {
+    public static class InternalMembershipDeleted extends MembershipObserver.MembershipDeleted {
+        public InternalMembershipDeleted(Membership membership, ActivityModel activity) {
             super(membership, activity);
         }
     }
 
-    static class InternalMembershipUpdated extends MembershipObserver.MembershipUpdated {
-        InternalMembershipUpdated(Membership membership, ActivityModel activity) {
+    public static class InternalMembershipUpdated extends MembershipObserver.MembershipUpdated {
+        public InternalMembershipUpdated(Membership membership, ActivityModel activity) {
             super(membership, activity);
         }
     }
 
-    static class InternalMembershipMessageSeen extends MembershipObserver.MembershipMessageSeen {
-        InternalMembershipMessageSeen(Membership membership, ActivityModel activity, String messageId) {
+    public static class InternalMembershipMessageSeen extends MembershipObserver.MembershipMessageSeen {
+        public InternalMembershipMessageSeen(Membership membership, ActivityModel activity, String messageId) {
             super(membership, activity, messageId);
         }
     }
 
-    InternalMembership(ActivityModel activity) {
-        super(activity);
+    public InternalMembership(ActivityModel activity, String clusterId) {
+        super(activity, clusterId);
     }
 }

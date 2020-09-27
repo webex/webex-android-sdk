@@ -28,6 +28,9 @@ import android.util.Size;
 import android.view.View;
 import com.ciscowebex.androidsdk.internal.media.*;
 import com.ciscowebex.androidsdk.internal.media.WmeTrack;
+import com.ciscowebex.androidsdk.internal.model.LocusParticipantDeviceModel;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
+import com.ciscowebex.androidsdk.phone.Call;
 import com.ciscowebex.androidsdk.phone.Phone;
 import com.github.benoitdion.ln.Ln;
 import com.webex.wme.MediaConnection;
@@ -68,6 +71,8 @@ public class MediaSession {
 
     private boolean localOnly;
 
+    private boolean prepared;
+
     MediaSession(WmeSession session, boolean localOnly) {
         this.session = session;
         this.localOnly = localOnly;
@@ -79,6 +84,14 @@ public class MediaSession {
 
     public boolean isRunning() {
         return session.getState() == WmeSession.State.CONNECTED;
+    }
+
+    public void setPrepared(boolean prepared) {
+        this.prepared = prepared;
+    }
+
+    public boolean isPrepared() {
+        return prepared;
     }
 
     public void startPreview() {
@@ -100,6 +113,20 @@ public class MediaSession {
     public void startCloud(CallImpl call) {
         if (!localOnly) {
             session.launch(new MediaObserver(call));
+            Queue.main.run(() -> {
+                WmeTrack track = session.getTrack(WmeTrack.Type.RemoteVideo, WMEngine.MAIN_VID);
+                if (track != null && track.getTrack() != null && call != null && call.getModel() != null) {
+                    LocusParticipantDeviceModel device = call.getModel().getMyDevice();
+                    if (device == null) {
+                        Ln.d("Cannot find self device for call: " + call);
+                        return;
+                    }
+                    if (device.isServerComposed()) {
+                        Ln.d("Set the remote video render mode to CropFill for composed video");
+                        track.getTrack().SetRenderMode(MediaTrack.ScalingMode.CropFill);
+                    }
+                }
+            });
         }
     }
 
@@ -221,6 +248,21 @@ public class MediaSession {
 
     public Size getRemoteSharingViewSize() {
         return session.getRenderViewSize(WmeTrack.Type.RemoteSharing);
+    }
+
+    public void setRemoteVideoRenderMode(Call.VideoRenderMode mode) {
+        MediaTrack.ScalingMode scalingMode;
+        switch (mode) {
+            case Fit:
+                scalingMode = MediaTrack.ScalingMode.LetterBox;
+                break;
+            case StretchFill:
+                scalingMode = MediaTrack.ScalingMode.Fill;
+                break;
+            default:
+                scalingMode = MediaTrack.ScalingMode.CropFill;
+        }
+        session.setVideoRenderMode(WmeTrack.Type.RemoteVideo, scalingMode);
     }
 
     public Pair<View, View> getVideoViews() {

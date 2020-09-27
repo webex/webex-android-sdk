@@ -28,7 +28,6 @@ import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 
 import me.helloworld.utils.Checker;
-import me.helloworld.utils.Objects;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -111,10 +110,9 @@ public class CallMembershipImpl implements CallMembership {
 
     public boolean isSendingSharing() {
         LocusModel model = call.getModel();
-        FloorModel floor = model.getFloor();
-        return floor != null && model.isFloorGranted()
-                && floor.getBeneficiary() != null && Checker.isEqual(floor.getBeneficiary().getId(), getId())
-                && floor.getDisposition() == FloorModel.Disposition.GRANTED;
+        FloorModel floor = model.getGrantedFloor();
+        return floor != null
+                && floor.getBeneficiary() != null && Checker.isEqual(floor.getBeneficiary().getId(), getId());
     }
 
     @Override
@@ -132,7 +130,7 @@ public class CallMembershipImpl implements CallMembership {
         synchronized (this) {
             this.model = model;
             this.self = Checker.isEqual(model.getId(), call.getModel().getSelfId());
-            this.personId = new WebexId(WebexId.Type.PEOPLE_ID, model.getPerson().getId()).toHydraId();
+            this.personId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, model.getPerson().getId()).getBase64Id();
             this.initiator = model.isCreator();
         }
     }

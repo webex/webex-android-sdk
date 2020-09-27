@@ -30,15 +30,13 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.queue.Scheduler;
 import com.ciscowebex.androidsdk.utils.NetworkUtils;
 import com.github.benoitdion.ln.Ln;
 import okhttp3.*;
 
 import java.io.IOException;
-import java.net.Proxy;
-import java.net.ProxySelector;
-import java.net.URI;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -55,7 +53,7 @@ public class NetworkReachability extends BroadcastReceiver {
     private TimerTask updateNetworkState;
 
     public NetworkReachability(Context context, NetworkReachabilityObserver observer) {
-        this.connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);;
+        this.connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         this.observer = observer;
     }
 
@@ -91,9 +89,6 @@ public class NetworkReachability extends BroadcastReceiver {
         return false;
     }
 
-    public boolean isBehindProxy() {
-        return ProxySelector.getDefault().select(URI.create(Service.Wdm.endpoint(null) + "/ping")).get(0) != Proxy.NO_PROXY;
-    }
 
     public void update() {
         if (updateNetworkState != null) {
@@ -123,16 +118,18 @@ public class NetworkReachability extends BroadcastReceiver {
         boolean isConnected = info.isConnected();
         if (isConnected) {
             boolean currentIsBehindProxy = false;
-            if (isBehindProxy()) {
+            if (NetworkUtils.isBehindProxy()) {
                 currentIsBehindProxy = true;
-                OkHttpClient client = new OkHttpClient().newBuilder().proxyAuthenticator(new ProxyCheckAuthenticator()).build();
-                Request request = new Request.Builder().url(Service.Wdm.endpoint(null) + "/").build();
-                try {
-                    Response response = client.newCall(request).execute();
-                    Ln.d("response.code() = " + response.code());
-                } catch (IOException ex) {
-                    Ln.d("proxyRequiresAuth: " + currentNetworkConnectionStatus.isProxyRequiresAuth());
-                }
+                Queue.background.run(() -> {
+                    OkHttpClient client = new OkHttpClient().newBuilder().proxyAuthenticator(new ProxyCheckAuthenticator()).build();
+                    Request request = new Request.Builder().url(Service.Wdm.baseUrl(null) + "/ping").build();
+                    try {
+                        Response response = client.newCall(request).execute();
+                        Ln.d("response.code() = " + response.code());
+                    } catch (IOException ex) {
+                        Ln.d("proxyRequiresAuth: " + currentNetworkConnectionStatus.isProxyRequiresAuth());
+                    }
+                });
             }
             int currentNetworkType  = info.getType();
             String currentIPAddress = NetworkUtils.getLocalIpAddress();
@@ -162,6 +159,7 @@ public class NetworkReachability extends BroadcastReceiver {
             if (null == choosenMethod) {
                 Ln.d("Unknown proxy authetication method.");
             }
+            // TODO Support auth proxy
             return null;
         }
     }

@@ -251,7 +251,6 @@ public class UriUtils {
         return uri.getLastPathSegment();
     }
 
-
     public static String convertWebExPmrHttpUrlToSipAddress(@Nullable String pmrUrl) {
         if (TextUtils.isEmpty(pmrUrl)) {
             return null;

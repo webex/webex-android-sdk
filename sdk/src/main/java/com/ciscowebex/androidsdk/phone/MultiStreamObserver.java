@@ -98,7 +98,7 @@ public interface MultiStreamObserver {
             super(call, error == null ? call.getAuxStream(view) : null);
             _view = view;
             if (error != null) {
-                _error = new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, error);
+                _error = WebexError.from(error);
             }
         }
 
@@ -144,8 +144,9 @@ public interface MultiStreamObserver {
         public AuxStreamClosedEvent(Call call, View view, String error) {
             super(call, null);
             _view = view;
-            if (error != null)
-                _error = new WebexError(WebexError.ErrorCode.UNEXPECTED_ERROR, error);
+            if (error != null) {
+                _error = WebexError.from(error);
+            }
         }
 
         /**

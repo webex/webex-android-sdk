@@ -33,15 +33,18 @@ public interface LocusResponse {
     class Call implements LocusResponse {
 
         private Device device;
+        private String correlationId;
         private MediaSession session;
         private LocusModel locus;
         private CompletionHandler<com.ciscowebex.androidsdk.phone.Call> callback;
 
         public Call(Device device,
+                    String correlationId,
                     MediaSession session,
                     LocusModel model,
                     CompletionHandler<com.ciscowebex.androidsdk.phone.Call> callback) {
             this.device = device;
+            this.correlationId = correlationId;
             this.session = session;
             this.locus = model;
             this.callback = callback;
@@ -49,6 +52,10 @@ public interface LocusResponse {
 
         public Device getDevice() {
             return device;
+        }
+
+        public String getCorrelationId() {
+            return correlationId;
         }
 
         public MediaSession getSession() {

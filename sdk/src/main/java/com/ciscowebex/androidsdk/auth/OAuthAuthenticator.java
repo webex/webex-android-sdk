@@ -108,7 +108,7 @@ public class OAuthAuthenticator implements Authenticator {
                 .add("grant_type", "authorization_code")
                 .add("code", code)
                 .build();
-        Service.Hydra.post(formBody).to("access_token").queue(Queue.main).model(TokenModel.class).error(handler)
+        Service.Hydra.global().post(formBody).to("access_token").queue(Queue.main).model(TokenModel.class).error(handler)
                 .async((Closure<TokenModel>) model -> {
             Ln.d("Authorized: " + model);
             tokenModel = model;
@@ -150,7 +150,7 @@ public class OAuthAuthenticator implements Authenticator {
                 .add("refresh_token", saved.getRefreshToken())
                 .add("grant_type", "refresh_token")
                 .build();
-        Service.Hydra.post(formBody).to("access_token").queue(Queue.main).model(TokenModel.class).error(handler).async((Closure<TokenModel>) model -> {
+        Service.Hydra.global().post(formBody).to("access_token").queue(Queue.main).model(TokenModel.class).error(handler).async((Closure<TokenModel>) model -> {
             Ln.d("Refreshed: " + model);
             tokenModel = model;
             tokenModel.setExpiresIn(tokenModel.getExpiresIn() + System.currentTimeMillis() / 1000);

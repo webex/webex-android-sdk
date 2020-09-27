@@ -26,10 +26,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.Closure;
-import com.ciscowebex.androidsdk.internal.Service;
-import com.ciscowebex.androidsdk.internal.Device;
-import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.people.Person;
@@ -48,68 +45,55 @@ import java.util.*;
 
 public class CallService {
 
-    static class DialTarget {
-
-        private String address;
-        private AddressType type;
-
-        enum AddressType {
-            PEOPLE_ID,
-            PEOPLE_MAIL,
-            SPACE_ID,
-            SPACE_MAIL,
-            OTHER
-        }
-
-        public boolean isEndpoint() {
-            return this.type != AddressType.SPACE_ID;
-        }
-
-        public boolean isGroup() {
-            return this.type == AddressType.SPACE_ID || this.type == AddressType.SPACE_MAIL;
-        }
-
-        public static void lookup(@NonNull String address, Authenticator authenticator, CompletionHandler<DialTarget> callback) {
+    interface DialTarget {
+        static void lookup(@NonNull String address, Authenticator authenticator, Closure<DialTarget> callback) {
             WebexId id = WebexId.from(address);
-            Ln.d("%s, %s", id, address);
-            if (id != null && id.is(WebexId.Type.PEOPLE_ID)) {
-                callback.onComplete(ResultImpl.success(new DialTarget(id.getId(), AddressType.PEOPLE_ID)));
-            }
-            else if (id != null && id.is(WebexId.Type.ROOM_ID)) {
-                callback.onComplete(ResultImpl.success(new DialTarget(id.getId(), AddressType.SPACE_ID)));
-            }
-            else if (EmailAddress.isValid(address)) {
-                if (address.toLowerCase().endsWith("@meet.ciscospark.com")) {
-                    callback.onComplete(ResultImpl.success(new DialTarget(address, AddressType.SPACE_MAIL)));
-                }
-                else if (address.contains("@") && !address.contains(".")) {
+            Ln.d("Call target: %s, %s", id, address);
+            if (id != null && id.is(WebexId.Type.PEOPLE)) {
+                callback.invoke(new CallableTarget(id.getUUID()));
+            } else if (id != null && id.is(WebexId.Type.ROOM)) {
+                callback.invoke(new JoinableTarget(id));
+            } else if (EmailAddress.isValid(address)) {
+                if (address.contains("@") && !address.contains(".")) {
                     new PersonClientImpl(authenticator).list(address, null, 1, result -> {
                         List<Person> data = result.getData();
-                        if (!Checker.isEmpty(data)) {
-                            callback.onComplete(ResultImpl.success(new DialTarget(WebexId.from(data.get(0).getId()).getId(), AddressType.PEOPLE_ID)));
-                        }
-                        else {
-                            callback.onComplete(ResultImpl.success(new DialTarget(address, AddressType.PEOPLE_MAIL)));
+                        WebexId person = Checker.isEmpty(data) ? null : WebexId.from(data.get(0).getId());
+                        if (person == null) {
+                            callback.invoke(new CallableTarget(address));
+                        } else {
+                            callback.invoke(new CallableTarget(person.getUUID()));
                         }
                     });
+                } else {
+                    callback.invoke(new CallableTarget(address));
                 }
-                else {
-                    callback.onComplete(ResultImpl.success(new DialTarget(address, AddressType.PEOPLE_MAIL)));
-                }
+            } else {
+                callback.invoke(new CallableTarget(address));
             }
-            else {
-                callback.onComplete(ResultImpl.success(new DialTarget(address, AddressType.OTHER)));
-            }
+        }
+    }
 
+    static class JoinableTarget implements DialTarget {
+        private WebexId target;
+
+        public JoinableTarget(WebexId target) {
+            this.target = target;
         }
 
-        private DialTarget(String address, AddressType type) {
-            this.address = address;
-            this.type = type;
+        public WebexId getConversation() {
+            return target;
+        }
+    }
+
+    static class CallableTarget implements DialTarget {
+        private String target;
+
+        public CallableTarget(String target) {
+            this.target = target;
         }
 
-        public String getAddress() {
-            return address;
+        public String getCallee() {
+            return target;
         }
     }
 
@@ -119,27 +103,27 @@ public class CallService {
         this.authenticator = authenticator;
     }
 
-    public void getOrCreatePermanentLocus(String id, Device device, CompletionHandler<String> callback) {
-        Service.Conv.get("conversations", id, "locus")
+    public void getOrCreatePermanentLocus(WebexId conversation, Device device, CompletionHandler<String> callback) {
+        ServiceReqeust.make(conversation.getUrl(device))
+                .get("/locus")
                 .auth(authenticator)
-                .device(device)
                 .queue(Queue.main)
                 .model(LocusUrlResponseModel.class)
                 .error(callback)
                 .async((Closure<LocusUrlResponseModel>) model -> {
                     if (model == null || model.getLocusUrl() == null) {
                         callback.onComplete(ResultImpl.error("No locus uri"));
-                    }
-                    else {
+                    } else {
                         callback.onComplete(ResultImpl.success(model.getLocusUrl()));
                     }
                 });
     }
 
-    public void call(@NonNull String address, @NonNull String callId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
-        Service.Locus.post(makeBody(callId, layout, device, sdp, address, reachabilities)).to("loci", "call")
+    public void call(@NonNull String address, @NonNull MediaOption option, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
+        Service.Locus.homed(device)
+                .post(makeBody(correlationId, device, sdp, address, option, reachabilities))
+                .to("loci/call")
                 .auth(authenticator)
-                .device(device)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
                 .error(callback)
@@ -148,18 +132,20 @@ public class CallService {
                     if (locus != null && model.getMediaConnections() != null) {
                         locus.setMediaConnections(model.getMediaConnections());
                     }
-                    if (layout == null) {
+                    if (option.getLayout() == null) {
                         callback.onComplete(ResultImpl.success(locus));
                         return;
                     }
-                    if (locus.getSelf() != null){
-                        layout(locus.getSelf().getUrl(), device, layout, result -> callback.onComplete(ResultImpl.success(locus)));
+                    if (locus != null && locus.getSelf() != null) {
+                        layout(locus.getSelf().getUrl(), device, option.getLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
                     }
                 });
     }
 
-    public void join(@NonNull String url, @NonNull String callId, @NonNull Device device, @NonNull String sdp, @Nullable MediaOption.VideoLayout layout, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
-        Service.Locus.post(makeBody(callId, layout, device, sdp, null, reachabilities)).url(url).to("participant")
+    public void join(@NonNull String url, @NonNull MediaOption option, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
+        ServiceReqeust.make(url)
+                .post(makeBody(correlationId, device, sdp, null, option, reachabilities))
+                .to("participant")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -169,18 +155,20 @@ public class CallService {
                     if (locus != null && model.getMediaConnections() != null) {
                         locus.setMediaConnections(model.getMediaConnections());
                     }
-                    if (layout == null) {
+                    if (option.getLayout() == null) {
                         callback.onComplete(ResultImpl.success(locus));
                         return;
                     }
-                    if (locus.getSelf() != null){
-                        layout(locus.getSelf().getUrl(), device, layout, result -> callback.onComplete(ResultImpl.success(locus)));
+                    if (locus != null && locus.getSelf() != null) {
+                        layout(locus.getSelf().getUrl(), device, option.getLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
                     }
                 });
     }
 
     public void leave(@NonNull String participantUrl, @NonNull Device device, @NonNull CompletionHandler<LocusModel> callback) {
-        Service.Locus.put(makeBody(device.getDeviceUrl())).url(participantUrl).to("leave")
+        ServiceReqeust.make(participantUrl)
+                .put(makeBody(device.getDeviceUrl()))
+                .to("leave")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -195,7 +183,9 @@ public class CallService {
     }
 
     public void decline(@NonNull String url, @NonNull Device device, @NonNull CompletionHandler<Void> callback) {
-        Service.Locus.put(makeBody(device.getDeviceUrl())).url(url).to("participant", "decline")
+        ServiceReqeust.make(url)
+                .put(makeBody(device.getDeviceUrl()))
+                .to("participant/decline")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -204,7 +194,9 @@ public class CallService {
     }
 
     public void alert(@NonNull String url, @NonNull Device device, @NonNull CompletionHandler<Void> callback) {
-        Service.Locus.put(makeBody(device.getDeviceUrl())).url(url).to("participant", "alert")
+        ServiceReqeust.make(url)
+                .put(makeBody(device.getDeviceUrl()))
+                .to("participant/alert")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -221,7 +213,8 @@ public class CallService {
         json.put("localMedias", Lists.asList(mc));
         json.put("deviceUrl", device.getDeviceUrl());
         json.put("respOnlySdp", true);
-        Service.Locus.put(json).url(mediaUrl)
+        ServiceReqeust.make(mediaUrl)
+                .put(json).apply()
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -240,7 +233,7 @@ public class CallService {
         floor.put("disposition", share.getDisposition());
         floor.put("requester", Maps.makeMap("url", share.getRequesterUrl()));
         floor.put("beneficiary", Maps.makeMap("url", share.getBeneficiaryUrl(), "devices", Maps.makeMap("url", device.getDeviceUrl())));
-        Service.Locus.put(Maps.makeMap("floor", floor)).url(url)
+        ServiceReqeust.make(url).put(Maps.makeMap("floor", floor)).apply()
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -249,7 +242,8 @@ public class CallService {
     }
 
     public void get(@NonNull String callUrl, @NonNull CompletionHandler<LocusModel> callback) {
-        Service.Locus.get().url(callUrl)
+        ServiceReqeust.make(callUrl)
+                .get()
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -263,10 +257,9 @@ public class CallService {
                 });
     }
 
-    public void list(@NonNull Device device, @NonNull CompletionHandler<List<LocusModel>> callback) {
-        Service.Locus.get("loci")
+    public void list(@Nullable Device device, @NonNull CompletionHandler<List<LocusModel>> callback) {
+        Service.Locus.homed(device).get("loci")
                 .auth(authenticator)
-                .device(device)
                 .queue(Queue.main)
                 .model(LocusListResponseModel.class)
                 .error(callback)
@@ -276,10 +269,10 @@ public class CallService {
     public void admit(@NonNull String url, @NonNull List<CallMembership> memberships, @NonNull CompletionHandler<LocusModel> callback) {
         List<String> ids = new ArrayList<>(memberships.size());
         for (CallMembership membership : memberships) {
-            ids.add(((CallMembershipImpl)membership).getId());
+            ids.add(((CallMembershipImpl) membership).getId());
         }
         Map<Object, Object> params = Maps.makeMap("admit", Maps.makeMap("participantIds", ids));
-        Service.Locus.patch(params).url(url).to("controls")
+        ServiceReqeust.make(url).patch(params).to("controls")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -297,12 +290,11 @@ public class CallService {
         String type = "ActivePresence";
         if (layout == MediaOption.VideoLayout.SINGLE) {
             type = "Single";
-        }
-        else if (layout == MediaOption.VideoLayout.GRID) {
+        } else if (layout == MediaOption.VideoLayout.GRID) {
             type = "Equal";
         }
         Map<String, Object> params = Maps.makeMap("layout", Maps.makeMap("deviceUrl", device.getDeviceUrl(), "type", type));
-        Service.Locus.patch(params).url(participantUrl).to("controls")
+        ServiceReqeust.make(participantUrl).patch(params).to("controls")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -317,7 +309,7 @@ public class CallService {
     }
 
     public void keepalive(@NonNull String url, @NonNull CompletionHandler<Void> callback) {
-        Service.Locus.get().url(url).auth(authenticator).queue(Queue.main).error(callback).async((Closure<Void>) data -> callback.onComplete(ResultImpl.success(null)));
+        ServiceReqeust.make(url).get().auth(authenticator).queue(Queue.main).error(callback).async((Closure<Void>) data -> callback.onComplete(ResultImpl.success(null)));
     }
 
     public void dtmf(@NonNull String participantUrl, @NonNull Device device, int correlation, @NonNull String event, @Nullable Integer volume, @Nullable Integer durationMillis, @NonNull CompletionHandler<Void> callback) {
@@ -334,7 +326,7 @@ public class CallService {
         json.put("deviceUrl", device.getDeviceUrl());
         json.put("respOnlySdp", true);
         json.put("dtmf", dtmf);
-        Service.Locus.post(json).url(participantUrl).to("sendDtmf")
+        ServiceReqeust.make(participantUrl).post(json).to("sendDtmf")
                 .auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusMediaResponseModel.class)
@@ -342,16 +334,24 @@ public class CallService {
                 .async((Closure<LocusMediaResponseModel>) data -> callback.onComplete(ResultImpl.success(null)));
     }
 
-    private Object makeBody(String callId, MediaOption.VideoLayout layout, Device device, String sdp, String callee, MediaEngineReachabilityModel reachabilities) {
+    private Object makeBody(String correlationId, Device device, String sdp, String callee, MediaOption option, MediaEngineReachabilityModel reachabilities) {
         Map<String, Object> json = new HashMap<>();
         MediaConnectionModel mc = new MediaConnectionModel();
         mc.setLocalSdp(Json.get().toJson(new MediaInfoModel(sdp, reachabilities == null ? null : reachabilities.reachability)));
         mc.setType("SDP");
         json.put("localMedias", Lists.asList(mc));
-        json.put("device", device.toJsonMap(layout == MediaOption.VideoLayout.SINGLE ? null : Device.WEB_DEVICE_TYPE));
+        json.put("device", device.toJsonMap(Device.Type.WEB_CLIENT.getTypeName()));
         json.put("respOnlySdp", true);
-        json.put("correlationId", callId);
-        if (callee != null) {
+        json.put("correlationId", correlationId);
+        if (callee == null) {
+            if (option.isModerator()) {
+                json.put("moderator", true);
+            }
+            if (option.getPin() != null) {
+                json.put("pin", option.getPin());
+            }
+        }
+        else {
             json.put("invitee", Maps.makeMap("address", callee));
             json.put("supportsNativeLobby", true);
             json.put("moderator", false);

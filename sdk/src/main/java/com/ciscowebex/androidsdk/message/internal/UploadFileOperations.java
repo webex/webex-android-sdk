@@ -24,20 +24,16 @@ package com.ciscowebex.androidsdk.message.internal;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.Closure;
-import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.crypto.TypedSecureContentReferenceOutput;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.queue.SerialQueue;
-import com.ciscowebex.androidsdk.internal.Device;
-import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.internal.crypto.KeyObject;
 import com.ciscowebex.androidsdk.internal.crypto.SecureContentReference;
 import com.ciscowebex.androidsdk.internal.model.FileModel;
 import com.ciscowebex.androidsdk.internal.model.ImageModel;
 import com.ciscowebex.androidsdk.internal.model.UploadSessionModel;
 import com.ciscowebex.androidsdk.message.LocalFile;
-import com.ciscowebex.androidsdk.utils.Metadata;
 import com.ciscowebex.androidsdk.utils.MimeUtils;
 import com.google.gson.reflect.TypeToken;
 import me.helloworld.utils.Checker;
@@ -62,12 +58,12 @@ public class UploadFileOperations {
         }
     }
 
-    public void run(Authenticator authenticator, Device device, String conversationId, KeyObject key, CompletionHandler<List<FileModel>> callback) {
+    public void run(Authenticator authenticator, Device device, String convUrl, KeyObject key, CompletionHandler<List<FileModel>> callback) {
         if (Checker.isEmpty(operations)) {
             callback.onComplete(ResultImpl.success(Collections.emptyList()));
             return;
         }
-        getSpaceUrl(authenticator, device, conversationId, spaceUrl -> {
+        getSpaceUrl(authenticator, device, convUrl, spaceUrl -> {
             if (spaceUrl == null || spaceUrl.getData() == null) {
                 callback.onComplete(ResultImpl.error(spaceUrl));
                 return;
@@ -135,9 +131,9 @@ public class UploadFileOperations {
                     Queue.main.run(() -> local.getProgressHandler().onProgress(progress));
                 }
             });
-            Service.Common.post(Maps.makeMap("uploadProtocol", "content-length")).url(spaceUrl).to("upload_sessions").auth(authenticator).model(UploadSessionModel.class).error(callback)
-                    .async((Closure<UploadSessionModel>) sessionModel -> Service.Common.put(typedOutput).url(sessionModel.getUploadUrl()).error(callback)
-                            .async((Closure<Void>) uploaded -> Service.Common.post(Maps.makeMap("size", file.length())).url(sessionModel.getFinishUploadUrl()).auth(authenticator).model(FileModel.class).error(callback)
+            ServiceReqeust.make(spaceUrl).post(Maps.makeMap("uploadProtocol", "content-length")).to("upload_sessions").auth(authenticator).model(UploadSessionModel.class).error(callback)
+                    .async((Closure<UploadSessionModel>) sessionModel -> ServiceReqeust.make(sessionModel.getUploadUrl()).put(typedOutput).apply().error(callback)
+                            .async((Closure<Void>) uploaded -> ServiceReqeust.make(sessionModel.getFinishUploadUrl()).post(Maps.makeMap("size", file.length())).apply().auth(authenticator).model(FileModel.class).error(callback)
                                     .async((Closure<FileModel>) finish -> {
                                         if (finish == null) {
                                             callback.onComplete(ResultImpl.error("Cannot download the uploaded file"));
@@ -153,15 +149,19 @@ public class UploadFileOperations {
         }
     }
 
-    private void getSpaceUrl(Authenticator authenticator, Device device, String conversionId, CompletionHandler<String> callback) {
-        Service.Conv.put().to("conversations", conversionId, "space").auth(authenticator).device(device).model(new TypeToken<Map<String, Object>>() {
-        }.getType()).error(callback).async((Closure<Map<String, Object>>) map -> {
-            String spaceUrl = map == null ? null : Objects.toString(map.get("spaceUrl"), null);
-            if (spaceUrl == null) {
-                callback.onComplete(ResultImpl.error("No spaceUrl"));
-                return;
-            }
-            callback.onComplete(ResultImpl.success(spaceUrl));
-        });
+    private void getSpaceUrl(Authenticator authenticator, Device device, String convUrl, CompletionHandler<String> callback) {
+        ServiceReqeust.make(convUrl).put().to("space")
+                .auth(authenticator)
+                .model(new TypeToken<Map<String, Object>>() {
+                }.getType())
+                .error(callback)
+                .async((Closure<Map<String, Object>>) map -> {
+                    String spaceUrl = map == null ? null : Objects.toString(map.get("spaceUrl"), null);
+                    if (spaceUrl == null) {
+                        callback.onComplete(ResultImpl.error("No spaceUrl"));
+                        return;
+                    }
+                    callback.onComplete(ResultImpl.success(spaceUrl));
+                });
     }
 }

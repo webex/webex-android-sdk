@@ -22,21 +22,24 @@
 
 package com.ciscowebex.androidsdk.internal.model;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class DeviceModel {
 
     private String url;
+
+    private String deviceIdentifier;
 
     private String webSocketUrl;
 
     private String deviceSettingsString;
 
-    private Map<String, String> services = new HashMap<>();
+    private ServiceHostModel serviceHostMap;
 
     public String getDeviceUrl() {
         return url;
+    }
+
+    public String getDeviceIdentifier() {
+        return deviceIdentifier;
     }
 
     public String getWebSocketUrl() {
@@ -48,7 +51,7 @@ public class DeviceModel {
     }
 
     public String getServiceUrl(String key) {
-        return services.get(key);
+        return serviceHostMap == null ? null : serviceHostMap.getServiceUrl(key);
     }
 
 }

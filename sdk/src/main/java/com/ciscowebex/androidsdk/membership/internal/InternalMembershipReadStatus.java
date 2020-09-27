@@ -28,7 +28,7 @@ import com.ciscowebex.androidsdk.membership.MembershipReadStatus;
 
 class InternalMembershipReadStatus extends MembershipReadStatus {
 
-    InternalMembershipReadStatus(ConversationModel conversation, PersonModel person) {
-        super(conversation, person);
+    InternalMembershipReadStatus(ConversationModel conversation, PersonModel person, String clusterId) {
+        super(conversation, person, clusterId);
     }
 }

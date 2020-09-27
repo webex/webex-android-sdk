@@ -26,6 +26,7 @@ import android.net.Uri;
 import com.ciscowebex.androidsdk.internal.model.LocusKeyModel;
 import com.ciscowebex.androidsdk.utils.DateUtils;
 import com.google.gson.*;
+import org.joda.time.Instant;
 
 import java.lang.reflect.Type;
 import java.text.DateFormat;
@@ -48,15 +49,15 @@ public class SimpleAdaptor {
         }
     }
 
-//    public static class InstantType implements JsonSerializer<Instant>, JsonDeserializer<Instant> {
-//        public JsonElement serialize(Instant src, Type typeOfSrc, JsonSerializationContext context) {
-//            return new JsonPrimitive(src.toString());
-//        }
-//
-//        public Instant deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-//            return json.getAsString() != null && !json.getAsString().isEmpty() ? Instant.parse(json.getAsString()) : null;
-//        }
-//    }
+    public static class InstantType implements JsonSerializer<Instant>, JsonDeserializer<Instant> {
+        public JsonElement serialize(Instant src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(src.toString());
+        }
+
+        public Instant deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            return json.getAsString() != null && !json.getAsString().isEmpty() ? Instant.parse(json.getAsString()) : null;
+        }
+    }
 
     public static class UriType implements JsonDeserializer<Uri>, JsonSerializer<Uri> {
         @Override

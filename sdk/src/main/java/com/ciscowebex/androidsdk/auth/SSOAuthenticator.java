@@ -71,7 +71,6 @@ public class SSOAuthenticator implements Authenticator {
      * @see <a href="https://developer.webex.com/docs/integrations">Cisco Webex Integration</a>
      * @since 1.3.0
      */
-    @Deprecated
     public SSOAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri,
                             @NonNull String email, @NonNull String identityProviderUri, @Nullable Map<String, String> queryItems) {
         authenticator = new OAuthAuthenticator(clientId, clientSecret, scope, redirectUri);
@@ -142,7 +141,7 @@ public class SSOAuthenticator implements Authenticator {
      * use their account.
      */
     private String buildCodeGrantUrl() {
-        Uri.Builder orginalUrl = Uri.parse(Service.Hydra.endpoint(null)).buildUpon();
+        Uri.Builder orginalUrl = Uri.parse(Service.Hydra.baseUrl(null)).buildUpon();
         orginalUrl.appendPath("authorize")
                 .appendQueryParameter("response_type", "code")
                 .appendQueryParameter("client_id", authenticator.getClientId())

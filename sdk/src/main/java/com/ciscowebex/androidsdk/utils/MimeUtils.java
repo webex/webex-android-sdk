@@ -72,6 +72,15 @@ public class MimeUtils {
         }
     }
 
+    public static MimeUtils.ContentType getContentTypeByMimeType(String mimeType) {
+        if (isEmptyOrGeneric(mimeType)) {
+            return ContentType.UNKNOWN;
+        } else {
+            MimeUtils.ContentType ret = CONTENT_TYPE_BY_EXTENSION.get(getExtensionByMimeType(mimeType));
+            return ret == null ? ContentType.UNKNOWN : ret;
+        }
+    }
+
     public static String getExtensionByMimeType(String mimeType) {
         return !mimeType.isEmpty() && !"*/*".equals(mimeType) ? MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) : "";
     }

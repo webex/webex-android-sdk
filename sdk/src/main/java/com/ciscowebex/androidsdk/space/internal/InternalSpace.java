@@ -26,22 +26,17 @@ import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 import com.ciscowebex.androidsdk.space.Space;
 import com.ciscowebex.androidsdk.space.SpaceObserver;
 
-class InternalSpace extends Space {
+public class InternalSpace extends Space {
 
-    static class InternalSpaceCeated extends SpaceObserver.SpaceCreated {
-        InternalSpaceCeated(Space space, ActivityModel activity) {
+    public static class InternalSpaceCeated extends SpaceObserver.SpaceCreated {
+        public InternalSpaceCeated(Space space, ActivityModel activity) {
             super(space, activity);
         }
     }
 
-    static class InternalSpaceUpdated extends SpaceObserver.SpaceUpdated {
-        InternalSpaceUpdated(Space space, ActivityModel activity) {
+    public static class InternalSpaceUpdated extends SpaceObserver.SpaceUpdated {
+        public InternalSpaceUpdated(Space space, ActivityModel activity) {
             super(space, activity);
         }
     }
-
-    InternalSpace(ActivityModel activity) {
-        super(activity);
-    }
-
 }

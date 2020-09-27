@@ -23,6 +23,7 @@
 package com.ciscowebex.androidsdk.phone;
 
 import java.util.List;
+import java.util.Set;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -122,6 +123,28 @@ public interface Call {
     }
 
     /**
+     * The options to specify how the video adjusts its content to be render in a view.
+     *
+     * @since 2.6.0
+     */
+    enum VideoRenderMode {
+
+        /**
+         * The option to scale the video to fit the size of the view by maintaining the aspect ratio.
+         * The black paddings will be added to the remaining area of the view.
+         */
+        Fit,
+        /**
+         * The option to scale the video to fill the size of the view. Some portion of the video may be cropped.
+         */
+        CropFill,
+        /**
+         * The option to scale the video to fit the size of the view by changing the aspect ratio of the video if necessary.
+         */
+        StretchFill
+    }
+
+    /**
      * @return The camera facing mode selected for this call.
      * @since 0.1
      */
@@ -158,6 +181,13 @@ public interface Call {
     CallObserver getObserver();
 
     /**
+     * Return the associated space of this call
+     *
+     * @since 2.6.0
+     */
+    String getSpaceId();
+
+    /**
      * @return Call Memberships represent participants in this call.
      * @since 0.1
      */
@@ -174,6 +204,28 @@ public interface Call {
      * @since 0.1
      */
     CallMembership getTo();
+
+    /**
+     * Returns the schedules of this call if this call has one or more schedules.
+     * If the call isn't a scheduled call, the method will returns null.
+     *
+     * @since 2.6.0
+     */
+    Set<CallSchedule> getSchedules();
+
+    /**
+     * Specify how the remote video adjusts its content to be render in a view.
+     *
+     * @since 2.6.0
+     */
+    void setRemoteVideoRenderMode(VideoRenderMode mode);
+
+    /**
+     * Specify the video layout for the active speaker and other attendees in the group video meeting.
+     *
+     * @since 2.6.0
+     */
+    void setVideoLayout(MediaOption.VideoLayout layout);
 
     /**
      * @return The local video render view dimensions (points) of this call.

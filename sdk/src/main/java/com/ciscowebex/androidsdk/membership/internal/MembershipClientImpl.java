@@ -32,7 +32,6 @@ import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
-import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 import com.ciscowebex.androidsdk.internal.model.ConversationModel;
 import com.ciscowebex.androidsdk.internal.model.PersonModel;
 import com.ciscowebex.androidsdk.membership.Membership;
@@ -46,10 +45,9 @@ import com.ciscowebex.androidsdk.internal.model.ItemsModel;
 import com.google.gson.reflect.TypeToken;
 import me.helloworld.utils.collection.Maps;
 
-public class MembershipClientImpl implements MembershipClient, ActivityListener {
+public class MembershipClientImpl implements MembershipClient {
 
     private PhoneImpl phone;
-    private MembershipObserver observer;
 
     public MembershipClientImpl(PhoneImpl phone) {
         this.phone = phone;
@@ -57,37 +55,12 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void setMembershipObserver(MembershipObserver observer) {
-        this.observer = observer;
-    }
-
-    public void processActivity(@NonNull ActivityModel activity) {
-        if (observer == null) {
-            return;
-        }
-        final MembershipObserver.MembershipEvent event;
-        if (activity.isAddParticipant()) {
-            event = new InternalMembership.InternalMembershipCreated(new InternalMembership(activity), activity);
-        }
-        else if (activity.isLeaveActivity()) {
-            event = new InternalMembership.InternalMembershipDeleted(new InternalMembership(activity), activity);
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.assignModerator || activity.getVerb() == ActivityModel.Verb.unassignModerator) {
-            event = new InternalMembership.InternalMembershipUpdated(new InternalMembership(activity), activity);
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.acknowledge) {
-            event = new InternalMembership.InternalMembershipMessageSeen(new InternalMembership(activity), activity, new WebexId(WebexId.Type.MESSAGE_ID, activity.getObject().getId()).toHydraId());
-        }
-        else {
-            event = null;
-        }
-        if (event != null) {
-            Queue.main.run(() -> observer.onEvent(event));
-        }
+        phone.setMembershipObserver(observer);
     }
 
     @Override
     public void list(@Nullable String spaceId, @Nullable String personId, @Nullable String personEmail, int max, @NonNull CompletionHandler<List<Membership>> handler) {
-        Service.Hydra.get("memberships")
+        Service.Hydra.global().get("memberships")
                 .with("roomId", spaceId)
                 .with("spaceId", spaceId)
                 .with("personId", personId)
@@ -102,7 +75,7 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void get(@NonNull String membershipId, @NonNull CompletionHandler<Membership> handler) {
-        Service.Hydra.get("memberships", membershipId)
+        Service.Hydra.global().get("memberships/" + membershipId)
                 .auth(phone.getAuthenticator())
                 .queue(Queue.main)
                 .model(Membership.class)
@@ -112,7 +85,7 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void create(@NonNull String spaceId, @Nullable String personId, @Nullable String personEmail, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
-        Service.Hydra.post(Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator))
+        Service.Hydra.global().post(Maps.makeMap("roomId", spaceId, "spaceId", spaceId, "personId", personId, "personEmail", personEmail, "isModerator", isModerator))
                 .to("memberships")
                 .auth(phone.getAuthenticator())
                 .queue(Queue.main)
@@ -123,8 +96,8 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void update(@NonNull String membershipId, boolean isModerator, @NonNull CompletionHandler<Membership> handler) {
-        Service.Hydra.put(Maps.makeMap("isModerator", isModerator))
-                .to("memberships", membershipId)
+        Service.Hydra.global().put(Maps.makeMap("isModerator", isModerator))
+                .to("memberships/" + membershipId)
                 .auth(phone.getAuthenticator())
                 .queue(Queue.main)
                 .model(Membership.class)
@@ -134,7 +107,7 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void delete(@NonNull String membershipId, @NonNull CompletionHandler<Void> handler) {
-        Service.Hydra.delete("memberships", membershipId)
+        Service.Hydra.global().delete("memberships/" + membershipId)
                 .auth(phone.getAuthenticator())
                 .queue(Queue.main)
                 .error(handler)
@@ -143,30 +116,36 @@ public class MembershipClientImpl implements MembershipClient, ActivityListener 
 
     @Override
     public void listWithReadStatus(@NonNull String spaceId, @NonNull CompletionHandler<List<MembershipReadStatus>> handler) {
-        Service.Conv.get("conversations", WebexId.translate(spaceId))
-                .with("uuidEntryFormat", "true")
-                .with("personRefresh", "true")
-                .with("includeParticipants", "true")
-                .with("participantAckFilter", "all")
-                .with("activitiesLimit", "0")
-                .auth(phone.getAuthenticator())
-                .device(phone.getDevice())
-                .queue(Queue.main)
-                .model(ConversationModel.class)
-                .error(handler)
-                .async((Closure<ConversationModel>) model -> {
-                    if (model == null) {
-                        handler.onComplete(ResultImpl.success(Collections.emptyList()));
-                        return;
+        WebexId conversation = WebexId.from(spaceId);
+        if (conversation == null) {
+            handler.onComplete(ResultImpl.error("Not found space: " + spaceId));
+            return;
+        }
+        ServiceReqeust.make(conversation.getUrl(phone.getDevice())).get()
+            .with("uuidEntryFormat", "true")
+            .with("personRefresh", "true")
+            .with("includeParticipants", "true")
+            .with("participantAckFilter", "all")
+            .with("activitiesLimit", "0")
+            .auth(phone.getAuthenticator())
+            .queue(Queue.main)
+            .model(ConversationModel.class)
+            .error(handler)
+            .async((Closure<ConversationModel>) model -> {
+                if (model == null) {
+                    handler.onComplete(ResultImpl.success(Collections.emptyList()));
+                    return;
+                }
+                List<MembershipReadStatus> result = new ArrayList<>();
+                String clusterId = phone.getDevice().getClusterId(model.getUrl());
+                for (PersonModel person : model.getParticipants().getItems()) {
+                    try {
+                        result.add(new InternalMembershipReadStatus(model, person, clusterId));
+                    } catch (Throwable ignored) {
                     }
-                    List<MembershipReadStatus> result = new ArrayList<>();
-                    for (PersonModel person : model.getParticipants().getItems()) {
-                        try {
-                            result.add(new InternalMembershipReadStatus(model, person));
-                        } catch (Throwable ignored) {
-                        }
-                    }
-                    handler.onComplete(ResultImpl.success(result));
-                });
+                }
+                handler.onComplete(ResultImpl.success(result));
+            });
+
     }
 }

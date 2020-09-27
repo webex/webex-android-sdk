@@ -8,28 +8,54 @@ import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.queue.SerialQueue;
 import com.ciscowebex.androidsdk.utils.Json;
-import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.http.HttpClient;
 import com.github.benoitdion.ln.Ln;
+import me.helloworld.utils.Checker;
+import me.helloworld.utils.Strings;
 import okhttp3.*;
 
+import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.SocketException;
 import java.util.*;
 
 public class ServiceReqeust {
 
-    private final Service service;
+    public static ServiceReqeust make(String url) {
+        return new ServiceReqeust(url);
+    }
+
+    public static class PathableRequest {
+
+        private ServiceReqeust reqeust;
+
+        public PathableRequest(ServiceReqeust reqeust) {
+            this.reqeust = reqeust;
+        }
+
+        public ServiceReqeust to(String path) {
+            if (!Checker.isEmpty(path)) {
+                this.reqeust.path = Strings.trim(path);
+            }
+            return this.reqeust;
+        }
+
+        public ServiceReqeust apply() {
+            return this.reqeust;
+        }
+
+    }
+
+    public static final String HEADER_TRACKING_ID = "TrackingID";
 
     private String url;
 
-    private final List<String> paths = new ArrayList<>();
+    private String path;
 
     private final Map<String, String> queries = new HashMap<>();
 
     private RequestBody body;
-
-    private Device device;
 
     private Authenticator authenticator;
 
@@ -41,19 +67,52 @@ public class ServiceReqeust {
 
     private Request.Builder builder;
 
-    public ServiceReqeust(Service service, Request.Builder builder) {
-        this.service = service;
-        this.builder = builder;
-    }
-
-    public ServiceReqeust url(String url) {
+    public ServiceReqeust(String url) {
         this.url = url;
+        this.builder = new Request.Builder();
+    }
+
+    public ServiceReqeust get() {
+        return this.get(null);
+    }
+
+    public ServiceReqeust get(String path) {
+        this.builder.get();
+        this.path = path;
         return this;
     }
 
-    public ServiceReqeust to(String... paths) {
-        this.paths.addAll(Arrays.asList(paths));
+    public ServiceReqeust delete() {
+        return this.delete(null);
+    }
+
+    public ServiceReqeust delete(String path) {
+        this.builder.delete();
+        this.path = path;
         return this;
+    }
+
+    public PathableRequest post(Object o) {
+        this.builder.post(toBody(o));
+        return new PathableRequest(this);
+    }
+
+    public PathableRequest post() {
+        return this.post(null);
+    }
+
+    public PathableRequest put(Object o) {
+        this.builder.put(toBody(o));
+        return new PathableRequest(this);
+    }
+
+    public PathableRequest put() {
+        return this.put(null);
+    }
+
+    public PathableRequest patch(Object o) {
+        this.builder.patch(toBody(o));
+        return new PathableRequest(this);
     }
 
     public ServiceReqeust with(String key, String value) {
@@ -85,11 +144,6 @@ public class ServiceReqeust {
         return this;
     }
 
-    public ServiceReqeust device(Device device) {
-        this.device = device;
-        return this;
-    }
-
     public ServiceReqeust model(Type typeOfModel) {
         this.typeOfModel = typeOfModel;
         return this;
@@ -101,13 +155,9 @@ public class ServiceReqeust {
     }
 
     public <M> void async(Closure<M> closure) {
-        String base = this.url;
-        if (base == null && service != null) {
-            base = service.endpoint(device);
-        }
-        HttpUrl.Builder url = HttpUrl.parse(base).newBuilder();
-        if (paths.size() > 0) {
-            url.addPathSegments(Utils.join("/", paths));
+        HttpUrl.Builder url = HttpUrl.parse(this.url).newBuilder();
+        if (!Checker.isEmpty(this.path)) {
+            url.addPathSegments(this.path);
         }
         if (queries.size() > 0) {
             for (Map.Entry<String, String> entry : queries.entrySet()) {
@@ -117,7 +167,7 @@ public class ServiceReqeust {
         builder.url(url.build());
 
         if (authenticator == null) {
-            async(builder.build(), false, closure);
+            async(HttpClient.defaultClient, builder.build(), false, closure);
         }
         else {
             authenticator.getToken(tokenResult -> {
@@ -126,16 +176,20 @@ public class ServiceReqeust {
                     doError(tokenResult.getError() == null ? WebexError.from("Token is null") : tokenResult.getError());
                 } else {
                     builder.header("Authorization", "Bearer " + token);
-                    async(builder.build(), true, closure);
+                    async(HttpClient.defaultClient, builder.build(), true, closure);
                 }
             });
         }
     }
 
-    private <M> void async(Request request, boolean refresh, Closure<M> closure) {
-        HttpClient.client.newCall(request).enqueue(new Callback() {
+    private <M> void async(OkHttpClient client, Request request, boolean refresh, Closure<M> closure) {
+        client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                if ((e instanceof SSLException || e instanceof SocketException) && !client.connectionSpecs().contains(HttpClient.TLS_SPEC)) {
+                    async(HttpClient.newClient().connectionSpecs(Collections.singletonList(HttpClient.TLS_SPEC)).build(), request, refresh, closure);
+                    return;
+                }
                 doError(WebexError.from(e));
             }
 
@@ -147,7 +201,7 @@ public class ServiceReqeust {
                         if (refreshedToken == null) {
                             doError(refreshResult.getError() == null ? WebexError.from("Token is null") : refreshResult.getError());
                         } else {
-                            async(request.newBuilder().header("Authorization", "Bearer " + refreshedToken).build(), false, closure);
+                            async(client, request.newBuilder().header("Authorization", "Bearer " + refreshedToken).build(), false, closure);
                         }
                     });
                 }
@@ -208,6 +262,18 @@ public class ServiceReqeust {
                 return;
             }
             queue.run(() -> modelCallback.invoke(model));
+        }
+    }
+
+    private static RequestBody toBody(Object o) {
+        if (o == null) {
+            return RequestBody.create(null, new byte[0]);
+        }
+        else if (o instanceof RequestBody) {
+            return (RequestBody) o;
+        }
+        else {
+            return RequestBody.create(MediaType.get("application/json; charset=utf-8"), Json.get().toJson(o));
         }
     }
 }

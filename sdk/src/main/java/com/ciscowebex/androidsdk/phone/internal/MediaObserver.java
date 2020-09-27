@@ -23,6 +23,8 @@
 package com.ciscowebex.androidsdk.phone.internal;
 
 import android.util.Size;
+import com.cisco.wx2.diagnostic_events.MediaLine;
+import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.media.MediaError;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
@@ -32,8 +34,11 @@ import com.ciscowebex.androidsdk.phone.AuxStream;
 import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.phone.CallObserver;
 import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
+import com.ciscowebex.androidsdk.utils.Json;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
+
+import java.util.List;
 
 class MediaObserver implements WmeObserver {
 
@@ -66,11 +71,11 @@ class MediaObserver implements WmeObserver {
 
     @Override
     public void onRemoteSharingAvailable(boolean available) {
-        Queue.main.run(() -> {
-            if (call != null && call.getObserver() != null) {
-                call.getObserver().onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, available));
-            }
-        });
+//        Queue.main.run(() -> {
+//            if (call != null && call.getObserver() != null) {
+//                call.getObserver().onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, available));
+//            }
+//        });
     }
 
     @Override
@@ -241,6 +246,66 @@ class MediaObserver implements WmeObserver {
 
     @Override
     public void onError(MediaError error) {
-        Ln.e("Media Error: " + error);
+        Ln.e("Media Error: " + Json.get().toJson(error));
+    }
+
+    @Override
+    public void onICEComplete() {
+
+    }
+
+    @Override
+    public void onICEFailed() {
+
+    }
+
+    @Override
+    public void onICEReportReady(boolean connectSuccess, List<MediaLine> mediaLines) {
+        CallAnalyzerReporter.shared.reportIceEnd(call, connectSuccess, mediaLines);
+    }
+
+    @Override
+    public void onMediaQualityMetricsReady(String metrics) {
+        CallAnalyzerReporter.shared.reportMediaQualityMetrics(call, metrics);
+    }
+
+    @Override
+    public void onMediaError(int mid, int vid, int errorCode) {
+        CallAnalyzerReporter.shared.reportMediaCapabilities(call, errorCode);
+    }
+
+    @Override
+    public void onMediaRxStart(WMEngine.Media media, Long csi) {
+        CallAnalyzerReporter.shared.reportMediaRxStart(call, media, csi);
+        if (media == WMEngine.Media.Audio) {
+            CallAnalyzerReporter.shared.reportMediaRenderStart(call, media, null);
+        }
+    }
+
+    @Override
+    public void onMediaRxStop(WMEngine.Media media, Integer mediaStatus) {
+        CallAnalyzerReporter.shared.reportMediaRxStop(call, media, mediaStatus);
+    }
+
+    @Override
+    public void onMediaTxStart(WMEngine.Media media) {
+        CallAnalyzerReporter.shared.reportMediaTxStart(call, media);
+    }
+
+    @Override
+    public void onMediaTxStop(WMEngine.Media media) {
+        CallAnalyzerReporter.shared.reportMediaTxStop(call, media);
+    }
+
+    @Override
+    public void onMediaBlocked(WMEngine.Media media, boolean blocked) {
+        if (blocked) {
+            CallAnalyzerReporter.shared.reportMediaRenderStop(call, media);
+            if (media == WMEngine.Media.Sharing) {
+                onMediaRxStop(media, 0);
+            }
+        } else {
+            CallAnalyzerReporter.shared.reportMediaRenderStart(call, media, null);
+        }
     }
 }

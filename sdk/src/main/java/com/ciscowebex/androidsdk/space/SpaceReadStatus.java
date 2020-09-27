@@ -50,8 +50,8 @@ public class SpaceReadStatus {
     @SerializedName("lastSeenActivityDate")
     private Date _lastSeenActivityDate;
 
-    protected SpaceReadStatus(ConversationModel conversation) {
-        _id =  new WebexId(WebexId.Type.ROOM_ID, conversation.getId()).toHydraId();
+    protected SpaceReadStatus(ConversationModel conversation, String clusterId) {
+        _id =  new WebexId(WebexId.Type.ROOM, clusterId, conversation.getId()).getBase64Id();
         _type = conversation.isOneOnOne() ? Space.SpaceType.DIRECT : Space.SpaceType.GROUP;
         _lastSeenActivityDate = conversation.getLastSeenActivityDate();
         _lastActivityDate = conversation.getLastReadableActivityDate();

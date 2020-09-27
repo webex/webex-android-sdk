@@ -38,7 +38,7 @@ Assuming you already have an Android project, e.g. _MyWebexApp_, for your Androi
 
     ```groovy
     dependencies { 
-        compile('com.ciscowebex:androidsdk:2.5.0@aar', {
+        compile('com.ciscowebex:androidsdk:2.6.0@aar', {
             transitive = true
         })
     }
@@ -194,11 +194,6 @@ Here are some examples of how to use the Android SDK in your app.
                     public void onMediaChanged(MediaChangedEvent mediaChangedEvent) {
 
                     }
-                    
-                    @Override
-                    public void onWaiting(Call call, Call.WaitReason waitReason) {
-        
-                    }
                 });
             }
             else {
@@ -228,6 +223,7 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
     ```
+   
 7. Make an space call:
 
     ```java
@@ -429,6 +425,7 @@ Here are some examples of how to use the Android SDK in your app.
         }
     });
     ```
+    
 15. Set MembershipObserver to receive Membership events 
 
     ```java
@@ -454,6 +451,7 @@ Here are some examples of how to use the Android SDK in your app.
             }
         });
     ```
+    
 16. Set SpaceObserver to receive Space events 
 
     ```java
@@ -473,6 +471,7 @@ Here are some examples of how to use the Android SDK in your app.
             }
         });
     ```
+    
 17. Get space meeting details
 
     ```java
@@ -499,6 +498,54 @@ Here are some examples of how to use the Android SDK in your app.
             }
         });
     ```
+19. Join password-protected meetings
+
+    ```java
+    mediaOption.setModerator(boolean moderator);
+
+    mediaOption.setPin(String pin);
+    ```
+20. Change the video layout during a call
+
+    ```java
+   activeCall.setVideoLayout(MediaOption.VideoLayout layout);
+    ```
+21. Specify how the remote video adjusts its content to be render in a view
+
+    ```java
+   activeCall.setRemoteVideoRenderMode(VideoRenderMode mode);
+    ```
+22. Change the max sending fps for video
+
+    ```java
+   webex.phone().setAdvancedSetting(new VideoMaxTxFPS(int value));
+    ```
+23. Enable(disable) android.hardware.camera2
+
+    ```java
+   webex.phone().setAdvancedSetting(new VideoEnableCamera2(boolean enable));
+    ```
+24. Whether the app can continue video streaming when app in background
+
+    ```java
+   webex.phone().enableBackgroundStream(boolean enable);
+    ```
+25. Get a list of spaces that have ongoing call
+
+    ```java
+   webex.spaces().listWithActiveCalls(r -> {});
+    ```
+26. Check if the message mentioned everyone in space
+
+    ```java
+   message.isAllMentioned()
+    ```
+27. Get all people mentioned in the message
+
+    ```java
+   message.getMentions()
+    ```
+    
 ## Migrating from Cisco Spark Android SDK
 
 The purpose of this guide is to help you to migrate from Cisco Spark Android SDK to Cisco Webex Android SDK.
@@ -528,7 +575,7 @@ Assuming you already have an Android project with Spark Android SDK integrated. 
         // compile('com.ciscospark:androidsdk:1.4.0@aar', {
         //     transitive = true
         // })
-        compile('com.ciscowebex:androidsdk:2.5.0@aar', {
+        implementation('com.ciscowebex:androidsdk:2.6.0@aar', {
             transitive = true
         })
     }

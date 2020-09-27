@@ -29,12 +29,16 @@ import android.util.Size;
 import android.view.View;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.WebexError;
+import com.ciscowebex.androidsdk.internal.media.WMEngine;
+import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
+import com.ciscowebex.androidsdk.internal.queue.NamedRunnable;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.queue.Scheduler;
 import com.ciscowebex.androidsdk.internal.Device;
 import com.ciscowebex.androidsdk.internal.model.*;
 import com.ciscowebex.androidsdk.phone.*;
 import com.ciscowebex.androidsdk.utils.Lists;
+import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.Objects;
@@ -49,6 +53,7 @@ public class CallImpl implements Call {
     private final Direction direction;
     private final boolean group;
 
+    private final String correlationId;
     private @Nullable MediaSession media;
     private CallObserver observer;
     private MultiStreamObserver streamObserver;
@@ -59,6 +64,7 @@ public class CallImpl implements Call {
     private List<AuxStreamImpl> streams = new ArrayList<>();
     private CallMembershipImpl activeSpeaker;
     private int availableStreamCount = 0;
+    private Set<CallSchedule> schedules = null;
 
     private boolean sendingVideo = true;
     private boolean sendingAudio = true;
@@ -72,7 +78,12 @@ public class CallImpl implements Call {
     private AtomicInteger predicate = new AtomicInteger(0);
     private AtomicInteger dtmfCorrelation = new AtomicInteger(1);
 
-    public CallImpl(LocusModel model, PhoneImpl phone, Device device, MediaSession media, Direction direction, boolean group) {
+    private long connectedTime = 0;
+
+    private List<NamedRunnable> peddingTasks = new ArrayList<>(1);
+
+    public CallImpl(String correlationId, LocusModel model, PhoneImpl phone, Device device, MediaSession media, Direction direction, boolean group) {
+        this.correlationId = correlationId;
         this.phone = phone;
         this.model = model;
         this.device = device;
@@ -80,9 +91,10 @@ public class CallImpl implements Call {
         this.group = (group ? group : !model.isOneOnOne());
         setMedia(media);
         doLocusModel(model);
+        CallAnalyzerReporter.shared.reportCallInitiated(this);
     }
 
-    LocusModel getModel() {
+    public LocusModel getModel() {
         return model;
     }
 
@@ -90,8 +102,21 @@ public class CallImpl implements Call {
         return getModel().getCallUrl();
     }
 
-    @Nullable
-    MediaSession getMedia() {
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public long getConnectedTime() {
+        if (model != null) {
+            Date startTime = model.getFullState().getLastActive();
+            if (startTime != null) {
+                return startTime.getTime();
+            }
+        }
+        return connectedTime;
+    }
+
+    public @Nullable MediaSession getMedia() {
         return media;
     }
 
@@ -100,6 +125,8 @@ public class CallImpl implements Call {
         if (media != null) {
             this.videoViews = media.getVideoViews();
             this.sharingView = media.getSharingView();
+            CallAnalyzerReporter.shared.reportMediaCapabilities(this);
+            CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
         }
     }
 
@@ -110,6 +137,9 @@ public class CallImpl implements Call {
     void setStatus(CallStatus status) {
         Ln.d("Call status changed from " + this.status + " to " + status);
         this.status = status;
+        if (status == CallStatus.CONNECTED) {
+            this.connectedTime = System.currentTimeMillis();
+        }
     }
 
     @Override
@@ -144,7 +174,7 @@ public class CallImpl implements Call {
                 } else if (status == CallStatus.WAITING) {
                     Queue.main.run(() -> observer.onWaiting(CallImpl.this, model.getWaitReason()));
                 } else if (status == CallStatus.CONNECTED) {
-                    Queue.main.run(() -> observer.onConnected(CallImpl.this));
+                    CallImpl.this.fireOnConnected();
                 }
             }
             Queue.serial.yield();
@@ -154,6 +184,12 @@ public class CallImpl implements Call {
     @Override
     public CallObserver getObserver() {
         return observer;
+    }
+
+    @Override
+    public String getSpaceId() {
+        WebexId space = (this.model == null) ? null : WebexId.from(this.model.getConversationUrl(), this.device);
+        return space == null ? null : space.getBase64Id();
     }
 
     @Override
@@ -183,6 +219,25 @@ public class CallImpl implements Call {
             }
         }
         return null;
+    }
+
+    @Override
+    public Set<CallSchedule> getSchedules() {
+        synchronized (this) {
+            return schedules == null ? null :  Collections.unmodifiableSet(schedules);
+        }
+    }
+
+    @Override
+    public void setRemoteVideoRenderMode(VideoRenderMode mode) {
+        if (media != null) {
+            media.setRemoteVideoRenderMode(mode);
+        }
+    }
+
+    @Override
+    public void setVideoLayout(MediaOption.VideoLayout layout) {
+        this.phone.layout(this, layout);
     }
 
     @Override
@@ -231,6 +286,12 @@ public class CallImpl implements Call {
             media.setLocalVideoSending(sending);
             sendingVideo = sending;
         }
+        if (sending) {
+            CallAnalyzerReporter.shared.reportUnmuted(this, WMEngine.Media.Video);
+        }
+        else {
+            CallAnalyzerReporter.shared.reportMuted(this, WMEngine.Media.Video);
+        }
     }
 
     @Override
@@ -243,6 +304,12 @@ public class CallImpl implements Call {
         if (media != null) {
             media.setLocalAudioSending(sending);
             sendingAudio = sending;
+        }
+        if (sending) {
+            CallAnalyzerReporter.shared.reportUnmuted(this, WMEngine.Media.Audio);
+        }
+        else {
+            CallAnalyzerReporter.shared.reportMuted(this, WMEngine.Media.Audio);
         }
     }
 
@@ -279,8 +346,7 @@ public class CallImpl implements Call {
         }
         if (!media.hasSharing() && media.hasVideo()) {
             return media.isRemoteVideoReceiving();
-        }
-        else {
+        } else {
             return media.hasSharing() && media.isRemoteSharingReceiving();
         }
     }
@@ -292,8 +358,7 @@ public class CallImpl implements Call {
         }
         if (!media.hasSharing() && media.hasVideo() && model.isFloorGranted()) {
             setReceivingVideo(receiving);
-        }
-        else if (media.hasSharing()) {
+        } else if (media.hasSharing()) {
             media.setRemoteSharingReceiving(receiving);
         }
     }
@@ -325,6 +390,7 @@ public class CallImpl implements Call {
                 videoViews = views;
                 media.update(new MediaSession.MediaTypeVideo(views));
                 phone.update(this, isSendingAudio(), isSendingVideo(), media.getLocalSdp(), result -> {
+                    CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
                     WebexError error = result.getError();
                     if (error != null) {
                         Ln.d("Update media failed " + error);
@@ -351,16 +417,16 @@ public class CallImpl implements Call {
                 sharingView = view;
                 media.update(new MediaSession.MediaTypeSharing(view));
                 phone.update(this, isSendingAudio(), isSendingVideo(), media.getLocalSdp(), result -> {
+                    CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
                     WebexError error = result.getError();
                     if (error != null) {
                         Ln.d("Update media failed " + error);
                     }
-                    FloorModel floor = model.getFloor();
-                    if (floor != null && floor.getGranted() != null) {
-                        if (sharingView == null) {
+                    FloorModel floor = model.getGrantedFloor();
+                    if (floor != null) {
+                        if (sharingView != null) {
                             media.joinSharing(floor.getGranted(), false);
-                        }
-                        else {
+                        } else {
                             media.leaveSharing(false);
                         }
                     }
@@ -407,6 +473,7 @@ public class CallImpl implements Call {
     @Override
     public void startSharing(@NonNull CompletionHandler<Void> callback) {
         phone.startSharing(this, callback);
+        CallAnalyzerReporter.shared.reportShareInitiated(this, WMEngine.Media.Sharing);
     }
 
     @Override
@@ -541,12 +608,14 @@ public class CallImpl implements Call {
 
     @Override
     public void letIn(@NonNull CallMembership membership) {
-        phone.admit(this, Lists.asList(membership), result -> {});
+        phone.admit(this, Lists.asList(membership), result -> {
+        });
     }
 
     @Override
     public void letIn(@NonNull List<CallMembership> memberships) {
-        phone.admit(this, memberships, result -> {});
+        phone.admit(this, memberships, result -> {
+        });
     }
 
     void startMedia() {
@@ -569,9 +638,25 @@ public class CallImpl implements Call {
             }
         }
         media.startCloud(this);
-        if (media.hasSharing() && model.getFloor() != null && model.getFloor().getGranted() != null) {
-            media.joinSharing(model.getFloor().getGranted(), isSharingFromThisDevice());
+        if (media.hasSharing() && model.getGrantedFloor() != null) {
+            media.joinSharing(model.getGrantedFloor().getGranted(), isSharingFromThisDevice());
         }
+
+        CallAnalyzerReporter.shared.reportRemoteSdpReceived(this);
+        CallAnalyzerReporter.shared.reportMediaEngineReady(this);
+        CallAnalyzerReporter.shared.reportIceStart(this);
+
+        Queue.main.run(() -> {
+            Iterator<NamedRunnable> it = peddingTasks.iterator();
+            while (it.hasNext()) {
+                NamedRunnable runnable = it.next();
+                if (runnable.getName() == NamedRunnable.Name.FireCallOnConnected) {
+                    it.remove();
+                    runnable.run();
+                    break;
+                }
+            }
+        });
     }
 
     void stopMedia() {
@@ -579,7 +664,7 @@ public class CallImpl implements Call {
             return;
         }
         //stopMedia must run in the main thread. Because WME will remove the videoRender view.
-        if (media.hasSharing() && model.getFloor() != null && model.getFloor().getGranted() != null) {
+        if (media.hasSharing() && model.getGrantedFloor() != null) {
             media.leaveSharing(isSharingFromThisDevice());
         }
         for (AuxStreamImpl stream : streams) {
@@ -624,8 +709,7 @@ public class CallImpl implements Call {
             int newAvailableAuxStreamCount = Math.min(count - 1, media.getAuxStreamCount() - 1);
             if (newAvailableAuxStreamCount < 0) {
                 newAvailableAuxStreamCount = 0;
-            }
-            else if (getAvailableAuxStreamCount() >= media.getCapability().getMaxNumberStreams()
+            } else if (getAvailableAuxStreamCount() >= media.getCapability().getMaxNumberStreams()
                     && newAvailableAuxStreamCount > media.getCapability().getMaxNumberStreams()) {
                 availableStreamCount = media.getCapability().getMaxNumberStreams();
                 return;
@@ -642,8 +726,7 @@ public class CallImpl implements Call {
                             openAuxStream(view);
                         }
                     }
-                }
-                else if (diff < 0) {
+                } else if (diff < 0) {
                     for (int i = 0; i < -diff; i++) {
                         View view = streamObserver.onAuxStreamUnavailable();
                         AuxStream stream = getAuxStream(view);
@@ -681,8 +764,7 @@ public class CallImpl implements Call {
                     observer.onMediaChanged(new CallObserver.SendingSharingEvent(this, true));
                 }
             }
-        }
-        else {
+        } else {
             if (media.hasSharing()) {
                 media.joinSharing(shareId, false);
             }
@@ -699,21 +781,22 @@ public class CallImpl implements Call {
                 }
             }
         }
+        CallAnalyzerReporter.shared.reportShareInitiated(this, WMEngine.Media.Sharing);
     }
 
-    void leaveSharing(LocusParticipantModel participant, String granted, FloorModel oldFloor) {
+    void leaveSharing(LocusParticipantModel participant, String granted, LocusModel old) {
         if (media == null) {
             return;
         }
-        if (isSharingByModel(oldFloor)) {
+        CallAnalyzerReporter.shared.reportShareStopped(this, WMEngine.Media.Sharing);
+        if (isSharingByModel(old)) {
             if (media.hasSharing()) {
                 media.leaveSharing(true);
             }
             if (observer != null) {
                 observer.onMediaChanged(new CallObserver.SendingSharingEvent(this, false));
             }
-        }
-        else {
+        } else {
             if (media.hasSharing()) {
                 media.leaveSharing(false);
             }
@@ -752,6 +835,10 @@ public class CallImpl implements Call {
                 observer.onDisconnected(reason);
             }
         });
+        CallAnalyzerReporter.shared.reportCallLeave(this);
+        if (reason instanceof CallObserver.LocalDecline) {
+            CallAnalyzerReporter.shared.reportCallDeclined(this);
+        }
     }
 
     void update(LocusModel remote) {
@@ -794,8 +881,7 @@ public class CallImpl implements Call {
                 phone.fetch(this, false);
                 return;
             }
-        }
-        else if (isDelta) {
+        } else if (isDelta) {
             // locus doesn't exist in the cache, but this DTO is a delta, so fetch a full DTO and reprocess
             phone.fetch(this, true);
             return;
@@ -809,78 +895,95 @@ public class CallImpl implements Call {
                         observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(this, !newModule.isRemoteAudioMuted()));
                     }
                 }
-                doFloorUpdate(local.getFloor(), newModule.getFloor());
+                doFloorUpdate(local, newModule);
             }
         });
     }
 
-    void doFloorUpdate(FloorModel old, FloorModel current) {
-        if (current != null && current.isValid()) {
-            if (old == null || !old.isValid()) {
-                if (current.getDisposition() == FloorModel.Disposition.GRANTED) {
-                    joinSharing(current.getBeneficiary(), current.getGranted());
+    void doFloorUpdate(LocusModel old, LocusModel current) {
+        if (current == null || !current.isValid()) {
+            Ln.e("CallImpl.doFloorUpdate: remote is null or valid");
+            return;
+        }
+
+        if (current.getGrantedFloor() != null) {
+            if (old == null || !old.isValid() || old.getGrantedFloor() == null) {
+                Ln.d("CallImpl.doFloorUpdate: remote floor granted, join sharing");
+                joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
+            } else if (old.getGrantedFloor() != null) {
+                String oldMediaShareType = old.getGrantedMediaShare().getName();
+                String oldMediaShareDeviceUrl = old.getGrantedFloor().getBeneficiary().getDeviceUrl();
+                String currentMediaShareType = current.getGrantedMediaShare().getName();
+                String currentMediaShareDeviceUrl = current.getGrantedFloor().getBeneficiary().getDeviceUrl();
+                String oldResourceUrl = old.getGrantedMediaShare().getResourceUrl();
+                String currentResourceUrl = current.getGrantedMediaShare().getResourceUrl();
+                Ln.d("CallImpl.doFloorUpdate: floor state, remote: %s %s %s, local: %s %s %s",
+                        currentMediaShareType, currentMediaShareDeviceUrl, currentResourceUrl,
+                        oldMediaShareType, oldMediaShareDeviceUrl, oldResourceUrl);
+
+                // Granted is replaced by another type
+                boolean isShareTypeChanged = !oldMediaShareType.equals(currentMediaShareType);
+                // Granted is replaced by another device
+                boolean isMediaShareDeviceUrlChanged = !oldMediaShareDeviceUrl.equals(currentMediaShareDeviceUrl);
+                // Granted is replaced by another whiteboard or a new whiteboard is granted
+                boolean isResourceUrlChanged = !java.util.Objects.equals(oldResourceUrl, currentResourceUrl);
+                if (!isShareTypeChanged && !isMediaShareDeviceUrlChanged && !isResourceUrlChanged) {
+                    Ln.d("CallImpl.doFloorUpdate: floor state is not changed, return");
+                    return;
                 }
-                else if (current.getDisposition() == FloorModel.Disposition.RELEASED) {
-                    leaveSharing(current.getBeneficiary(), current.getGranted(), null);
-                }
-                else {
-                    Ln.d("Failure: floor dispostion is unknown.");
-                }
-            }
-            else {
-                if (old.getDisposition() != current.getDisposition()) {
-                    if (current.getDisposition() == FloorModel.Disposition.GRANTED) {
-                        joinSharing(current.getBeneficiary(), current.getGranted());
+
+                // When I am sharing screen, other device start share screen
+                boolean isMySharingReplaced = oldMediaShareType.equals(MediaShareModel.SHARE_CONTENT_TYPE)
+                        && isSharingByModel(old)
+                        && isMediaShareDeviceUrlChanged;
+                // When other device is sharing screen, I start share screen
+                boolean isSharingReplacedByMine = oldMediaShareType.equals(MediaShareModel.SHARE_CONTENT_TYPE)
+                        && isSharingByModel(current)
+                        && isMediaShareDeviceUrlChanged;
+
+                if (isShareTypeChanged || isMySharingReplaced || isSharingReplacedByMine || isResourceUrlChanged) {
+                    Ln.d("CallImpl.doFloorUpdate: share type or resource url or sharing device changed, leave and join sharing");
+                    leaveSharing(old.getGrantedFloor().getBeneficiary(), old.getGrantedFloor().getGranted(), old);
+                    joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
+                    if (isMySharingReplaced){
+                        Ln.d("CallImpl.doFloorUpdate: my sharing replaced by other's, join sharing");
+                        joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
                     }
-                    else if (current.getDisposition() == FloorModel.Disposition.RELEASED) {
-                        leaveSharing(old.getBeneficiary(), old.getGranted(), old);
-                    }
-                    else {
-                        Ln.d("Failure: floor dispostion is unknown.");
-                    }
-                }
-                else if (media != null && Checker.isEqual(old.getGranted(), current.getGranted()) && current.getDisposition() == FloorModel.Disposition.GRANTED) {
-                    if (isSharingByModel(old) && !isSharingByModel(current)) {
-                        if (media.hasSharing()) {
-                            media.leaveSharing(true);
-                            media.joinSharing(current.getGranted(), false);
-                        }
-                        if (observer != null) {
-                            observer.onMediaChanged(new CallObserver.SendingSharingEvent(this, false));
-                            observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(this, true));
-                        }
-                    }
-                    else if (!isSharingByModel(old) && isSharingByModel(current)) {
-                        if (media.hasSharing()) {
-                            media.leaveSharing(false);
-                            media.joinSharing(current.getGranted(), true);
-                        }
-                        if (observer != null) {
-                            observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(this, false));
-                            if (media.isLocalSharingSending()) {
-                                observer.onMediaChanged(new CallObserver.SendingSharingEvent(this, true));
-                            }
-                        }
-                    }
-                    String id = current.getBeneficiary().getId();
-                    if (id != null) {
-                        for (CallMembershipImpl membership : memberships) {
-                            if (Checker.isEqual(membership.getId(), id)) {
-                                if (observer != null) {
-                                    observer.onCallMembershipChanged(new CallObserver.MembershipSendingSharingEvent(this, membership));
-                                }
-                            }
-                        }
-                    }
+                } else {
+                    Ln.d("CallImpl.doFloorUpdate: only MediaShareDeviceUrlChanged, join sharing");
+                    joinSharing(current.getGrantedFloor().getBeneficiary(), current.getGrantedFloor().getGranted());
                 }
             }
+        } else if (old != null && old.isValid() && old.getGrantedFloor() != null) {
+            Ln.d("CallImpl.doFloorUpdate: remote released, leave sharing");
+            leaveSharing(old.getGrantedFloor().getBeneficiary(), old.getGrantedFloor().getGranted(), old);
+        } else {
+            Ln.d("CallImpl.doFloorUpdate: no local or remote sharing, do nothing");
         }
     }
 
     void doLocusModel(LocusModel model) {
         Ln.d("doLocusModel: " + model.getCallUrl());
         this.model = model;
-        List<LocusParticipantModel> participants = Objects.defaultIfNull(model.getParticipants(), Collections.emptyList());
+        List<LocusScheduledMeetingModel> meetings = model.getMeetings();
+        Set<CallSchedule> oldSchedules = this.schedules;
+        Set<CallSchedule> newSchedules = null;
+        if (meetings != null) {
+            newSchedules = new TreeSet<>();
+            for (LocusScheduledMeetingModel meeting : meetings) {
+                newSchedules.add(new InternalCallSchedule(meeting, model.getFullState()));
+            }
+        }
+        if (!Lists.isEquals(oldSchedules, newSchedules)) {
+            this.schedules = newSchedules;
+            Queue.main.run(() -> {
+                if (observer != null) {
+                    observer.onScheduleChanged(this);
+                }
+            });
+        }
+
+        List<LocusParticipantModel> participants = Objects.defaultIfNull(model.getRawParticipants(), Collections.emptyList());
         List<CallMembershipImpl> oldMemberships = this.memberships;
         List<CallMembershipImpl> newMemberships = new ArrayList<>();
         List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
@@ -901,8 +1004,7 @@ public class CallImpl implements Call {
                 events.add(new CallObserver.MembershipSendingAudioEvent(this, membership));
                 events.add(new CallObserver.MembershipSendingVideoEvent(this, membership));
                 events.add(new CallObserver.MembershipSendingSharingEvent(this, membership));
-            }
-            else {
+            } else {
                 CallMembership.State oldState = membership.getState();
                 boolean tempSendingAudio = membership.isSendingAudio();
                 boolean tempSendingVideo = membership.isSendingVideo();
@@ -947,9 +1049,11 @@ public class CallImpl implements Call {
         if (getStatus() != CallStatus.WAITING) {
             stopKeepAlive();
         }
-        if ((getStatus() == CallStatus.CONNECTED || getStatus() == CallStatus.RINGING ) && media != null && !media.isRunning()) {
+        if ((getStatus() == CallStatus.CONNECTED || getStatus() == CallStatus.RINGING) && media != null && !media.isPrepared() && !media.isRunning()) {
             Ln.d("Update SDP before start media");
+            media.setPrepared(true);
             phone.update(this, isSendingAudio(), isSendingVideo(), media.getLocalSdp(), result -> {
+                CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
                 if (result.getError() != null) {
                     Ln.d("Update SDP failed: " + result.getError());
                     return;
@@ -960,9 +1064,6 @@ public class CallImpl implements Call {
                     setSendingVideo(sendingVideo);
                     setReceivingAudio(receivingAudio);
                     setReceivingVideo(receivingVideo);
-                    if (getStatus() == CallStatus.CONNECTED && observer != null) {
-                        observer.onConnected(this);
-                    }
                 }
             });
         }
@@ -973,11 +1074,10 @@ public class CallImpl implements Call {
         CallMembership.State state = membership.getState();
         if (state == CallMembership.State.JOINED) {
             events.add(new CallObserver.MembershipJoinedEvent(this, membership));
-        }
-        else if (state == CallMembership.State.LEFT) {
+        } else if (state == CallMembership.State.LEFT) {
             events.add(new CallObserver.MembershipLeftEvent(this, membership));
             for (AuxStreamImpl stream : streams) {
-                if (stream.getPerson() != null && ((CallMembershipImpl)stream.getPerson()).getId().equals(membership.getId())) {
+                if (stream.getPerson() != null && ((CallMembershipImpl) stream.getPerson()).getId().equals(membership.getId())) {
                     stream.setPerson(null);
                     if (streamObserver != null) {
                         streamObserver.onAuxStreamChanged(new MultiStreamObserver.AuxStreamPersonChangedEvent(this, stream, membership, null));
@@ -991,11 +1091,9 @@ public class CallImpl implements Call {
                     observer.onMediaChanged(new CallObserver.ActiveSpeakerChangedEvent(this, membership, null));
                 }
             }
-        }
-        else if (state == CallMembership.State.DECLINED) {
+        } else if (state == CallMembership.State.DECLINED) {
             events.add(new CallObserver.MembershipDeclinedEvent(this, membership));
-        }
-        else if (state == CallMembership.State.WAITING) {
+        } else if (state == CallMembership.State.WAITING) {
             events.add(new CallObserver.MembershipWaitingEvent(this, membership, model.getWaitReason()));
         }
         return events;
@@ -1012,31 +1110,26 @@ public class CallImpl implements Call {
                 if (isRemoteJoined()) {
                     if (self.isJoined(device.getDeviceUrl())) {
                         setStatus(CallStatus.CONNECTED);
-                        Queue.main.run(() -> {
-                            if (observer != null) {
-                                observer.onConnected(this);
-                            }
-                        });
-                    }
-                    else if (self.isDeclined(device.getDeviceUrl())) {
+                        fireOnConnected();
+                    } else if (self.isDeclined(device.getDeviceUrl())) {
                         end(new CallObserver.LocalDecline(this));
-                    }
-                    else if (self.isJoined()) {
+                    } else if (self.isJoined()) {
                         end(new CallObserver.OtherConnected(this));
-                    }
-                    else if (self.isDeclined()) {
+                    } else if (self.isDeclined()) {
                         end(new CallObserver.OtherDeclined(this));
+                    } else if (model.isInactive()) {
+                        end(new CallObserver.RemoteCancel(this));
                     }
-                }
-                else if (isRemoteDeclined() || isRemoteLeft()) {
+                } else if (isRemoteDeclined() || isRemoteLeft()) {
                     end(new CallObserver.RemoteCancel(this));
                 }
-            }
-            else if (getDirection() == Direction.OUTGOING) {
+//                else if (model.isInactive()) {
+//                    end(new CallObserver.RemoteCancel(this));
+//                }
+            } else if (getDirection() == Direction.OUTGOING) {
                 if (self.isLefted(device.getDeviceUrl())) {
                     end(new CallObserver.LocalCancel(this));
-                }
-                else if (self.isJoined(device.getDeviceUrl())) {
+                } else if (self.isJoined(device.getDeviceUrl())) {
                     if (isGroup()) {
                         setStatus(CallStatus.RINGING);
                         Queue.main.run(() -> {
@@ -1044,14 +1137,9 @@ public class CallImpl implements Call {
                                 observer.onRinging(this);
                             }
                             setStatus(CallStatus.CONNECTED);
-                            Queue.main.run(() -> {
-                                if (observer != null) {
-                                    observer.onConnected(this);
-                                }
-                            });
+                            fireOnConnected();
                         });
-                    }
-                    else {
+                    } else {
                         if (isRemoteNotified()) {
                             setStatus(CallStatus.RINGING);
                             Queue.main.run(() -> {
@@ -1059,21 +1147,14 @@ public class CallImpl implements Call {
                                     observer.onRinging(this);
                                 }
                             });
-                        }
-                        else if (isRemoteJoined()) {
+                        } else if (isRemoteJoined()) {
                             setStatus(CallStatus.CONNECTED);
-                            Queue.main.run(() -> {
-                                if (observer != null) {
-                                    observer.onConnected(this);
-                                }
-                            });
-                        }
-                        else if (isRemoteDeclined()) {
+                            fireOnConnected();
+                        } else if (isRemoteDeclined()) {
                             end(new CallObserver.RemoteDecline(this));
                         }
                     }
-                }
-                else if (self.isInLobby()) {
+                } else if (self.isInLobby()) {
                     setStatus(CallStatus.WAITING);
                     Queue.main.run(() -> {
                         if (observer != null) {
@@ -1082,29 +1163,26 @@ public class CallImpl implements Call {
                     });
                 }
             }
-        }
-        else if (status == CallStatus.CONNECTED) {
+        } else if (status == CallStatus.CONNECTED) {
             if (self.isLefted(device.getDeviceUrl())) {
                 end(new CallObserver.LocalLeft(this));
-            }
-            else if (!isGroup() && isRemoteLeft()) {
+            } else if (!isGroup() && isRemoteLeft()) {
                 end(new CallObserver.RemoteLeft(this));
             }
         }
     }
 
     boolean isSharingFromThisDevice() {
-        return isSharingByModel(model.getFloor());
+        return isSharingByModel(model);
     }
 
-    boolean isSharingByModel(FloorModel model) {
-        if (model != null && media != null && media.hasSharing() && model.getDisposition() == FloorModel.Disposition.GRANTED) {
-            LocusParticipantModel p = model.getBeneficiary();
+    boolean isSharingByModel(LocusModel model) {
+        if (model != null && model.isValid() && model.getGrantedFloor() != null && media != null && media.hasSharing()) {
+            LocusParticipantModel p = model.getGrantedFloor().getBeneficiary();
             return p != null && Checker.isEqual(device.getDeviceUrl(), p.getDeviceUrl());
         }
         return false;
     }
-
 
     boolean isRemoteLeft() {
         if (isGroup()) {
@@ -1132,6 +1210,12 @@ public class CallImpl implements Call {
 
     boolean isRemoteJoined() {
         if (isGroup()) {
+//            for (CallMembershipImpl membership : memberships) {
+//                if (!membership.isSelf() && membership.getState() == CallMembership.State.JOINED) {
+//                    return true;
+//                }
+//            }
+//            return false;
             return true;
         }
         for (CallMembershipImpl membership : memberships) {
@@ -1161,5 +1245,29 @@ public class CallImpl implements Call {
             }
         }
         return false;
+    }
+
+    private void fireOnConnected() {
+        Queue.main.run(() -> {
+            NamedRunnable runnable = new NamedRunnable() {
+                @Override
+                public Name getName() {
+                    return Name.FireCallOnConnected;
+                }
+
+                @Override
+                public void run() {
+                    if (observer != null) {
+                        observer.onConnected(CallImpl.this);
+                    }
+                }
+            };
+            if (media == null || !media.isRunning()) {
+                peddingTasks.add(runnable);
+            }
+            else {
+                runnable.run();
+            }
+        });
     }
 }

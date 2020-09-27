@@ -96,6 +96,8 @@ public class MediaOption {
     private boolean _hasSharing;
     private boolean _hasVideo;
     private VideoLayout layout;
+    private boolean isModerator;
+    private String pin;
 
     private MediaOption(@Nullable View localView, @Nullable View remoteView, @Nullable View sharingView, boolean hasSharing, boolean hasVideo) {
         _localView = localView;
@@ -165,5 +167,41 @@ public class MediaOption {
      */
     public void setLayout(VideoLayout layout) {
         this.layout = layout;
+    }
+
+    /**
+     * If true, join the meeting as a moderator.
+     *
+     * @since 2.6.0
+     */
+    public boolean isModerator() {
+        return isModerator;
+    }
+
+    /**
+     * If true, join the meeting as a moderator.
+     *
+     * @since 2.6.0
+     */
+    public void setModerator(boolean moderator) {
+        isModerator = moderator;
+    }
+
+    /**
+     * If join as moderator, PIN should be a host key, else PIN should be a meeting password.
+     *
+     * @since 2.6.0
+     */
+    public String getPin() {
+        return pin;
+    }
+
+    /**
+     * If join as moderator, PIN should be a host key, else PIN should be a meeting password.
+     *
+     * @since 2.6.0
+     */
+    public void setPin(String pin) {
+        this.pin = pin;
     }
 }

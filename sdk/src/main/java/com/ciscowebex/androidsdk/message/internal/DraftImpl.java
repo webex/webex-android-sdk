@@ -25,6 +25,7 @@ package com.ciscowebex.androidsdk.message.internal;
 import com.ciscowebex.androidsdk.message.LocalFile;
 import com.ciscowebex.androidsdk.message.Mention;
 import com.ciscowebex.androidsdk.message.Message;
+import me.helloworld.utils.Checker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,18 +43,22 @@ public class DraftImpl implements Message.Draft {
     }
 
     public Message.Draft addAttachments(LocalFile... files) {
-        if (this.files == null) {
-            this.files = new ArrayList<>();
+        if (!Checker.isEmpty(files)) {
+            if (this.files == null) {
+                this.files = new ArrayList<>();
+            }
+            this.files.addAll(Arrays.asList(files));
         }
-        this.files.addAll(Arrays.asList(files));
         return this;
     }
 
     public Message.Draft addMentions(Mention... mentions) {
-        if (this.mentions == null) {
-            this.mentions = new ArrayList<>();
+        if (!Checker.isEmpty(mentions)) {
+            if (this.mentions == null) {
+                this.mentions = new ArrayList<>();
+            }
+            this.mentions.addAll(Arrays.asList(mentions));
         }
-        this.mentions.addAll(Arrays.asList(mentions));
         return this;
     }
 

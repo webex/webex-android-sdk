@@ -37,11 +37,12 @@ public class UIEventHandler {
         void onMediaPermission(boolean permission);
 
         void onScreenCapturePermission(Intent permission);
+
     }
 
     static class UIEventBroadcastReceiver extends BroadcastReceiver {
 
-        private int rotation;
+        private int rotation = -1;
 
         private EventObserver observer;
 

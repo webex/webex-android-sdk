@@ -24,6 +24,7 @@ package com.ciscowebex.androidsdk.phone;
 
 import android.app.AlertDialog;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
@@ -86,23 +87,23 @@ public interface Phone {
          */
         MAX_BANDWIDTH_360P(768000),
         /**
-         * 2Mbps for 1280x720 resolution
+         * 2.5Mbps for 1280x720 resolution
          *
          * @since 1.3.0
          */
-        MAX_BANDWIDTH_720P(2000000),
+        MAX_BANDWIDTH_720P(2500000),
         /**
-         * 3Mbps for 1920x1080 resolution
+         * 4Mbps for 1920x1080 resolution
          *
          * @since 1.3.0
          */
-        MAX_BANDWIDTH_1080P(3000000),
+        MAX_BANDWIDTH_1080P(4000000),
         /**
-         * 4Mbps data session
+         * 8Mbps data session
          *
          * @since 1.3.0
          */
-        MAX_BANDWIDTH_SESSION(4000000),
+        MAX_BANDWIDTH_SESSION(8000000),
         /**
          * 64kbps for voice
          *
@@ -119,6 +120,26 @@ public interface Phone {
         public int getValue() {
             return id;
         }
+    }
+
+    /**
+     * The options for H.264 video codec license from Cisco Systems, Inc
+     *
+     * @since 2.6.0
+     */
+    enum H264LicenseAction {
+        /**
+         * Indicates that the end user has accepted the term.
+         */
+        ACCEPT,
+        /**
+         * Indicates that the end user declined the term.
+         */
+        DECLINE,
+        /**
+         * Indicates that the end user wants to view the license.
+         */
+        VIEW_LICENSE
     }
 
     /**
@@ -216,10 +237,10 @@ public interface Phone {
      * Pops up an Alert for the end user to approve the use of H.264 codec license from Cisco Systems, Inc.
      *
      * @param builder  AlertDialog builder
-     * @param callback A closure to be executed when completed. true if the user approve the license , otherwise false.
+     * @param callback A closure to be executed when completed.
      * @since 0.1
      */
-    void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @NonNull CompletionHandler<Boolean> callback);
+    void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @Nullable CompletionHandler<H264LicenseAction> callback);
 
     /**
      * Prevents the SDK from poping up an Alert for the end user to approve the use of H.264 video codec license from Cisco Systems, Inc.
@@ -243,56 +264,74 @@ public interface Phone {
     String getVideoCodecLicenseURL();
 
     /**
-     * Set the max bandwidth for audio in unit bps for the call.
+     * Set the max receivning bandwidth for audio in unit bps for the call.
      * Only effective if set before the start of call.
      * if 0, default value of 64 * 1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_AUDIO}.
-     * @since 1.3.0
+     * @since 2.6.0
      */
-    void setAudioMaxBandwidth(int bandwidth);
+    void setAudioMaxRxBandwidth(int bandwidth);
 
     /**
-     * Return the current maximum bandwidth of audio stream.
+     * Return the current maximum receivning bandwidth of audio stream.
      *
-     * @since 1.3.0
+     * @since 2.6.0
      */
-    int getAudioMaxBandwidth();
+    int getAudioMaxRxBandwidth();
 
     /**
-     * Set the max bandwidth for video in unit bps for the call.
+     * Set the max receiving bandwidth for video in unit bps for the call.
      * Only effective if set before the start of call.
      * if 0, default value of 2000*1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_90P}, {@link DefaultBandwidth#MAX_BANDWIDTH_180P},
      *                  {@link DefaultBandwidth#MAX_BANDWIDTH_360P}, {@link DefaultBandwidth#MAX_BANDWIDTH_720P}, or {@link DefaultBandwidth#MAX_BANDWIDTH_1080P}.
-     * @since 1.3.0
+     * @since 2.6.0
      */
-    void setVideoMaxBandwidth(int bandwidth);
+    void setVideoMaxRxBandwidth(int bandwidth);
 
     /**
-     * Return the current maximum bandwidth of video stream.
+     * Return the current maximum receiving bandwidth of video stream.
      *
-     * @since 1.3.0
+     * @since 2.6.0
      */
-    int getVideoMaxBandwidth();
+    int getVideoMaxRxBandwidth();
 
     /**
-     * Set the max bandwidth for content sharing in unit bps for the call.
+     * Set the max sending bandwidth for video in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 2000*1000 is used.
+     *
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_90P}, {@link DefaultBandwidth#MAX_BANDWIDTH_180P},
+     *                  {@link DefaultBandwidth#MAX_BANDWIDTH_360P}, {@link DefaultBandwidth#MAX_BANDWIDTH_720P}, or {@link DefaultBandwidth#MAX_BANDWIDTH_1080P}.
+     * @since 2.6.0
+     */
+    void setVideoMaxTxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum sending bandwidth of video stream.
+     *
+     * @since 2.6.0
+     */
+    int getVideoMaxTxBandwidth();
+
+    /**
+     * Set the max receiving bandwidth for content sharing in unit bps for the call.
      * Only effective if set before the start of call.
      * if 0, default value of 4000*1000 is used.
      *
      * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_SESSION}.
-     * @since 1.3.0
+     * @since 2.6.0
      */
-    void setSharingMaxBandwidth(int bandwidth);
+    void setSharingMaxRxBandwidth(int bandwidth);
 
     /**
-     * Return the current maximum bandwidth of content sharing stream.
+     * Return the current maximum receiving bandwidth of content sharing stream.
      *
-     * @since 1.3.0
+     * @since 2.6.0
      */
-    int getSharingMaxBandwidth();
+    int getSharingMaxRxBandwidth();
 
     /**
      * Return True if Google hardware media codec is turned on for video. Otherwise, false.
@@ -307,7 +346,6 @@ public interface Phone {
      * since the hardware codec is high depend on android devices, some devices support hardware codec not very well.
      *
      * @param enable True to turn on Google hardware media codec. Otherwise, use OpenH264 software codec.
-     *
      * @since 2.1.1
      */
     void setHardwareAccelerationEnabled(boolean enable);
@@ -317,9 +355,108 @@ public interface Phone {
      * the audio enhancement is enable for Samsung S7/S7Edge/S8/S8+/S9/S9+/S10/S10+/S10e/Note8/Note9.
      *
      * @param models the list of device models, if the list is null or empty, turn off the audio enhancement.
-     *
      * @since 2.3.0
      */
     void enableAudioEnhancementForModels(List<String> models);
 
+    /**
+     * Set the max bandwidth for audio in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 64 * 1000 is used.
+     *
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_AUDIO}.
+     * @since 1.3.0
+     * @deprecated
+     */
+    @Deprecated
+    void setAudioMaxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum bandwidth of audio stream.
+     *
+     * @since 1.3.0
+     * @deprecated
+     */
+    @Deprecated
+    int getAudioMaxBandwidth();
+
+    /**
+     * Set the max bandwidth for video in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 2000*1000 is used.
+     *
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_90P}, {@link DefaultBandwidth#MAX_BANDWIDTH_180P},
+     *                  {@link DefaultBandwidth#MAX_BANDWIDTH_360P}, {@link DefaultBandwidth#MAX_BANDWIDTH_720P}, or {@link DefaultBandwidth#MAX_BANDWIDTH_1080P}.
+     * @since 1.3.0
+     * @deprecated
+     */
+    @Deprecated
+    void setVideoMaxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum bandwidth of video stream.
+     *
+     * @since 1.3.0
+     * @deprecated
+     */
+    @Deprecated
+    int getVideoMaxBandwidth();
+
+    /**
+     * Set the max bandwidth for content sharing in unit bps for the call.
+     * Only effective if set before the start of call.
+     * if 0, default value of 4000*1000 is used.
+     *
+     * @param bandwidth the suggest value could be {@link DefaultBandwidth#MAX_BANDWIDTH_SESSION}.
+     * @since 1.3.0
+     * @deprecated
+     */
+    @Deprecated
+    void setSharingMaxBandwidth(int bandwidth);
+
+    /**
+     * Return the current maximum bandwidth of content sharing stream.
+     *
+     * @since 1.3.0
+     * @deprecated
+     */
+    @Deprecated
+    int getSharingMaxBandwidth();
+
+    /**
+     * Set true to keep video stream(include local and remote) when minimize app, else will stop. Default is false.
+     * Google recommend release camera when app goes background and resume after app foreground.
+     * When you use picture-in-picture mode in app should set this method to true before call.
+     *
+     * @param enable true to keep video stream when minimize app, else will stop. Default is false.
+     * @since 2.6.0
+     */
+    void enableBackgroundStream(boolean enable);
+
+    /**
+     * Set advanced setings for call. Only effective if set before the start of call.
+     *
+     * For example, Phone.setAdvancedSetting(new VideoMaxTxFPS(30));
+     *
+     * @see AdvancedSetting
+     * @since 2.6.0
+     */
+    void setAdvancedSetting(AdvancedSetting setting);
+
+    /**
+     * Returns value of the advanced seting that has been set.
+     *
+     * For example, AdvancedSetting setting = Phone.getAdvancedSetting(VideoMaxTxFPS.class);
+     *
+     * @see AdvancedSetting
+     * @since 2.6.0
+     */
+    AdvancedSetting getAdvancedSetting(Class<? extends AdvancedSetting> clz);
+
+    /**
+     * Cancel the currently outgoing call that has not been connected.
+     *
+     * @since 2.6.0
+     */
+    void cancel();
 }
