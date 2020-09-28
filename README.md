@@ -508,42 +508,42 @@ Here are some examples of how to use the Android SDK in your app.
 20. Change the video layout during a call
 
     ```java
-   activeCall.setVideoLayout(MediaOption.VideoLayout layout);
+    activeCall.setVideoLayout(MediaOption.VideoLayout layout);
     ```
 21. Specify how the remote video adjusts its content to be render in a view
 
     ```java
-   activeCall.setRemoteVideoRenderMode(VideoRenderMode mode);
+    activeCall.setRemoteVideoRenderMode(VideoRenderMode mode);
     ```
 22. Change the max sending fps for video
 
     ```java
-   webex.phone().setAdvancedSetting(new VideoMaxTxFPS(int value));
+    webex.phone().setAdvancedSetting(new VideoMaxTxFPS(int value));
     ```
 23. Enable(disable) android.hardware.camera2
 
     ```java
-   webex.phone().setAdvancedSetting(new VideoEnableCamera2(boolean enable));
+    webex.phone().setAdvancedSetting(new VideoEnableCamera2(boolean enable));
     ```
 24. Whether the app can continue video streaming when app in background
 
     ```java
-   webex.phone().enableBackgroundStream(boolean enable);
+    webex.phone().enableBackgroundStream(boolean enable);
     ```
 25. Get a list of spaces that have ongoing call
 
     ```java
-   webex.spaces().listWithActiveCalls(r -> {});
+    webex.spaces().listWithActiveCalls(r -> {});
     ```
 26. Check if the message mentioned everyone in space
 
     ```java
-   message.isAllMentioned()
+    message.isAllMentioned()
     ```
 27. Get all people mentioned in the message
 
     ```java
-   message.getMentions()
+    message.getMentions()
     ```
     
 ## Migrating from Cisco Spark Android SDK

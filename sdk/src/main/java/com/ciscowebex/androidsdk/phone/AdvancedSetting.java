@@ -81,7 +81,7 @@ public abstract class AdvancedSetting<T> {
 
         public static boolean defaultVaule = true;
 
-        protected VideoEnableCamera2(boolean value) {
+        public VideoEnableCamera2(boolean value) {
             super(value, defaultVaule);
         }
     }
