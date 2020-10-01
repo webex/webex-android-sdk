@@ -333,6 +333,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             else if (action == H264LicenseAction.VIEW_LICENSE) {
                 Ln.d("View H264 license");
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(H264LicensePrompter.LICENSE_URL));
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 this.getContext().startActivity(browserIntent);
                 ResultImpl.errorInMain(callback, WebexError.from(WebexError.ErrorCode.VIEW_H264_LICENSE));
             }
