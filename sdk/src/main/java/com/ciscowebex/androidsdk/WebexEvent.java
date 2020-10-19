@@ -23,6 +23,8 @@
 package com.ciscowebex.androidsdk;
 
 import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.LocusModel;
+import com.ciscowebex.androidsdk.internal.model.LocusParticipantInfoModel;
 import com.ciscowebex.androidsdk.internal.model.PersonModel;
 import com.ciscowebex.androidsdk.utils.WebexId;
 
@@ -53,6 +55,13 @@ public interface WebexEvent {
             PersonModel person = activity.getActor();
             if (person != null) {
                 _actorId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, person.getId()).getBase64Id();
+            }
+        }
+
+        protected Base(LocusModel locus) {
+            LocusParticipantInfoModel participant = locus.getHost();
+            if (participant != null) {
+                _actorId = new WebexId(WebexId.Type.PEOPLE, WebexId.DEFAULT_CLUSTER, participant.getId()).getBase64Id();
             }
         }
 
