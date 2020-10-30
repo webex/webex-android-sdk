@@ -33,30 +33,60 @@ import android.util.Pair;
 import android.view.View;
 
 import com.cisco.wme.appshare.ScreenShareContext;
-import com.ciscowebex.androidsdk.*;
+import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.Webex;
+import com.ciscowebex.androidsdk.WebexError;
+import com.ciscowebex.androidsdk.WebexEvent;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.*;
+import com.ciscowebex.androidsdk.internal.AcquirePermissionActivity;
+import com.ciscowebex.androidsdk.internal.Credentials;
+import com.ciscowebex.androidsdk.internal.Device;
+import com.ciscowebex.androidsdk.internal.MetricsService;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
 import com.ciscowebex.androidsdk.internal.crypto.KeyManager;
-import com.ciscowebex.androidsdk.internal.mercury.*;
-import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
-import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.media.MediaCapability;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
-import com.ciscowebex.androidsdk.internal.model.*;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryActivityEvent;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryEvent;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryKmsMessageEvent;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryLocusEvent;
+import com.ciscowebex.androidsdk.internal.mercury.MercuryService;
+import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.FloorModel;
+import com.ciscowebex.androidsdk.internal.model.KmsMessageModel;
+import com.ciscowebex.androidsdk.internal.model.LocusModel;
+import com.ciscowebex.androidsdk.internal.model.LocusSequenceModel;
+import com.ciscowebex.androidsdk.internal.model.MediaEngineReachabilityModel;
+import com.ciscowebex.androidsdk.internal.model.MediaInfoModel;
+import com.ciscowebex.androidsdk.internal.model.MediaShareModel;
+import com.ciscowebex.androidsdk.internal.model.ObjectModel;
+import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.reachability.BackgroundChecker;
 import com.ciscowebex.androidsdk.membership.MembershipObserver;
 import com.ciscowebex.androidsdk.membership.internal.InternalMembership;
 import com.ciscowebex.androidsdk.message.MessageObserver;
 import com.ciscowebex.androidsdk.message.internal.InternalMessage;
 import com.ciscowebex.androidsdk.message.internal.MessageClientImpl;
-import com.ciscowebex.androidsdk.phone.*;
+import com.ciscowebex.androidsdk.phone.AdvancedSetting;
+import com.ciscowebex.androidsdk.phone.Call;
+import com.ciscowebex.androidsdk.phone.CallMembership;
+import com.ciscowebex.androidsdk.phone.CallObserver;
+import com.ciscowebex.androidsdk.phone.MediaOption;
+import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.space.SpaceObserver;
 import com.ciscowebex.androidsdk.space.internal.InternalSpace;
 import com.ciscowebex.androidsdk.utils.Utils;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercuryService.MercuryListener, BackgroundChecker.BackgroundListener {
 
@@ -76,6 +106,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     private State state = State.UNREGISTERED;
     private MediaEngine engine;
     private Map<String, CallImpl> calls = new HashMap<>();
+    private List<String> activeSpaceIds = new ArrayList<>();
     private CallContext callContext;
     private final CallService service;
     private final ReachabilityService reachability;
@@ -325,14 +356,13 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     Queue.main.run(this::tryAcquirePermission);
                     Queue.serial.yield();
                 });
-            }
-            else if (action == H264LicenseAction.DECLINE) {
+            } else if (action == H264LicenseAction.DECLINE) {
                 Ln.d("Decline H264 license");
                 ResultImpl.errorInMain(callback, WebexError.from(WebexError.ErrorCode.DECLINE_H264_LICENSE));
-            }
-            else if (action == H264LicenseAction.VIEW_LICENSE) {
+            } else if (action == H264LicenseAction.VIEW_LICENSE) {
                 Ln.d("View H264 license");
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(H264LicensePrompter.LICENSE_URL));
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 this.getContext().startActivity(browserIntent);
                 ResultImpl.errorInMain(callback, WebexError.from(WebexError.ErrorCode.VIEW_H264_LICENSE));
             }
@@ -385,7 +415,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     String correlationId = UUID.randomUUID().toString();
                     //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
                     if (target instanceof CallService.CallableTarget) {
-                        service.call(((CallService.CallableTarget) target).getCallee(), outgoing.getOption(), correlationId, device, localSdp,reachabilities, callResult -> {
+                        service.call(((CallService.CallableTarget) target).getCallee(), outgoing.getOption(), correlationId, device, localSdp, reachabilities, callResult -> {
                             if (callResult.getError() != null || callResult.getData() == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(callResult.getError())));
                                 Queue.serial.yield();
@@ -394,7 +424,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                             }
                             doLocusResponse(new LocusResponse.Call(device, correlationId, session, callResult.getData(), outgoing.getCallback()), Queue.serial);
                         });
-                    } else if (target instanceof CallService.JoinableTarget){
+                    } else if (target instanceof CallService.JoinableTarget) {
                         service.getOrCreatePermanentLocus(((CallService.JoinableTarget) target).getConversation(), device, convResult -> {
                             if (this.canceled) {
                                 this.canceled = false;
@@ -418,8 +448,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 doLocusResponse(new LocusResponse.Call(device, correlationId, session, joinResult.getData(), outgoing.getCallback()), Queue.serial);
                             });
                         });
-                    }
-                    else {
+                    } else {
                         Ln.e("Cannot find dial target: " + outgoing.getTarget());
                         Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error("Cannot find dial target: " + outgoing.getTarget())));
                         Queue.serial.yield();
@@ -543,8 +572,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(H264LicensePrompter.LICENSE_URL));
                     this.getContext().startActivity(browserIntent);
                 }
-            }
-            else {
+            } else {
                 callback.onComplete(result);
             }
         });
@@ -752,14 +780,13 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     Queue.main.run(this::tryAcquirePermission);
                     Queue.serial.yield();
                 });
-            }
-            else if (action == H264LicenseAction.DECLINE) {
+            } else if (action == H264LicenseAction.DECLINE) {
                 Ln.d("Decline H264 license");
                 ResultImpl.errorInMain(callback, WebexError.from(WebexError.ErrorCode.DECLINE_H264_LICENSE));
-            }
-            else if (action == H264LicenseAction.VIEW_LICENSE) {
+            } else if (action == H264LicenseAction.VIEW_LICENSE) {
                 Ln.d("View H264 license");
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(H264LicensePrompter.LICENSE_URL));
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 this.getContext().startActivity(browserIntent);
                 ResultImpl.errorInMain(callback, WebexError.from(WebexError.ErrorCode.VIEW_H264_LICENSE));
             }
@@ -832,8 +859,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     if (error != null) {
                         if (error.is(WebexError.ErrorCode.CONFLICT_ERROR) || error.is(WebexError.ErrorCode.NETWORK_ERROR)) {
                             call.end(new CallObserver.CallErrorEvent(call, error));
-                        }
-                        else {
+                        } else {
                             Queue.main.run(() -> callback.onComplete(ResultImpl.error(error)));
                             Queue.serial.yield();
                             return;
@@ -852,8 +878,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             if (url == null) {
                 Ln.e("Missing self participant URL");
                 Queue.serial.yield();
-            }
-            else {
+            } else {
                 service.layout(url, device, layout, result -> Queue.serial.yield());
             }
         });
@@ -1127,6 +1152,17 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         Ln.d("doLocusEvent: " + url);
         //CallAnalyzerReporter.shared.reportClientNotificationReceived(model.getKey(), true);
         Queue.serial.run(() -> {
+            if (!model.isOneOnOne() && model.isValid()) {
+                String spaceId = WebexId.from(model.getConversationUrl(), device).getBase64Id();
+                if (!activeSpaceIds.contains(spaceId) && model.getFullState() != null && model.getFullState().isActive()) {
+                    fire(new InternalSpace.InternalSpaceCallStarted(spaceId, model));
+                    activeSpaceIds.add(spaceId);
+                }
+                if (activeSpaceIds.contains(spaceId) && model.getFullState() != null && !model.getFullState().isActive()) {
+                    fire(new InternalSpace.InternalSpaceCallEnded(spaceId, model));
+                    activeSpaceIds.remove(spaceId);
+                }
+            }
             CallImpl call = calls.get(url);
             if (call == null) {
                 if (device != null && model.isIncomingCall() && model.isValid()) {
@@ -1175,51 +1211,42 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 && object != null && object.isPerson()
                 && target != null && target.isConversation()) {
             fire(new InternalMembership.InternalMembershipCreated(new InternalMembership(activity, clusterId), activity));
-        }
-        else if (verb == ActivityModel.Verb.leave
+        } else if (verb == ActivityModel.Verb.leave
                 && (object == null || object.isPerson())
                 && target != null && target.isConversation()) {
             fire(new InternalMembership.InternalMembershipDeleted(new InternalMembership(activity, clusterId), activity));
-        }
-        else if ((activity.getVerb() == ActivityModel.Verb.assignModerator || activity.getVerb() == ActivityModel.Verb.unassignModerator)
+        } else if ((activity.getVerb() == ActivityModel.Verb.assignModerator || activity.getVerb() == ActivityModel.Verb.unassignModerator)
                 && object != null && object.isPerson()
                 && target != null && target.isConversation()) {
             fire(new InternalMembership.InternalMembershipUpdated(new InternalMembership(activity, clusterId), activity));
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.acknowledge
+        } else if (activity.getVerb() == ActivityModel.Verb.acknowledge
                 && object != null && object.isActivity() && object.getId() != null
                 && target != null && target.isConversation()) {
             fire(new InternalMembership.InternalMembershipMessageSeen(new InternalMembership(activity, clusterId), activity, new WebexId(WebexId.Type.MESSAGE, clusterId, object.getId()).getBase64Id()));
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.create
+        } else if (activity.getVerb() == ActivityModel.Verb.create
                 && object != null && object.isConversation() && object.getId() != null) {
             String base64Id = new WebexId(WebexId.Type.ROOM, clusterId, object.getId()).getBase64Id();
-            webex.spaces().get(base64Id, result -> fire(result.getData() == null ? null : new InternalSpace.InternalSpaceCeated(result.getData(), activity)));
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.update
+            webex.spaces().get(base64Id, result -> fire(result.getData() == null ? null : new InternalSpace.InternalSpaceCreated(result.getData(), activity)));
+        } else if (activity.getVerb() == ActivityModel.Verb.update
                 && object != null && object.isConversation()
                 && target != null && target.isConversation() && target.getId() != null) {
             String base64Id = new WebexId(WebexId.Type.ROOM, clusterId, object.getId()).getBase64Id();
             webex.spaces().get(base64Id, result -> fire(result.getData() == null ? null : new InternalSpace.InternalSpaceUpdated(result.getData(), activity)));
-        }
-        else if ((activity.getVerb() == ActivityModel.Verb.post || activity.getVerb() == ActivityModel.Verb.share)
+        } else if ((activity.getVerb() == ActivityModel.Verb.post || activity.getVerb() == ActivityModel.Verb.share)
                 && activity.getConversationId() != null && activity.getConversationUrl() != null) {
             ((MessageClientImpl) webex.messages()).doMessageReveived(activity, clusterId, message -> {
                 fire(new InternalMessage.InternalMessageReceived(message, activity));
                 // TODO Remove the deprecated event in next big release
                 fire(new InternalMessage.InternalMessageArrived(message, activity));
             });
-         }
-        else if (activity.getVerb() == ActivityModel.Verb.update
+        } else if (activity.getVerb() == ActivityModel.Verb.update
                 && activity.getConversationId() != null && activity.getConversationUrl() != null
                 && object != null && object.isContent() && object.getId() != null) {
             ((MessageClientImpl) webex.messages()).doMessageUpdated(activity, this::fire);
-        }
-        else if (activity.getVerb() == ActivityModel.Verb.delete
+        } else if (activity.getVerb() == ActivityModel.Verb.delete
                 && object != null && object.isActivity() && object.getId() != null) {
             fire(new InternalMessage.InternalMessageDeleted(((MessageClientImpl) webex.messages()).doMessageDeleted(object.getId(), clusterId), activity));
-        }
-        else {
+        } else {
             Ln.d("Not a valid activity: " + url);
         }
     }
@@ -1228,11 +1255,9 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         Queue.main.run(() -> {
             if (event instanceof MembershipObserver.MembershipEvent && membershipObserver != null) {
                 membershipObserver.onEvent((MembershipObserver.MembershipEvent) event);
-            }
-            else if (event instanceof SpaceObserver.SpaceEvent && spaceObserver != null) {
+            } else if (event instanceof SpaceObserver.SpaceEvent && spaceObserver != null) {
                 spaceObserver.onEvent((SpaceObserver.SpaceEvent) event);
-            }
-            else if (event instanceof MessageObserver.MessageEvent && messageObserver != null) {
+            } else if (event instanceof MessageObserver.MessageEvent && messageObserver != null) {
                 messageObserver.onEvent((MessageObserver.MessageEvent) event);
             }
         });
