@@ -29,6 +29,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import android.util.Size;
+
 import com.ciscowebex.androidsdk.CompletionHandler;
 
 import android.view.View;
@@ -111,7 +112,7 @@ public interface Call {
      *
      * @since 2.4.0
      */
-    enum WaitReason{
+    enum WaitReason {
         /**
          * Waiting in the lobby for the meeting to start.
          */
@@ -142,6 +143,30 @@ public interface Call {
          * The option to scale the video to fit the size of the view by changing the aspect ratio of the video if necessary.
          */
         StretchFill
+    }
+
+    /**
+     * The options to switch audio output during a call.
+     *
+     * @since 2.7.0
+     */
+    enum AudioOutputMode {
+        /**
+         * The option to play audio through phone.
+         */
+        PHONE,
+        /**
+         * The option to play audio through headset(if connected).
+         */
+        HEADSET,
+        /**
+         * The option to play audio through speaker.
+         */
+        SPEAKER,
+        /**
+         * The option to play audio through bluetooth headset(if connected).
+         */
+        BLUETOOTH_HEADSET
     }
 
     /**
@@ -411,12 +436,14 @@ public interface Call {
 
     /**
      * Start content sharing.
+     *
      * @since 1.4
      */
     void startSharing(@NonNull CompletionHandler<Void> callback);
 
     /**
      * Stop content sharing.
+     *
      * @since 1.4
      */
     void stopSharing(@NonNull CompletionHandler<Void> callback);
@@ -509,5 +536,13 @@ public interface Call {
      * @since 2.4.0
      */
     void letIn(@NonNull List<CallMembership> memberships);
+
+    /**
+     * Switch the audio play output mode during a call.
+     *
+     * @param audioOutputMode the audio play output mode during a call.
+     * @since 2.7.0
+     */
+    void switchAudioOutput(AudioOutputMode audioOutputMode);
 
 }

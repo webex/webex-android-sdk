@@ -25,7 +25,9 @@ package com.ciscowebex.androidsdk.internal.media.device;
 import android.bluetooth.*;
 import android.content.Context;
 import android.media.AudioManager;
+
 import com.ciscowebex.androidsdk.internal.media.*;
+import com.ciscowebex.androidsdk.phone.Call;
 import com.github.benoitdion.ln.Ln;
 import com.webex.wme.MediaSessionAPI;
 
@@ -132,8 +134,7 @@ public class AudioDeviceConnectionManager {
         if (session != null) {
             if (connected) {
                 session.headsetPluggedIn();
-            }
-            else {
+            } else {
                 session.headsetPluggedOut();
             }
         }
@@ -145,36 +146,24 @@ public class AudioDeviceConnectionManager {
     }
 
     private void doUpdate() {
-        if (audioManager.isWiredHeadsetOn()) {
-            status = ConnectionStatus.WIRED_HEADSET;
-        }
-        else if (audioManager.isBluetoothScoAvailableOffCall() && (isBTHeadsetConnected() || isBTA2dpConnected())) {
+        if (audioManager.isBluetoothScoAvailableOffCall() && (isBTHeadsetConnected() || isBTA2dpConnected())) {
             status = ConnectionStatus.BLUETOOTH;
-        }
-        else {
+        } else if (audioManager.isWiredHeadsetOn()) {
+            status = ConnectionStatus.WIRED_HEADSET;
+        } else {
             status = ConnectionStatus.NONE;
         }
         Ln.d("status: " + status + "; previousStatus: " + previousStatus + "; devicePreference: " + devicePreference);
         if (status != previousStatus) {
             previousStatus = status;
             if (status == ConnectionStatus.WIRED_HEADSET) {
-                Ln.d("playThroughWiredHeadset");
-                audioManager.stopBluetoothSco();
-                audioManager.setSpeakerphoneOn(false);
-                //int mode = isAudioEnhancement() ? android.media.AudioManager.MODE_IN_COMMUNICATION : android.media.AudioManager.MODE_NORMAL;
-                audioManager.setMode(android.media.AudioManager.MODE_IN_COMMUNICATION);
-            }
-            else if (status == ConnectionStatus.BLUETOOTH) {
-                Ln.d("playThroughBluetooth");
-                audioManager.setMode(android.media.AudioManager.MODE_IN_COMMUNICATION);
-                audioManager.setSpeakerphoneOn(false);
-                audioManager.startBluetoothSco();
-            }
-            else {
+                playThroughPhoneOrHeadSet();
+            } else if (status == ConnectionStatus.BLUETOOTH) {
+                playThroughBluetooth();
+            } else {
                 if (devicePreference == DevicePref.EARPIECE) {
                     playThroughEarpiece();
-                }
-                else {
+                } else {
                     playThroughSpeakerPhone();
                 }
             }
@@ -244,5 +233,53 @@ public class AudioDeviceConnectionManager {
         audioManager.setMode(android.media.AudioManager.MODE_IN_COMMUNICATION);
     }
 
+    private void playThroughBluetooth() {
+        Ln.d("playThroughBluetooth");
+        audioManager.setMode(android.media.AudioManager.MODE_IN_COMMUNICATION);
+        audioManager.setSpeakerphoneOn(false);
+        audioManager.startBluetoothSco();
+    }
 
+    private void playThroughPhoneOrHeadSet() {
+        Ln.d("playThroughWiredHeadset");
+        audioManager.stopBluetoothSco();
+        audioManager.setSpeakerphoneOn(false);
+        //int mode = isAudioEnhancement() ? android.media.AudioManager.MODE_IN_COMMUNICATION : android.media.AudioManager.MODE_NORMAL;
+        audioManager.setMode(android.media.AudioManager.MODE_IN_COMMUNICATION);
+    }
+
+    private void playThroughNone() {
+        Ln.d("playThroughNone");
+        audioManager.stopBluetoothSco();
+        audioManager.setSpeakerphoneOn(false);
+    }
+
+    public void toggleAudioOutput(Call.AudioOutputMode mode) {
+        switch (mode) {
+            case PHONE:
+            case HEADSET:
+                if (audioManager.isWiredHeadsetOn()) {
+                    status = ConnectionStatus.WIRED_HEADSET;
+                } else {
+                    status = ConnectionStatus.NONE;
+                }
+                playThroughPhoneOrHeadSet();
+                break;
+            case SPEAKER:
+                status = ConnectionStatus.NONE;
+                playThroughSpeakerPhone();
+                break;
+            case BLUETOOTH_HEADSET:
+                if (audioManager.isBluetoothScoAvailableOffCall() && (isBTHeadsetConnected() || isBTA2dpConnected())) {
+                    status = ConnectionStatus.BLUETOOTH;
+                    playThroughBluetooth();
+                }
+                break;
+            default:
+                status = ConnectionStatus.NONE;
+                playThroughNone();
+                break;
+        }
+        previousStatus = status;
+    }
 }
