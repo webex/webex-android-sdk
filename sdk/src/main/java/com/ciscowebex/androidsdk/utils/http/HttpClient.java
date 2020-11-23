@@ -23,10 +23,14 @@
 package com.ciscowebex.androidsdk.utils.http;
 
 import android.support.annotation.NonNull;
+
+import com.ciscowebex.androidsdk.internal.ServiceReqeust;
 import com.ciscowebex.androidsdk.utils.NetworkUtils;
 import com.github.benoitdion.ln.Ln;
+
 import okhttp3.*;
 import okhttp3.logging.HttpLoggingInterceptor;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -48,8 +52,7 @@ public class HttpClient {
                     Ln.d("[HTTP] " + message.substring(MAX_LENGTH * i, max));
                 }
             }
-        }
-        else {
+        } else {
             Ln.d("[HTTP] " + message);
         }
     });
@@ -63,7 +66,8 @@ public class HttpClient {
         LOGGING_INTERCEPTOR.setLevel(level);
     }
 
-    public static @NonNull OkHttpClient defaultClient = newClient().build();
+    public static @NonNull
+    OkHttpClient defaultClient = newClient().build();
 
     public static OkHttpClient.Builder newClient() {
         return new OkHttpClient.Builder()
@@ -74,7 +78,14 @@ public class HttpClient {
                     Request request = chain.request();
                     Response response = chain.proceed(request);
                     if (response.code() >= 300 && response.code() <= 399) {
-                        request = request.newBuilder().url(Objects.requireNonNull(response.header("Location"))).build();
+                        String url = Objects.requireNonNull(response.header("Location"));
+                        okhttp3.Request.Builder requestBuilder = request.newBuilder().url(url);
+                        if (!url.contains("wbx2.com") && !url.contains("ciscospark.com") && !url.contains("webex.com")) {
+                            requestBuilder.removeHeader("Spark-User-Agent");
+                            requestBuilder.removeHeader("Cisco-Request-ID");
+                            requestBuilder.removeHeader(ServiceReqeust.HEADER_TRACKING_ID);
+                        }
+                        request = requestBuilder.build();
                         Ln.i("Handling redirect, url = " + request.url());
                         response = chain.proceed(request);
                     }
@@ -92,7 +103,10 @@ public class HttpClient {
                             int retrySeconds = NetworkUtils.get429RetryAfterSeconds(response, 5, 3600);
                             if (retrySeconds > 0) {
                                 synchronized (lock) {
-                                    try { lock.wait(retrySeconds * 1000); } catch (Throwable ignored) {}
+                                    try {
+                                        lock.wait(retrySeconds * 1000);
+                                    } catch (Throwable ignored) {
+                                    }
                                 }
                                 response = chain.proceed(request);
                             }
