@@ -24,17 +24,23 @@ package com.ciscowebex.androidsdk.internal.media;
 
 import android.os.Build;
 import android.os.Environment;
+
 import com.ciscowebex.androidsdk.phone.AdvancedSetting;
 import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.github.benoitdion.ln.Ln;
 import com.webex.wme.MediaConfig;
 import com.webex.wme.MediaConnection;
-import me.helloworld.utils.Checker;
+
 import org.json.JSONObject;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+
+import me.helloworld.utils.Checker;
 
 public class MediaCapability {
 
@@ -45,7 +51,7 @@ public class MediaCapability {
             + "\"yv12Capture\":false"
             + "}}}}";
 
-    private static final List<String> DEFAULT_AE_MODLES =  Lists.asList("SM-G93", "SM-G95", "SM-G96", "SM-G97", "SM-N95", "SM-N96", "GM19");
+    private static final List<String> DEFAULT_AE_MODLES = Lists.asList("SM-G93", "SM-G95", "SM-G96", "SM-G97", "SM-N95", "SM-N96", "GM19");
 
     private static final int DEFAULT_MAX_STREAMS = 4;
 
@@ -275,6 +281,16 @@ public class MediaCapability {
     private void applySharingConfig(MediaConnection connection) {
         MediaConfig.ShareConfig config = connection.GetShareConfig(WMEngine.Media.Sharing.mid());
         config.SetMaxBandwidth(sharingMaxRxBandwidth);
+        if (!Checker.isEmpty(this.settings)) {
+            AdvancedSetting.ShareMaxCaptureFPS setting = (AdvancedSetting.ShareMaxCaptureFPS) this.settings.get(AdvancedSetting.ShareMaxCaptureFPS.class);
+            if (setting != null && setting.getValue() != null && setting.getValue() > 0 && !setting.getValue().equals(AdvancedSetting.ShareMaxCaptureFPS.defaultValue)) {
+                int fps = setting.getValue();
+                if (fps > 10) {
+                    fps = 10;
+                }
+                config.SetScreenMaxCaptureFps(fps);
+            }
+        }
     }
 
     private void applyVideoConfig(MediaConnection connection) {
@@ -295,7 +311,7 @@ public class MediaCapability {
         decoderCodec.uProfileLevelID = decoderSCR.levelId;
         decoderCodec.max_br = videoMaxRxBandwidth / 1000;
         decoderCodec.max_mbps = decoderSCR.maxMbps;
-        decoderCodec.max_fs =  decoderSCR.maxFs;
+        decoderCodec.max_fs = decoderSCR.maxFs;
         decoderCodec.max_fps = decoderSCR.maxFps;
         config.SetDecodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, decoderCodec);
 
