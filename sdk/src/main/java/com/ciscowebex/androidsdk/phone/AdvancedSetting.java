@@ -2,7 +2,7 @@ package com.ciscowebex.androidsdk.phone;
 
 /**
  * A AdvancedSetting represents a setting item for a call. Each subclass is a setting item.
- *
+ * <p>
  * These settings are for special use cases and usually do not need to be set.
  *
  * @see Phone#setAdvancedSetting(AdvancedSetting)
@@ -84,5 +84,21 @@ public abstract class AdvancedSetting<T> {
         public VideoEnableCamera2(boolean value) {
             super(value, defaultVaule);
         }
+    }
+
+    /**
+     * Set the max screen capture fps for screen share for the call. If 0, default value of 5 is used.
+     * Range of this value is 1 to 10
+     * If set the value >5 and battery / CPU are not acceptable on the device, then should set the value <= 5.
+     *
+     * @since 2.7.0
+     */
+    public static class ShareMaxCaptureFPS extends AdvancedSetting<Integer> {
+        public static int defaultValue = 0;
+
+        public ShareMaxCaptureFPS(int value) {
+            super(value, defaultValue);
+        }
+
     }
 }
