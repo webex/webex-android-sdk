@@ -291,6 +291,10 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
         return capability;
     }
 
+    public MediaDeviceMananger getMediaDeviceManager(){
+        return deviceManager;
+    }
+
     private boolean hasMedia(WmeTrack.Type type) {
         if (type == WmeTrack.Type.LocalAudio || type == WmeTrack.Type.RemoteAudio) {
             return capability.hasAudio();

@@ -643,6 +643,15 @@ public class CallImpl implements Call {
         });
     }
 
+    @Override
+    public void switchAudioOutput(AudioOutputMode audioOutputMode) {
+        if (media != null && media.getMediaDeviceManager() != null && media.getMediaDeviceManager().getAudioDeviceConnectionManager() != null) {
+            media.getMediaDeviceManager()
+                    .getAudioDeviceConnectionManager()
+                    .toggleAudioOutput(audioOutputMode);
+        }
+    }
+
     void startMedia() {
         if (media == null) {
             return;

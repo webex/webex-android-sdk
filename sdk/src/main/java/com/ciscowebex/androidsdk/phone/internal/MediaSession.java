@@ -26,8 +26,10 @@ import android.support.annotation.Nullable;
 import android.util.Pair;
 import android.util.Size;
 import android.view.View;
+
 import com.ciscowebex.androidsdk.internal.media.*;
 import com.ciscowebex.androidsdk.internal.media.WmeTrack;
+import com.ciscowebex.androidsdk.internal.media.device.MediaDeviceMananger;
 import com.ciscowebex.androidsdk.internal.model.LocusParticipantDeviceModel;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.phone.Call;
@@ -38,7 +40,8 @@ import com.webex.wme.MediaTrack;
 
 public class MediaSession {
 
-    interface MediaType {}
+    interface MediaType {
+    }
 
     static class MediaTypeVideo implements MediaType {
 
@@ -80,6 +83,10 @@ public class MediaSession {
 
     public MediaCapability getCapability() {
         return session.getCapability();
+    }
+
+    MediaDeviceMananger getMediaDeviceManager() {
+        return session.getMediaDeviceManager();
     }
 
     public boolean isRunning() {
@@ -196,8 +203,7 @@ public class MediaSession {
     public void update(MediaType type) {
         if (type instanceof MediaTypeVideo) {
             session.updateVideoTracks(((MediaTypeVideo) type).localView, ((MediaTypeVideo) type).remoteView);
-        }
-        else if (type instanceof MediaTypeSharing) {
+        } else if (type instanceof MediaTypeSharing) {
             session.updateSharingTracks(((MediaTypeSharing) type).view);
         }
     }
