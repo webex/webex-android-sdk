@@ -38,7 +38,7 @@ Assuming you already have an Android project, e.g. _MyWebexApp_, for your Androi
 
     ```groovy
     dependencies { 
-        compile('com.ciscowebex:androidsdk:2.6.0@aar', {
+        compile('com.ciscowebex:androidsdk:2.7.0@aar', {
             transitive = true
         })
     }
@@ -312,44 +312,44 @@ Here are some examples of how to use the Android SDK in your app.
 10. Post a message
 
     ```java
-    webex.message().postToPerson(
-        EmailAddress.fromString("bob@example.com"), 
-        Message.Text.markdown("**Hello**", "<strong>Hello</strong>", "Hello"), 
-        files,
-        new CompletionHandler<Message>() {
-            @Override
-            public void onComplete(Result<Message> result) {
-                if (result.isSuccessful()) {
-                    // message sent success
+    webex.message().post(
+                targetId,
+                Message.draft(Message.Text.markdown("**Hello**", "<strong>Hello</strong>", "Hello"))
+                .addAttachments(localFile),
+                new CompletionHandler<Message>() {
+                    @Override
+                    public void onComplete(Result<Message> result) {
+                        if (result.isSuccessful()) {
+                            // message sent success
                     ...
-                } else {
-                    // message sent failed
+                        } else {
+                            // message sent failed
                     ...
-                }
-            }
-        }));
+                        }
+                    }
+                });
     ```
     
 11. Post a threaded message
 
     ```java
-    webex.message().postToPerson(
-        EmailAddress.fromString("bob@example.com"), 
-        Message.Text.markdown("**Hello**", "<strong>Hello</strong>", "Hello"), 
-        files,
-        parentMessage,
-        new CompletionHandler<Message>() {
-            @Override
-            public void onComplete(Result<Message> result) {
-                if (result.isSuccessful()) {
-                    // message sent success
+    webex.message().post(
+                targetId,
+                Message.draft(Message.Text.markdown("**Hello**", "<strong>Hello</strong>", "Hello"))
+                .addAttachments(localFile)
+                .setParent(parentMessage),
+                new CompletionHandler<Message>() {
+                    @Override
+                    public void onComplete(Result<Message> result) {
+                        if (result.isSuccessful()) {
+                            // message sent success
                     ...
-                } else {
-                    // message sent failed
+                        } else {
+                            // message sent failed
                     ...
-                }
-            }
-        }));
+                        }
+                    }
+                });
     ```
 
 12. Receive a message
@@ -544,6 +544,16 @@ Here are some examples of how to use the Android SDK in your app.
 
     ```java
     message.getMentions()
+    ```
+28. Change the max capture fps when screen sharing
+
+    ```java
+    webex.phone().setAdvancedSetting(new ShareMaxCaptureFPS(int value));
+    ```
+29. Switch the audio play output mode during a call
+
+    ```java
+    activeCall.switchAudioOutput(AudioOutputMode audioOutputMode);
     ```
     
 ## Migrating from Cisco Spark Android SDK

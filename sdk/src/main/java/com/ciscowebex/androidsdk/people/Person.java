@@ -157,7 +157,7 @@ public class Person {
     }
 
     /**
-     * @return The date and time of the person's last activity within Webex Teams.
+     * @return The date and time of the person's last activity within Webex.
      * @since 2.1.1
      */
     public String getLastActivity() {
