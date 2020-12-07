@@ -126,7 +126,7 @@ public class WmeTrack {
             Ln.d("Track is not ready, " + this);
             return;
         }
-        track.Stop();
+        //track.Stop();
         if (removeView && (type == Type.LocalVideo || type == Type.RemoteVideo
                 || type == Type.AuxVideo || type == Type.Preview
                 || type == Type.LocalSharing || type == Type.RemoteSharing)) {
