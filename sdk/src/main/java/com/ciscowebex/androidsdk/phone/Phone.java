@@ -434,6 +434,13 @@ public interface Phone {
     void enableBackgroundStream(boolean enable);
 
     /**
+     * Set true to keep Webex server connection when minimize app, else will stop. Default is false.
+     *
+     * @param enable true to keep server connection when minimize app, else will stop. Default is false.
+     */
+    void enableBackgroundConnection(boolean enable);
+
+    /**
      * Set advanced setings for call. Only effective if set before the start of call.
      *
      * For example, Phone.setAdvancedSetting(new VideoMaxTxFPS(30));
