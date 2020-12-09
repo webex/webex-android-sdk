@@ -43,7 +43,7 @@ public abstract class AdvancedSetting<T> {
     }
 
     /**
-     * Enable or disable the video mosaic for error-concealment when data loss in network. The defaule is enable.
+     * Enable or disable the video mosaic for error-concealment when data loss in network. The default is enable.
      *
      * @since 2.6.0
      */

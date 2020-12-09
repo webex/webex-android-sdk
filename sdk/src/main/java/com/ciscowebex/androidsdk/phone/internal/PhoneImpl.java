@@ -123,6 +123,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     private List<String> audioEnhancementModels = null;
     private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = new HashMap<>();
     private boolean enableBackgroundStream = false;
+    private boolean enableAudioBNR = false;
+    private AudioBRNMode audioBRNMode = AudioBRNMode.HP;
 
     private String uuid = UUID.randomUUID().toString();
     private boolean canceled = false;
@@ -562,6 +564,26 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public void cancel() {
         this.canceled = true;
+    }
+
+    @Override
+    public void enableAudioBNR(boolean enable) {
+        this.enableAudioBNR = enable;
+    }
+
+    @Override
+    public boolean isAudioBNREnable() {
+        return enableAudioBNR;
+    }
+
+    @Override
+    public void setAudioBNRMode(AudioBRNMode mode) {
+        this.audioBRNMode = mode;
+    }
+
+    @Override
+    public AudioBRNMode getAudioBNRMode() {
+        return audioBRNMode;
     }
 
     @Override
@@ -1301,6 +1323,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         capability.setHardwareCodecEnable(isHardwareAccelerationEnabled());
         capability.setHardwareVideoSetting(getHardwareVideoSettings());
         capability.setAudioEnhancementModels(audioEnhancementModels);
+        capability.setEnableAudioBNR(isAudioBNREnable());
+        capability.setAudioBRNMode(getAudioBNRMode());
         if (device != null) {
             capability.setDeviceSettings(device.getDeviceSettings());
         }

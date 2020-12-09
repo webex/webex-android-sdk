@@ -87,6 +87,10 @@ public class MediaCapability {
 
     private EnumSet<MediaConstraint> constraints = EnumSet.noneOf(MediaConstraint.class);
 
+    private boolean enableAudioBNR = false;
+
+    private Phone.AudioBRNMode audioBRNMode = Phone.AudioBRNMode.HP;
+
     public MediaCapability() {
         setAudioEnhancementModels(null);
     }
@@ -162,6 +166,14 @@ public class MediaCapability {
 
     public void setDefaultCamera(WMEngine.Camera camera) {
         this.camera = camera;
+    }
+
+    public void setEnableAudioBNR(boolean enableAudioBNR) {
+        this.enableAudioBNR = enableAudioBNR;
+    }
+
+    public void setAudioBRNMode(Phone.AudioBRNMode audioBRNMode) {
+        this.audioBRNMode = audioBRNMode;
     }
 
     public void setAudioPlaybackFile(String audioPlaybackFile) {
@@ -273,6 +285,10 @@ public class MediaCapability {
         config.EnableRecordLossData(false);
         config.EnableClientMix(1);
         config.SetMaxBandwidth(audioMaxRxBandwidth);
+        config.EnableBNR(enableAudioBNR);
+        if (enableAudioBNR) {
+            config.SetBNRProfileMode(audioBRNMode.getValue());
+        }
         if (!Checker.isEmpty(audioPlaybackFile)) {
             config.EnableFileCapture(audioPlaybackFile, true);
         }
