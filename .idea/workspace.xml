@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="1f3acd35-3290-489e-9f12-420204f7aec7" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.travis.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CHANGELOG.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CISCO_API_LICENSE.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/IntegrationTesting.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/build.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/libs/diagnostic-events-gson-1.0.392.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/libs/kms-sdk-2.0.62.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/libs/utils-1.0.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/proguard-rules.pro" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/androidTest/AndroidManifest.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/androidTest/java/com/ciscowebex/androidsdk/WebexTestRunner.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/androidTest/java/com/ciscowebex/androidsdk/auth/JWTAuthenticatorTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/androidTest/java/com/ciscowebex/androidsdk/message/MessageClientTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/androidTest/java/com/ciscowebex/androidsdk/people/PersonClientTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/androidTest/java/com/ciscowebex/androidsdk/space/SpaceClientTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/androidTest/java/com/ciscowebex/androidsdk/team/TeamClientTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/androidTest/java/com/ciscowebex/androidsdk/team/TeamMembershipClientTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/androidTest/java/com/ciscowebex/androidsdk/webhook/WebhookClientTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/AndroidManifest.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/CompletionHandler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/Result.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/Webex.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/WebexError.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/WebexEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/Authenticator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/JWTAuthenticator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/OAuthAuthenticator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/OAuthWebViewAuthenticator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/SSOAuthenticator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/internal/OAuthLauncher.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/auth/internal/TokenAuthenticator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/AcquirePermissionActivity.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/Closure.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/Credentials.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/Device.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/ErrorDetail.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/MetricsService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/ResultImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/Service.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/ServiceReqeust.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/Settings.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/adaptor/MercuryEventAdapter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/adaptor/ObjectModelAdapter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/adaptor/SimpleAdaptor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/crypto/CryptoUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/crypto/KeyManager.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/crypto/KeyObject.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/crypto/KmsRequestWrapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/crypto/KmsResourceObject.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/crypto/SecureContentReference.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/crypto/SymmetricJWK.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/crypto/TypedSecureContentReferenceOutput.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/AudioPlaybackStreamType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/MediaCapability.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/MediaConstraint.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/MediaError.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/MediaHelper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/MediaSCR.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/WMEngine.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/WmeObserver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/WmeSession.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/WmeTrack.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/device/AudioDeviceConnectionManager.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/device/AudioManagerDelegate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/device/BluetoothBroadcastReceiver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/device/BluetoothServiceListener.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/device/HeadsetIntentReceiver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/device/MediaDeviceMananger.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/device/ProximitySensor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/device/SensorManagerDelegate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/media/device/VolumeSettingChangedListener.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/mercury/MercuryActivityEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/mercury/MercuryEnvelope.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/mercury/MercuryEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/mercury/MercuryKmsAckEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/mercury/MercuryKmsMessageEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/mercury/MercuryKmsPushEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/mercury/MercuryLocusEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/mercury/MercuryService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/mercury/MercuryTypingEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/metric/CallAnalyzerErrorCode.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/metric/CallAnalyzerReporter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/metric/ClientEventBuilder.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/metric/DiagnosticsEventBuilder.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/metric/MediaQualityBuilder.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/metric/MetricService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/metric/MetricsHelper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ActivityModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/AlertTypeModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/CalliopeClusterModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/CommentModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ContentModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ConversationModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/DeviceModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/DisplayHintsModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/FileModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/FloorModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/GenericMetricModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/GenericMetricsModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/GroupMentionModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ImageModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/IntentModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ItemsModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/JWTLoginModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/KmsInfoModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/KmsMessageModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusControlMetaModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusControlModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusDescriptionModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusKeyModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusLinkModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusListResponseModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusLockControlModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusMediaDirection.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusMediaResponseModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusParticipantAudioControlModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusParticipantChallengeControlModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusParticipantControlsModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusParticipantDeviceModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusParticipantInfoModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusParticipantLocalRecordControlModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusParticipantModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusParticipantStatusModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusRecordControlModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusReplacesModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusScheduledMeetingModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusSelfModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusSequenceModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusStateModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/LocusUrlResponseModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/MarkdownableModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/MediaConnectionModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/MediaEngineReachabilityModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/MediaInfoModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/MediaShareModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/MentionableModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ObjectModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/OrganizationModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/OrganizationPolicyModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ParentModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/PersonModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/PlaceModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ProviderModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ReachabilityModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/RegionModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ServiceHostModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/ServicesClusterModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/SpacePropertyModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/SuggestedMediaModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/TeamModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/TokenModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/UploadSessionModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/WMEIceListModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/WMEIceModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/model/WMEIceResultModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/queue/BackgroundQueue.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/queue/MainQueue.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/queue/NamedRunnable.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/queue/Operation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/queue/OperationQueue.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/queue/Queue.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/queue/QueueWorker.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/queue/Scheduler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/queue/SerialQueue.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/reachability/BackgroundChecker.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/reachability/ForegroundChecker.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/reachability/NetworkConnectionStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/reachability/NetworkReachability.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/internal/reachability/ProxyHelpers.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/membership/Membership.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/membership/MembershipClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/membership/MembershipObserver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/membership/MembershipReadStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/membership/internal/InternalMembership.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/membership/internal/InternalMembershipReadStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/membership/internal/MembershipClientImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/Before.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/LocalFile.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/Mention.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/Message.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/MessageClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/MessageObserver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/RemoteFile.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/internal/DownloadFileOperation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/internal/DraftImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/internal/InternalMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/internal/MessageClientImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/internal/RemoteFileImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/message/internal/UploadFileOperations.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/people/Person.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/people/PersonClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/people/internal/PersonClientImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/AdvancedSetting.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/AuxStream.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/Call.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/CallMembership.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/CallObserver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/CallSchedule.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/MediaOption.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/MediaRenderView.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/MultiStreamObserver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/Phone.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/AuxStreamImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/CallContext.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/CallImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/CallMembershipImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/CallService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/H264LicensePrompter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/H264LicensePrompterActivity.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/InternalCallSchedule.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/LocusResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/MediaEngine.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/MediaObserver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/MediaSession.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/PhoneImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/ReachabilityService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/RegisterOperation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/UIEventHandler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/phone/internal/UnregisterOperation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/Space.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/SpaceClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/SpaceMeetingInfo.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/SpaceObserver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/SpaceReadStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/internal/InternalSpace.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/internal/InternalSpaceReadStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/space/internal/SpaceClientImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/team/Team.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/team/TeamClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/team/TeamMembership.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/team/TeamMembershipClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/team/internal/TeamClientImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/team/internal/TeamMembershipClientImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/DateUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/EmailAddress.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/ExpirableCache.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/GiphyUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/Json.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/Lists.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/LoggingLock.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/Metadata.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/MimeUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/NetworkUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/PSUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/TrackingIdGenerator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/UriUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/UserAgent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/Utils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/WebexId.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/http/ContentDownloadMonitor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/http/CountedTypedOutput.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/http/DefaultHeadersInterceptor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/http/HttpClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/log/DebugLn.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/log/LogCaptureUtil.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/log/MediaLog.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/log/NoLn.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/utils/log/WarningLn.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/webhook/Webhook.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/webhook/WebhookClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/java/com/ciscowebex/androidsdk/webhook/internal/WebhookClientImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/jniLibs/arm64-v8a/libaudiopairing.so" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/jniLibs/arm64-v8a/libc++_shared.so" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/jniLibs/armeabi-v7a/libaudiopairing.so" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/jniLibs/armeabi-v7a/libc++_shared.so" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/jniLibs/x86/libaudiopairing.so" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/jniLibs/x86/libc++_shared.so" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/jniLibs/x86_64/libaudiopairing.so" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/main/jniLibs/x86_64/libc++_shared.so" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/src/test/java/com/ciscowebex/androidsdk/WebexTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings.gradle" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view />
+      </state>
+    </system>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="readMe" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1lPS8ZrCeTo90Sw3BUeadnEZ7fg" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="Git.Branch.Popup.ShowAllRemotes" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/images" />
+    <property name="settings.editor.selected.configurable" value="AndroidSdkUpdater" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/images" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="AndroidJUnit" factoryName="Android JUnit">
+      <option name="TEST_OBJECT" value="class" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1f3acd35-3290-489e-9f12-420204f7aec7" name="Default Changelist" comment="" />
+      <created>1607497074744</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1607497074744</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="536" y="335" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1607517725047">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="536" y="335" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1680.1050@0.0.1680.1050" timestamp="1607517725047" />
+    <state x="429" y="127" key="CommitChangelistDialog2" timestamp="1607517780129">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="429" y="127" key="CommitChangelistDialog2/0.0.1680.1050@0.0.1680.1050" timestamp="1607517780129" />
+    <state width="371" height="856" key="Git.Branch.Popup" timestamp="1607517472719">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state width="371" height="856" key="Git.Branch.Popup/0.0.1680.1050@0.0.1680.1050" timestamp="1607517472719" />
+    <state width="213" height="772" key="Git.Branch.Popup/0.23.1680.947@0.23.1680.947" timestamp="1607497158246" />
+    <state x="596" y="242" key="RollbackChangesDialog" timestamp="1607500530208">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="596" y="242" key="RollbackChangesDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1607500530208" />
+    <state x="440" y="265" key="Vcs.Push.Dialog.v2" timestamp="1607511565327">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="440" y="265" key="Vcs.Push.Dialog.v2/0.0.1680.1050@0.0.1680.1050" timestamp="1607511565327" />
+  </component>
+</project>
