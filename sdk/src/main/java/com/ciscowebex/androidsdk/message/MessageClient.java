@@ -33,7 +33,7 @@ import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.utils.EmailAddress;
 
 /**
- * MessageClient represents a client to the Webex Teams platform.
+ * MessageClient represents a client to the Webex platform.
  * It can send and receive messages.
  * <p>
  * Use {@link com.ciscowebex.androidsdk.Webex#messages()} to get an instance of MessageClient.
