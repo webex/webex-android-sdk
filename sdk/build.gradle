@@ -305,7 +305,7 @@ task javadoc(type: Javadoc) {
     options.docTitle(moduleName + ' ' + moduleVersion)
     options.links("http://docs.oracle.com/javase/7/docs/api/");
     options.links("http://d.android.com/reference/");
-    options.footer('Copyright &#169; 2016&#8211;2020 Cisco System Inc.  All Rights Reserved.')
+    options.footer('Copyright &#169; 2016&#8211;2021 Cisco System Inc.  All Rights Reserved.')
     exclude '**/BuildConfig.java'
     exclude '**/R.java'
     exclude '**/internal/**'
