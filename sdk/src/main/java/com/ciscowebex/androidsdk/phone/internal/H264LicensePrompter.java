@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -86,11 +86,11 @@ public class H264LicensePrompter {
     }
 
     boolean isVideoLicenseActivationDisabled() {
-        return Settings.shared.get("isVideoLicenseActivationDisabledKey", false);
+        return Settings.shared.getKeep("isVideoLicenseActivationDisabledKey", false);
     }
 
     void setVideoLicenseActivationDisabled(boolean disabled) {
-        Settings.shared.store("isVideoLicenseActivationDisabledKey", disabled);
+        Settings.shared.storeKeep("isVideoLicenseActivationDisabledKey", disabled);
     }
 
     void reset() {
@@ -99,10 +99,10 @@ public class H264LicensePrompter {
     }
 
     private boolean isVideoLicenseActivated() {
-        return Settings.shared.get("isVideoLicenseActivatedKey", false);
+        return Settings.shared.getKeep("isVideoLicenseActivatedKey", false);
     }
 
     private void setVideoLicenseActivated(boolean activated) {
-        Settings.shared.store("isVideoLicenseActivatedKey", activated);
+        Settings.shared.storeKeep("isVideoLicenseActivatedKey", activated);
     }
 }

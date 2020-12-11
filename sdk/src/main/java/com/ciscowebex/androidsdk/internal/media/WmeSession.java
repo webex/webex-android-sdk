@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -289,6 +289,10 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
 
     public MediaCapability getCapability() {
         return capability;
+    }
+
+    public MediaDeviceMananger getMediaDeviceManager(){
+        return deviceManager;
     }
 
     private boolean hasMedia(WmeTrack.Type type) {

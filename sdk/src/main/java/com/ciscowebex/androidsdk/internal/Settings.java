@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,11 +35,13 @@ public class Settings {
     public static Settings shared = new Settings();
 
     private SharedPreferences store;
+    private SharedPreferences keep;
 
     private Settings() {}
 
     public void init(Context context) {
         this.store = context.getSharedPreferences(Webex.class.getPackage().getName(), MODE_PRIVATE);
+        this.keep = context.getSharedPreferences(Webex.class.getPackage().getName() + ".keep", MODE_PRIVATE);
     }
 
     public void store(String key, String value) {
@@ -54,15 +56,39 @@ public class Settings {
         }
     }
 
+    public void storeKeep(String key, String value) {
+        if (keep != null) {
+            keep.edit().putString(key, value).apply();
+        }
+    }
+
+    public void storeKeep(String key, boolean value) {
+        if (keep != null) {
+            keep.edit().putBoolean(key, value).apply();
+        }
+    }
+
     public void clear(String key) {
         if (store != null) {
             store.edit().remove(key).apply();
         }
     }
 
+    public void clearKeep(String key) {
+        if (keep != null) {
+            keep.edit().remove(key).apply();
+        }
+    }
+
     public void clear() {
         if (store != null) {
             store.edit().clear().apply();
+        }
+    }
+
+    public void clearKeep() {
+        if (keep != null) {
+            keep.edit().clear().apply();
         }
     }
 
@@ -83,6 +109,30 @@ public class Settings {
     public <T> T get(String key, Class<T> clazz, T defaultValue) {
         if (store != null) {
             String value = store.getString(key, null);
+            if (value != null) {
+                return Objects.defaultIfNull(Json.fromJson(value, clazz), defaultValue);
+            }
+        }
+        return defaultValue;
+    }
+
+    public String getKeep(String key, String defaultValue) {
+        if (keep != null) {
+            return keep.getString(key, defaultValue);
+        }
+        return defaultValue;
+    }
+
+    public boolean getKeep(String key, boolean defaultValue) {
+        if (keep != null) {
+            return keep.getBoolean(key, defaultValue);
+        }
+        return defaultValue;
+    }
+
+    public <T> T getKeep(String key, Class<T> clazz, T defaultValue) {
+        if (keep != null) {
+            String value = keep.getString(key, null);
             if (value != null) {
                 return Objects.defaultIfNull(Json.fromJson(value, clazz), defaultValue);
             }

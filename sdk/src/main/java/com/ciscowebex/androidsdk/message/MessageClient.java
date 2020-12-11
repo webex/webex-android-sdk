@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.utils.EmailAddress;
 
 /**
- * MessageClient represents a client to the Webex Teams platform.
+ * MessageClient represents a client to the Webex platform.
  * It can send and receive messages.
  * <p>
  * Use {@link com.ciscowebex.androidsdk.Webex#messages()} to get an instance of MessageClient.

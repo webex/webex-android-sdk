@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,8 @@ public interface CallObserver {
 
     /**
      * Callback when the call is waiting.
-     * @param call Call.
+     *
+     * @param call   Call.
      * @param reason The reason why the call is waiting.
      * @since 2.4.0
      */
@@ -628,11 +629,11 @@ public interface CallObserver {
             _to = to;
         }
 
-        public CallMembership from(){
+        public CallMembership from() {
             return _from;
         }
 
-        public CallMembership to(){
+        public CallMembership to() {
             return _to;
         }
 
@@ -762,17 +763,29 @@ public interface CallObserver {
      *
      * @since 2.4.0
      */
-    class MembershipWaitingEvent extends AbstractCallMembershipChangedEvent{
+    class MembershipWaitingEvent extends AbstractCallMembershipChangedEvent {
 
         private Call.WaitReason waitReason;
 
-        public MembershipWaitingEvent(Call call, CallMembership membership, Call.WaitReason waitReason){
+        public MembershipWaitingEvent(Call call, CallMembership membership, Call.WaitReason waitReason) {
             super(call, membership);
             this.waitReason = waitReason;
         }
 
         public Call.WaitReason getWaitReason() {
             return waitReason;
+        }
+    }
+
+    /**
+     * This might be triggered when the person in the membership is muted by others in the meeting.
+     *
+     * @since 2.7.0
+     */
+    class MembershipAudioMutedControlledEvent extends AbstractCallMembershipChangedEvent {
+
+        public MembershipAudioMutedControlledEvent(Call call, CallMembership membership) {
+            super(call, membership);
         }
     }
 }

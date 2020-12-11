@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,17 +24,23 @@ package com.ciscowebex.androidsdk.internal.media;
 
 import android.os.Build;
 import android.os.Environment;
+
 import com.ciscowebex.androidsdk.phone.AdvancedSetting;
 import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.github.benoitdion.ln.Ln;
 import com.webex.wme.MediaConfig;
 import com.webex.wme.MediaConnection;
-import me.helloworld.utils.Checker;
+
 import org.json.JSONObject;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+
+import me.helloworld.utils.Checker;
 
 public class MediaCapability {
 
@@ -45,7 +51,7 @@ public class MediaCapability {
             + "\"yv12Capture\":false"
             + "}}}}";
 
-    private static final List<String> DEFAULT_AE_MODLES =  Lists.asList("SM-G93", "SM-G95", "SM-G96", "SM-G97", "SM-N95", "SM-N96", "GM19");
+    private static final List<String> DEFAULT_AE_MODLES = Lists.asList("SM-G93", "SM-G95", "SM-G96", "SM-G97", "SM-N95", "SM-N96", "GM19");
 
     private static final int DEFAULT_MAX_STREAMS = 4;
 
@@ -80,6 +86,10 @@ public class MediaCapability {
     private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = null;
 
     private EnumSet<MediaConstraint> constraints = EnumSet.noneOf(MediaConstraint.class);
+
+    private boolean enableAudioBNR = false;
+
+    private Phone.AudioBRNMode audioBRNMode = Phone.AudioBRNMode.HP;
 
     public MediaCapability() {
         setAudioEnhancementModels(null);
@@ -156,6 +166,14 @@ public class MediaCapability {
 
     public void setDefaultCamera(WMEngine.Camera camera) {
         this.camera = camera;
+    }
+
+    public void setEnableAudioBNR(boolean enableAudioBNR) {
+        this.enableAudioBNR = enableAudioBNR;
+    }
+
+    public void setAudioBRNMode(Phone.AudioBRNMode audioBRNMode) {
+        this.audioBRNMode = audioBRNMode;
     }
 
     public void setAudioPlaybackFile(String audioPlaybackFile) {
@@ -267,6 +285,10 @@ public class MediaCapability {
         config.EnableRecordLossData(false);
         config.EnableClientMix(1);
         config.SetMaxBandwidth(audioMaxRxBandwidth);
+        config.EnableBNR(enableAudioBNR);
+        if (enableAudioBNR) {
+            config.SetBNRProfileMode(audioBRNMode.getValue());
+        }
         if (!Checker.isEmpty(audioPlaybackFile)) {
             config.EnableFileCapture(audioPlaybackFile, true);
         }
@@ -275,6 +297,16 @@ public class MediaCapability {
     private void applySharingConfig(MediaConnection connection) {
         MediaConfig.ShareConfig config = connection.GetShareConfig(WMEngine.Media.Sharing.mid());
         config.SetMaxBandwidth(sharingMaxRxBandwidth);
+        if (!Checker.isEmpty(this.settings)) {
+            AdvancedSetting.ShareMaxCaptureFPS setting = (AdvancedSetting.ShareMaxCaptureFPS) this.settings.get(AdvancedSetting.ShareMaxCaptureFPS.class);
+            if (setting != null && setting.getValue() != null && setting.getValue() > 0 && !setting.getValue().equals(AdvancedSetting.ShareMaxCaptureFPS.defaultValue)) {
+                int fps = setting.getValue();
+                if (fps > 10) {
+                    fps = 10;
+                }
+                config.SetScreenMaxCaptureFps(fps);
+            }
+        }
     }
 
     private void applyVideoConfig(MediaConnection connection) {
@@ -295,7 +327,7 @@ public class MediaCapability {
         decoderCodec.uProfileLevelID = decoderSCR.levelId;
         decoderCodec.max_br = videoMaxRxBandwidth / 1000;
         decoderCodec.max_mbps = decoderSCR.maxMbps;
-        decoderCodec.max_fs =  decoderSCR.maxFs;
+        decoderCodec.max_fs = decoderSCR.maxFs;
         decoderCodec.max_fps = decoderSCR.maxFps;
         config.SetDecodeParams(MediaConfig.WmeCodecType.WmeCodecType_AVC, decoderCodec);
 

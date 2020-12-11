@@ -9,8 +9,8 @@ ext {
     moduleName = 'Cisco Webex Android SDK'
     moduleGroupId = 'com.ciscowebex'
     moduleArtifactId = 'androidsdk'
-    moduleVersion = '2.6.0'
-    moduleVersionCode = 26026
+    moduleVersion = '2.7.0'
+    moduleVersionCode = 27005
     moduleDescription = 'Cisco Webex SDK for Android'
     moduleSiteUrl = 'https://developer.webex.com/docs/sdks/android'
     moduleProjectUrl = 'https://github.com/webex/webex-android-sdk'
@@ -24,6 +24,8 @@ ext {
     moduleDeveloperEmail = 'devsupport@ciscowebex.com'
     moduleDeveloperOrganization = 'Cisco System Inc'
     moduleDeveloperOrganizationURL = 'https://www.webex.com/'
+
+    moduleWMEVersion = '10.12.2.0'
 }
 
 Properties properties = new Properties()
@@ -180,6 +182,41 @@ publishing {
                 }
             }
         }
+
+        WME(MavenPublication) {
+            groupId "com.webex"
+            artifactId "wme4android-release"
+            version moduleWMEVersion
+            artifact rootDir.absolutePath + '/deps/wme4android-release-' + moduleWMEVersion + '.aar'
+            pom.withXml {
+                asNode().appendNode('description', 'Cisco Webex Media Engine')
+                asNode().appendNode('name', 'Cisco Webex Media Engine')
+                asNode().children().last() + {
+                    resolveStrategy = DELEGATE_FIRST
+                    url moduleSiteUrl
+                    scm {
+                        url moduleGitUrl
+                        connection moduleConnectionUrl
+                        developerConnection moduleDeveloperConnectionUrl
+                    }
+                    licenses {
+                        license {
+                            name 'Commercial'
+                            url 'https://www.cisco.com/c/en/us/products/end-user-license-agreement.html'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id moduleDeveloperId
+                            name moduleDeveloperName
+                            email moduleDeveloperEmail
+                            organization moduleDeveloperOrganization
+                            organizationUrl 'https://www.webex.com/products/teams/'
+                        }
+                    }
+                }
+            }
+        }
     }
 
     repositories {
@@ -205,7 +242,7 @@ publishing {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.webex:wme4android-release:10.8.5.0@aar'
+    implementation "com.webex:wme4android-release:$moduleWMEVersion@aar"
     implementation 'com.google.code.gson:gson:2.7'
     implementation 'com.github.benoitdion.ln:ln:0.1.2'
     implementation 'com.squareup.okhttp3:okhttp:3.12.0'
@@ -268,7 +305,7 @@ task javadoc(type: Javadoc) {
     options.docTitle(moduleName + ' ' + moduleVersion)
     options.links("http://docs.oracle.com/javase/7/docs/api/");
     options.links("http://d.android.com/reference/");
-    options.footer('Copyright &#169; 2016&#8211;2020 Cisco System Inc.  All Rights Reserved.')
+    options.footer('Copyright &#169; 2016&#8211;2021 Cisco System Inc.  All Rights Reserved.')
     exclude '**/BuildConfig.java'
     exclude '**/R.java'
     exclude '**/internal/**'

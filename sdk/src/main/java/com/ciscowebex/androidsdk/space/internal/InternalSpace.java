@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,13 +23,14 @@
 package com.ciscowebex.androidsdk.space.internal;
 
 import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.LocusModel;
 import com.ciscowebex.androidsdk.space.Space;
 import com.ciscowebex.androidsdk.space.SpaceObserver;
 
 public class InternalSpace extends Space {
 
-    public static class InternalSpaceCeated extends SpaceObserver.SpaceCreated {
-        public InternalSpaceCeated(Space space, ActivityModel activity) {
+    public static class InternalSpaceCreated extends SpaceObserver.SpaceCreated {
+        public InternalSpaceCreated(Space space, ActivityModel activity) {
             super(space, activity);
         }
     }
@@ -37,6 +38,18 @@ public class InternalSpace extends Space {
     public static class InternalSpaceUpdated extends SpaceObserver.SpaceUpdated {
         public InternalSpaceUpdated(Space space, ActivityModel activity) {
             super(space, activity);
+        }
+    }
+
+    public static class InternalSpaceCallStarted extends SpaceObserver.SpaceCallStarted {
+        public InternalSpaceCallStarted(String spaceId, LocusModel locus) {
+            super(spaceId, locus);
+        }
+    }
+
+    public static class InternalSpaceCallEnded extends SpaceObserver.SpaceCallEnded {
+        public InternalSpaceCallEnded(String spaceId, LocusModel locus) {
+            super(spaceId, locus);
         }
     }
 }

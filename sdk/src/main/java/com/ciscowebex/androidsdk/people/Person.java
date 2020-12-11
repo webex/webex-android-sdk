@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -157,7 +157,7 @@ public class Person {
     }
 
     /**
-     * @return The date and time of the person's last activity within Webex Teams.
+     * @return The date and time of the person's last activity within Webex.
      * @since 2.1.1
      */
     public String getLastActivity() {

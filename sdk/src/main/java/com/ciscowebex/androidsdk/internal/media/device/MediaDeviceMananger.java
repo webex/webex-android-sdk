@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
+
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.internal.media.WMEngine;
 import com.ciscowebex.androidsdk.internal.media.WmeSession;
@@ -72,8 +73,7 @@ public class MediaDeviceMananger {
                         videoMutedByProximity = true;
                         proximitySensor.disableScreen();
                     }
-                }
-                else if (event == ProximitySensor.Listener.ProximityEvent.FAR) {
+                } else if (event == ProximitySensor.Listener.ProximityEvent.FAR) {
                     if (speakerOnBeforeProximity) {
                         delegate.setMode(android.media.AudioManager.MODE_NORMAL);
                         delegate.setSpeakerphoneOn(speakerOnBeforeProximity);
@@ -145,5 +145,9 @@ public class MediaDeviceMananger {
 
     public DeviceManager.MediaDevice getCamera(WMEngine.Camera camera) {
         return deviceManager.getCamera(camera.toDeviceCamera());
+    }
+
+    public AudioDeviceConnectionManager getAudioDeviceConnectionManager() {
+        return audioDeviceConnectionManager;
     }
 }

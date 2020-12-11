@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,12 +22,14 @@
 
 package com.ciscowebex.androidsdk.phone;
 
+import android.support.annotation.Nullable;
+
 /**
  * A data type represents a relationship between *Call* and *Person* at Cisco Webex cloud.
  *
  * @since 0.1
  */
-public interface  CallMembership {
+public interface CallMembership {
 
     /**
      * The enumeration of the status of the person in the membership.
@@ -138,4 +140,17 @@ public interface  CallMembership {
      * @since 2.5.0
      */
     boolean isActiveSpeaker();
+
+    /**
+     * @return True is the `CallMembership` is muted by other. Otherwise, false.
+     * @since 2.7.0
+     */
+    boolean isAudioMutedControlled();
+
+    /**
+     * @return The ID of the person who muted/unmuted this `CallMembership`
+     * @since 2.7.0
+     */
+    @Nullable
+    String audioModifiedBy();
 }

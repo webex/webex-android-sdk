@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 2.7.0 Releases
+- `2.7.0` Releases - [2.7.0](#270)
+
 #### 2.6.0 Releases
 - `2.6.0` Releases - [2.6.0](#260)
 
@@ -32,6 +35,20 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
+## [2.7.0](https://github.com/webex/webex-android-sdk/releases/tag/2.7.0)
+Released on 2020-12-14.
+#### Added
+- Support to notify a space call status through SpaceObserver
+- Support to notify muted by host during a space call.
+- Support to enable audio Background Noise Removal(BNR), and switch between HP(High Performance) and LP(Low Power) mode.
+- Not sending sensitive headers for unknown site.
+- Add a new API `Phone.setAdvancedSetting(new ShareMaxCaptureFPS(Int))` to change the max capture fps when screen sharing.
+- Add a new API `Call.switchAudioOutput(AudioOutputMode audioOutputMode)` to switch the audio play output mode during a call.
+
+#### Updated
+- Fixed users required to activate H.264 multiple times.
+- Fixed SpaceClient.listWithActiveCalls() cannot show spaces cross-cluster.
+
 ## [2.6.0](https://github.com/webex/webex-android-sdk/releases/tag/2.6.0)
 Released on 2020-09-28.
 #### Added

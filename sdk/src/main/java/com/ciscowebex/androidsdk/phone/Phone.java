@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -140,6 +140,31 @@ public interface Phone {
          * Indicates that the end user wants to view the license.
          */
         VIEW_LICENSE
+    }
+
+    /**
+     * The enumeration of audio BNR mode choices, default is HP.
+     *
+     * @since 2.7.0
+     */
+    enum AudioBRNMode {
+        /**
+         * Low Power mode.
+         */
+        LP(0),
+        /**
+         * High Performance mode.
+         */
+        HP(1);
+        private final int value;
+
+        AudioBRNMode(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
     }
 
     /**
@@ -435,7 +460,7 @@ public interface Phone {
 
     /**
      * Set advanced setings for call. Only effective if set before the start of call.
-     *
+     * <p>
      * For example, Phone.setAdvancedSetting(new VideoMaxTxFPS(30));
      *
      * @see AdvancedSetting
@@ -445,7 +470,7 @@ public interface Phone {
 
     /**
      * Returns value of the advanced seting that has been set.
-     *
+     * <p>
      * For example, AdvancedSetting setting = Phone.getAdvancedSetting(VideoMaxTxFPS.class);
      *
      * @see AdvancedSetting
@@ -459,4 +484,38 @@ public interface Phone {
      * @since 2.6.0
      */
     void cancel();
+
+    /**
+     * Enable audio background noise removal. Default is false
+     *
+     * @param enable true to open audio background noise removal, else will close. Default is false.
+     * @since 2.7.0
+     */
+    void enableAudioBNR(boolean enable);
+
+    /**
+     * True if audio background noise removal is open, otherwise false.
+     *
+     * @return true if audio background noise removal is open, otherwise false.
+     * @since 2.7.0
+     */
+    boolean isAudioBNREnable();
+
+    /**
+     * Set the audio background noise removal mode, default value is {@link AudioBRNMode#HP}.
+     * This method only effective if set {@link Phone#enableAudioBNR(boolean)} to true.
+     *
+     * @param mode the audio background noise removal mode.
+     * @since 2.7.0
+     */
+    void setAudioBNRMode(AudioBRNMode mode);
+
+    /**
+     * Return the audio background noise removal mode.
+     *
+     * @return the audio background noise removal mode.
+     * @see AudioBRNMode
+     * @since 2.7.0
+     */
+    AudioBRNMode getAudioBNRMode();
 }

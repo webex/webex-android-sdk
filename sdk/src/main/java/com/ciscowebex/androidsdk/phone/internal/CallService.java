@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,9 @@ package com.ciscowebex.androidsdk.phone.internal;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.ciscowebex.androidsdk.CompletionHandler;
+import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.auth.Authenticator;
 import com.ciscowebex.androidsdk.internal.*;
 import com.ciscowebex.androidsdk.internal.model.*;
@@ -38,6 +40,7 @@ import com.ciscowebex.androidsdk.utils.Json;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
+
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.collection.Maps;
 
@@ -258,12 +261,44 @@ public class CallService {
     }
 
     public void list(@Nullable Device device, @NonNull CompletionHandler<List<LocusModel>> callback) {
-        Service.Locus.homed(device).get("loci")
-                .auth(authenticator)
+        listLoci(device, null, new CompletionHandler<LocusListResponseModel>() {
+            private List<LocusModel> loci = new ArrayList<>();
+
+            @Override
+            public void onComplete(Result<LocusListResponseModel> result) {
+                if (result.isSuccessful()) {
+                    LocusListResponseModel model = result.getData();
+                    if (model == null || model.getLoci() == null) {
+                        callback.onComplete(ResultImpl.success(loci));
+                    } else {
+                        loci.addAll(model.getLoci());
+                        List<String> remoteLocusClusterUrls = model.getRemoteLocusClusterUrls();
+                        if (remoteLocusClusterUrls != null && !remoteLocusClusterUrls.isEmpty()) {
+                            String url = remoteLocusClusterUrls.get(0);
+                            listLoci(null, url, this);
+                        } else {
+                            callback.onComplete(ResultImpl.success(loci));
+                        }
+                    }
+                } else {
+                    callback.onComplete(ResultImpl.error(result));
+                }
+            }
+        });
+    }
+
+    private void listLoci(@Nullable Device device, @Nullable String url, @NonNull CompletionHandler<LocusListResponseModel> callback) {
+        ServiceReqeust serviceReqeust;
+        if (url != null) {
+            serviceReqeust = new ServiceReqeust(url).get();
+        } else {
+            serviceReqeust = Service.Locus.homed(device).get("loci");
+        }
+        serviceReqeust.auth(authenticator)
                 .queue(Queue.main)
                 .model(LocusListResponseModel.class)
                 .error(callback)
-                .async((Closure<LocusListResponseModel>) model -> callback.onComplete(ResultImpl.success(model == null ? Collections.emptyList() : model.getLoci())));
+                .async((Closure<LocusListResponseModel>) model -> callback.onComplete(ResultImpl.success(model)));
     }
 
     public void admit(@NonNull String url, @NonNull List<CallMembership> memberships, @NonNull CompletionHandler<LocusModel> callback) {
@@ -350,8 +385,7 @@ public class CallService {
             if (option.getPin() != null) {
                 json.put("pin", option.getPin());
             }
-        }
-        else {
+        } else {
             json.put("invitee", Maps.makeMap("address", callee));
             json.put("supportsNativeLobby", true);
             json.put("moderator", false);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Cisco Systems Inc
+ * Copyright 2016-2021 Cisco Systems Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@ package com.ciscowebex.androidsdk.space;
 
 import com.ciscowebex.androidsdk.WebexEvent;
 import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.LocusModel;
 
 /**
  * Callback to receive the events from a {@link SpaceClient}.
@@ -73,10 +74,56 @@ public interface SpaceObserver {
 
         /**
          * Returns the changed space.
-         *
          */
         public Space getSpace() {
             return space;
+        }
+    }
+
+    /**
+     * The event when a space call started.
+     *
+     * @since 2.7.0
+     */
+    class SpaceCallStarted extends WebexEvent.Base implements SpaceEvent {
+
+        private String spaceId;
+
+        protected SpaceCallStarted(String spaceId, LocusModel locus) {
+            super(locus);
+            this.spaceId = spaceId;
+        }
+
+        /**
+         * Return the space ID.
+         *
+         * @return the space ID.
+         */
+        public String getSpaceId() {
+            return spaceId;
+        }
+    }
+
+    /**
+     * The event when a space call ended.
+     *
+     * @since 2.7.0
+     */
+    class SpaceCallEnded extends WebexEvent.Base implements SpaceEvent {
+        private String spaceId;
+
+        protected SpaceCallEnded(String spaceId, LocusModel locus) {
+            super(locus);
+            this.spaceId = spaceId;
+        }
+
+        /**
+         * Return the space ID.
+         *
+         * @return the space ID.
+         */
+        public String getSpaceId() {
+            return spaceId;
         }
     }
 

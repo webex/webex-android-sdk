@@ -56,3 +56,6 @@ freeline_project_description.json
 .settings/
 .vscode
 .classpath
+
+# Filies under deps
+deps/*.*
