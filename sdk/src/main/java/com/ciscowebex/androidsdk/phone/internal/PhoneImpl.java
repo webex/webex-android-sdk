@@ -1174,7 +1174,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         Ln.d("doLocusEvent: " + url);
         //CallAnalyzerReporter.shared.reportClientNotificationReceived(model.getKey(), true);
         Queue.serial.run(() -> {
-            if (!model.isOneOnOne() && model.isValid()) {
+            if (!model.isOneOnOne() && model.isValid() && model.getConversationUrl() != null) {
                 String spaceId = WebexId.from(model.getConversationUrl(), device).getBase64Id();
                 if (!activeSpaceIds.contains(spaceId) && model.getFullState() != null && model.getFullState().isActive()) {
                     fire(new InternalSpace.InternalSpaceCallStarted(spaceId, model));

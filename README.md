@@ -555,6 +555,17 @@ Here are some examples of how to use the Android SDK in your app.
     ```java
     activeCall.switchAudioOutput(AudioOutputMode audioOutputMode);
     ```
+
+30. Enable Background Noise Removal(BNR)
+
+    ```java
+    webex.phone().enableAudioBNR(boolean enable);
+    ```
+31. Set Background Noise Removal(BNR) mode
+
+    ```java
+    webex.phone().setAudioBNRMode(Phone.AudioBRNMode mode);
+    ```
     
 ## Migrating from Cisco Spark Android SDK
 
