@@ -78,7 +78,7 @@ Here are some examples of how to use the Android SDK in your app.
     String clientId = "YOUR_CLIENT_ID";
     String clientSecret = "YOUR_CLIENT_SECRET";
     String scope = "spark:all";
-    String redirectUri = "Webexdemoapp://response";
+    String redirectUri = "https://webexdemoapp.com";
 
     OAuthWebViewAuthenticator authenticator = new OAuthWebViewAuthenticator(clientId, clientSecret, scope, redirectUri);
     Webex webex = new Webex(activity.getApplication(), authenticator)
