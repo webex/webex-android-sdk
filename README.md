@@ -596,7 +596,7 @@ Assuming you already have an Android project with Spark Android SDK integrated. 
         // compile('com.ciscospark:androidsdk:1.4.0@aar', {
         //     transitive = true
         // })
-        implementation('com.ciscowebex:androidsdk:2.6.0@aar', {
+        implementation('com.ciscowebex:androidsdk:2.7.0@aar', {
             transitive = true
         })
     }
