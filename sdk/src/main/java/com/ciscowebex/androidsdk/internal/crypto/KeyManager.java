@@ -169,11 +169,11 @@ public class KeyManager {
                         if (encryptionKeyUrl == null) {
                             encryptionKeyUrl = model.getDefaultActivityEncryptionKeyUrl();
                         }
-                        if (encryptionKeyUrl == null) {
-                            if (model.getKmsResourceObject() == null) {
-                                callback.onComplete(ResultImpl.error("No result"));
-                                return;
-                            }
+//                        if (encryptionKeyUrl == null) {
+//                            if (model.getKmsResourceObject() == null) {
+//                                callback.onComplete(ResultImpl.error("No result"));
+//                                return;
+//                            }
                             ItemsModel<PersonModel> items = model.getParticipants();
                             List<PersonModel> participants = items == null ? null : items.getItems();
                             Set<String> participantUuids = participants == null ? null : new HashSet<>(participants.size());
@@ -183,7 +183,7 @@ public class KeyManager {
                                 }
                             }
                             userIds.put(convUrl, participantUuids);
-                        }
+//                        }
                         if (encryptionKeyUrl != null) {
                             convKeyUrls.put(convUrl, encryptionKeyUrl);
                         }
