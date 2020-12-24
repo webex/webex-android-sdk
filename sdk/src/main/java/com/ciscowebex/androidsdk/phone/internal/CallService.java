@@ -378,17 +378,13 @@ public class CallService {
         json.put("device", device.toJsonMap(Device.Type.WEB_CLIENT.getTypeName()));
         json.put("respOnlySdp", true);
         json.put("correlationId", correlationId);
-        if (callee == null) {
-            if (option.isModerator()) {
-                json.put("moderator", true);
-            }
-            if (option.getPin() != null) {
-                json.put("pin", option.getPin());
-            }
-        } else {
+        json.put("moderator", option.isModerator());
+        if (option.getPin() != null) {
+            json.put("pin", option.getPin());
+        }
+        if (callee != null) {
             json.put("invitee", Maps.makeMap("address", callee));
             json.put("supportsNativeLobby", true);
-            json.put("moderator", false);
         }
         return json;
     }
