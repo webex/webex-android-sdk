@@ -264,7 +264,12 @@ public class CallImpl implements Call {
 
     @Override
     public void setVideoLayout(MediaOption.VideoLayout layout) {
-        this.phone.layout(this, layout);
+        this.phone.layout(this, layout, null);
+    }
+
+    @Override
+    public void setVideoLayout(MediaOption.VideoLayout layout, @Nullable CompletionHandler<Void> callback) {
+        this.phone.layout(this, layout, callback);
     }
 
     @Override

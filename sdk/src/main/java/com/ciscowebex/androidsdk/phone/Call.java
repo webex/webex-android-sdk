@@ -241,6 +241,7 @@ public interface Call {
     /**
      * Specify how the remote video adjusts its content to be render in a view.
      *
+     * @param mode the remote video render mode
      * @since 2.6.0
      */
     void setRemoteVideoRenderMode(VideoRenderMode mode);
@@ -248,9 +249,19 @@ public interface Call {
     /**
      * Specify the video layout for the active speaker and other attendees in the group video meeting.
      *
+     * @param layout the video layout mode
      * @since 2.6.0
      */
     void setVideoLayout(MediaOption.VideoLayout layout);
+
+    /**
+     * Specify the video layout for the active speaker and other attendees in the group video meeting.
+     *
+     * @param layout   the video layout mode
+     * @param callback A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
+     * @since 2.8.0
+     */
+    void setVideoLayout(MediaOption.VideoLayout layout, @Nullable CompletionHandler<Void> callback);
 
     /**
      * @return The local video render view dimensions (points) of this call.
