@@ -894,14 +894,26 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         });
     }
 
-    void layout(CallImpl call, MediaOption.VideoLayout layout) {
+    void layout(CallImpl call, MediaOption.VideoLayout layout, @Nullable CompletionHandler<Void> callback) {
         Queue.serial.run(() -> {
             String url = call.getModel().getSelf() == null ? null : call.getModel().getSelf().getUrl();
             if (url == null) {
                 Ln.e("Missing self participant URL");
+                if (callback != null) {
+                    Queue.main.run(() -> callback.onComplete(ResultImpl.error("Missing self participant URL")));
+                }
                 Queue.serial.yield();
             } else {
-                service.layout(url, device, layout, result -> Queue.serial.yield());
+                service.layout(url, device, layout, result -> {
+                    if (callback != null) {
+                        if (result.getError() != null) {
+                            Queue.main.run(() -> callback.onComplete(ResultImpl.error(result.getError())));
+                        } else {
+                            Queue.main.run(() -> callback.onComplete(ResultImpl.success(null)));
+                        }
+                    }
+                    Queue.serial.yield();
+                });
             }
         });
     }
