@@ -22,22 +22,31 @@
 
 package com.ciscowebex.androidsdk.message;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.ciscowebex.androidsdk.internal.Credentials;
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.ConversationModel;
+import com.ciscowebex.androidsdk.internal.model.MarkdownableModel;
+import com.ciscowebex.androidsdk.internal.model.MentionableModel;
+import com.ciscowebex.androidsdk.internal.model.ObjectModel;
+import com.ciscowebex.androidsdk.internal.model.ParentModel;
+import com.ciscowebex.androidsdk.internal.model.PersonModel;
+import com.ciscowebex.androidsdk.internal.model.SpacePropertyModel;
+import com.ciscowebex.androidsdk.message.internal.DraftImpl;
+import com.ciscowebex.androidsdk.message.internal.RemoteFileImpl;
+import com.ciscowebex.androidsdk.space.Space;
+import com.ciscowebex.androidsdk.utils.Utils;
+import com.ciscowebex.androidsdk.utils.WebexId;
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import com.ciscowebex.androidsdk.internal.Credentials;
-import com.ciscowebex.androidsdk.internal.model.*;
-import com.ciscowebex.androidsdk.message.internal.DraftImpl;
-import com.ciscowebex.androidsdk.message.internal.RemoteFileImpl;
-import com.ciscowebex.androidsdk.utils.Utils;
-import com.ciscowebex.androidsdk.utils.WebexId;
-import com.ciscowebex.androidsdk.space.Space;
-import com.google.gson.Gson;
 import me.helloworld.utils.Checker;
 
 /**
@@ -110,7 +119,7 @@ public class Message {
         /**
          * Make a Text object for the html.
          *
-         * @param html the text with the html markup.
+         * @param html  the text with the html markup.
          * @param plain the alternate plain text for cases that do not support html markup.
          */
         public static Text html(String html, String plain) {
@@ -121,8 +130,8 @@ public class Message {
          * Make a Text object for the markdown.
          *
          * @param markdown the text with the markdown markup.
-         * @param html the html text for how to render the markdown. This will be optional in the future.
-         * @param plain the alternate plain text for cases that do not support markdown and html markup.
+         * @param html     the html text for how to render the markdown. This will be optional in the future.
+         * @param plain    the alternate plain text for cases that do not support markdown and html markup.
          */
         public static Text markdown(String markdown, String html, String plain) {
             return new Text(plain, html, markdown);
@@ -182,7 +191,6 @@ public class Message {
 
         /**
          * Returns the html if exist.
-         *
          */
         public String getHtml() {
             return html;
@@ -228,6 +236,10 @@ public class Message {
 
     protected String clusterId;
 
+    protected Date created;
+
+    protected Date updated;
+
     protected Message(ActivityModel activity, Credentials user, String clusterId, boolean received) {
         this.activity = activity;
         this.clusterId = clusterId;
@@ -270,6 +282,8 @@ public class Message {
         this.mentions = getMentions(activity.getObject());
         this.remoteFiles = RemoteFileImpl.mapRemoteFiles(activity);
         this.parent = activity.getParent();
+        this.created = activity.getPublished();
+        this.updated = created;
     }
 
     /**
@@ -384,7 +398,17 @@ public class Message {
      * @since 0.1
      */
     public Date getCreated() {
-        return activity.getPublished();
+        return created;
+    }
+
+    /**
+     * Returns the {@link java.util.Date} that the message being updated, the date will equals created time, if has NOT updated.
+     *
+     * @return The {@link java.util.Date} that the message being updated, the date will equals created time, if has NOT updated.
+     * @since 2.8
+     */
+    public Date getUpdated() {
+        return updated;
     }
 
     /**
@@ -485,5 +509,20 @@ public class Message {
         return ret;
     }
 
-
+    public void update(MessageObserver.MessageEdited event) {
+        ActivityModel activity = event.getActivity();
+        if (activity == null) {
+            return;
+        }
+        Credentials user = event.getUser();
+        if (user != null) {
+            this.isSelfMentioned = activity.isSelfMentioned(user, 0);
+        }
+        if (activity.getObject() != null) {
+            this.textAsObject = new Text(activity.getObject(), clusterId);
+        }
+        this.isAllMentioned = activity.isAllMentioned(0);
+        this.mentions = getMentions(activity.getObject());
+        this.updated = activity.getPublished();
+    }
 }

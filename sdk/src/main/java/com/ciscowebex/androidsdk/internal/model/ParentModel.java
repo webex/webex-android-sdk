@@ -67,4 +67,8 @@ public class ParentModel {
         return "reply".equals(this.type);
     }
 
+    public boolean isEdit() {
+        return "edit".equals(this.type);
+    }
+
 }

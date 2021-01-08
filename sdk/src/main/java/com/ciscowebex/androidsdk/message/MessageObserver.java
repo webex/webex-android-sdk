@@ -23,6 +23,7 @@
 package com.ciscowebex.androidsdk.message;
 
 import com.ciscowebex.androidsdk.WebexEvent;
+import com.ciscowebex.androidsdk.internal.Credentials;
 import com.ciscowebex.androidsdk.internal.model.ActivityModel;
 
 import java.util.List;
@@ -161,6 +162,30 @@ public interface MessageObserver {
          */
         public List<RemoteFile> getFiles() {
             return files;
+        }
+    }
+
+    /**
+     * The message has been edited. Developer could call {@link Message#update(MessageEdited)} to update original message.
+     *
+     * @since 2.8.0
+     */
+    class MessageEdited extends MessageUpdated {
+        private ActivityModel activity;
+        private Credentials user;
+
+        protected MessageEdited(String messageId, Credentials user, ActivityModel activity) {
+            super(messageId, activity);
+            this.activity = activity;
+            this.user = user;
+        }
+
+        ActivityModel getActivity() {
+            return activity;
+        }
+
+        Credentials getUser() {
+            return user;
         }
     }
 
