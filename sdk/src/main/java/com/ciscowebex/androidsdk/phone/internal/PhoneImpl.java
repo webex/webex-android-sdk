@@ -1268,15 +1268,19 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             webex.spaces().get(base64Id, result -> fire(result.getData() == null ? null : new InternalSpace.InternalSpaceUpdated(result.getData(), activity)));
         } else if ((activity.getVerb() == ActivityModel.Verb.post || activity.getVerb() == ActivityModel.Verb.share)
                 && activity.getConversationId() != null && activity.getConversationUrl() != null) {
-            ((MessageClientImpl) webex.messages()).doMessageReveived(activity, clusterId, message -> {
-                fire(new InternalMessage.InternalMessageReceived(message, activity));
-                // TODO Remove the deprecated event in next big release
-                fire(new InternalMessage.InternalMessageArrived(message, activity));
-            });
+            if (activity.getParent() != null && activity.getParent().isEdit()) {
+                ((MessageClientImpl) webex.messages()).doMessageEdited(activity, clusterId, this::fire);
+            } else {
+                ((MessageClientImpl) webex.messages()).doMessageReceived(activity, clusterId, message -> {
+                    fire(new InternalMessage.InternalMessageReceived(message, activity));
+                    // TODO Remove the deprecated event in next big release
+                    fire(new InternalMessage.InternalMessageArrived(message, activity));
+                });
+            }
         } else if (activity.getVerb() == ActivityModel.Verb.update
                 && activity.getConversationId() != null && activity.getConversationUrl() != null
                 && object != null && object.isContent() && object.getId() != null) {
-            ((MessageClientImpl) webex.messages()).doMessageUpdated(activity, this::fire);
+            ((MessageClientImpl) webex.messages()).doMessageFileThumbnailsUpdated(activity, this::fire);
         } else if (activity.getVerb() == ActivityModel.Verb.delete
                 && object != null && object.isActivity() && object.getId() != null) {
             fire(new InternalMessage.InternalMessageDeleted(((MessageClientImpl) webex.messages()).doMessageDeleted(object.getId(), clusterId), activity));

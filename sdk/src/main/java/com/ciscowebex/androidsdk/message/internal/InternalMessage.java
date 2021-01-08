@@ -59,6 +59,13 @@ public class InternalMessage extends Message {
         }
     }
 
+    public static class InternalMessageEdited extends MessageObserver.MessageEdited{
+
+        protected InternalMessageEdited(String messageId, Credentials user, ActivityModel activity) {
+            super(messageId, user, activity);
+        }
+    }
+
     InternalMessage(ActivityModel activity, Credentials user, String clusterId, boolean received) {
         super(activity, user, clusterId, received);
     }

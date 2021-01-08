@@ -63,7 +63,7 @@ public interface MessageClient {
      * @param handler  A closure to be executed once the request has finished with a list of messages based on the above criteria.
      * @since 2.1
      */
-    void list(@NonNull String spaceId, @Nullable Before before, @IntRange(from = 0,to = Integer.MAX_VALUE) int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler);
+    void list(@NonNull String spaceId, @Nullable Before before, @IntRange(from = 0, to = Integer.MAX_VALUE) int max, @Nullable Mention[] mentions, @NonNull CompletionHandler<List<Message>> handler);
 
     /**
      * Retrieves a message asynchronously by message Id.
@@ -87,6 +87,18 @@ public interface MessageClient {
      * @since 2.5.0
      */
     void post(@NonNull String target, @NonNull Message.Draft draft, @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * Edit a previous sent message asynchronously.
+     * <p>
+     * @param originalMessage The message that is editing.
+     * @param text The new text that will replace original message, if not edit this value, please set the value same with original message.
+     * @param mentions The mentioned person list that will replace original message, if not edit this value, please set the value same with original message.
+     * @param handler A closure to be executed once the message has edited. A {@link com.ciscowebex.androidsdk.message.MessageObserver.MessageEdited} event will gain if success.
+     *                Developer can call {@link Message#update(MessageObserver.MessageEdited)} method to update to original message.
+     * @since 2.8.0
+     */
+    void edit(@NonNull Message originalMessage, @Nullable Message.Text text, @Nullable Mention[] mentions, @NonNull CompletionHandler<MessageObserver.MessageEdited> handler);
 
     /**
      * Posts a message with optional file attachments to a person asynchronously.
@@ -227,7 +239,7 @@ public interface MessageClient {
      * @deprecated
      */
     @Deprecated
-    void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, @IntRange(from = 0,to = Integer.MAX_VALUE) int max, @NonNull CompletionHandler<List<Message>> handler);
+    void list(@NonNull String spaceId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, @IntRange(from = 0, to = Integer.MAX_VALUE) int max, @NonNull CompletionHandler<List<Message>> handler);
 
     /**
      * Posts a plain text message, and optionally, a media content attachment, to a space by space Id.
@@ -263,8 +275,8 @@ public interface MessageClient {
      * @param mentions  Notify either one or all in a space about this message. Ignored if post to a person or an email.
      * @param files     Local files to be attached with the message. Nil if no files to be attached.
      * @param handler   A closure to be executed once the message has posted.
-     * @deprecated
      * @since 1.4.0
+     * @deprecated
      */
     @Deprecated
     void post(@NonNull String idOrEmail,
@@ -283,9 +295,9 @@ public interface MessageClient {
 
     /**
      * Mark messages sent before the specified message in the space are read, including the specified message.
-     * <P>
+     * <p>
      *
-     * @param spaceId the id of space.
+     * @param spaceId   the id of space.
      * @param messageId the id of a message.
      * @since 2.3.0
      */
