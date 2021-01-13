@@ -895,6 +895,7 @@ public class CallImpl implements Call {
         }
 
         boolean isDelta = remote.getBaseSequence() != null;
+        boolean processLocus = false;
         if (local != null) {
             LocusSequenceModel.OverwriteWithResult overwriteWithResult;
             if (isDelta) {
@@ -912,6 +913,7 @@ public class CallImpl implements Call {
                 if (isDelta) {
                     remote = local.applyDelta(remote);
                 }
+                processLocus = true;
                 Ln.d("Updating locus DTO and notifying listeners of data change for: %s", remote.getCallUrl());
             } else if (overwriteWithResult.equals(LocusSequenceModel.OverwriteWithResult.FALSE)) {
                 Ln.d("Didn't overwrite locus DTO as new one was older version than one currently in memory.");
@@ -924,19 +926,23 @@ public class CallImpl implements Call {
             // locus doesn't exist in the cache, but this DTO is a delta, so fetch a full DTO and reprocess
             phone.fetch(this, true);
             return;
+        } else {
+            processLocus = true;
         }
-        doLocusModel(remote);
-        LocusModel newModule = remote;
-        Queue.main.run(() -> {
-            if (local != null) {
-                if (newModule.isRemoteAudioMuted() != local.isRemoteAudioMuted()) {
-                    if (observer != null) {
-                        observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(this, !newModule.isRemoteAudioMuted()));
+        if (processLocus) {
+            doLocusModel(remote);
+            LocusModel newModule = remote;
+            Queue.main.run(() -> {
+                if (local != null) {
+                    if (newModule.isRemoteAudioMuted() != local.isRemoteAudioMuted()) {
+                        if (observer != null) {
+                            observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(this, !newModule.isRemoteAudioMuted()));
+                        }
                     }
+                    doFloorUpdate(local, newModule);
                 }
-                doFloorUpdate(local, newModule);
-            }
-        });
+            });
+        }
     }
 
     void doFloorUpdate(LocusModel old, LocusModel current) {
