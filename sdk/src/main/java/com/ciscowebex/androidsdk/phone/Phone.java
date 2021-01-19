@@ -459,6 +459,13 @@ public interface Phone {
     void enableBackgroundStream(boolean enable);
 
     /**
+     * Set true to keep Webex server connection when minimize app. Default is false.
+     * When set to true, app will receive notifications in background, include incoming calls, messages, space updates, membership updates, etc.
+     * @param enable
+     */
+    void enableBackgroundConnection(boolean enable);
+
+    /**
      * Set advanced setings for call. Only effective if set before the start of call.
      * <p>
      * For example, Phone.setAdvancedSetting(new VideoMaxTxFPS(30));

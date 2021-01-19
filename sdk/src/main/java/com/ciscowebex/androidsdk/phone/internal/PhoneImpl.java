@@ -123,6 +123,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     private List<String> audioEnhancementModels = null;
     private Map<Class<? extends AdvancedSetting>, AdvancedSetting> settings = new HashMap<>();
     private boolean enableBackgroundStream = false;
+    private boolean enableBackgroundConnection = false;
     private boolean enableAudioBNR = false;
     private AudioBRNMode audioBRNMode = AudioBRNMode.HP;
 
@@ -266,7 +267,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             if (mercury != null) {
                 if (foreground) {
                     mercury.tryReconnect();
-                } else if (calls.size() == 0) {
+                } else if (calls.size() == 0 && !enableBackgroundConnection) {
                     mercury.disconnect(false);
                 }
             }
@@ -689,6 +690,12 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     public void enableBackgroundStream(boolean enable) {
         Ln.d("Set enableBackgroundStream to " + enable);
         this.enableBackgroundStream = enable;
+    }
+
+    @Override
+    public void enableBackgroundConnection(boolean enable) {
+        Ln.d("Set enableBackgroundStream to " + enable);
+        this.enableBackgroundConnection = enable;
     }
 
     @Override
