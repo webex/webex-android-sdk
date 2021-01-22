@@ -1,0 +1,60 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>RemoteFile.Thumbnail - sdk</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../../index.html">com.ciscowebex.androidsdk.message</a>&nbsp;/&nbsp;<a href="../index.html">RemoteFile</a>&nbsp;/&nbsp;<a href="./index.html">Thumbnail</a><br/>
+<br/>
+<h1>Thumbnail</h1>
+<code><span class="keyword">interface </span><span class="identifier">Thumbnail</span></code>
+<p>A data type represents a thumbnail file.
+The thumbnail typically is an image file which provides preview of the remote file without downloading.
+The content of the thumbnail can be downloaded via <a href="../../-message-client/download-thumbnail.html">MessageClient.downloadThumbnail</a>.</p>
+<p>Since 1.4.0</p>
+<p><strong>Since</strong><br/>
+1.4.0</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-height.html">getHeight</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getHeight</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Returns the height of the thumbnail.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-mime-type.html">getMimeType</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getMimeType</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the MIME type of the thumbnail.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-url.html">getUrl</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getUrl</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the thumbnail url of this remote file.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-width.html">getWidth</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getWidth</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Returns the width of the thumbnail.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

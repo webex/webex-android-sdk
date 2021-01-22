@@ -1,0 +1,65 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TeamMembershipClient - sdk</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk.team</a>&nbsp;/&nbsp;<a href="./index.html">TeamMembershipClient</a><br/>
+<br/>
+<h1>TeamMembershipClient</h1>
+<code><span class="keyword">interface </span><span class="identifier">TeamMembershipClient</span></code>
+<p>Client wrapper for TeamMembership of a Team membership related APIs</p>
+<p>Since 0.1</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="create.html">create</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">create</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$create(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.team.TeamMembership)))/teamId">teamId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$create(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.team.TeamMembership)))/personId">personId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$create(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.team.TeamMembership)))/personEmail">personEmail</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$create(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.team.TeamMembership)))/isModerator">isModerator</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$create(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.team.TeamMembership)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="../-team-membership/index.html"><span class="identifier">TeamMembership</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds a person to a team by person id; optionally making the person a moderator of the team.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="delete.html">delete</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">delete</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$delete(kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/teamMembershipId">teamMembershipId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$delete(kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/java/lang/Void.html"><span class="identifier">Void</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Deletes a membership by id.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get.html">get</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">get</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$get(kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.team.TeamMembership)))/teamMembershipId">teamMembershipId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$get(kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.team.TeamMembership)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="../-team-membership/index.html"><span class="identifier">TeamMembership</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Fetches the team membership details based on the team membership id</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="list.html">list</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">list</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$list(kotlin.String, kotlin.Int, com.ciscowebex.androidsdk.CompletionHandler((kotlin.collections.List((com.ciscowebex.androidsdk.team.TeamMembership)))))/teamId">teamId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$list(kotlin.String, kotlin.Int, com.ciscowebex.androidsdk.CompletionHandler((kotlin.collections.List((com.ciscowebex.androidsdk.team.TeamMembership)))))/max">max</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$list(kotlin.String, kotlin.Int, com.ciscowebex.androidsdk.CompletionHandler((kotlin.collections.List((com.ciscowebex.androidsdk.team.TeamMembership)))))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-team-membership/index.html"><span class="identifier">TeamMembership</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Lists all team memberships where the authenticated user belongs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="update.html">update</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">update</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$update(kotlin.String, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.team.TeamMembership)))/teamMembershipId">teamMembershipId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$update(kotlin.String, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.team.TeamMembership)))/isModerator">isModerator</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.team.TeamMembershipClient$update(kotlin.String, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.team.TeamMembership)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="../-team-membership/index.html"><span class="identifier">TeamMembership</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Updates the details for a team membership by id.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

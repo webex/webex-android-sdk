@@ -1,0 +1,154 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>CallObserver - sdk</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk.phone</a>&nbsp;/&nbsp;<a href="./index.html">CallObserver</a><br/>
+<br/>
+<h1>CallObserver</h1>
+<code><span class="keyword">interface </span><span class="identifier">CallObserver</span></code>
+<p>An observer interface for Call event</p>
+<p>Since 0.1</p>
+<p><strong>Since</strong><br/>
+0.1</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-abstract-call-event/index.html">AbstractCallEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">AbstractCallEvent</span></code>
+<p>Base class for the event of a call</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-call-disconnected-event.html">CallDisconnectedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">CallDisconnectedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-call-event/index.html"><span class="identifier">CallObserver.CallEvent</span></a></code>
+<p>This event is fired when the call is disconnected.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-call-event/index.html">CallEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">CallEvent</span></code>
+<p>Base class for the event of a call</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-local-cancel/index.html">LocalCancel</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">LocalCancel</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
+<p>TThis event is fired when the local party has cancelled the call.
+This is only applicable when the direction of the call is outgoing.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-audio-state-changed.html">onAudioStateChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onAudioStateChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onAudioStateChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback when the audio of call is muted or un-muted</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-connected.html">onConnected</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onConnected</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onConnected(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback when remote participant(s) answered and the call is connected.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-disconnected.html">onDisconnected</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onDisconnected</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onDisconnected(com.ciscowebex.androidsdk.phone.CallObserver.CallDisconnectedEvent)/event">event</span><span class="symbol">:</span>&nbsp;<a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback when the call is disconnected (hangup, cancelled, get declined or other self device pickup the call).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-failed.html">onFailed</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onFailed</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onFailed(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback when call failed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-hold-state-changed.html">onHoldStateChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onHoldStateChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onHoldStateChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback whenever a call is put on hold or call gets resumed</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-info-changed.html">onInfoChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onInfoChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onInfoChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback whenever a call information is changed for example - a participant is added or removed from call or mute status is changed</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-ringing.html">onRinging</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onRinging</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onRinging(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback when remote participant(s) is ringing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-sharing-state-changed.html">onSharingStateChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSharingStateChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onSharingStateChanged(com.ciscowebex.androidsdk.phone.Call, kotlin.String)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onSharingStateChanged(com.ciscowebex.androidsdk.phone.Call, kotlin.String)/label">label</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>callback whenever screen sharing state changes</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-sharing-video-stream-in-use-changed.html">onSharingVideoStreamInUseChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSharingVideoStreamInUseChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onSharingVideoStreamInUseChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>callback whenever Sharing Video Stream  changes</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-video-streaming-changed.html">onVideoStreamingChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onVideoStreamingChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onVideoStreamingChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback whenever video stream gets started or stopped</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

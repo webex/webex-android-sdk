@@ -1,0 +1,23 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Webex.getCallIdByNotificationId - sdk</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk</a>&nbsp;/&nbsp;<a href="index.html">Webex</a>&nbsp;/&nbsp;<a href="./get-call-id-by-notification-id.html">getCallIdByNotificationId</a><br/>
+<br/>
+<h1>getCallIdByNotificationId</h1>
+<a name="com.ciscowebex.androidsdk.Webex$getCallIdByNotificationId(kotlin.String, com.ciscowebex.androidsdk.phone.NotificationCallType)"></a>
+<code><span class="keyword">fun </span><span class="identifier">getCallIdByNotificationId</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$getCallIdByNotificationId(kotlin.String, com.ciscowebex.androidsdk.phone.NotificationCallType)/notificationId">notificationId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$getCallIdByNotificationId(kotlin.String, com.ciscowebex.androidsdk.phone.NotificationCallType)/callType">callType</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk.phone/-notification-call-type/index.html"><span class="identifier">NotificationCallType</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Returns the actual call id of the call based on callType.
+For webex calls, webhooks return session Id of Locus, which should be used to get call id
+For cucm calls, pushrest server provides push id, which should be used to get call id</p>
+<p>Since 3.0.0</p>
+<h3>Parameters</h3>
+<p><a name="notificationId"></a>
+<code>notificationId</code> - The id returned by the notification server</p>
+<p><a name="callType"></a>
+<code>callType</code> - The type of call</p>
+</BODY>
+</HTML>
