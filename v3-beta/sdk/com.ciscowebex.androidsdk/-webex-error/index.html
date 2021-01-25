@@ -1,0 +1,108 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>WebexError - sdk</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk</a>&nbsp;/&nbsp;<a href="./index.html">WebexError</a><br/>
+<br/>
+<h1>WebexError</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">WebexError</span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">!</span><span class="symbol">&gt;</span></code>
+<p>The enumeration of error types in Cisco Webex Android SDK.</p>
+<p><strong>Since</strong><br/>
+0.1</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-error-code/index.html">ErrorCode</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ErrorCode</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">WebexError</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>The default constructor</p>
+<code><span class="identifier">WebexError</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.WebexError$<init>(com.ciscowebex.androidsdk.WebexError.ErrorCode)/errorCode">errorCode</span><span class="symbol">:</span>&nbsp;<a href="-error-code/index.html"><span class="identifier">WebexError.ErrorCode</span></a><span class="symbol">!</span><span class="symbol">)</span></code>
+<p>The constructor with the error code</p>
+<code><span class="identifier">WebexError</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.WebexError$<init>(com.ciscowebex.androidsdk.WebexError.ErrorCode, kotlin.String)/errorCode">errorCode</span><span class="symbol">:</span>&nbsp;<a href="-error-code/index.html"><span class="identifier">WebexError.ErrorCode</span></a><span class="symbol">!</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.WebexError$<init>(com.ciscowebex.androidsdk.WebexError.ErrorCode, kotlin.String)/message">message</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">!</span><span class="symbol">)</span></code><br/>
+<code><span class="identifier">WebexError</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.WebexError$<init>(com.ciscowebex.androidsdk.WebexError.ErrorCode, kotlin.String, com.ciscowebex.androidsdk.WebexError.T)/errorCode">errorCode</span><span class="symbol">:</span>&nbsp;<a href="-error-code/index.html"><span class="identifier">WebexError.ErrorCode</span></a><span class="symbol">!</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.WebexError$<init>(com.ciscowebex.androidsdk.WebexError.ErrorCode, kotlin.String, com.ciscowebex.androidsdk.WebexError.T)/message">message</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">!</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.WebexError$<init>(com.ciscowebex.androidsdk.WebexError.ErrorCode, kotlin.String, com.ciscowebex.androidsdk.WebexError.T)/data">data</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span></code>
+<p>The constructor with the error code and error message</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="_data.html">_data</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">_data</span><span class="symbol">: </span><a href="index.html#T"><span class="identifier">T</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="error-code.html">errorCode</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">errorCode</span><span class="symbol">: </span><a href="-error-code/index.html"><span class="identifier">WebexError.ErrorCode</span></a><span class="symbol">!</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="message.html">message</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">message</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">!</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="from.html">from</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">static</span> <span class="keyword">fun </span><span class="identifier">from</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.WebexError$from(kotlin.String)/message">message</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">!</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">WebexError</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">!</span><span class="symbol">&gt;</span><span class="symbol">!</span></code><br/>
+<code><span class="keyword">open</span> <span class="keyword">static</span> <span class="keyword">fun </span><span class="identifier">from</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.WebexError$from(kotlin.Throwable)/t">t</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html"><span class="identifier">Throwable</span></a><span class="symbol">!</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">WebexError</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">!</span><span class="symbol">&gt;</span><span class="symbol">!</span></code><br/>
+<code><span class="keyword">open</span> <span class="keyword">static</span> <span class="keyword">fun </span><span class="identifier">from</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.WebexError$from(okhttp3.Response)/res">res</span><span class="symbol">:</span>&nbsp;<span class="identifier">Response</span><span class="symbol">!</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">WebexError</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">!</span><span class="symbol">&gt;</span><span class="symbol">!</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-data.html">getData</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getData</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="index.html#T"><span class="identifier">T</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-error-code.html">getErrorCode</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getErrorCode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-error-message.html">getErrorMessage</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getErrorMessage</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">!</span></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
