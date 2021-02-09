@@ -1101,6 +1101,7 @@ public class CallImpl implements Call {
         }
         if ((getStatus() == CallStatus.CONNECTED || getStatus() == CallStatus.RINGING) && media != null && !media.isPrepared() && !media.isRunning()) {
             Ln.d("Update SDP before start media");
+            phone.stopPreview();
             media.setPrepared(true);
             phone.update(this, isSendingAudio(), isSendingVideo(), media.getLocalSdp(), result -> {
                 CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
