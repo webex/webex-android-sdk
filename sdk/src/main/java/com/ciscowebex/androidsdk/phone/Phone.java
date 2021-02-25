@@ -462,6 +462,7 @@ public interface Phone {
      * Set true to keep Webex server connection when minimize app. Default is false.
      * When set to true, app will receive notifications in background, include incoming calls, messages, space updates, membership updates, etc.
      * @param enable
+     * @since 2.8.0
      */
     void enableBackgroundConnection(boolean enable);
 

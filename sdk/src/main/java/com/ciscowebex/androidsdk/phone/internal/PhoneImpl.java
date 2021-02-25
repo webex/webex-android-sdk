@@ -333,7 +333,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             if (action == null || action == H264LicenseAction.ACCEPT) {
                 this.canceled = false;
                 Queue.serial.run(() -> {
-                    stopPreview();
+//                    stopPreview();
                     if (callContext != null) {
                         Ln.w("Already calling: " + callContext);
                         Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already calling")));
