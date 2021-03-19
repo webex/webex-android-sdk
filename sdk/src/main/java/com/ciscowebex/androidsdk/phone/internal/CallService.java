@@ -28,23 +28,38 @@ import android.support.annotation.Nullable;
 import com.ciscowebex.androidsdk.CompletionHandler;
 import com.ciscowebex.androidsdk.Result;
 import com.ciscowebex.androidsdk.auth.Authenticator;
-import com.ciscowebex.androidsdk.internal.*;
-import com.ciscowebex.androidsdk.internal.model.*;
+import com.ciscowebex.androidsdk.internal.Closure;
+import com.ciscowebex.androidsdk.internal.Device;
+import com.ciscowebex.androidsdk.internal.ResultImpl;
+import com.ciscowebex.androidsdk.internal.Service;
+import com.ciscowebex.androidsdk.internal.ServiceReqeust;
+import com.ciscowebex.androidsdk.internal.model.LocusListResponseModel;
+import com.ciscowebex.androidsdk.internal.model.LocusMediaResponseModel;
+import com.ciscowebex.androidsdk.internal.model.LocusModel;
+import com.ciscowebex.androidsdk.internal.model.LocusUrlResponseModel;
+import com.ciscowebex.androidsdk.internal.model.MediaConnectionModel;
+import com.ciscowebex.androidsdk.internal.model.MediaEngineReachabilityModel;
+import com.ciscowebex.androidsdk.internal.model.MediaInfoModel;
+import com.ciscowebex.androidsdk.internal.model.MediaShareModel;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
 import com.ciscowebex.androidsdk.people.Person;
 import com.ciscowebex.androidsdk.people.internal.PersonClientImpl;
 import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.phone.MediaOption;
+import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.EmailAddress;
 import com.ciscowebex.androidsdk.utils.Json;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.collection.Maps;
-
-import java.util.*;
 
 public class CallService {
 
@@ -122,9 +137,9 @@ public class CallService {
                 });
     }
 
-    public void call(@NonNull String address, @NonNull MediaOption option, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
+    public void call(@NonNull String address, @NonNull MediaOption option, @NonNull Phone.VideoStreamMode streamMode, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
         Service.Locus.homed(device)
-                .post(makeBody(correlationId, device, sdp, address, option, reachabilities))
+                .post(makeBody(correlationId, device, sdp, address, option, streamMode, reachabilities))
                 .to("loci/call")
                 .auth(authenticator)
                 .queue(Queue.main)
@@ -135,19 +150,19 @@ public class CallService {
                     if (locus != null && model.getMediaConnections() != null) {
                         locus.setMediaConnections(model.getMediaConnections());
                     }
-                    if (option.getLayout() == null) {
+                    if (option.getCompositedLayout() == null) {
                         callback.onComplete(ResultImpl.success(locus));
                         return;
                     }
                     if (locus != null && locus.getSelf() != null) {
-                        layout(locus.getSelf().getUrl(), device, option.getLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
+                        layout(locus.getSelf().getUrl(), device, option.getCompositedLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
                     }
                 });
     }
 
-    public void join(@NonNull String url, @NonNull MediaOption option, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
+    public void join(@NonNull String url, @NonNull MediaOption option, @NonNull Phone.VideoStreamMode streamMode, @NonNull String correlationId, @NonNull Device device, @NonNull String sdp, MediaEngineReachabilityModel reachabilities, @NonNull CompletionHandler<LocusModel> callback) {
         ServiceReqeust.make(url)
-                .post(makeBody(correlationId, device, sdp, null, option, reachabilities))
+                .post(makeBody(correlationId, device, sdp, null, option, streamMode, reachabilities))
                 .to("participant")
                 .auth(authenticator)
                 .queue(Queue.main)
@@ -158,12 +173,12 @@ public class CallService {
                     if (locus != null && model.getMediaConnections() != null) {
                         locus.setMediaConnections(model.getMediaConnections());
                     }
-                    if (option.getLayout() == null) {
+                    if (option.getCompositedLayout() == null) {
                         callback.onComplete(ResultImpl.success(locus));
                         return;
                     }
                     if (locus != null && locus.getSelf() != null) {
-                        layout(locus.getSelf().getUrl(), device, option.getLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
+                        layout(locus.getSelf().getUrl(), device, option.getCompositedLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
                     }
                 });
     }
@@ -321,11 +336,11 @@ public class CallService {
                 });
     }
 
-    public void layout(@NonNull String participantUrl, @NonNull Device device, @NonNull MediaOption.VideoLayout layout, @NonNull CompletionHandler<LocusModel> callback) {
+    public void layout(@NonNull String participantUrl, @NonNull Device device, @NonNull MediaOption.CompositedVideoLayout layout, @NonNull CompletionHandler<LocusModel> callback) {
         String type = "ActivePresence";
-        if (layout == MediaOption.VideoLayout.SINGLE) {
+        if (layout == MediaOption.CompositedVideoLayout.SINGLE) {
             type = "Single";
-        } else if (layout == MediaOption.VideoLayout.GRID) {
+        } else if (layout == MediaOption.CompositedVideoLayout.GRID) {
             type = "Equal";
         }
         Map<String, Object> params = Maps.makeMap("layout", Maps.makeMap("deviceUrl", device.getDeviceUrl(), "type", type));
@@ -369,13 +384,17 @@ public class CallService {
                 .async((Closure<LocusMediaResponseModel>) data -> callback.onComplete(ResultImpl.success(null)));
     }
 
-    private Object makeBody(String correlationId, Device device, String sdp, String callee, MediaOption option, MediaEngineReachabilityModel reachabilities) {
+    private Object makeBody(String correlationId, Device device, String sdp, String callee, MediaOption option, Phone.VideoStreamMode streamMode, MediaEngineReachabilityModel reachabilities) {
         Map<String, Object> json = new HashMap<>();
         MediaConnectionModel mc = new MediaConnectionModel();
         mc.setLocalSdp(Json.get().toJson(new MediaInfoModel(sdp, reachabilities == null ? null : reachabilities.reachability)));
         mc.setType("SDP");
         json.put("localMedias", Lists.asList(mc));
-        json.put("device", device.toJsonMap(Device.Type.WEB_CLIENT.getTypeName()));
+//        json.put("device", device.toJsonMap(Device.Type.WEB_CLIENT.getTypeName()));
+        json.put("device", device.toJsonMap(null));
+        if (streamMode == Phone.VideoStreamMode.COMPOSITED) {
+            json.put("clientMediaPreferences", Maps.makeMap("preferTranscoding", true));
+        }
         json.put("respOnlySdp", true);
         json.put("correlationId", correlationId);
         json.put("moderator", option.isModerator());

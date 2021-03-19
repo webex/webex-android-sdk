@@ -38,8 +38,19 @@ public class MediaOption {
      * The video layout for the active speaker and other attendees in the group video meeting.
      *
      * @since 2.5.0
+     * @deprecated please use {@link CompositedVideoLayout}
      */
     public enum VideoLayout {
+        SINGLE, FILMSTRIP, GRID
+    }
+
+    /**
+     * The video layout for the active speaker and other attendees in the group video meeting.
+     * The layout only affects when {@link Phone.VideoStreamMode} is {@link Phone.VideoStreamMode#COMPOSITED}
+     *
+     * @since 2.8.0
+     */
+    public enum CompositedVideoLayout {
         SINGLE, FILMSTRIP, GRID
     }
 
@@ -80,7 +91,7 @@ public class MediaOption {
      * Constructs an audio/video and share media option.
      *
      * @param videoRenderViews Local video view and remote video view.
-     * @param sharingView  share view for remote.
+     * @param sharingView      share view for remote.
      * @since 1.3.0
      */
     public static MediaOption audioVideoSharing(@Nullable Pair<View, View> videoRenderViews, @Nullable View sharingView) {
@@ -95,7 +106,7 @@ public class MediaOption {
     private View _sharingView;
     private boolean _hasSharing;
     private boolean _hasVideo;
-    private VideoLayout layout;
+    private CompositedVideoLayout compositedLayout;
     private boolean isModerator;
     private String pin;
 
@@ -155,18 +166,38 @@ public class MediaOption {
      * Returns the video layout of the active speaker and other attendees for the group video call.
      *
      * @since 2.5.0
+     * @deprecated please use {@link MediaOption#getCompositedLayout()}
      */
-    public VideoLayout getLayout() {
-        return layout;
+    public CompositedVideoLayout getLayout() {
+        return compositedLayout;
+    }
+
+    /**
+     * Returns the video layout of the active speaker and other attendees for the group video call.
+     *
+     * @since 2.8.0
+     */
+    public CompositedVideoLayout getCompositedLayout() {
+        return compositedLayout;
     }
 
     /**
      * Set the video layout of the active speaker and other attendees for the group video call.
      *
      * @since 2.5.0
+     * @deprecated please use {@link MediaOption#setCompositedLayout(CompositedVideoLayout)}
      */
-    public void setLayout(VideoLayout layout) {
-        this.layout = layout;
+    public void setLayout(CompositedVideoLayout layout) {
+        this.compositedLayout = layout;
+    }
+
+    /**
+     * Set the video layout of the active speaker and other attendees for the group video call.
+     *
+     * @since 2.8.0
+     */
+    public void setCompositedLayout(CompositedVideoLayout compositedLayout) {
+        this.compositedLayout = compositedLayout;
     }
 
     /**
