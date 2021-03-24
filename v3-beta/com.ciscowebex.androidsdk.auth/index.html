@@ -17,7 +17,7 @@
 </td>
 <td>
 <code><span class="keyword">interface </span><span class="identifier">Authenticator</span></code>
-<p>An Interface that tells if user is authorised</p>
+<p>An interface for generic authentication strategies in Cisco Webex. Each authentication strategy is responsible for providing an accessToken used throughout this SDK.</p>
 </td>
 </tr>
 <tr>
@@ -27,6 +27,15 @@
 <td>
 <code><span class="keyword">class </span><span class="identifier">JWTAuthenticator</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-authenticator.html"><span class="identifier">Authenticator</span></a></code>
 <p>A JSON Web Token (JWT) based authentication strategy is to be used to authenticate a user on Cisco Webex.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-o-auth-authenticator/index.html">OAuthAuthenticator</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">OAuthAuthenticator</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-authenticator.html"><span class="identifier">Authenticator</span></a></code>
+<p>An <a href="https://oauth.net/2/">OAuth</a> based authentication strategy for authenticating a user on Cisco Webex.</p>
 </td>
 </tr>
 <tr>
@@ -45,8 +54,7 @@ This is for authenticating a user on Cisco Webex.</p>
 </td>
 <td>
 <code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">PhoneServiceRegistrationFailureReason</span></code>
-<p>An enum for CUCM Phone Service Registration Failure Reason
-Since 3.0.0</p>
+<p>An enum for CUCM Phone Service Registration Failure Reason</p>
 </td>
 </tr>
 <tr>
@@ -55,8 +63,7 @@ Since 3.0.0</p>
 </td>
 <td>
 <code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">UCLoginServerConnectionStatus</span></code>
-<p>An enum for CUCM Server connection Status
-Since 3.0.0</p>
+<p>An enum for CUCM Server connection Status</p>
 </td>
 </tr>
 <tr>

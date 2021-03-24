@@ -1,0 +1,134 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>WebexEvent.Base - sdk</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../../index.html">com.ciscowebex.androidsdk</a>&nbsp;/&nbsp;<a href="../index.html">WebexEvent</a>&nbsp;/&nbsp;<a href="./index.html">Base</a><br/>
+<br/>
+<h1>Base</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">Base</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../index.html"><span class="identifier">WebexEvent</span></a></code>
+<p>Base class for all Webex events.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-actor-id.html">getActorId</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getActorId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the identifier of the user that caused the event to be sent. For example, for a messsage received event,
+the author of the message will be the actor. For a membership deleted event, the actor is the person who removed the user
+from space.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.membership/-membership-observer/-membership-created/index.html">MembershipCreated</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipCreated</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.membership/-membership-observer/-membership-event.html"><span class="identifier">MembershipObserver.MembershipEvent</span></a></code>
+<p>The event when a user is added to a space.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.membership/-membership-observer/-membership-deleted/index.html">MembershipDeleted</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipDeleted</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.membership/-membership-observer/-membership-event.html"><span class="identifier">MembershipObserver.MembershipEvent</span></a></code>
+<p>The event when a user is removed from a space.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.membership/-membership-observer/-membership-message-seen/index.html">MembershipMessageSeen</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipMessageSeen</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.membership/-membership-observer/-membership-event.html"><span class="identifier">MembershipObserver.MembershipEvent</span></a></code>
+<p>The event when a membership has sent a read receipt</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.membership/-membership-observer/-membership-updated/index.html">MembershipUpdated</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipUpdated</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.membership/-membership-observer/-membership-event.html"><span class="identifier">MembershipObserver.MembershipEvent</span></a></code>
+<p>The event when a membership's properties changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.message/-message-observer/-message-deleted/index.html">MessageDeleted</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MessageDeleted</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.message/-message-observer/-message-event.html"><span class="identifier">MessageObserver.MessageEvent</span></a></code>
+<p>The event when a message has been deleted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.message/-message-observer/-message-received/index.html">MessageReceived</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MessageReceived</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.message/-message-observer/-message-event.html"><span class="identifier">MessageObserver.MessageEvent</span></a></code>
+<p>The event when a new message has arrived.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.message/-message-observer/-message-updated/index.html">MessageUpdated</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">MessageUpdated</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.message/-message-observer/-message-event.html"><span class="identifier">MessageObserver.MessageEvent</span></a></code>
+<p>The event when an existing message has been updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.space/-space-observer/-space-call-ended/index.html">SpaceCallEnded</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SpaceCallEnded</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.space/-space-observer/-space-event.html"><span class="identifier">SpaceObserver.SpaceEvent</span></a></code>
+<p>The event when a space call ended.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.space/-space-observer/-space-call-started/index.html">SpaceCallStarted</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SpaceCallStarted</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.space/-space-observer/-space-event.html"><span class="identifier">SpaceObserver.SpaceEvent</span></a></code>
+<p>The event when a space call started.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.space/-space-observer/-space-created/index.html">SpaceCreated</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SpaceCreated</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.space/-space-observer/-space-event.html"><span class="identifier">SpaceObserver.SpaceEvent</span></a></code>
+<p>The event when a new space was created</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk.space/-space-observer/-space-updated/index.html">SpaceUpdated</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SpaceUpdated</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../../../com.ciscowebex.androidsdk.space/-space-observer/-space-event.html"><span class="identifier">SpaceObserver.SpaceEvent</span></a></code>
+<p>The event when a space was changed (usually a rename).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

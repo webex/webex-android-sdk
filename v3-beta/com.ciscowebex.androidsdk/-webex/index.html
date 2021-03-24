@@ -17,8 +17,21 @@ Constructs a new Webex object with an <a href="../../com.ciscowebex.androidsdk.a
 <p><a name="authenticator"></a>
 <code>authenticator</code> - The authentication strategy for this SDK</p>
 <p><strong>Since</strong><br/>
-0.1
-Since 0.1</p>
+0.1</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-log-level/index.html">LogLevel</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">LogLevel</span></code>
+<p>The enumeration of log message level</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3>Constructors</h3>
 <table>
 <tbody>
@@ -141,6 +154,24 @@ Constructs a new Webex object with an <a href="../../com.ciscowebex.androidsdk.a
 </tr>
 <tr>
 <td>
+<p><a href="base64-decode.html">base64Decode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">base64Decode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$base64Decode(kotlin.String)/encodedResource">encodedResource</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Decodes the base64 encodedResource and returns the decoded string.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="base64-encode.html">base64Encode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">base64Encode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$base64Encode(com.ciscowebex.androidsdk.ResourceType, kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((kotlin.String)))/type">type</span><span class="symbol">:</span>&nbsp;<a href="../-resource-type/index.html"><span class="identifier">ResourceType</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$base64Encode(com.ciscowebex.androidsdk.ResourceType, kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((kotlin.String)))/resource">resource</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$base64Encode(com.ciscowebex.androidsdk.ResourceType, kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((kotlin.String)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Encodes the resource to base64 string</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="get-call-id-by-notification-id.html">getCallIdByNotificationId</a></p>
 </td>
 <td>
@@ -202,6 +233,15 @@ For cucm calls, pushrest server provides push id, which should be used to get ca
 <td>
 <code><span class="keyword">fun </span><span class="identifier">setCUCMCredential</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$setCUCMCredential(kotlin.String, kotlin.String)/username">username</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$setCUCMCredential(kotlin.String, kotlin.String)/password">password</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
 <p>Setting a CUCM credentials in required to authenticate while doing non SSO login.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-log-level.html">setLogLevel</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setLogLevel</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$setLogLevel(com.ciscowebex.androidsdk.Webex.LogLevel)/logLevel">logLevel</span><span class="symbol">:</span>&nbsp;<a href="-log-level/index.html"><span class="identifier">Webex.LogLevel</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set the log level of the logging.</p>
 </td>
 </tr>
 <tr>

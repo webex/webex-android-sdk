@@ -10,9 +10,15 @@
 <tbody>
 <tr>
 <td>
+<a href="../com.ciscowebex.androidsdk.phone/-advanced-setting/index.html">com.ciscowebex.androidsdk.phone.AdvancedSetting</a></td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
 <a href="../com.ciscowebex.androidsdk.auth/-authenticator.html">com.ciscowebex.androidsdk.auth.Authenticator</a></td>
 <td>
-<p>An Interface that tells if user is authorised</p>
+<p>An interface for generic authentication strategies in Cisco Webex. Each authentication strategy is responsible for providing an accessToken used throughout this SDK.</p>
 </td>
 </tr>
 <tr>
@@ -35,8 +41,14 @@ The application can receive an incoming call on Phone.IncomingCallListener:</p>
 <td>
 <a href="../com.ciscowebex.androidsdk.phone/-call-association-type/index.html">com.ciscowebex.androidsdk.phone.CallAssociationType</a></td>
 <td>
-<p>An enum for CallAssociationType
-Since 3.0.0</p>
+<p>An enum for CallAssociationType</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../com.ciscowebex.androidsdk.phone/-call-membership/index.html">com.ciscowebex.androidsdk.phone.CallMembership</a></td>
+<td>
+<p>A data type represents a relationship between <em>Call</em> and <em>Person</em> at Cisco Webex cloud.</p>
 </td>
 </tr>
 <tr>
@@ -48,8 +60,9 @@ Since 3.0.0</p>
 </tr>
 <tr>
 <td>
-<a href="../com.ciscowebex.androidsdk.phone/-call-participant/index.html">com.ciscowebex.androidsdk.phone.CallParticipant</a></td>
+<a href="../com.ciscowebex.androidsdk.phone/-call-schedule/index.html">com.ciscowebex.androidsdk.phone.CallSchedule</a></td>
 <td>
+<p>A CallSchedule represents the schedule of a scheduled call</p>
 </td>
 </tr>
 <tr>
@@ -138,8 +151,16 @@ Since 3.0.0</p>
 </tr>
 <tr>
 <td>
+<a href="../com.ciscowebex.androidsdk.membership/-membership-observer/index.html">com.ciscowebex.androidsdk.membership.MembershipObserver</a></td>
+<td>
+<p>Callback to receive the events from a <a href="../com.ciscowebex.androidsdk.membership/-membership-client/index.html">MembershipClient</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
 <a href="../com.ciscowebex.androidsdk.membership/-membership-read-status/index.html">com.ciscowebex.androidsdk.membership.MembershipReadStatus</a></td>
 <td>
+<p>The read status of the Membership for space.</p>
 </td>
 </tr>
 <tr>
@@ -173,10 +194,23 @@ Use <code>Webex.messages</code> to get an instance of MessageClient.</p>
 </tr>
 <tr>
 <td>
+<a href="../com.ciscowebex.androidsdk.message/-message-observer/index.html">com.ciscowebex.androidsdk.message.MessageObserver</a></td>
+<td>
+<p>Callback to receive the events from a <a href="../com.ciscowebex.androidsdk.message/-message-client/index.html">MessageClient</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
 <a href="../com.ciscowebex.androidsdk.phone/-notification-call-type/index.html">com.ciscowebex.androidsdk.phone.NotificationCallType</a></td>
 <td>
-<p>An enum for FCM Notification Call type
-Since 3.0.0</p>
+<p>An enum for FCM Notification Call type</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../com.ciscowebex.androidsdk.auth/-o-auth-authenticator/index.html">com.ciscowebex.androidsdk.auth.OAuthAuthenticator</a></td>
+<td>
+<p>An <a href="https://oauth.net/2/">OAuth</a> based authentication strategy for authenticating a user on Cisco Webex.</p>
 </td>
 </tr>
 <tr>
@@ -240,8 +274,7 @@ This is for authenticating a user on Cisco Webex.</p>
 <td>
 <a href="../com.ciscowebex.androidsdk.auth/-phone-service-registration-failure-reason/index.html">com.ciscowebex.androidsdk.auth.PhoneServiceRegistrationFailureReason</a></td>
 <td>
-<p>An enum for CUCM Phone Service Registration Failure Reason
-Since 3.0.0</p>
+<p>An enum for CUCM Phone Service Registration Failure Reason</p>
 </td>
 </tr>
 <tr>
@@ -249,6 +282,12 @@ Since 3.0.0</p>
 <a href="../com.ciscowebex.androidsdk.message/-remote-file/index.html">com.ciscowebex.androidsdk.message.RemoteFile</a></td>
 <td>
 <p>A data type represents a remote file on the Cisco Webex.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../com.ciscowebex.androidsdk/-resource-type/index.html">com.ciscowebex.androidsdk.ResourceType</a></td>
+<td>
 </td>
 </tr>
 <tr>
@@ -275,7 +314,7 @@ Since 3.0.0</p>
 <td>
 <a href="../com.ciscowebex.androidsdk.space/-space-client/index.html">com.ciscowebex.androidsdk.space.SpaceClient</a></td>
 <td>
-<p>A client wrapper of Space APIs that allows allows various operations such list, create, delete etc</p>
+<p>A client wrapper of Space APIs that allows various operations such list, create, delete etc</p>
 </td>
 </tr>
 <tr>
@@ -283,6 +322,13 @@ Since 3.0.0</p>
 <a href="../com.ciscowebex.androidsdk.space/-space-meeting-info/index.html">com.ciscowebex.androidsdk.space.SpaceMeetingInfo</a></td>
 <td>
 <p>The Webex meeting details for a space such as the SIP address, meeting URL, toll-free and toll dial-in numbers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../com.ciscowebex.androidsdk.space/-space-observer/index.html">com.ciscowebex.androidsdk.space.SpaceObserver</a></td>
+<td>
+<p>Callback to receive the events from a <a href="../com.ciscowebex.androidsdk.space/-space-client/index.html">SpaceClient</a>.</p>
 </td>
 </tr>
 <tr>
@@ -311,7 +357,7 @@ For spaces where lastActivityDate &gt; lastSeenDate the space can be considered 
 <td>
 <a href="../com.ciscowebex.androidsdk.team/-team-client/index.html">com.ciscowebex.androidsdk.team.TeamClient</a></td>
 <td>
-<p>Since 0.1</p>
+<p>An client wrapper of the Cisco Webex Teams REST API</p>
 </td>
 </tr>
 <tr>
@@ -360,8 +406,7 @@ For spaces where lastActivityDate &gt; lastSeenDate the space can be considered 
 <td>
 <a href="../com.ciscowebex.androidsdk.auth/-u-c-login-server-connection-status/index.html">com.ciscowebex.androidsdk.auth.UCLoginServerConnectionStatus</a></td>
 <td>
-<p>An enum for CUCM Server connection Status
-Since 3.0.0</p>
+<p>An enum for CUCM Server connection Status</p>
 </td>
 </tr>
 <tr>
@@ -399,6 +444,13 @@ Constructs a new Webex object with an <a href="../com.ciscowebex.androidsdk.auth
 <a href="../com.ciscowebex.androidsdk/-webex-error/index.html">com.ciscowebex.androidsdk.WebexError</a></td>
 <td>
 <p>The enumeration of error types in Cisco Webex Android SDK.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../com.ciscowebex.androidsdk/-webex-event/index.html">com.ciscowebex.androidsdk.WebexEvent</a></td>
+<td>
+<p>Interface for all Webex events.</p>
 </td>
 </tr>
 <tr>

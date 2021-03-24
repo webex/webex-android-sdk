@@ -12,10 +12,29 @@
 <p>A Call represents a media call on Cisco Webex.
 The application can create an outgoing call by calling Phone.dial function:
 The application can receive an incoming call on Phone.IncomingCallListener:</p>
-<p>Since 0.1</p>
+<p><strong>Since</strong><br/>
+0.1</p>
 <h3>Types</h3>
 <table>
 <tbody>
+<tr>
+<td>
+<p><a href="-audio-output-mode/index.html">AudioOutputMode</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">AudioOutputMode</span></code>
+<p>The options to switch audio output during a call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-call-status/index.html">CallStatus</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">CallStatus</span></code>
+<p>The status of a Call.</p>
+</td>
+</tr>
 <tr>
 <td>
 <p><a href="-direction/index.html">Direction</a></p>
@@ -34,120 +53,13 @@ The application can receive an incoming call on Phone.IncomingCallListener:</p>
 <p>The options to specify how the video adjusts its content to be render in a view.</p>
 </td>
 </tr>
-</tbody>
-</table>
-<h3>Properties</h3>
-<table>
-<tbody>
 <tr>
 <td>
-<p><a href="call-id.html">callId</a></p>
+<p><a href="-wait-reason/index.html">WaitReason</a></p>
 </td>
 <td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">callId</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
-<p>Return callId an identifier for call.</p>
-</td>
-</tr>
-<tr>
-<td>
-<p><a href="can-share.html">canShare</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">canShare</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="conversation-id.html">conversationId</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">conversationId</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
-<p>Return the associated space of this call</p>
-</td>
-</tr>
-<tr>
-<td>
-<p><a href="has-remote-video.html">hasRemoteVideo</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">hasRemoteVideo</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="is-audio-muted.html">isAudioMuted</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">isAudioMuted</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="is-audio-only.html">isAudioOnly</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">isAudioOnly</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="is-broad-works-call.html">isBroadWorksCall</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">isBroadWorksCall</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="is-ecc-call.html">isEccCall</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">isEccCall</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="is-local-sharing.html">isLocalSharing</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">isLocalSharing</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="is-on-hold.html">isOnHold</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">isOnHold</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="is-remote-sharing.html">isRemoteSharing</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">isRemoteSharing</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="is-secure.html">isSecure</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">isSecure</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="is-self-video-muted.html">isSelfVideoMuted</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">isSelfVideoMuted</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="participants.html">participants</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">participants</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-call-participant/index.html"><span class="identifier">CallParticipant</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code></td>
-</tr>
-<tr>
-<td>
-<p><a href="title.html">title</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">var </span><span class="identifier">title</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
-<p>Return title for call.</p>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">WaitReason</span></code>
+<p>The reasons for the call is waiting.</p>
 </td>
 </tr>
 </tbody>
@@ -166,11 +78,440 @@ The application can receive an incoming call on Phone.IncomingCallListener:</p>
 </tr>
 <tr>
 <td>
+<p><a href="can-share.html">canShare</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">canShare</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-active-speaker.html">getActiveSpeaker</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getActiveSpeaker</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-call-membership/index.html"><span class="identifier">CallMembership</span></a><span class="symbol">?</span></code>
+<p>Get the current active speaker</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-call-id.html">getCallId</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getCallId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Return callId an identifier for call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-direction.html">getDirection</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getDirection</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-direction/index.html"><span class="identifier">Call.Direction</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-facing-mode.html">getFacingMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getFacingMode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-phone/-facing-mode/index.html"><span class="identifier">Phone.FacingMode</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-from.html">getFrom</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getFrom</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-call-membership/index.html"><span class="identifier">CallMembership</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-local-video-view-size.html">getLocalVideoViewSize</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getLocalVideoViewSize</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/util/Size.html"><span class="identifier">Size</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-memberships.html">getMemberships</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getMemberships</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-call-membership/index.html"><span class="identifier">CallMembership</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-observer.html">getObserver</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getObserver</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-call-observer/index.html"><span class="identifier">CallObserver</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-remote-video-view-size.html">getRemoteVideoViewSize</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getRemoteVideoViewSize</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/util/Size.html"><span class="identifier">Size</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-schedules.html">getSchedules</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getSchedules</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html"><span class="identifier">Set</span></a><span class="symbol">&lt;</span><a href="../-call-schedule/index.html"><span class="identifier">CallSchedule</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code>
+<p>Will returns the schedules of this call if this call has one or more schedules.
+If the call isn't a scheduled call, the method will returns null.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-screen-share-label.html">getScreenShareLabel</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getScreenShareLabel</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Return title for ScreenShare.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-sharing-render-view.html">getSharingRenderView</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getSharingRenderView</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-sharing-view-size.html">getSharingViewSize</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getSharingViewSize</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/util/Size.html"><span class="identifier">Size</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-space-id.html">getSpaceId</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getSpaceId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Return the associated space of this call</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-status.html">getStatus</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getStatus</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-call-status/index.html"><span class="identifier">Call.CallStatus</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-title.html">getTitle</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getTitle</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Return title for call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-to.html">getTo</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getTo</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-call-membership/index.html"><span class="identifier">CallMembership</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-video-render-views.html">getVideoRenderViews</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getVideoRenderViews</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="hangup.html">hangup</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">hangup</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$hangup(com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/callback">callback</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/java/lang/Void.html"><span class="identifier">Void</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Disconnects this call. This can only be invoked when this call is in answered status.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="hold-call.html">holdCall</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">holdCall</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$holdCall(kotlin.Boolean)/putOnHold">putOnHold</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Puts the call on hold and trigger a call back onCallHoldStateChanged() for the respective call id</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-audio-only.html">isAudioOnly</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isAudioOnly</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-c-u-c-m-call.html">isCUCMCall</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isCUCMCall</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-on-hold.html">isOnHold</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isOnHold</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns <code>true</code> is the call for the given Id is on hold <code>false</code> otherwise</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-receiving-audio.html">isReceivingAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isReceivingAudio</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-receiving-sharing.html">isReceivingSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isReceivingSharing</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-receiving-video.html">isReceivingVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isReceivingVideo</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-remote-sending-audio.html">isRemoteSendingAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isRemoteSendingAudio</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-remote-sending-sharing.html">isRemoteSendingSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isRemoteSendingSharing</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-remote-sending-video.html">isRemoteSendingVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isRemoteSendingVideo</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-sending-audio.html">isSendingAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isSendingAudio</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-sending-d-t-m-f-enabled.html">isSendingDTMFEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isSendingDTMFEnabled</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-sending-sharing.html">isSendingSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isSendingSharing</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-sending-video.html">isSendingVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isSendingVideo</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="merge-calls.html">mergeCalls</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">mergeCalls</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$mergeCalls(kotlin.String)/targetCallId">targetCallId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Merges a call. This method needs to be called after startAssociatedCall()</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="mute-all-participant-audio.html">muteAllParticipantAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">muteAllParticipantAudio</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$muteAllParticipantAudio(kotlin.Boolean)/doMute">doMute</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Mutes all other participants who are on call, also un-mutes the others if isMuted is <code>true</code></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="mute-participant-audio.html">muteParticipantAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">muteParticipantAudio</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$muteParticipantAudio(kotlin.String, kotlin.Boolean)/participantId">participantId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$muteParticipantAudio(kotlin.String, kotlin.Boolean)/doMute">doMute</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>This method is used to mute particular participant</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="reject.html">reject</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">reject</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$reject(com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/callback">callback</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/java/lang/Void.html"><span class="identifier">Void</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Rejects this call. This can only be invoked when this call is incoming and in ringing status.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="send-d-t-m-f.html">sendDTMF</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">sendDTMF</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$sendDTMF(kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/dtmf">dtmf</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$sendDTMF(kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/callback">callback</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/java/lang/Void.html"><span class="identifier">Void</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sends DTMF events to the remote party. Valid DTMF events are 0-9, *, #, a-d, and A-D.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="send-feedback.html">sendFeedback</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">sendFeedback</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$sendFeedback(kotlin.Int, kotlin.String)/rating">rating</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$sendFeedback(kotlin.Int, kotlin.String)/comment">comment</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sends feedback for this call to Cisco Webex team.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-facing-mode.html">setFacingMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setFacingMode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setFacingMode(com.ciscowebex.androidsdk.phone.Phone.FacingMode)/facingMode">facingMode</span><span class="symbol">:</span>&nbsp;<a href="../-phone/-facing-mode/index.html"><span class="identifier">Phone.FacingMode</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
 <p><a href="set-observer.html">setObserver</a></p>
 </td>
 <td>
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setObserver</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setObserver(com.ciscowebex.androidsdk.phone.CallObserver)/observer">observer</span><span class="symbol">:</span>&nbsp;<a href="../-call-observer/index.html"><span class="identifier">CallObserver</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
 <p>Observes the call events</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-receiving-audio.html">setReceivingAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setReceivingAudio</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setReceivingAudio(kotlin.Boolean)/receiving">receiving</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-receiving-sharing.html">setReceivingSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setReceivingSharing</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setReceivingSharing(kotlin.Boolean)/receiving">receiving</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-receiving-video.html">setReceivingVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setReceivingVideo</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setReceivingVideo(kotlin.Boolean)/receiving">receiving</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-remote-video-render-mode.html">setRemoteVideoRenderMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setRemoteVideoRenderMode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setRemoteVideoRenderMode(com.ciscowebex.androidsdk.phone.Call.VideoRenderMode)/mode">mode</span><span class="symbol">:</span>&nbsp;<a href="-video-render-mode/index.html"><span class="identifier">Call.VideoRenderMode</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Specify how the remote video adjusts its content to be render in a view.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-sending-audio.html">setSendingAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setSendingAudio</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setSendingAudio(kotlin.Boolean)/sending">sending</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-sending-sharing.html">setSendingSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setSendingSharing</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setSendingSharing(kotlin.Boolean)/sending">sending</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-sending-video.html">setSendingVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setSendingVideo</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setSendingVideo(kotlin.Boolean)/sending">sending</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-sharing-render-view.html">setSharingRenderView</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setSharingRenderView</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setSharingRenderView(android.view.View)/view">view</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-video-render-views.html">setVideoRenderViews</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setVideoRenderViews</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setVideoRenderViews(kotlin.Pair((android.view.View, )))/videoRenderViews">videoRenderViews</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">&gt;</span><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="start-associated-call.html">startAssociatedCall</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">startAssociatedCall</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$startAssociatedCall(kotlin.String, com.ciscowebex.androidsdk.phone.CallAssociationType, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.Call)))/dialNumber">dialNumber</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$startAssociatedCall(kotlin.String, com.ciscowebex.androidsdk.phone.CallAssociationType, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.Call)))/associationType">associationType</span><span class="symbol">:</span>&nbsp;<a href="../-call-association-type/index.html"><span class="identifier">CallAssociationType</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$startAssociatedCall(kotlin.String, com.ciscowebex.androidsdk.phone.CallAssociationType, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.Call)))/audioCall">audioCall</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$startAssociatedCall(kotlin.String, com.ciscowebex.androidsdk.phone.CallAssociationType, kotlin.Boolean, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.Call)))/callback">callback</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="./index.html"><span class="identifier">Call</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>This associates a new call with 3rd person. transferCall() needs to be called to transfer a call when a new call association is done,
+Returns a new call id after associating a call</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="start-sharing.html">startSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">startSharing</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$startSharing(com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/callback">callback</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/java/lang/Void.html"><span class="identifier">Void</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Start content sharing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="stop-sharing.html">stopSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">stopSharing</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$stopSharing(com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/callback">callback</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/java/lang/Void.html"><span class="identifier">Void</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Stop content sharing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="switch-audio-output.html">switchAudioOutput</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">switchAudioOutput</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$switchAudioOutput(com.ciscowebex.androidsdk.phone.Call.AudioOutputMode)/audioOutputMode">audioOutputMode</span><span class="symbol">:</span>&nbsp;<a href="-audio-output-mode/index.html"><span class="identifier">Call.AudioOutputMode</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Switch the audio play output mode during a call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="transfer-call.html">transferCall</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">transferCall</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$transferCall(kotlin.String)/toCallId">toCallId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Transfers a call. This method needs to be called after startAssociatedCall()</p>
 </td>
 </tr>
 </tbody>

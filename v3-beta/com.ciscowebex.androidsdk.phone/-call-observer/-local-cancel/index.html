@@ -9,9 +9,8 @@
 <br/>
 <h1>LocalCancel</h1>
 <code><span class="keyword">class </span><span class="identifier">LocalCancel</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="../-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
-<p>TThis event is fired when the local party has cancelled the call.
+<p>This event is fired when the local party has cancelled the call.
 This is only applicable when the direction of the call is outgoing.</p>
-<p>Since 0.1</p>
 <p><strong>Since</strong><br/>
 0.1</p>
 <h3>Constructors</h3>
@@ -23,22 +22,8 @@ This is only applicable when the direction of the call is outgoing.</p>
 </td>
 <td>
 <code><span class="identifier">LocalCancel</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver.LocalCancel$<init>(com.ciscowebex.androidsdk.phone.Call)/_call">_call</span><span class="symbol">:</span>&nbsp;<a href="../../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span></code>
-<p>TThis event is fired when the local party has cancelled the call.
+<p>This event is fired when the local party has cancelled the call.
 This is only applicable when the direction of the call is outgoing.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3>Properties</h3>
-<table>
-<tbody>
-<tr>
-<td>
-<p><a href="call.html">call</a></p>
-</td>
-<td>
-<code><span class="keyword">val </span><span class="identifier">call</span><span class="symbol">: </span><a href="../../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span></code>
-<p>Since 0.1</p>
 </td>
 </tr>
 </tbody>
@@ -48,10 +33,29 @@ This is only applicable when the direction of the call is outgoing.</p>
 <tbody>
 <tr>
 <td>
-<p><a href="../-abstract-call-event/_call.html">_call</a></p>
+<p><a href="../-abstract-call-event/m-call.html">mCall</a></p>
 </td>
 <td>
-<code><span class="keyword">val </span><span class="identifier">_call</span><span class="symbol">: </span><a href="../../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span></code></td>
+<code><span class="keyword">var </span><span class="identifier">mCall</span><span class="symbol">: </span><a href="../../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-abstract-call-event/get-call.html">getCall</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getCall</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-abstract-call-event/to-string.html">toString</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">toString</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
 </tr>
 </tbody>
 </table>

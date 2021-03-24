@@ -10,7 +10,6 @@
 <h1>Message</h1>
 <code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">Message</span></code>
 <p>This class represents a Message on Cisco Webex.</p>
-<p>Since 0.1</p>
 <p><strong>Since</strong><br/>
 0.1</p>
 <h3>Types</h3>
@@ -82,11 +81,29 @@
 </tr>
 <tr>
 <td>
+<p><a href="get-mentions.html">getMentions</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getMentions</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-list/index.html"><span class="identifier">MutableList</span></a><span class="symbol">&lt;</span><a href="../-mention/index.html"><span class="identifier">Mention</span></a><span class="symbol">&gt;</span></code>
+<p>Returns all people mentioned in the message</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="get-parent-id.html">getParentId</a></p>
 </td>
 <td>
 <code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getParentId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
 <p>Returns the parent if this message is a reply message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-person-display-name.html">getPersonDisplayName</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getPersonDisplayName</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the name of the person who sent this message.</p>
 </td>
 </tr>
 <tr>
@@ -127,6 +144,15 @@
 </tr>
 <tr>
 <td>
+<p><a href="get-text.html">getText</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getText</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the content of the message.</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="get-text-as-object.html">getTextAsObject</a></p>
 </td>
 <td>
@@ -154,6 +180,24 @@
 </tr>
 <tr>
 <td>
+<p><a href="is-all-mentioned.html">isAllMentioned</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">isAllMentioned</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if the message mentioned everyone in space.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-content-decrypted.html">isContentDecrypted</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">isContentDecrypted</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if the content of the message is decrypted</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="is-reply.html">isReply</a></p>
 </td>
 <td>
@@ -168,6 +212,15 @@
 <td>
 <code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">isSelfMentioned</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
 <p>Returns true if the message is the recipient of the message is included in message's mention list</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="to-string.html">toString</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">toString</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Returns the message in JSON string format.</p>
 </td>
 </tr>
 </tbody>

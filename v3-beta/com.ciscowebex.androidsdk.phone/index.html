@@ -13,6 +13,13 @@
 <tbody>
 <tr>
 <td>
+<p><a href="-advanced-setting/index.html">AdvancedSetting</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">AdvancedSetting</span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
 <p><a href="-call/index.html">Call</a></p>
 </td>
 <td>
@@ -28,8 +35,16 @@ The application can receive an incoming call on Phone.IncomingCallListener:</p>
 </td>
 <td>
 <code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">CallAssociationType</span></code>
-<p>An enum for CallAssociationType
-Since 3.0.0</p>
+<p>An enum for CallAssociationType</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-call-membership/index.html">CallMembership</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">CallMembership</span></code>
+<p>A data type represents a relationship between <em>Call</em> and <em>Person</em> at Cisco Webex cloud.</p>
 </td>
 </tr>
 <tr>
@@ -43,10 +58,12 @@ Since 3.0.0</p>
 </tr>
 <tr>
 <td>
-<p><a href="-call-participant/index.html">CallParticipant</a></p>
+<p><a href="-call-schedule/index.html">CallSchedule</a></p>
 </td>
 <td>
-<code><span class="keyword">class </span><span class="identifier">CallParticipant</span></code></td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">CallSchedule</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-comparable/index.html"><span class="identifier">Comparable</span></a><span class="symbol">&lt;</span><a href="-call-schedule/index.html"><span class="identifier">CallSchedule</span></a><span class="symbol">&gt;</span></code>
+<p>A CallSchedule represents the schedule of a scheduled call</p>
+</td>
 </tr>
 <tr>
 <td>
@@ -72,8 +89,7 @@ Since 3.0.0</p>
 </td>
 <td>
 <code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">NotificationCallType</span></code>
-<p>An enum for FCM Notification Call type
-Since 3.0.0</p>
+<p>An enum for FCM Notification Call type</p>
 </td>
 </tr>
 <tr>

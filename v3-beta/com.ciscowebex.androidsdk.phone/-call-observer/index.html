@@ -10,7 +10,6 @@
 <h1>CallObserver</h1>
 <code><span class="keyword">interface </span><span class="identifier">CallObserver</span></code>
 <p>An observer interface for Call event</p>
-<p>Since 0.1</p>
 <p><strong>Since</strong><br/>
 0.1</p>
 <h3>Types</h3>
@@ -27,11 +26,47 @@
 </tr>
 <tr>
 <td>
+<p><a href="-abstract-call-membership-changed-event/index.html">AbstractCallMembershipChangedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">AbstractCallMembershipChangedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-membership-changed-event/index.html"><span class="identifier">CallObserver.CallMembershipChangedEvent</span></a></code>
+<p>Base class for the event of a CallMembershipEvent</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-active-speaker-changed-event/index.html">ActiveSpeakerChangedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ActiveSpeakerChangedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Active Speaker has changed.</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="-call-disconnected-event.html">CallDisconnectedEvent</a></p>
 </td>
 <td>
 <code><span class="keyword">interface </span><span class="identifier">CallDisconnectedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-call-event/index.html"><span class="identifier">CallObserver.CallEvent</span></a></code>
 <p>This event is fired when the call is disconnected.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-call-ended/index.html">CallEnded</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">CallEnded</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
+<p>This event is fired when the resources of the call object gets cleared after disconnection.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-call-error-event/index.html">CallErrorEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">CallErrorEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
+<p>This event is fired when the call to be disconnected due to an error.</p>
 </td>
 </tr>
 <tr>
@@ -45,12 +80,297 @@
 </tr>
 <tr>
 <td>
+<p><a href="-call-membership-changed-event/index.html">CallMembershipChangedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">CallMembershipChangedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-call-event/index.html"><span class="identifier">CallObserver.CallEvent</span></a></code>
+<p>Call membership change event</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-camera-switched/index.html">CameraSwitched</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">CameraSwitched</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Camera FacingMode on local device has switched.</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="-local-cancel/index.html">LocalCancel</a></p>
 </td>
 <td>
 <code><span class="keyword">class </span><span class="identifier">LocalCancel</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
-<p>TThis event is fired when the local party has cancelled the call.
+<p>This event is fired when the local party has cancelled the call.
 This is only applicable when the direction of the call is outgoing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-local-decline/index.html">LocalDecline</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">LocalDecline</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
+<p>This event is fired when the local party has declined the call.
+This is only applicable when the direction of the call is incoming.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-local-left/index.html">LocalLeft</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">LocalLeft</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
+<p>This event is fired when local party has left the call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-local-sharing-view-size-changed/index.html">LocalSharingViewSizeChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">LocalSharingViewSizeChanged</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Local video rendering view size has changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-local-video-view-size-changed/index.html">LocalVideoViewSizeChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">LocalVideoViewSizeChanged</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Local video rendering view size has changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-media-changed-event.html">MediaChangedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">MediaChangedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-call-event/index.html"><span class="identifier">CallObserver.CallEvent</span></a></code>
+<p>Media change event</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-audio-muted-controlled-event/index.html">MembershipAudioMutedControlledEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipAudioMutedControlledEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-membership-changed-event/index.html"><span class="identifier">CallObserver.AbstractCallMembershipChangedEvent</span></a></code>
+<p>This might be triggered when the person in the membership is muted by others in the meeting.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-declined-event/index.html">MembershipDeclinedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipDeclinedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-membership-changed-event/index.html"><span class="identifier">CallObserver.AbstractCallMembershipChangedEvent</span></a></code>
+<p>This might be triggered when the person in the membership declined this call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-joined-event/index.html">MembershipJoinedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipJoinedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-membership-changed-event/index.html"><span class="identifier">CallObserver.AbstractCallMembershipChangedEvent</span></a></code>
+<p>This might be triggered when the person in the membership joined this call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-left-event/index.html">MembershipLeftEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipLeftEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-membership-changed-event/index.html"><span class="identifier">CallObserver.AbstractCallMembershipChangedEvent</span></a></code>
+<p>This might be triggered when the person in the membership left this call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-sending-audio-event/index.html">MembershipSendingAudioEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipSendingAudioEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-membership-changed-event/index.html"><span class="identifier">CallObserver.AbstractCallMembershipChangedEvent</span></a></code>
+<p>This might be triggered when the person in the membership started sending audio this call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-sending-sharing-event/index.html">MembershipSendingSharingEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipSendingSharingEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-membership-changed-event/index.html"><span class="identifier">CallObserver.AbstractCallMembershipChangedEvent</span></a></code>
+<p>This might be triggered when the person in the membership started sharing this call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-sending-video-event/index.html">MembershipSendingVideoEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipSendingVideoEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-membership-changed-event/index.html"><span class="identifier">CallObserver.AbstractCallMembershipChangedEvent</span></a></code>
+<p>This might be triggered when the person in the membership started sending video this call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-waiting-event/index.html">MembershipWaitingEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipWaitingEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-membership-changed-event/index.html"><span class="identifier">CallObserver.AbstractCallMembershipChangedEvent</span></a></code>
+<p>This might be triggered when the person in the membership is waiting in the lobby.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-other-connected/index.html">OtherConnected</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">OtherConnected</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
+<p>This event is fired when one of the other phones of the authenticated user has answered the call.
+This is only applicable when the direction of the call is incoming.
+OtherConnected</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-other-declined/index.html">OtherDeclined</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">OtherDeclined</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
+<p>One of the other phones of the authenticated user has declined the call.
+This is only applicable when the direction of the call is incoming.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-receiving-audio/index.html">ReceivingAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ReceivingAudio</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party muted or unmuted the audio.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-receiving-sharing/index.html">ReceivingSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ReceivingSharing</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party muted or unmuted the remote content sharing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-receiving-video/index.html">ReceivingVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ReceivingVideo</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party muted or unmuted the video.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-cancel/index.html">RemoteCancel</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteCancel</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
+<p>This event is fired when the remote party has cancelled the call.
+This is only applicable when the direction of the call is incoming.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-decline/index.html">RemoteDecline</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteDecline</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
+<p>This event is fired when the remote party has declined the call.
+This is only applicable when the direction of the call is outgoing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-left/index.html">RemoteLeft</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteLeft</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-call-disconnected-event.html"><span class="identifier">CallObserver.CallDisconnectedEvent</span></a></code>
+<p>This event is fired when the remote party has left the call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-sending-audio-event/index.html">RemoteSendingAudioEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteSendingAudioEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the remote party muted or unmuted the audio.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-sending-sharing-event/index.html">RemoteSendingSharingEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteSendingSharingEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the remote party muted or unmuted the content sharing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-sending-video-event/index.html">RemoteSendingVideoEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteSendingVideoEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the remote party muted or unmuted the video.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-sharing-view-size-changed/index.html">RemoteSharingViewSizeChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteSharingViewSizeChanged</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Remote sharing rendering view size has changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-video-view-size-changed/index.html">RemoteVideoViewSizeChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteVideoViewSizeChanged</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Remote video rendering view size has changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-sending-audio/index.html">SendingAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SendingAudio</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party muted or unmuted the audio.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-sending-sharing-event/index.html">SendingSharingEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SendingSharingEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party started or stopped the content sharing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-sending-video/index.html">SendingVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SendingVideo</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party muted or unmuted the video.</p>
 </td>
 </tr>
 </tbody>
@@ -60,11 +380,11 @@ This is only applicable when the direction of the call is outgoing.</p>
 <tbody>
 <tr>
 <td>
-<p><a href="on-audio-state-changed.html">onAudioStateChanged</a></p>
+<p><a href="on-call-membership-changed.html">onCallMembershipChanged</a></p>
 </td>
 <td>
-<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onAudioStateChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onAudioStateChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
-<p>Callback when the audio of call is muted or un-muted</p>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onCallMembershipChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onCallMembershipChanged(com.ciscowebex.androidsdk.phone.CallObserver.CallMembershipChangedEvent)/event">event</span><span class="symbol">:</span>&nbsp;<a href="-call-membership-changed-event/index.html"><span class="identifier">CallObserver.CallMembershipChangedEvent</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback when the memberships of this call have changed.</p>
 </td>
 </tr>
 <tr>
@@ -87,29 +407,20 @@ This is only applicable when the direction of the call is outgoing.</p>
 </tr>
 <tr>
 <td>
-<p><a href="on-failed.html">onFailed</a></p>
-</td>
-<td>
-<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onFailed</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onFailed(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
-<p>Callback when call failed.</p>
-</td>
-</tr>
-<tr>
-<td>
-<p><a href="on-hold-state-changed.html">onHoldStateChanged</a></p>
-</td>
-<td>
-<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onHoldStateChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onHoldStateChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
-<p>Callback whenever a call is put on hold or call gets resumed</p>
-</td>
-</tr>
-<tr>
-<td>
 <p><a href="on-info-changed.html">onInfoChanged</a></p>
 </td>
 <td>
 <code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onInfoChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onInfoChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
 <p>Callback whenever a call information is changed for example - a participant is added or removed from call or mute status is changed</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-media-changed.html">onMediaChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onMediaChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onMediaChanged(com.ciscowebex.androidsdk.phone.CallObserver.MediaChangedEvent)/event">event</span><span class="symbol">:</span>&nbsp;<a href="-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback when the media types of the call have changed.</p>
 </td>
 </tr>
 <tr>
@@ -123,29 +434,20 @@ This is only applicable when the direction of the call is outgoing.</p>
 </tr>
 <tr>
 <td>
-<p><a href="on-sharing-state-changed.html">onSharingStateChanged</a></p>
+<p><a href="on-schedule-changed.html">onScheduleChanged</a></p>
 </td>
 <td>
-<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSharingStateChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onSharingStateChanged(com.ciscowebex.androidsdk.phone.Call, kotlin.String)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onSharingStateChanged(com.ciscowebex.androidsdk.phone.Call, kotlin.String)/label">label</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
-<p>callback whenever screen sharing state changes</p>
-</td>
-</tr>
-<tr>
-<td>
-<p><a href="on-sharing-video-stream-in-use-changed.html">onSharingVideoStreamInUseChanged</a></p>
-</td>
-<td>
-<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSharingVideoStreamInUseChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onSharingVideoStreamInUseChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
-<p>callback whenever Sharing Video Stream  changes</p>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onScheduleChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onScheduleChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback when the <code>Call</code> is scheduled call and the schedules of the call has been changed.</p>
 </td>
 </tr>
 <tr>
 <td>
-<p><a href="on-video-streaming-changed.html">onVideoStreamingChanged</a></p>
+<p><a href="on-waiting.html">onWaiting</a></p>
 </td>
 <td>
-<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onVideoStreamingChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onVideoStreamingChanged(com.ciscowebex.androidsdk.phone.Call)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
-<p>Callback whenever video stream gets started or stopped</p>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onWaiting</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onWaiting(com.ciscowebex.androidsdk.phone.Call, com.ciscowebex.androidsdk.phone.Call.WaitReason)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver$onWaiting(com.ciscowebex.androidsdk.phone.Call, com.ciscowebex.androidsdk.phone.Call.WaitReason)/reason">reason</span><span class="symbol">:</span>&nbsp;<a href="../-call/-wait-reason/index.html"><span class="identifier">Call.WaitReason</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Callback when the call is waiting.</p>
 </td>
 </tr>
 </tbody>
