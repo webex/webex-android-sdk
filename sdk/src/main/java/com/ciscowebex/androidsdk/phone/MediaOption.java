@@ -166,7 +166,7 @@ public class MediaOption {
      * Returns the video layout of the active speaker and other attendees for the group video call.
      *
      * @since 2.5.0
-     * @deprecated please use {@link MediaOption#getCompositedLayout()}
+     * @deprecated please use {@link MediaOption#getCompositedVideoLayout()}
      */
     public CompositedVideoLayout getLayout() {
         return compositedLayout;
@@ -177,7 +177,7 @@ public class MediaOption {
      *
      * @since 2.8.0
      */
-    public CompositedVideoLayout getCompositedLayout() {
+    public CompositedVideoLayout getCompositedVideoLayout() {
         return compositedLayout;
     }
 
@@ -185,7 +185,7 @@ public class MediaOption {
      * Set the video layout of the active speaker and other attendees for the group video call.
      *
      * @since 2.5.0
-     * @deprecated please use {@link MediaOption#setCompositedLayout(CompositedVideoLayout)}
+     * @deprecated please use {@link MediaOption#setCompositedVideoLayout(CompositedVideoLayout)}
      */
     public void setLayout(CompositedVideoLayout layout) {
         this.compositedLayout = layout;
@@ -196,7 +196,7 @@ public class MediaOption {
      *
      * @since 2.8.0
      */
-    public void setCompositedLayout(CompositedVideoLayout compositedLayout) {
+    public void setCompositedVideoLayout(CompositedVideoLayout compositedLayout) {
         this.compositedLayout = compositedLayout;
     }
 

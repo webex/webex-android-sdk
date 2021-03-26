@@ -150,12 +150,12 @@ public class CallService {
                     if (locus != null && model.getMediaConnections() != null) {
                         locus.setMediaConnections(model.getMediaConnections());
                     }
-                    if (option.getCompositedLayout() == null) {
+                    if (option.getCompositedVideoLayout() == null) {
                         callback.onComplete(ResultImpl.success(locus));
                         return;
                     }
                     if (locus != null && locus.getSelf() != null) {
-                        layout(locus.getSelf().getUrl(), device, option.getCompositedLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
+                        layout(locus.getSelf().getUrl(), device, option.getCompositedVideoLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
                     }
                 });
     }
@@ -173,12 +173,12 @@ public class CallService {
                     if (locus != null && model.getMediaConnections() != null) {
                         locus.setMediaConnections(model.getMediaConnections());
                     }
-                    if (option.getCompositedLayout() == null) {
+                    if (option.getCompositedVideoLayout() == null) {
                         callback.onComplete(ResultImpl.success(locus));
                         return;
                     }
                     if (locus != null && locus.getSelf() != null) {
-                        layout(locus.getSelf().getUrl(), device, option.getCompositedLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
+                        layout(locus.getSelf().getUrl(), device, option.getCompositedVideoLayout(), result -> callback.onComplete(ResultImpl.success(locus)));
                     }
                 });
     }

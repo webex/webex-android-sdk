@@ -797,51 +797,53 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
     @Override
     public void onMediaReady(int mid, MediaConnection.MediaDirection direction, MediaConnection.MediaType type, MediaTrack track) {
         Ln.d("Media.onMediaReady, track=" + track + ", mConn=" + connection + ", mid=" + mid + ", dir=" + direction + ", type=" + type);
-        if (type == MediaConnection.MediaType.Video) {
-            if (direction == MediaConnection.MediaDirection.SendOnly) {
-                localVideoTrack.init(track);
-                applyCamera();
-                if (capability.isCamera2Enabled()){
-                    WseEngine.EnableCamera2(context);
-                }
-                localVideoTrack.start();
-            } else if (direction == MediaConnection.MediaDirection.RecvOnly) {
-                long vid = track.getVID();
-                Ln.d("onMediaReady track: " + vid);
-                if (vid == WMEngine.MAIN_VID) {
-                    remoteVideoTrack.init(track);
-                    if (getCapability().isHardwareCodecEnable()) {
-                        MediaHelper.requestSCR(remoteVideoTrack.getTrack(), MediaSCR.p720);
+        Queue.main.run(() -> {
+            if (type == MediaConnection.MediaType.Video) {
+                if (direction == MediaConnection.MediaDirection.SendOnly) {
+                    localVideoTrack.init(track);
+                    applyCamera();
+                    if (capability.isCamera2Enabled()) {
+                        WseEngine.EnableCamera2(context);
+                    }
+                    localVideoTrack.start();
+                } else if (direction == MediaConnection.MediaDirection.RecvOnly) {
+                    long vid = track.getVID();
+                    Ln.d("onMediaReady track: " + vid);
+                    if (vid == WMEngine.MAIN_VID) {
+                        remoteVideoTrack.init(track);
+                        if (getCapability().isHardwareCodecEnable()) {
+                            MediaHelper.requestSCR(remoteVideoTrack.getTrack(), MediaSCR.p720);
+                        } else {
+                            MediaHelper.requestSCR(remoteVideoTrack.getTrack(), MediaSCR.p360);
+                        }
                     } else {
-                        MediaHelper.requestSCR(remoteVideoTrack.getTrack(), MediaSCR.p360);
+                        WmeTrack auxTrack = getAuxVideoTrack(vid);
+                        if (auxTrack != null) {
+                            auxTrack.init(track);
+                            auxTrack.start();
+                        }
                     }
-                } else {
-                    WmeTrack auxTrack = getAuxVideoTrack(vid);
-                    if (auxTrack != null) {
-                        auxTrack.init(track);
-                        auxTrack.start();
+                }
+            } else if (type == MediaConnection.MediaType.Audio) {
+                WmeTrack audioTrack = direction == MediaConnection.MediaDirection.SendOnly ? localAudioTrack : remoteAudioTrack;
+                audioTrack.init(track);
+                audioTrack.start();
+            } else if (type == MediaConnection.MediaType.Sharing) {
+                if (direction == MediaConnection.MediaDirection.RecvOnly) {
+                    remoteSharingTrack.init(track);
+                    MediaHelper.requestSCR(remoteSharingTrack.getTrack(), MediaSCR.p1080);
+                    if (!Checker.isEmpty(sharingId)) {
+                        remoteSharingTrack.getTrack().SetScreenSharingID(sharingId);
+                        remoteSharingTrack.start();
+                    }
+                } else if (direction == MediaConnection.MediaDirection.SendOnly) {
+                    localSharingTrack.init(track);
+                    if (!Checker.isEmpty(sharingId)) {
+                        localSharingTrack.getTrack().SetScreenSharingID(sharingId);
                     }
                 }
             }
-        } else if (type == MediaConnection.MediaType.Audio) {
-            WmeTrack audioTrack = direction == MediaConnection.MediaDirection.SendOnly ? localAudioTrack : remoteAudioTrack;
-            audioTrack.init(track);
-            audioTrack.start();
-        } else if (type == MediaConnection.MediaType.Sharing) {
-            if (direction == MediaConnection.MediaDirection.RecvOnly) {
-                remoteSharingTrack.init(track);
-                MediaHelper.requestSCR(remoteSharingTrack.getTrack(), MediaSCR.p1080);
-                if (!Checker.isEmpty(sharingId)) {
-                    remoteSharingTrack.getTrack().SetScreenSharingID(sharingId);
-                    remoteSharingTrack.start();
-                }
-            } else if (direction == MediaConnection.MediaDirection.SendOnly) {
-                localSharingTrack.init(track);
-                if (!Checker.isEmpty(sharingId)) {
-                    localSharingTrack.getTrack().SetScreenSharingID(sharingId);
-                }
-            }
-        }
+        });
     }
 
     public void onSessionStatus(int mid, MediaConnection.MediaType mediaType, MediaConnection.ConnectionStatus status) {
