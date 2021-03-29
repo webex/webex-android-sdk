@@ -102,8 +102,15 @@ public interface CallMembership {
     /**
      * @return The email address of the person in this CallMembership.
      * @since 0.1
+     * @deprecated The email address can no longer get, since privacy protection reason, please use {@link CallMembership#getDisplayName()}
      */
     String getEmail();
+
+    /**
+     * @return The display name of the person in this CallMembership.
+     * @since 2.8.0
+     */
+    String getDisplayName();
 
     /**
      * @return The SIP address of the person in this CallMembership.

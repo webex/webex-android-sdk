@@ -70,7 +70,7 @@ public class CallMembershipImpl implements CallMembership {
     CallMembershipImpl(LocusParticipantModel participant, CallImpl call) {
         this.call = call;
         setModel(participant);
-        Ln.d("CallMembership: " + getId() + " person: " + getPersonId() + " email: " + getEmail() + "  video: " + isSendingVideo() + "   audio: " + isSendingAudio());
+        Ln.d("CallMembership: " + getId() + " person: " + getPersonId() + " displayName: " + getDisplayName() + "  video: " + isSendingVideo() + "   audio: " + isSendingAudio());
     }
 
     public String getId() {
@@ -95,6 +95,11 @@ public class CallMembershipImpl implements CallMembership {
 
     public String getEmail() {
         return model.getPerson() == null ? null : model.getPerson().getEmail();
+    }
+
+    @Override
+    public String getDisplayName() {
+        return model.getPerson() == null ? null : model.getPerson().getDisplayName();
     }
 
     public String getSipUrl() {
@@ -171,7 +176,7 @@ public class CallMembershipImpl implements CallMembership {
                 + " status: " + getState()
                 + " isSelf: " + isSelf()
                 + " person: " + getPersonId()
-                + " email: " + getEmail()
+                + " displayName: " + getDisplayName()
                 + " video: " + isSendingVideo()
                 + " audio: " + isSendingAudio();
     }

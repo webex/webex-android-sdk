@@ -132,6 +132,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     private MembershipObserver membershipObserver;
     private SpaceObserver spaceObserver;
     private MessageObserver messageObserver;
+    private VideoStreamMode videoStreamMode = VideoStreamMode.COMPOSITED;
 
     public PhoneImpl(Context context, Webex webex, Authenticator authenticator, MediaEngine engine) {
         this.webex = webex;
@@ -418,7 +419,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     String correlationId = UUID.randomUUID().toString();
                     //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
                     if (target instanceof CallService.CallableTarget) {
-                        service.call(((CallService.CallableTarget) target).getCallee(), outgoing.getOption(), correlationId, device, localSdp, reachabilities, callResult -> {
+                        service.call(((CallService.CallableTarget) target).getCallee(), outgoing.getOption(), videoStreamMode, correlationId, device, localSdp, reachabilities, callResult -> {
                             if (callResult.getError() != null || callResult.getData() == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(callResult.getError())));
                                 Queue.serial.yield();
@@ -441,7 +442,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 Queue.serial.yield();
                                 return;
                             }
-                            service.join(url, outgoing.getOption(), correlationId, device, localSdp, reachabilities, joinResult -> {
+                            service.join(url, outgoing.getOption(), videoStreamMode, correlationId, device, localSdp, reachabilities, joinResult -> {
                                 if (joinResult.getError() != null || joinResult.getData() == null) {
                                     Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                                     Queue.serial.yield();
@@ -470,7 +471,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String localSdp = session.getLocalSdp();
                 incoming.getCall().setMedia(session);
                 //CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
-                service.join(incoming.getCall().getUrl(), incoming.getOption(), incoming.getCall().getCorrelationId(), device, localSdp, reachability.getFeedback(), joinResult -> {
+                service.join(incoming.getCall().getUrl(), incoming.getOption(), videoStreamMode, incoming.getCall().getCorrelationId(), device, localSdp, reachability.getFeedback(), joinResult -> {
                     if (joinResult.getError() != null || joinResult.getData() == null) {
                         Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                         Queue.serial.yield();
@@ -585,6 +586,16 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public AudioBRNMode getAudioBNRMode() {
         return audioBRNMode;
+    }
+
+    @Override
+    public void setVideoStreamMode(VideoStreamMode videoStreamMode) {
+        this.videoStreamMode = videoStreamMode;
+    }
+
+    @Override
+    public VideoStreamMode getVideoStreamMode() {
+        return videoStreamMode;
     }
 
     @Override
@@ -901,7 +912,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         });
     }
 
-    void layout(CallImpl call, MediaOption.VideoLayout layout, @Nullable CompletionHandler<Void> callback) {
+    void layout(CallImpl call, MediaOption.CompositedVideoLayout layout, @Nullable CompletionHandler<Void> callback) {
         Queue.serial.run(() -> {
             String url = call.getModel().getSelf() == null ? null : call.getModel().getSelf().getUrl();
             if (url == null) {

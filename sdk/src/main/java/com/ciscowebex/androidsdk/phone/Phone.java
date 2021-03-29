@@ -43,6 +43,26 @@ import java.util.List;
 public interface Phone {
 
     /**
+     * The enumeration of remote video stream.
+     *
+     * @since 2.8.0
+     */
+    enum VideoStreamMode {
+        /**
+         * Composite remote videos as one video stream
+         *
+         * @since 2.8.0
+         */
+        COMPOSITED,
+        /**
+         * Remote videos are different streams
+         *
+         * @since 2.8.0
+         */
+        AUXILIARY
+    }
+
+    /**
      * The enumeration of Camera facing modes.
      *
      * @since 0.1
@@ -461,6 +481,7 @@ public interface Phone {
     /**
      * Set true to keep Webex server connection when minimize app. Default is false.
      * When set to true, app will receive notifications in background, include incoming calls, messages, space updates, membership updates, etc.
+     *
      * @param enable
      * @since 2.8.0
      */
@@ -526,4 +547,21 @@ public interface Phone {
      * @since 2.7.0
      */
     AudioBRNMode getAudioBNRMode();
+
+    /**
+     * Set the video stream mode, default value is {@link VideoStreamMode#COMPOSITED}.
+     *
+     * @param videoStreamMode the video stream mode.
+     * @since 2.8.0
+     */
+    void setVideoStreamMode(VideoStreamMode videoStreamMode);
+
+    /**
+     * Return the video stream mode.
+     *
+     * @return the video stream mode.
+     * @see VideoStreamMode
+     * @since 2.8.0
+     */
+    VideoStreamMode getVideoStreamMode();
 }

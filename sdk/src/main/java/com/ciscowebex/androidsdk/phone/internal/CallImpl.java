@@ -263,12 +263,17 @@ public class CallImpl implements Call {
     }
 
     @Override
-    public void setVideoLayout(MediaOption.VideoLayout layout) {
+    public void setVideoLayout(MediaOption.CompositedVideoLayout layout) {
         this.phone.layout(this, layout, null);
     }
 
     @Override
-    public void setVideoLayout(MediaOption.VideoLayout layout, @Nullable CompletionHandler<Void> callback) {
+    public void setCompositedVideoLayout(MediaOption.CompositedVideoLayout layout) {
+        this.phone.layout(this, layout, null);
+    }
+
+    @Override
+    public void setCompositedVideoLayout(MediaOption.CompositedVideoLayout layout, @Nullable CompletionHandler<Void> callback) {
         this.phone.layout(this, layout, callback);
     }
 
@@ -1079,7 +1084,7 @@ public class CallImpl implements Call {
         for (AuxStreamImpl stream : streams) {
             CallMembership old = stream.getPerson();
             for (CallMembership membership : memberships) {
-                if (old.equals(membership)) {
+                if (old != null && old.equals(membership)) {
                     stream.setPerson(membership);
                     break;
                 }

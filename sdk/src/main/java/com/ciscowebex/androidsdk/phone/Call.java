@@ -251,17 +251,26 @@ public interface Call {
      *
      * @param layout the video layout mode
      * @since 2.6.0
+     * @deprecated please use {@link Call#setCompositedVideoLayout(MediaOption.CompositedVideoLayout)}
      */
-    void setVideoLayout(MediaOption.VideoLayout layout);
+    void setVideoLayout(MediaOption.CompositedVideoLayout layout);
 
     /**
-     * Specify the video layout for the active speaker and other attendees in the group video meeting.
+     * Specify the composited video layout for the active speaker and other attendees in the group video meeting.
      *
-     * @param layout   the video layout mode
+     * @param layout the composited video layout mode
+     * @since 2.8.0
+     */
+    void setCompositedVideoLayout(MediaOption.CompositedVideoLayout layout);
+
+    /**
+     * Specify the composited video layout for the active speaker and other attendees in the group video meeting.
+     *
+     * @param layout   the composited video layout mode
      * @param callback A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
      * @since 2.8.0
      */
-    void setVideoLayout(MediaOption.VideoLayout layout, @Nullable CompletionHandler<Void> callback);
+    void setCompositedVideoLayout(MediaOption.CompositedVideoLayout layout, @Nullable CompletionHandler<Void> callback);
 
     /**
      * @return The local video render view dimensions (points) of this call.
