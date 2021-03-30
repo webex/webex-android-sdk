@@ -419,7 +419,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     String correlationId = UUID.randomUUID().toString();
                     //CallAnalyzerReporter.shared.reportJoinRequest(correlationId, null);
                     if (target instanceof CallService.CallableTarget) {
-                        service.call(((CallService.CallableTarget) target).getCallee(), outgoing.getOption(), videoStreamMode, correlationId, device, localSdp, reachabilities, callResult -> {
+                        service.call(((CallService.CallableTarget) target).getCallee(), outgoing.getOption(), getVideoStreamMode(), correlationId, device, localSdp, reachabilities, callResult -> {
                             if (callResult.getError() != null || callResult.getData() == null) {
                                 Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(callResult.getError())));
                                 Queue.serial.yield();
@@ -442,7 +442,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                                 Queue.serial.yield();
                                 return;
                             }
-                            service.join(url, outgoing.getOption(), videoStreamMode, correlationId, device, localSdp, reachabilities, joinResult -> {
+                            service.join(url, outgoing.getOption(), getVideoStreamMode(), correlationId, device, localSdp, reachabilities, joinResult -> {
                                 if (joinResult.getError() != null || joinResult.getData() == null) {
                                     Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                                     Queue.serial.yield();
@@ -471,7 +471,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String localSdp = session.getLocalSdp();
                 incoming.getCall().setMedia(session);
                 //CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
-                service.join(incoming.getCall().getUrl(), incoming.getOption(), videoStreamMode, incoming.getCall().getCorrelationId(), device, localSdp, reachability.getFeedback(), joinResult -> {
+                service.join(incoming.getCall().getUrl(), incoming.getOption(), getVideoStreamMode(), incoming.getCall().getCorrelationId(), device, localSdp, reachability.getFeedback(), joinResult -> {
                     if (joinResult.getError() != null || joinResult.getData() == null) {
                         Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
                         Queue.serial.yield();
