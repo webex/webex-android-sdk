@@ -157,7 +157,7 @@ public class KeyManager {
             }
             ServiceReqeust.make(convUrl).get()
                     .with("includeActivities", String.valueOf(false))
-                    .with("includeParticipants", String.valueOf(false))
+                    .with("includeParticipants", String.valueOf(true))
                     .auth(authenticator)
                     .queue(queue)
                     .model(ConversationModel.class)
