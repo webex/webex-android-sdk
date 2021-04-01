@@ -24,6 +24,7 @@ package com.ciscowebex.androidsdk.internal.crypto;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.cisco.wx2.sdk.kms.KmsRequest;
 import com.cisco.wx2.sdk.kms.KmsResponseBody;
 import com.ciscowebex.androidsdk.CompletionHandler;
@@ -36,6 +37,7 @@ import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.UriUtils;
 import com.github.benoitdion.ln.Ln;
 import com.nimbusds.jose.jwk.JWK;
+
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.collection.Maps;
 
@@ -169,7 +171,7 @@ public class KeyManager {
                         if (encryptionKeyUrl == null) {
                             encryptionKeyUrl = model.getDefaultActivityEncryptionKeyUrl();
                         }
-//                        if (encryptionKeyUrl == null) {
+                        if (encryptionKeyUrl == null) {
 //                            if (model.getKmsResourceObject() == null) {
 //                                callback.onComplete(ResultImpl.error("No result"));
 //                                return;
@@ -183,7 +185,7 @@ public class KeyManager {
                                 }
                             }
                             userIds.put(convUrl, participantUuids);
-//                        }
+                        }
                         if (encryptionKeyUrl != null) {
                             convKeyUrls.put(convUrl, encryptionKeyUrl);
                         }
