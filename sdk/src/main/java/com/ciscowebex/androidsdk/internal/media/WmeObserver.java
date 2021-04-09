@@ -56,4 +56,6 @@ public interface WmeObserver {
     void onMediaTxStart(WMEngine.Media media);
     void onMediaTxStop(WMEngine.Media media);
     void onMediaBlocked(WMEngine.Media media, boolean blocked);
+
+    void onLocalShareStopped();
 }

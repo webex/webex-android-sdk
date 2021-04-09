@@ -22,18 +22,17 @@
 
 package com.ciscowebex.androidsdk.phone;
 
-import java.util.List;
-import java.util.Set;
-
+import android.app.Notification;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
+import android.util.Pair;
 import android.util.Size;
+import android.view.View;
 
 import com.ciscowebex.androidsdk.CompletionHandler;
 
-import android.view.View;
-import android.util.Pair;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A Call represents a media call on Cisco Webex.
@@ -456,10 +455,22 @@ public interface Call {
 
     /**
      * Start content sharing.
-     *
+     * Invalid if targetSdkVersion is 29 or higher, please use {@link Call#startSharing(Notification, int, CompletionHandler)}
      * @since 1.4
+     * @deprecated
      */
     void startSharing(@NonNull CompletionHandler<Void> callback);
+
+    /**
+     * Start content sharing. The notification and it's id are only work for targetSdkVersion is 29 or higher.
+     *
+     * @param notification   The foreground notification when sharing, take effect if targetSdkVersion is 29 or higher.
+     * @param notificationId The id of this notification, take effect if targetSdkVersion is 29 or higher, must a positive number.
+     * @param callback       A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise nil.
+     * @see <a href="https://developer.android.com/reference/android/media/projection/MediaProjectionManager#getMediaProjection(int,%20android.content.Intent)">Google Developers Page</a>
+     * @since 2.8.0
+     */
+    void startSharing(@Nullable Notification notification, int notificationId, @NonNull CompletionHandler<Void> callback);
 
     /**
      * Stop content sharing.
