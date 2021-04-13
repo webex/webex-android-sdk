@@ -22,6 +22,7 @@
 
 package com.ciscowebex.androidsdk.phone.internal;
 
+import android.app.Notification;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
@@ -55,6 +56,8 @@ import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -507,13 +510,22 @@ public class CallImpl implements Call {
 
     @Override
     public void startSharing(@NonNull CompletionHandler<Void> callback) {
-        phone.startSharing(this, callback);
+        startSharing(null, 0, callback);
+    }
+
+    @Override
+    public void startSharing(@Nullable Notification notification, int notificationId, @NonNull @NotNull CompletionHandler<Void> callback) {
+        phone.startSharing(this, notification, notificationId, callback);
         CallAnalyzerReporter.shared.reportShareInitiated(this, WMEngine.Media.Sharing);
     }
 
     @Override
     public void stopSharing(@NonNull CompletionHandler<Void> callback) {
         phone.stopSharing(this, callback);
+    }
+
+    void stopSharing() {
+        phone.stopSharing(this, null);
     }
 
     @Override

@@ -23,6 +23,7 @@
 package com.ciscowebex.androidsdk.phone.internal;
 
 import android.util.Size;
+
 import com.cisco.wx2.diagnostic_events.MediaLine;
 import com.ciscowebex.androidsdk.internal.metric.CallAnalyzerReporter;
 import com.ciscowebex.androidsdk.internal.queue.Queue;
@@ -36,6 +37,7 @@ import com.ciscowebex.androidsdk.phone.CallObserver;
 import com.ciscowebex.androidsdk.phone.MultiStreamObserver;
 import com.ciscowebex.androidsdk.utils.Json;
 import com.github.benoitdion.ln.Ln;
+
 import me.helloworld.utils.Checker;
 
 import java.util.List;
@@ -79,6 +81,15 @@ class MediaObserver implements WmeObserver {
     }
 
     @Override
+    public void onLocalShareStopped() {
+        Queue.main.run(() -> {
+            if (call != null && call.isSendingSharing()) {
+                call.stopSharing();
+            }
+        });
+    }
+
+    @Override
     public void onActiveSpeakerChanged(long[] oldCSIs, long[] newCSIs) {
         Queue.main.run(() -> {
             if (call != null && newCSIs != null) {
@@ -86,11 +97,11 @@ class MediaObserver implements WmeObserver {
                 boolean done = false;
                 if (newCSIs.length < 1) {
                     done = true;
-                }
-                else {
-                    loop: for (long csi : newCSIs) {
+                } else {
+                    loop:
+                    for (long csi : newCSIs) {
                         for (CallMembership member : call.getMemberships()) {
-                            if (((CallMembershipImpl)member).containsCSI(csi)) {
+                            if (((CallMembershipImpl) member).containsCSI(csi)) {
                                 membership = (CallMembershipImpl) member;
                                 done = true;
                                 break loop;
@@ -122,11 +133,11 @@ class MediaObserver implements WmeObserver {
                     boolean done = false;
                     if (newCSIs.length < 1) {
                         done = true;
-                    }
-                    else {
-                        loop: for (long csi : newCSIs) {
+                    } else {
+                        loop:
+                        for (long csi : newCSIs) {
                             for (CallMembership member : call.getMemberships()) {
-                                if (((CallMembershipImpl)member).containsCSI(csi)) {
+                                if (((CallMembershipImpl) member).containsCSI(csi)) {
                                     membership = (CallMembershipImpl) member;
                                     done = true;
                                     break loop;
@@ -165,8 +176,7 @@ class MediaObserver implements WmeObserver {
                 if (call != null) {
                     if (vid == WMEngine.MAIN_VID && call.getObserver() != null) {
                         call.getObserver().onMediaChanged(new CallObserver.RemoteVideoViewSizeChanged(call));
-                    }
-                    else if (vid >= 0 && call.getMultiStreamObserver() != null){
+                    } else if (vid >= 0 && call.getMultiStreamObserver() != null) {
                         AuxStream stream = call.getAuxStream(vid);
                         if (stream != null) {
                             call.getMultiStreamObserver().onAuxStreamChanged(new MultiStreamObserver.AuxStreamSizeChangedEvent(call, stream));
@@ -174,8 +184,7 @@ class MediaObserver implements WmeObserver {
                     }
                 }
             });
-        }
-        else if (media == WMEngine.Media.Sharing) {
+        } else if (media == WMEngine.Media.Sharing) {
             Queue.main.run(() -> {
                 if (call != null && call.getObserver() != null) {
                     call.getObserver().onMediaChanged(new CallObserver.RemoteSharingViewSizeChanged(call));
@@ -211,21 +220,16 @@ class MediaObserver implements WmeObserver {
                 if (track == WmeTrack.Type.LocalVideo) {
                     call.updateMedia(call.isSendingAudio(), !mute);
                     event = new CallObserver.SendingVideo(call, !mute);
-                }
-                else if (track == WmeTrack.Type.RemoteVideo) {
+                } else if (track == WmeTrack.Type.RemoteVideo) {
                     event = new CallObserver.ReceivingVideo(call, !mute);
-                }
-                else if (track == WmeTrack.Type.LocalAudio) {
+                } else if (track == WmeTrack.Type.LocalAudio) {
                     call.updateMedia(!mute, call.isSendingVideo());
                     event = new CallObserver.SendingAudio(call, !mute);
-                }
-                else if (track == WmeTrack.Type.RemoteAudio) {
+                } else if (track == WmeTrack.Type.RemoteAudio) {
                     event = new CallObserver.ReceivingAudio(call, !mute);
-                }
-                else if (track == WmeTrack.Type.LocalSharing) {
+                } else if (track == WmeTrack.Type.LocalSharing) {
                     event = new CallObserver.SendingSharingEvent(call, !mute);
-                }
-                else if (track == WmeTrack.Type.RemoteSharing) {
+                } else if (track == WmeTrack.Type.RemoteSharing) {
                     event = new CallObserver.ReceivingSharing(call, !mute);
                 }
                 if (call.getObserver() != null && event != null) {

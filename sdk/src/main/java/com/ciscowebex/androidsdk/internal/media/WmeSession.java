@@ -1059,6 +1059,9 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
 
     public void onShareStopped() {
         Ln.d("MediaSessionImpl.onShareStopped");
+        if (observer != null) {
+            observer.onLocalShareStopped();
+        }
     }
 
     public void OnRequestAvatarForMute(boolean mute) {
