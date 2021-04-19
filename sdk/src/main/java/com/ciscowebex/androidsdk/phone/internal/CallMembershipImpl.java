@@ -93,10 +93,6 @@ public class CallMembershipImpl implements CallMembership {
         return fromLocusState(model.getState(), model.isInLobby());
     }
 
-    public String getEmail() {
-        return model.getPerson() == null ? null : model.getPerson().getEmail();
-    }
-
     @Override
     public String getDisplayName() {
         return model.getPerson() == null ? null : model.getPerson().getDisplayName();

@@ -100,13 +100,8 @@ public interface CallMembership {
     State getState();
 
     /**
-     * @return The email address of the person in this CallMembership.
-     * @since 0.1
-     * @deprecated The email address can no longer get, since privacy protection reason, please use {@link CallMembership#getDisplayName()}
-     */
-    String getEmail();
-
-    /**
+     * Notice, removed the getEmail() function, due to the email address can no longer get, since privacy protection reason.
+     * Please use this function to show a display name instead.
      * @return The display name of the person in this CallMembership.
      * @since 2.8.0
      */
