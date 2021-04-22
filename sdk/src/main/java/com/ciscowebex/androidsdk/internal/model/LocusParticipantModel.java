@@ -23,9 +23,11 @@
 package com.ciscowebex.androidsdk.internal.model;
 
 import android.support.annotation.Nullable;
+
 import com.ciscowebex.androidsdk.internal.Device;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LocusParticipantModel {
 
@@ -34,7 +36,8 @@ public class LocusParticipantModel {
     }
 
     public enum IntentType {
-        HELD, HOLDING, JOIN, LEAVE, MOVE_MEDIA, NONE, OBSERVE, WAIT }
+        HELD, HOLDING, JOIN, LEAVE, MOVE_MEDIA, NONE, OBSERVE, WAIT
+    }
 
     public enum State {
         /* the participant is not in the locus */
@@ -359,10 +362,8 @@ public class LocusParticipantModel {
     }
 
     public boolean isLefted(String deviceUrl) {
-        if (state == State.LEFT) {
-            return true;
-        }
-        return getDevice(deviceUrl) == null;
+        LocusParticipantDeviceModel device = getDevice(deviceUrl);
+        return state == State.LEFT || device == null || device.getState() == State.LEFT;
     }
 
     public boolean isJoined(String deviceUrl) {
