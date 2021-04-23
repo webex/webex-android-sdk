@@ -605,6 +605,29 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     }
 
     @Override
+    public String getServiceUrl(ServiceUrlType serviceUrlType) {
+        if (state == State.REGISTERED && device != null) {
+            String key = key(serviceUrlType);
+            if (key != null) {
+                return device.getServiceUrl(key);
+            }
+        }
+        return null;
+    }
+
+    private String key(ServiceUrlType serviceUrlType) {
+        switch (serviceUrlType) {
+            case METRICS:
+                return "metrics";
+            case CLIENT_LOGS:
+                return "clientLogs";
+            case KMS:
+                return "encryption";
+        }
+        return null;
+    }
+
+    @Override
     public void requestVideoCodecActivation(@NonNull AlertDialog.Builder builder, @Nullable CompletionHandler<H264LicenseAction> callback) {
         this.prompter.check(getContext(), builder, result -> {
             if (callback == null) {
