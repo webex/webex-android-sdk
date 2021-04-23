@@ -41,6 +41,31 @@ import java.util.List;
  * @since 0.1
  */
 public interface Phone {
+    /**
+     * The enumeration of service url.
+     *
+     * @since 2.8.0
+     */
+    enum ServiceUrlType {
+        /**
+         * Metrics service url.
+         *
+         * @since 2.8.0
+         */
+        METRICS,
+        /**
+         * Client logs service url.
+         *
+         * @since 2.8.0
+         */
+        CLIENT_LOGS,
+        /**
+         * KMS service url.
+         *
+         * @since 2.8.0
+         */
+        KMS
+    }
 
     /**
      * The enumeration of remote video stream.
@@ -564,4 +589,13 @@ public interface Phone {
      * @since 2.8.0
      */
     VideoStreamMode getVideoStreamMode();
+
+    /**
+     * Return the required service url, return null if unregistered.
+     * @param serviceUrlType the type of service url.
+     * @return the required service url, null if unregistered.
+     * @see ServiceUrlType
+     * @since 2.8.0
+     */
+    String getServiceUrl(ServiceUrlType serviceUrlType);
 }
