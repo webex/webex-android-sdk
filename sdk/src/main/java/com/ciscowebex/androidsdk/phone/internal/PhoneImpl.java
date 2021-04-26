@@ -1154,7 +1154,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     private void tryAcquirePermission() {
         final Intent intent = new Intent(context, AcquirePermissionActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
-        intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
+        intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC_PHONE);
         context.startActivity(intent);
     }
 

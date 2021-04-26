@@ -1,27 +1,31 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 
-        package="com.ciscowebex.androidsdk">
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    package="com.ciscowebex.androidsdk">
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.INTERNET" />
-        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-        <uses-permission android:name="android.permission.CAMERA" />
-        <uses-permission android:name="android.permission.RECORD_AUDIO" />
-        <application>
-                <activity
-                        android:exported="false"
-                        android:name=".internal.AcquirePermissionActivity"
-                        android:configChanges="orientation|screenSize"
-                        android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-                <activity
-                        android:exported="false"
-                        android:name=".phone.internal.H264LicensePrompterActivity"
-                        android:configChanges="orientation|screenSize"
-                        android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-            <service
-                android:name=".phone.internal.ScreenShareForegroundService"
-                android:foregroundServiceType="mediaProjection"/>
-        </application>
-        
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <application>
+        <activity
+            android:name=".internal.AcquirePermissionActivity"
+            android:configChanges="orientation|screenSize"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <activity
+            android:name=".phone.internal.H264LicensePrompterActivity"
+            android:configChanges="orientation|screenSize"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <service
+            android:name=".phone.internal.ScreenShareForegroundService"
+            android:foregroundServiceType="mediaProjection" />
+    </application>
+
 </manifest>
 
