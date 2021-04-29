@@ -598,4 +598,13 @@ public interface Phone {
      * @since 2.8.0
      */
     String getServiceUrl(ServiceUrlType serviceUrlType);
+
+    /**
+     * Toggle to enable or disable ask for {@link android.Manifest.permission#READ_PHONE_STATE} permission, true by default.
+     * When target SDK >= 30, this permission is required to check the network state, so SDK can auto-tuning performance during calls.
+     *
+     * @param enable toggle to enable or disable ask for {@link android.Manifest.permission#READ_PHONE_STATE} permission, true by default.
+     * @since 2.8.0
+     */
+    void enableAskingReadPhoneStatePermission(boolean enable);
 }

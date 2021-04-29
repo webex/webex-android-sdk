@@ -130,6 +130,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     private boolean enableBackgroundConnection = false;
     private boolean enableAudioBNR = false;
     private AudioBRNMode audioBRNMode = AudioBRNMode.HP;
+    private boolean enableAskingPhoneState = true;
 
     private String uuid = UUID.randomUUID().toString();
     private boolean canceled = false;
@@ -338,7 +339,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             if (action == null || action == H264LicenseAction.ACCEPT) {
                 this.canceled = false;
                 Queue.serial.run(() -> {
-//                    stopPreview();
                     if (callContext != null) {
                         Ln.w("Already calling: " + callContext);
                         Queue.main.run(() -> callback.onComplete(ResultImpl.error("Already calling")));
@@ -613,6 +613,11 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             }
         }
         return null;
+    }
+
+    @Override
+    public void enableAskingReadPhoneStatePermission(boolean enable) {
+        this.enableAskingPhoneState = enable;
     }
 
     private String key(ServiceUrlType serviceUrlType) {
@@ -1155,6 +1160,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         final Intent intent = new Intent(context, AcquirePermissionActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
         intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC_PHONE);
+        intent.putExtra(AcquirePermissionActivity.PERMISSION_ENABLE_PHONE_STATE, enableAskingPhoneState);
         context.startActivity(intent);
     }
 

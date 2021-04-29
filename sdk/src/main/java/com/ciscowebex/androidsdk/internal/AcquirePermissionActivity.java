@@ -46,6 +46,7 @@ public class AcquirePermissionActivity extends Activity {
     public static final String PERMISSION_TYPE = "permission_type";
     public static final String PERMISSION_SCREEN_SHOT = "permission_screen_shot";
     public static final String PERMISSION_CAMERA_MIC_PHONE = "permission_camera_mic_phone";
+    public static final String PERMISSION_ENABLE_PHONE_STATE = "permission_enable_phone_state";
 
     public static final String ACTION_MEDIA_PERMISSION = "action_media_permission";
     public static final String PERMISSION_RESULT = "permission_result";
@@ -77,6 +78,7 @@ public class AcquirePermissionActivity extends Activity {
             }
         } else if (PERMISSION_CAMERA_MIC_PHONE.equals(type)) {
             Ln.d("request PERMISSION_CAMERA_MIC");
+            boolean enableAskingPhoneState = getIntent().getBooleanExtra(PERMISSION_ENABLE_PHONE_STATE, true);
             int permissionCheckCamera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
             int permissionCheckMic = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
             int permissionCheckPhone = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
@@ -87,7 +89,7 @@ public class AcquirePermissionActivity extends Activity {
             if (permissionCheckMic != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.RECORD_AUDIO);
             }
-            if (getApplicationInfo().targetSdkVersion >= 30 && permissionCheckPhone != PackageManager.PERMISSION_GRANTED) {
+            if (enableAskingPhoneState && getApplicationInfo().targetSdkVersion >= 30 && permissionCheckPhone != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.READ_PHONE_STATE);
             }
             if (!permissions.isEmpty()) {
