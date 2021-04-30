@@ -41,6 +41,51 @@ import java.util.List;
  * @since 0.1
  */
 public interface Phone {
+    /**
+     * The enumeration of service url.
+     *
+     * @since 2.8.0
+     */
+    enum ServiceUrlType {
+        /**
+         * Metrics service url.
+         *
+         * @since 2.8.0
+         */
+        METRICS,
+        /**
+         * Client logs service url.
+         *
+         * @since 2.8.0
+         */
+        CLIENT_LOGS,
+        /**
+         * KMS service url.
+         *
+         * @since 2.8.0
+         */
+        KMS
+    }
+
+    /**
+     * The enumeration of remote video stream.
+     *
+     * @since 2.8.0
+     */
+    enum VideoStreamMode {
+        /**
+         * Composite remote videos as one video stream
+         *
+         * @since 2.8.0
+         */
+        COMPOSITED,
+        /**
+         * Remote videos are different streams
+         *
+         * @since 2.8.0
+         */
+        AUXILIARY
+    }
 
     /**
      * The enumeration of Camera facing modes.
@@ -459,6 +504,15 @@ public interface Phone {
     void enableBackgroundStream(boolean enable);
 
     /**
+     * Set true to keep Webex server connection when minimize app. Default is false.
+     * When set to true, app will receive notifications in background, include incoming calls, messages, space updates, membership updates, etc.
+     *
+     * @param enable
+     * @since 2.8.0
+     */
+    void enableBackgroundConnection(boolean enable);
+
+    /**
      * Set advanced setings for call. Only effective if set before the start of call.
      * <p>
      * For example, Phone.setAdvancedSetting(new VideoMaxTxFPS(30));
@@ -518,4 +572,39 @@ public interface Phone {
      * @since 2.7.0
      */
     AudioBRNMode getAudioBNRMode();
+
+    /**
+     * Set the video stream mode, default value is {@link VideoStreamMode#COMPOSITED}.
+     *
+     * @param videoStreamMode the video stream mode.
+     * @since 2.8.0
+     */
+    void setVideoStreamMode(VideoStreamMode videoStreamMode);
+
+    /**
+     * Return the video stream mode.
+     *
+     * @return the video stream mode.
+     * @see VideoStreamMode
+     * @since 2.8.0
+     */
+    VideoStreamMode getVideoStreamMode();
+
+    /**
+     * Return the required service url, return null if unregistered.
+     * @param serviceUrlType the type of service url.
+     * @return the required service url, null if unregistered.
+     * @see ServiceUrlType
+     * @since 2.8.0
+     */
+    String getServiceUrl(ServiceUrlType serviceUrlType);
+
+    /**
+     * Toggle to enable or disable ask for {@link android.Manifest.permission#READ_PHONE_STATE} permission, true by default.
+     * When target SDK >= 30, this permission is required to check the network state, so SDK can auto-tuning performance during calls.
+     *
+     * @param enable toggle to enable or disable ask for {@link android.Manifest.permission#READ_PHONE_STATE} permission, true by default.
+     * @since 2.8.0
+     */
+    void enableAskingReadPhoneStatePermission(boolean enable);
 }

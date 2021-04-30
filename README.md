@@ -566,7 +566,21 @@ Here are some examples of how to use the Android SDK in your app.
     ```java
     webex.phone().setAudioBNRMode(Phone.AudioBRNMode mode);
     ```
-    
+32. Edit message
+
+    ```java
+     messageClient.edit(originalMessage, Message.Text.plain("edit"), mentions, rst -> {
+                                        if (rst.isSuccessful()) {
+                                            ...
+                                        }
+                                    });
+    ```
+33. Enable background connection
+
+    ```java
+    webex.phone().enableBackgroundConnection(boolean);
+    ```
+        
 ## Migrating from Cisco Spark Android SDK
 
 The purpose of this guide is to help you to migrate from Cisco Spark Android SDK to Cisco Webex Android SDK.

@@ -24,6 +24,7 @@ package com.ciscowebex.androidsdk.internal.crypto;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.cisco.wx2.sdk.kms.KmsRequest;
 import com.cisco.wx2.sdk.kms.KmsResponseBody;
 import com.ciscowebex.androidsdk.CompletionHandler;
@@ -36,6 +37,7 @@ import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.UriUtils;
 import com.github.benoitdion.ln.Ln;
 import com.nimbusds.jose.jwk.JWK;
+
 import me.helloworld.utils.Checker;
 import me.helloworld.utils.collection.Maps;
 
@@ -155,7 +157,7 @@ public class KeyManager {
             }
             ServiceReqeust.make(convUrl).get()
                     .with("includeActivities", String.valueOf(false))
-                    .with("includeParticipants", String.valueOf(false))
+                    .with("includeParticipants", String.valueOf(true))
                     .auth(authenticator)
                     .queue(queue)
                     .model(ConversationModel.class)
@@ -170,10 +172,10 @@ public class KeyManager {
                             encryptionKeyUrl = model.getDefaultActivityEncryptionKeyUrl();
                         }
                         if (encryptionKeyUrl == null) {
-                            if (model.getKmsResourceObject() == null) {
-                                callback.onComplete(ResultImpl.error("No result"));
-                                return;
-                            }
+//                            if (model.getKmsResourceObject() == null) {
+//                                callback.onComplete(ResultImpl.error("No result"));
+//                                return;
+//                            }
                             ItemsModel<PersonModel> items = model.getParticipants();
                             List<PersonModel> participants = items == null ? null : items.getItems();
                             Set<String> participantUuids = participants == null ? null : new HashSet<>(participants.size());

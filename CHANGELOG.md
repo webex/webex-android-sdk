@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 2.8.0 Releases
+- `2.8.0` Releases - [2.8.0](#280)
+
 #### 2.7.0 Releases
 - `2.7.0` Releases - [2.7.0](#270)
 
@@ -35,6 +38,26 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
+## [2.8.0](https://github.com/webex/webex-android-sdk/releases/tag/2.8.0)
+Released on 2020-12-14.
+#### Added
+- Support Multi-stream feature in group calls.
+- Support message edit.
+- Expose some service urls.
+- Allow preview during dialling.
+- Support for meeting scheduled from Webex Meetings.
+- Increase the meeting number to 11 digit number.
+- Add a new API `Phone.enableBackgroundConnection(boolean)` to keep receive events when app is in background.
+- Add a new API `Phone.enableAskingReadPhoneStatePermission(boolean enable)` enable or disable ask for read phone state permission.
+- Removed the API `CallMembership.getEmail()` due to privacy protection reasons.
+- Add a new API `CallMembership.getDisplayName()` to get the display name of the person.
+
+#### Updated
+- Fixed occasionally encryption failures when trying to send messages.
+- Fixed screen sharing doesn't work if targetSDK >= 29.
+- Fixed LocalLeft event occasionally triggered incorrect.
+- Fixed MediaOption.setPin() doesn't appear to work.
+
 ## [2.7.0](https://github.com/webex/webex-android-sdk/releases/tag/2.7.0)
 Released on 2020-12-14.
 #### Added

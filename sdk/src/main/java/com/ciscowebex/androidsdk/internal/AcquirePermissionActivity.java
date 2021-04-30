@@ -37,11 +37,16 @@ import android.view.WindowManager;
 import com.ciscowebex.androidsdk.phone.internal.UIEventHandler;
 import com.github.benoitdion.ln.Ln;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class AcquirePermissionActivity extends Activity {
 
     public static final String PERMISSION_TYPE = "permission_type";
     public static final String PERMISSION_SCREEN_SHOT = "permission_screen_shot";
-    public static final String PERMISSION_CAMERA_MIC = "permission_camera_mic";
+    public static final String PERMISSION_CAMERA_MIC_PHONE = "permission_camera_mic_phone";
+    public static final String PERMISSION_ENABLE_PHONE_STATE = "permission_enable_phone_state";
 
     public static final String ACTION_MEDIA_PERMISSION = "action_media_permission";
     public static final String PERMISSION_RESULT = "permission_result";
@@ -50,7 +55,7 @@ public class AcquirePermissionActivity extends Activity {
     public static final String CALL_STRING = "call_string";
     public static final String CALL_TAG = "call_tag";
     public static final String CALL_DATA = "call_data";
-    protected static final int REQUEST_CAMERA_MIC = 0;
+    protected static final int REQUEST_CAMERA_MIC_PHONE = 0;
     protected static final int REQUEST_MEDIA_PROJECTION = 1;
 
     @Override
@@ -71,21 +76,24 @@ public class AcquirePermissionActivity extends Activity {
                 Ln.e("Android version is lower than LOLLIPOP");
                 finish();
             }
-        }
-        else if (PERMISSION_CAMERA_MIC.equals(type)) {
+        } else if (PERMISSION_CAMERA_MIC_PHONE.equals(type)) {
             Ln.d("request PERMISSION_CAMERA_MIC");
+            boolean enableAskingPhoneState = getIntent().getBooleanExtra(PERMISSION_ENABLE_PHONE_STATE, true);
             int permissionCheckCamera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
             int permissionCheckMic = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
-            String[] permissions = null;
-            if (permissionCheckCamera != PackageManager.PERMISSION_GRANTED && permissionCheckMic != PackageManager.PERMISSION_GRANTED) {
-                permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
-            } else if (permissionCheckCamera != PackageManager.PERMISSION_GRANTED) {
-                permissions = new String[]{Manifest.permission.CAMERA};
-            } else if (permissionCheckMic != PackageManager.PERMISSION_GRANTED) {
-                permissions = new String[]{Manifest.permission.RECORD_AUDIO};
+            int permissionCheckPhone = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
+            List<String> permissions = new ArrayList<>();
+            if (permissionCheckCamera != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.CAMERA);
             }
-            if (permissions != null) {
-                ActivityCompat.requestPermissions(this, permissions, REQUEST_CAMERA_MIC);
+            if (permissionCheckMic != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.RECORD_AUDIO);
+            }
+            if (enableAskingPhoneState && getApplicationInfo().targetSdkVersion >= 30 && permissionCheckPhone != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.READ_PHONE_STATE);
+            }
+            if (!permissions.isEmpty()) {
+                ActivityCompat.requestPermissions(this, permissions.toArray(new String[0]), REQUEST_CAMERA_MIC_PHONE);
             } else {
                 Ln.i("Do not need request permission, and make call directly");
                 UIEventHandler.get().doMediaPermission(true);
@@ -112,14 +120,12 @@ public class AcquirePermissionActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == REQUEST_CAMERA_MIC) {
-            boolean resultOk = true;
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    resultOk = false;
-                    break;
-                }
-            }
+        if (requestCode == REQUEST_CAMERA_MIC_PHONE) {
+            List<String> result = Arrays.asList(permissions);
+            int indexCamera = result.indexOf(Manifest.permission.CAMERA);
+            int indexMic = result.indexOf(Manifest.permission.RECORD_AUDIO);
+            boolean resultOk = (indexCamera == -1 || grantResults[indexCamera] == PackageManager.PERMISSION_GRANTED) &&
+                    (indexMic == -1 || grantResults[indexMic] == PackageManager.PERMISSION_GRANTED);
             Ln.d("onRequestPermissionsResult: " + resultOk);
             UIEventHandler.get().doMediaPermission(resultOk);
         }

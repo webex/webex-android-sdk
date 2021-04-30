@@ -22,6 +22,7 @@
 
 package com.ciscowebex.androidsdk.phone.internal;
 
+import android.app.Notification;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
@@ -55,6 +56,8 @@ import com.ciscowebex.androidsdk.phone.Phone;
 import com.ciscowebex.androidsdk.utils.Lists;
 import com.ciscowebex.androidsdk.utils.WebexId;
 import com.github.benoitdion.ln.Ln;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -263,8 +266,18 @@ public class CallImpl implements Call {
     }
 
     @Override
-    public void setVideoLayout(MediaOption.VideoLayout layout) {
-        this.phone.layout(this, layout);
+    public void setVideoLayout(MediaOption.CompositedVideoLayout layout) {
+        this.phone.layout(this, layout, null);
+    }
+
+    @Override
+    public void setCompositedVideoLayout(MediaOption.CompositedVideoLayout layout) {
+        this.phone.layout(this, layout, null);
+    }
+
+    @Override
+    public void setCompositedVideoLayout(MediaOption.CompositedVideoLayout layout, @Nullable CompletionHandler<Void> callback) {
+        this.phone.layout(this, layout, callback);
     }
 
     @Override
@@ -497,13 +510,22 @@ public class CallImpl implements Call {
 
     @Override
     public void startSharing(@NonNull CompletionHandler<Void> callback) {
-        phone.startSharing(this, callback);
+        startSharing(null, 0, callback);
+    }
+
+    @Override
+    public void startSharing(@Nullable Notification notification, int notificationId, @NonNull @NotNull CompletionHandler<Void> callback) {
+        phone.startSharing(this, notification, notificationId, callback);
         CallAnalyzerReporter.shared.reportShareInitiated(this, WMEngine.Media.Sharing);
     }
 
     @Override
     public void stopSharing(@NonNull CompletionHandler<Void> callback) {
         phone.stopSharing(this, callback);
+    }
+
+    void stopSharing() {
+        phone.stopSharing(this, null);
     }
 
     @Override
@@ -890,6 +912,7 @@ public class CallImpl implements Call {
         }
 
         boolean isDelta = remote.getBaseSequence() != null;
+        boolean processLocus = false;
         if (local != null) {
             LocusSequenceModel.OverwriteWithResult overwriteWithResult;
             if (isDelta) {
@@ -907,6 +930,7 @@ public class CallImpl implements Call {
                 if (isDelta) {
                     remote = local.applyDelta(remote);
                 }
+                processLocus = true;
                 Ln.d("Updating locus DTO and notifying listeners of data change for: %s", remote.getCallUrl());
             } else if (overwriteWithResult.equals(LocusSequenceModel.OverwriteWithResult.FALSE)) {
                 Ln.d("Didn't overwrite locus DTO as new one was older version than one currently in memory.");
@@ -919,19 +943,23 @@ public class CallImpl implements Call {
             // locus doesn't exist in the cache, but this DTO is a delta, so fetch a full DTO and reprocess
             phone.fetch(this, true);
             return;
+        } else {
+            processLocus = true;
         }
-        doLocusModel(remote);
-        LocusModel newModule = remote;
-        Queue.main.run(() -> {
-            if (local != null) {
-                if (newModule.isRemoteAudioMuted() != local.isRemoteAudioMuted()) {
-                    if (observer != null) {
-                        observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(this, !newModule.isRemoteAudioMuted()));
+        if (processLocus) {
+            doLocusModel(remote);
+            LocusModel newModule = remote;
+            Queue.main.run(() -> {
+                if (local != null) {
+                    if (newModule.isRemoteAudioMuted() != local.isRemoteAudioMuted()) {
+                        if (observer != null) {
+                            observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(this, !newModule.isRemoteAudioMuted()));
+                        }
                     }
+                    doFloorUpdate(local, newModule);
                 }
-                doFloorUpdate(local, newModule);
-            }
-        });
+            });
+        }
     }
 
     void doFloorUpdate(LocusModel old, LocusModel current) {
@@ -1068,7 +1096,7 @@ public class CallImpl implements Call {
         for (AuxStreamImpl stream : streams) {
             CallMembership old = stream.getPerson();
             for (CallMembership membership : memberships) {
-                if (old.equals(membership)) {
+                if (old != null && old.equals(membership)) {
                     stream.setPerson(membership);
                     break;
                 }
@@ -1090,6 +1118,7 @@ public class CallImpl implements Call {
         }
         if ((getStatus() == CallStatus.CONNECTED || getStatus() == CallStatus.RINGING) && media != null && !media.isPrepared() && !media.isRunning()) {
             Ln.d("Update SDP before start media");
+            phone.stopPreview();
             media.setPrepared(true);
             phone.update(this, isSendingAudio(), isSendingVideo(), media.getLocalSdp(), result -> {
                 CallAnalyzerReporter.shared.reportLocalSdpGenerated(this);
