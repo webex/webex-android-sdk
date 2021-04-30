@@ -405,8 +405,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 CallContext.Outgoing outgoing = (CallContext.Outgoing) callContext;
                 callContext = null;
                 if (!permission) {
-                    Ln.w("permission deined");
-                    Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error("permission deined")));
+                    Ln.w("permission denied");
+                    Queue.main.run(() -> outgoing.getCallback().onComplete(ResultImpl.error("permission denied")));
                     Queue.serial.yield();
                     return;
                 }
@@ -466,8 +466,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 CallContext.Incoming incoming = (CallContext.Incoming) callContext;
                 callContext = null;
                 if (!permission) {
-                    Ln.w("permission deined");
-                    Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error("permission deined")));
+                    Ln.w("permission denied");
+                    Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error("permission denied")));
                     Queue.serial.yield();
                     return;
                 }
