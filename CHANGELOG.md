@@ -53,6 +53,7 @@ Released on 2020-12-14.
 - Add a new API `CallMembership.getDisplayName()` to get the display name of the person.
 
 #### Updated
+- Upgrade min sdk version to 24.
 - Fixed occasionally encryption failures when trying to send messages.
 - Fixed screen sharing doesn't work if targetSDK >= 29.
 - Fixed LocalLeft event occasionally triggered incorrect.
