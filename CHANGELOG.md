@@ -39,7 +39,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 ## [2.8.0](https://github.com/webex/webex-android-sdk/releases/tag/2.8.0)
-Released on 2020-12-14.
+Released on 2021-04-30.
 #### Added
 - Support Multi-stream feature in group calls.
 - Support message edit.
