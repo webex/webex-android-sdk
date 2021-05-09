@@ -39,7 +39,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 ## [2.8.0](https://github.com/webex/webex-android-sdk/releases/tag/2.8.0)
-Released on 2020-12-14.
+Released on 2021-04-30.
 #### Added
 - Support Multi-stream feature in group calls.
 - Support message edit.
@@ -53,6 +53,7 @@ Released on 2020-12-14.
 - Add a new API `CallMembership.getDisplayName()` to get the display name of the person.
 
 #### Updated
+- Upgrade min sdk version to 24.
 - Fixed occasionally encryption failures when trying to send messages.
 - Fixed screen sharing doesn't work if targetSDK >= 29.
 - Fixed LocalLeft event occasionally triggered incorrect.
