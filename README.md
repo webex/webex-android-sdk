@@ -38,7 +38,7 @@ Assuming you already have an Android project, e.g. _MyWebexApp_, for your Androi
 
     ```groovy
     dependencies { 
-        compile('com.ciscowebex:androidsdk:2.7.0@aar', {
+        compile('com.ciscowebex:androidsdk:2.8.0@aar', {
             transitive = true
         })
     }
@@ -361,7 +361,7 @@ Here are some examples of how to use the Android SDK in your app.
                 if (event instanceof MessageReceived) {
                     Message message = event.getMessage();
                     // new message arrived
-                    if(message.getParent != null){
+                    if(message.getParentId() != null){
                         // threaded message
                     }
                 } else if (event instanceof MessageDeleted) {
