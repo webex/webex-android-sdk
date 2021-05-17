@@ -53,8 +53,8 @@ public class MediaEngine {
         return new MediaSession(session, false);
     }
 
-    public MediaSession createPreviveSession(MediaCapability capability, View view) {
-        WmeSession session = engine.createPreviveSession(capability, view);
+    public MediaSession createPreviewSession(MediaCapability capability, View view) {
+        WmeSession session = engine.createPreviewSession(capability, view);
         return new MediaSession(session, true);
     }
 

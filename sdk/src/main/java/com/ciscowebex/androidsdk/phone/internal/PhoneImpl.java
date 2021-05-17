@@ -382,7 +382,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         stopPreview();
         Queue.main.run(() -> {
             engine.setDisplayRotation(Utils.getScreenRotation(context));
-            previewSession = engine.createPreviveSession(createCapability(), view);
+            previewSession = engine.createPreviewSession(createCapability(), view);
             previewSession.startPreview();
         });
     }

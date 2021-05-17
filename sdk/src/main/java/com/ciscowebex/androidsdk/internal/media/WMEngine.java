@@ -182,7 +182,7 @@ public class WMEngine implements StunTraceSink {
         return session;
     }
 
-    public WmeSession createPreviveSession(MediaCapability capability, View view) {
+    public WmeSession createPreviewSession(MediaCapability capability, View view) {
         capability.setDefaultCamera(Camera.FRONT);
         WmeSession session = new WmeSession(context, devManager, capability);
         session.getCapability().addConstraints(MediaConstraint.SendAudio, MediaConstraint.ReceiveAudio);
