@@ -25,6 +25,7 @@ package com.ciscowebex.androidsdk.phone.internal;
 import com.ciscowebex.androidsdk.internal.model.FloorModel;
 import com.ciscowebex.androidsdk.internal.model.LocusMediaDirection;
 import com.ciscowebex.androidsdk.internal.model.LocusModel;
+import com.ciscowebex.androidsdk.internal.model.LocusParticipantDeviceModel;
 import com.ciscowebex.androidsdk.internal.model.LocusParticipantModel;
 import com.ciscowebex.androidsdk.phone.CallMembership;
 import com.ciscowebex.androidsdk.utils.WebexId;
@@ -33,6 +34,7 @@ import com.github.benoitdion.ln.Ln;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import me.helloworld.utils.Checker;
@@ -165,6 +167,16 @@ public class CallMembershipImpl implements CallMembership {
             return CSIs.contains(csi);
         }
         return false;
+    }
+
+    List<String> getAssociatedUrls() {
+        List<String> associatedUrls = new ArrayList<>();
+        for (LocusParticipantDeviceModel device : model.getDevices()) {
+            if (device.getIntent() != null && device.getIntent().getAssociatedWith() != null) {
+                associatedUrls.add(device.getIntent().getAssociatedWith());
+            }
+        }
+        return associatedUrls;
     }
 
     public String toString() {
