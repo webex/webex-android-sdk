@@ -756,8 +756,19 @@ public class CallImpl implements Call {
             return;
         }
         Queue.main.run(() -> {
+            List<CallMembershipImpl> unduplicateMemberships = new ArrayList<>();
+            LOOP:for (CallMembershipImpl membership : memberships) {
+                if (!membership.getAssociatedUrls().isEmpty()) {
+                    for (CallMembershipImpl m : memberships) {
+                        if (membership.getAssociatedUrls().contains(m.getModel().getUrl())) {
+                            continue LOOP;
+                        }
+                    }
+                }
+                unduplicateMemberships.add(membership);
+            }
             int count = 0;
-            for (CallMembershipImpl membership : memberships) {
+            for (CallMembershipImpl membership : unduplicateMemberships) {
                 if (membership.getModel().getState() == LocusParticipantModel.State.JOINED && !membership.isSelf()) {
                     count = count + 1;
                 }
