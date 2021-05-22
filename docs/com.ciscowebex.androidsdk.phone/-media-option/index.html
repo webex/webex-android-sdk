@@ -1,0 +1,164 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>MediaOption - sdk</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk.phone</a>&nbsp;/&nbsp;<a href="./index.html">MediaOption</a><br/>
+<br/>
+<h1>MediaOption</h1>
+<code><span class="keyword">class </span><span class="identifier">MediaOption</span></code>
+<p>A data type represents the media options of a call.</p>
+<p><strong>Since</strong><br/>
+0.1</p>
+<p><strong>Version</strong><br/>
+0.1</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-composited-video-layout/index.html">CompositedVideoLayout</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">CompositedVideoLayout</span></code>
+<p>The video layout for the active speaker and other attendees in the group video meeting.
+The layout only affects when <a href="../-phone/-video-stream-mode/index.html">Phone.VideoStreamMode</a> is <a href="../-phone/-video-stream-mode/-c-o-m-p-o-s-i-t-e-d.html">Phone.VideoStreamMode.COMPOSITED</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-composited-video-layout.html">getCompositedVideoLayout</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getCompositedVideoLayout</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-composited-video-layout/index.html"><span class="identifier">MediaOption.CompositedVideoLayout</span></a><span class="symbol">?</span></code>
+<p>Returns the video layout of the active speaker and other attendees for the group video call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-local-view.html">getLocalView</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getLocalView</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-pin.html">getPin</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getPin</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>If join as moderator, PIN should be a host key, else PIN should be a meeting password.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-remote-view.html">getRemoteView</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getRemoteView</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-sharing-view.html">getSharingView</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getSharingView</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="has-sharing.html">hasSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">hasSharing</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Whether content sharing is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="has-video.html">hasVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">hasVideo</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Whether video is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-moderator.html">isModerator</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isModerator</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>If true, join the meeting as a moderator.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-composited-video-layout.html">setCompositedVideoLayout</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setCompositedVideoLayout</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.MediaOption$setCompositedVideoLayout(com.ciscowebex.androidsdk.phone.MediaOption.CompositedVideoLayout)/compositedLayout">compositedLayout</span><span class="symbol">:</span>&nbsp;<a href="-composited-video-layout/index.html"><span class="identifier">MediaOption.CompositedVideoLayout</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set the video layout of the active speaker and other attendees for the group video call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-moderator.html">setModerator</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setModerator</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.MediaOption$setModerator(kotlin.Boolean)/moderator">moderator</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>If true, join the meeting as a moderator.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-pin.html">setPin</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setPin</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.MediaOption$setPin(kotlin.String)/pin">pin</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>If join as moderator, PIN should be a host key, else PIN should be a meeting password.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="audio-only.html">audioOnly</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">audioOnly</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">MediaOption</span></a></code>
+<p>Constructs an audio only media option.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="audio-video.html">audioVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">audioVideo</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.MediaOption.Companion$audioVideo(android.view.View, android.view.View)/localView">localView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.MediaOption.Companion$audioVideo(android.view.View, android.view.View)/remoteView">remoteView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">MediaOption</span></a></code><br/>
+<code><span class="keyword">fun </span><span class="identifier">audioVideo</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.MediaOption.Companion$audioVideo(android.util.Pair((android.view.View, )))/videoRenderViews">videoRenderViews</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/util/Pair.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">&gt;</span><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">MediaOption</span></a></code>
+<p>Constructs an audio and video media option.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="audio-video-sharing.html">audioVideoSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">audioVideoSharing</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.MediaOption.Companion$audioVideoSharing(android.util.Pair((android.view.View, )), android.view.View)/videoRenderViews">videoRenderViews</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/util/Pair.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">&gt;</span><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.MediaOption.Companion$audioVideoSharing(android.util.Pair((android.view.View, )), android.view.View)/sharingView">sharingView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">MediaOption</span></a></code>
+<p>Constructs an audio/video and share media option.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

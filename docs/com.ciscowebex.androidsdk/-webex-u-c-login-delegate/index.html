@@ -1,0 +1,66 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>WebexUCLoginDelegate - sdk</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk</a>&nbsp;/&nbsp;<a href="./index.html">WebexUCLoginDelegate</a><br/>
+<br/>
+<h1>WebexUCLoginDelegate</h1>
+<code><span class="keyword">interface </span><span class="identifier">WebexUCLoginDelegate</span></code>
+<p>An interface for all the CUCM login related event callbacks.</p>
+<p><strong>Since</strong><br/>
+3.0.0</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-u-c-logged-in.html">onUCLoggedIn</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onUCLoggedIn</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>This will notify when user is successfully login on CUCM server</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-u-c-login-failed.html">onUCLoginFailed</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onUCLoginFailed</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>This will notify app whenever CUCM server login failed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-u-c-server-connection-state-changed.html">onUCServerConnectionStateChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onUCServerConnectionStateChanged</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.WebexUCLoginDelegate$onUCServerConnectionStateChanged(com.ciscowebex.androidsdk.auth.UCLoginServerConnectionStatus, com.ciscowebex.androidsdk.auth.PhoneServiceRegistrationFailureReason)/status">status</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk.auth/-u-c-login-server-connection-status/index.html"><span class="identifier">UCLoginServerConnectionStatus</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.WebexUCLoginDelegate$onUCServerConnectionStateChanged(com.ciscowebex.androidsdk.auth.UCLoginServerConnectionStatus, com.ciscowebex.androidsdk.auth.PhoneServiceRegistrationFailureReason)/failureReason">failureReason</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk.auth/-phone-service-registration-failure-reason/index.html"><span class="identifier">PhoneServiceRegistrationFailureReason</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>This will notify app whenever CUCM server connection state changes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="show-u-c-non-s-s-o-login-view.html">showUCNonSSOLoginView</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">showUCNonSSOLoginView</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>This will notify when non SSO authentication of CUCM domain/server is required, this gives non SSO url to launch the WebView to start authentication process</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="show-u-c-s-s-o-login-view.html">showUCSSOLoginView</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">showUCSSOLoginView</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.WebexUCLoginDelegate$showUCSSOLoginView(kotlin.String)/ssoUrl">ssoUrl</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>This will notify app when SSO authentication of CUCM domain/server is required, this gives SSO URL to launch the WebView to start authentication process</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

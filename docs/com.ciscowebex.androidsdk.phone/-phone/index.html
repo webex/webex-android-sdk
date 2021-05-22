@@ -1,0 +1,411 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Phone - sdk</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk.phone</a>&nbsp;/&nbsp;<a href="./index.html">Phone</a><br/>
+<br/>
+<h1>Phone</h1>
+<code><span class="keyword">interface </span><span class="identifier">Phone</span></code>
+<p>Phone is a wrapper of the available calling related APIs</p>
+<p><strong>Since</strong><br/>
+0.1</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-audio-b-r-n-mode/index.html">AudioBRNMode</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">AudioBRNMode</span></code>
+<p>The enumeration of audio BNR mode choices, default is HP.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-default-bandwidth/index.html">DefaultBandwidth</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">DefaultBandwidth</span></code>
+<p>The enumeration of common bandwidth choices.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-facing-mode/index.html">FacingMode</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">FacingMode</span></code>
+<p>The enumeration of Camera facing modes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-h264-license-action/index.html">H264LicenseAction</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">H264LicenseAction</span></code>
+<p>The options for H.264 video codec license from Cisco Systems, Inc</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-incoming-call-listener/index.html">IncomingCallListener</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">IncomingCallListener</span></code>
+<p>The interface for a listener for incoming call</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-video-stream-mode/index.html">VideoStreamMode</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">VideoStreamMode</span></code>
+<p>The enumeration of remote video stream.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="cancel.html">cancel</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">cancel</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Cancel the currently outgoing call that has not been connected.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="dial.html">dial</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">dial</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$dial(kotlin.String, com.ciscowebex.androidsdk.phone.MediaOption, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.Call)))/dialString">dialString</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$dial(kotlin.String, com.ciscowebex.androidsdk.phone.MediaOption, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.Call)))/option">option</span><span class="symbol">:</span>&nbsp;<a href="../-media-option/index.html"><span class="identifier">MediaOption</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$dial(kotlin.String, com.ciscowebex.androidsdk.phone.MediaOption, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.Call)))/callback">callback</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Dials the given number along with the media options for call</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="disable-video-codec-activation.html">disableVideoCodecActivation</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">disableVideoCodecActivation</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Prevents the SDK from poping up an Alert for the end user to approve the use of H.264 video codec license from Cisco Systems, Inc.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="enable-asking-read-phone-state-permission.html">enableAskingReadPhoneStatePermission</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">enableAskingReadPhoneStatePermission</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$enableAskingReadPhoneStatePermission(kotlin.Boolean)/enable">enable</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Toggle to enable or disable ask for <a href="https://developer.android.com/reference/android/Manifest/permission.html#READ_PHONE_STATE">android.Manifest.permission.READ_PHONE_STATE</a> permission, true by default.
+When target SDK &gt;= 30, this permission is required to check the network state, so SDK can auto-tuning performance during calls.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="enable-audio-b-n-r.html">enableAudioBNR</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">enableAudioBNR</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$enableAudioBNR(kotlin.Boolean)/enable">enable</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Enable audio background noise removal. Default is false</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="enable-audio-enhancement-for-models.html">enableAudioEnhancementForModels</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">enableAudioEnhancementForModels</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$enableAudioEnhancementForModels(kotlin.collections.List((kotlin.String)))/models">models</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Turn on audio enhancement for the specified device models. By default,
+the audio enhancement is enable for Samsung S7/S7Edge/S8/S8+/S9/S9+/S10/S10+/S10e/Note8/Note9.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="enable-background-connection.html">enableBackgroundConnection</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">enableBackgroundConnection</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$enableBackgroundConnection(kotlin.Boolean)/enable">enable</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set true to keep Webex server connection when minimize app. Default is false.
+When set to true, app will receive notifications in background, include incoming calls, messages, space updates, membership updates, etc.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="enable-background-stream.html">enableBackgroundStream</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">enableBackgroundStream</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$enableBackgroundStream(kotlin.Boolean)/enable">enable</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set true to keep video stream(include local and remote) when minimize app, else will stop. Default is false.
+Google recommend release camera when app goes background and resume after app foreground.
+When you use picture-in-picture mode in app should set this method to true before call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-advanced-setting.html">getAdvancedSetting</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getAdvancedSetting</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$getAdvancedSetting(kotlin.reflect.KClass((com.ciscowebex.androidsdk.phone.AdvancedSetting((kotlin.Any)))))/clz">clz</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-class/index.html"><span class="identifier">KClass</span></a><span class="symbol">&lt;</span><span class="keyword">out</span>&nbsp;<a href="../-advanced-setting/index.html"><span class="identifier">AdvancedSetting</span></a><span class="symbol">&lt;</span><span class="identifier">*</span><span class="symbol">&gt;</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-advanced-setting/index.html"><span class="identifier">AdvancedSetting</span></a><span class="symbol">&lt;</span><span class="identifier">*</span><span class="symbol">&gt;</span><span class="symbol">?</span></code>
+<p>Returns value of the advanced seting that has been set.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-audio-b-n-r-mode.html">getAudioBNRMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getAudioBNRMode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-audio-b-r-n-mode/index.html"><span class="identifier">Phone.AudioBRNMode</span></a></code>
+<p>Return the audio background noise removal mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-audio-max-rx-bandwidth.html">getAudioMaxRxBandwidth</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getAudioMaxRxBandwidth</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Return the current maximum receivning bandwidth of audio stream.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-call-history.html">getCallHistory</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getCallHistory</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../com.ciscowebex.androidsdk.space/-space/index.html"><span class="identifier">Space</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code>
+<p>A collection of Space which contains call history of One to One Spaces as well as Group type Spaces</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-default-facing-mode.html">getDefaultFacingMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getDefaultFacingMode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-facing-mode/index.html"><span class="identifier">Phone.FacingMode</span></a></code>
+<p>Default camera facing mode of this phone, used as the default when dialing or answering a call. The default mode is the front camera.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-incoming-call-listener.html">getIncomingCallListener</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getIncomingCallListener</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-incoming-call-listener/index.html"><span class="identifier">Phone.IncomingCallListener</span></a><span class="symbol">?</span></code>
+<p>The listener for incoming call</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-sharing-max-rx-bandwidth.html">getSharingMaxRxBandwidth</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getSharingMaxRxBandwidth</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Return the current maximum receiving bandwidth of content sharing stream.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-video-codec-license.html">getVideoCodecLicense</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getVideoCodecLicense</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Return the text of the H.264 codec license from Cisco Systems, Inc.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-video-codec-license-u-r-l.html">getVideoCodecLicenseURL</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getVideoCodecLicenseURL</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Return the URL of the H.264 codec license from Cisco Systems, Inc.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-video-max-rx-bandwidth.html">getVideoMaxRxBandwidth</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getVideoMaxRxBandwidth</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Return the current maximum receiving bandwidth of video stream.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-video-max-tx-bandwidth.html">getVideoMaxTxBandwidth</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getVideoMaxTxBandwidth</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Return the current maximum sending bandwidth of video stream.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-video-stream-mode.html">getVideoStreamMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getVideoStreamMode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-video-stream-mode/index.html"><span class="identifier">Phone.VideoStreamMode</span></a></code>
+<p>Return the video stream mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-audio-b-n-r-enable.html">isAudioBNREnable</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isAudioBNREnable</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>True if audio background noise removal is open, otherwise false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-hardware-acceleration-enabled.html">isHardwareAccelerationEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isHardwareAccelerationEnabled</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Return True if Google hardware media codec is turned on for video. Otherwise, false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="request-video-codec-activation.html">requestVideoCodecActivation</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">requestVideoCodecActivation</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$requestVideoCodecActivation(android.app.AlertDialog.Builder, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.Phone.H264LicenseAction)))/builder">builder</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/app/AlertDialog/Builder.html"><span class="identifier">Builder</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$requestVideoCodecActivation(android.app.AlertDialog.Builder, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.Phone.H264LicenseAction)))/callback">callback</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="-h264-license-action/index.html"><span class="identifier">Phone.H264LicenseAction</span></a><span class="symbol">&gt;</span><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Pops up an Alert for the end user to approve the use of H.264 codec license from Cisco Systems, Inc.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-advanced-setting.html">setAdvancedSetting</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setAdvancedSetting</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setAdvancedSetting(com.ciscowebex.androidsdk.phone.AdvancedSetting((kotlin.Any)))/setting">setting</span><span class="symbol">:</span>&nbsp;<a href="../-advanced-setting/index.html"><span class="identifier">AdvancedSetting</span></a><span class="symbol">&lt;</span><span class="identifier">*</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set advanced settings for call. Only effective if set before the start of call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-audio-b-n-r-mode.html">setAudioBNRMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setAudioBNRMode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setAudioBNRMode(com.ciscowebex.androidsdk.phone.Phone.AudioBRNMode)/mode">mode</span><span class="symbol">:</span>&nbsp;<a href="-audio-b-r-n-mode/index.html"><span class="identifier">Phone.AudioBRNMode</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set the audio background noise removal mode, default value is <a href="-audio-b-r-n-mode/-h-p.html">AudioBRNMode.HP</a>.
+This method only effective if set <a href="enable-audio-b-n-r.html">Phone.enableAudioBNR</a> to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-audio-max-rx-bandwidth.html">setAudioMaxRxBandwidth</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setAudioMaxRxBandwidth</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setAudioMaxRxBandwidth(kotlin.Int)/bandwidth">bandwidth</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set the max receivning bandwidth for audio in unit bps for the call.
+Only effective if set before the start of call.
+if 0, default value of 64 * 1000 is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-default-facing-mode.html">setDefaultFacingMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setDefaultFacingMode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setDefaultFacingMode(com.ciscowebex.androidsdk.phone.Phone.FacingMode)/mode">mode</span><span class="symbol">:</span>&nbsp;<a href="-facing-mode/index.html"><span class="identifier">Phone.FacingMode</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set default camera facing mode of this phone, used as the default when dialing or answering a call. The setting is not persistent.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-hardware-acceleration-enabled.html">setHardwareAccelerationEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setHardwareAccelerationEnabled</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setHardwareAccelerationEnabled(kotlin.Boolean)/enable">enable</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Turn on/off Google hardware media codec for video. By doing hardware codec,
+android devices can do high definition (720p@30fps) video calls, but please note,
+since the hardware codec is high depend on android devices, some devices support hardware codec not very well.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-incoming-call-listener.html">setIncomingCallListener</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setIncomingCallListener</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setIncomingCallListener(com.ciscowebex.androidsdk.phone.Phone.IncomingCallListener)/listener">listener</span><span class="symbol">:</span>&nbsp;<a href="-incoming-call-listener/index.html"><span class="identifier">Phone.IncomingCallListener</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set the listener to listen to the incoming call to this Phone.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-sharing-max-rx-bandwidth.html">setSharingMaxRxBandwidth</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setSharingMaxRxBandwidth</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setSharingMaxRxBandwidth(kotlin.Int)/bandwidth">bandwidth</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set the max receiving bandwidth for content sharing in unit bps for the call.
+Only effective if set before the start of call.
+if 0, default value of 4000*1000 is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-video-max-rx-bandwidth.html">setVideoMaxRxBandwidth</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setVideoMaxRxBandwidth</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setVideoMaxRxBandwidth(kotlin.Int)/bandwidth">bandwidth</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set the max receiving bandwidth for video in unit bps for the call.
+Only effective if set before the start of call.
+if 0, default value of 2000*1000 is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-video-max-tx-bandwidth.html">setVideoMaxTxBandwidth</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setVideoMaxTxBandwidth</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setVideoMaxTxBandwidth(kotlin.Int)/bandwidth">bandwidth</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set the max sending bandwidth for video in unit bps for the call.
+Only effective if set before the start of call.
+if 0, default value of 2000*1000 is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-video-stream-mode.html">setVideoStreamMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setVideoStreamMode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setVideoStreamMode(com.ciscowebex.androidsdk.phone.Phone.VideoStreamMode)/videoStreamMode">videoStreamMode</span><span class="symbol">:</span>&nbsp;<a href="-video-stream-mode/index.html"><span class="identifier">Phone.VideoStreamMode</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set the video stream mode, default value is <a href="-video-stream-mode/-c-o-m-p-o-s-i-t-e-d.html">VideoStreamMode.COMPOSITED</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="start-preview.html">startPreview</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">startPreview</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$startPreview(android.view.View)/view">view</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Render a preview of the local party before the call is answered.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="stop-preview.html">stopPreview</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">stopPreview</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Stop rendering the preview of the local party.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

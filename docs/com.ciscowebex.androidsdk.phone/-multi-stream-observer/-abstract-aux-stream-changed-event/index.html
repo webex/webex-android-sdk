@@ -1,0 +1,112 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>MultiStreamObserver.AbstractAuxStreamChangedEvent - sdk</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../../index.html">com.ciscowebex.androidsdk.phone</a>&nbsp;/&nbsp;<a href="../index.html">MultiStreamObserver</a>&nbsp;/&nbsp;<a href="./index.html">AbstractAuxStreamChangedEvent</a><br/>
+<br/>
+<h1>AbstractAuxStreamChangedEvent</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">AbstractAuxStreamChangedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../-call-observer/-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="../-aux-stream-changed-event/index.html"><span class="identifier">MultiStreamObserver.AuxStreamChangedEvent</span></a></code>
+<p>Base class for the event of an AuxStreamChangedEvent</p>
+<p><strong>Since</strong><br/>
+2.0.0</p>
+<h3>Inherited Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../-call-observer/-abstract-call-event/m-call.html">mCall</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">mCall</span><span class="symbol">: </span><a href="../../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-aux-stream.html">getAuxStream</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getAuxStream</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../-aux-stream/index.html"><span class="identifier">AuxStream</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="to-string.html">toString</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">toString</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../-call-observer/-abstract-call-event/get-call.html">getCall</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getCall</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-aux-stream-closed-event/index.html">AuxStreamClosedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AuxStreamClosedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">MultiStreamObserver.AbstractAuxStreamChangedEvent</span></a></code>
+<p>This will be triggered when auxiliary stream is closed successfully or unsuccessfully.
+On this event, the client can display the view</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-aux-stream-opened-event/index.html">AuxStreamOpenedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AuxStreamOpenedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">MultiStreamObserver.AbstractAuxStreamChangedEvent</span></a></code>
+<p>This will be triggered when auxiliary stream is opened successfully or unsuccessfully.
+On this event, the client can hide the view</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-aux-stream-person-changed-event/index.html">AuxStreamPersonChangedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AuxStreamPersonChangedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">MultiStreamObserver.AbstractAuxStreamChangedEvent</span></a></code>
+<p>This will be triggered when the person represented this auxiliary stream is changed</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-aux-stream-sending-video-event/index.html">AuxStreamSendingVideoEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AuxStreamSendingVideoEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">MultiStreamObserver.AbstractAuxStreamChangedEvent</span></a></code>
+<p>This will be triggered when the network is unstable or the represented person muted or unmuted his video,
+and client can get the detail from the property</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-aux-stream-size-changed-event/index.html">AuxStreamSizeChangedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AuxStreamSizeChangedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">MultiStreamObserver.AbstractAuxStreamChangedEvent</span></a></code>
+<p>This will be triggered when the auxiliary stream view size is changed, and client can get the detail from the property</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
