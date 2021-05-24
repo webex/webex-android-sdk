@@ -1,0 +1,349 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'maven-publish'
+apply plugin: 'jacoco'
+
+ext {
+    moduleName = 'Cisco Webex Android SDK'
+    moduleGroupId = 'com.ciscowebex'
+    moduleArtifactId = 'androidsdk'
+    moduleVersion = '2.8.0.3-SNAPSHOT'
+    moduleVersionCode = 28003
+    moduleDescription = 'Cisco Webex SDK for Android'
+    moduleSiteUrl = 'https://developer.webex.com/docs/sdks/android'
+    moduleProjectUrl = 'https://github.com/webex/webex-android-sdk'
+    moduleGitUrl = 'https://github.com/webex/webex-android-sdk/tree/master'
+    moduleConnectionUrl = 'scm:git:git://github.com/webex/webex-android-sdk.git'
+    moduleDeveloperConnectionUrl = 'scm:git:ssh://github.com:webex/webex-android-sdk.git'
+    moduleLicenseName = 'MIT License'
+    moduleLicenseURL = 'https://raw.githubusercontent.com/webex/webex-android-sdk/master/LICENSE'
+    moduleDeveloperId = 'devsupport'
+    moduleDeveloperName = 'Cisco Webex for Developer'
+    moduleDeveloperEmail = 'devsupport@ciscowebex.com'
+    moduleDeveloperOrganization = 'Cisco System Inc'
+    moduleDeveloperOrganizationURL = 'https://www.webex.com/'
+
+    moduleWMEVersion = '10.12.2.11'
+}
+
+Properties properties = new Properties()
+if (project.rootProject.file('local.properties').canRead()) {
+    properties.load(project.rootProject.file("local.properties").newDataInputStream())
+}
+
+kotlin {
+}
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.3"
+    defaultConfig {
+        minSdkVersion 24
+        testInstrumentationRunner "com.ciscowebex.androidsdk.WebexTestRunner"
+        multiDexEnabled true
+        versionCode moduleVersionCode
+        versionName moduleVersion
+
+        buildConfigField "String", "BUILD_TIME", "\"${buildTime()}\""
+        buildConfigField "String", "BUILD_REVISION", "\"${revision()}\""
+        buildConfigField "boolean", "INTEGRATION_TEST", "false"
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+        debug {
+            buildConfigField "String", "JWT", getPropertyOrDefault("JWT")
+        }
+        jenkins {
+            initWith debug
+            testCoverageEnabled true
+        }
+    }
+    testBuildType "debug"
+    dexOptions {
+        preDexLibraries = false
+        javaMaxHeapSize "4g"
+        dexInProcess false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    testOptions {
+        unitTests.all {
+            testLogging {
+                events "passed", "skipped", "failed", "standardOut", "standardError"
+                outputs.upToDateWhen { false }
+                showStandardStreams = true
+            }
+            jacoco.includeNoLocationClasses = true
+        }
+    }
+    if (JavaVersion.current().isJava8Compatible()) {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+    }
+    def libraryModuleName = 'sdk'
+    def aarName = libraryModuleName + '-debug.aar'
+    def outputAarDir = rootProject.file(libraryModuleName + '/build/outputs/aar')
+    def outputAarUnzipedDir = rootProject.file(libraryModuleName + '/build/outputs/aar/unziped')
+    def aarReleaseFile = rootProject.file(libraryModuleName + '/build/outputs/aar/' + aarName)
+    task unzipAar(type: Copy) {
+        from zipTree(aarReleaseFile)
+        into outputAarUnzipedDir
+    }
+    task addLicenseFileInUnzipedAar(type: Copy, dependsOn: 'unzipAar') {
+        def fromDir = rootProject.file('.')
+        from fromDir
+        into outputAarUnzipedDir
+        include 'LICENSE'
+        include 'CISCO_API_LICENSE.pdf'
+    }
+    task reZipAar(type: Zip, dependsOn: 'addLicenseFileInUnzipedAar') {
+        from outputAarUnzipedDir
+        include '*'
+        include '*/*'
+        include '**/**/*'
+        archiveName aarName
+        destinationDir(outputAarDir)
+    }
+    afterEvaluate {
+        bundleReleaseAar.finalizedBy(reZipAar)
+        bundleDebugAar.finalizedBy(reZipAar)
+    }
+    packagingOptions {
+        exclude 'META-INF/rxjava.properties'
+    }
+    productFlavors {
+    }
+}
+
+publishing {
+
+    def repo_username = project.properties.CEC_Username
+    def repo_password = project.properties.ArtifactoryApiKey
+
+    publications {
+        maven(MavenPublication) {
+            groupId moduleGroupId
+            artifactId moduleArtifactId
+            version moduleVersion
+            artifact "$buildDir/outputs/aar/sdk-debug.aar"
+
+            artifact javadocJar
+            artifact sourcesJar
+
+            pom.withXml {
+                def dependenciesNode = asNode().appendNode('dependencies')
+                configurations.implementation.allDependencies.each { dependency ->
+                    if (dependency.group?.trim()) {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', dependency.group)
+                        dependencyNode.appendNode('artifactId', dependency.name)
+                        dependencyNode.appendNode('version', dependency.version)
+                        if (!dependency.transitive || dependency.name == 'androidsdk_commlib') {
+                            dependencyNode.appendNode('type', 'aar')
+                        }
+                    }
+                }
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name moduleName
+                    description moduleDescription
+                    url moduleSiteUrl
+                    scm {
+                        url moduleGitUrl
+                        connection moduleConnectionUrl
+                        developerConnection moduleDeveloperConnectionUrl
+                    }
+                    licenses {
+                        license {
+                            name moduleLicenseName
+                            url moduleLicenseURL
+                        }
+                    }
+                    developers {
+                        developer {
+                            id moduleDeveloperId
+                            name moduleDeveloperName
+                            email moduleDeveloperEmail
+                            organization moduleDeveloperOrganization
+                            organizationUrl moduleDeveloperOrganizationURL
+                        }
+                    }
+                }
+            }
+        }
+
+        WME(MavenPublication) {
+            groupId "com.webex"
+            artifactId "wme4android-release"
+            version moduleWMEVersion
+            artifact rootDir.absolutePath + '/deps/wme4android-release-' + moduleWMEVersion + '.aar'
+            pom.withXml {
+                asNode().appendNode('description', 'Cisco Webex Media Engine')
+                asNode().appendNode('name', 'Cisco Webex Media Engine')
+                asNode().children().last() + {
+                    resolveStrategy = DELEGATE_FIRST
+                    url moduleSiteUrl
+                    scm {
+                        url moduleGitUrl
+                        connection moduleConnectionUrl
+                        developerConnection moduleDeveloperConnectionUrl
+                    }
+                    licenses {
+                        license {
+                            name 'Commercial'
+                            url 'https://www.cisco.com/c/en/us/products/end-user-license-agreement.html'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id moduleDeveloperId
+                            name moduleDeveloperName
+                            email moduleDeveloperEmail
+                            organization moduleDeveloperOrganization
+                            organizationUrl 'https://www.webex.com/products/teams/'
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name 'DevSnapshot'
+            url "https://engci-maven.cisco.com/artifactory/webexsdk-SNAPSHOT/"
+            credentials {
+                username repo_username
+                password repo_password
+            }
+        }
+
+        maven {
+            name 'Release'
+            url "https://engci-maven.cisco.com/artifactory/webexsdk/"
+            credentials {
+                username repo_username
+                password repo_password
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "com.webex:wme4android-release:$moduleWMEVersion@aar"
+    implementation 'com.google.code.gson:gson:2.7'
+    implementation 'com.github.benoitdion.ln:ln:0.1.2'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.0'
+    implementation 'com.android.support:support-annotations:27.1.0'
+    implementation 'com.android.support:support-compat:27.1.0'
+    implementation 'com.nimbusds:nimbus-jose-jwt:8.17.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.68'
+    implementation 'joda-time:joda-time:2.10'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support:support-annotations:27.1.0'
+    androidTestImplementation 'com.android.support.test:runner:1.0.0'
+}
+
+static def buildTime() {
+    return new Date().format("yyyy_MM_dd_HH_mm_ss")
+}
+
+
+
+def revision() {
+    def code = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        standardOutput = code
+    }
+    return code.toString().replaceAll("\n", "")
+}
+
+def getPropertyOrDefault(prop, defaultValue = '') {
+    def value = System.getProperty(prop)
+    return value ? '\"' + value + '\"' : '\"' + defaultValue + '\"'
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from "../LICENSE"
+    from "../CISCO_API_LICENSE.pdf"
+    from android.sourceSets.main.java.srcDirs
+}
+
+task javadoc(type: Javadoc) {
+    doFirst {
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        android.libraryVariants.all { variant ->
+            description "Generates Javadoc for $variant.name."
+            ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+            owner.classpath += files(variant.javaCompiler.classpath.files) + files(ext.androidJar)
+        }
+    }
+    source = android.sourceSets.main.java.srcDirs
+    options.memberLevel = JavadocMemberLevel.PUBLIC
+    options.encoding('UTF-8')
+    options.locale('en_US')
+    options.setUse(true)
+    options.author(true)
+    options.version(true)
+    options.windowTitle(moduleName + ' ' + moduleVersion)
+    options.docTitle(moduleName + ' ' + moduleVersion)
+    options.links("http://docs.oracle.com/javase/7/docs/api/");
+    options.links("http://d.android.com/reference/");
+    options.footer('Copyright &#169; 2016&#8211;2021 Cisco System Inc.  All Rights Reserved.')
+    exclude '**/BuildConfig.java'
+    exclude '**/R.java'
+    exclude '**/internal/**'
+    exclude '**/utils/**'
+    failOnError false
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+jacoco {
+    toolVersion = "0.7.5+"
+}
+
+task jacocoTestReport(type: JacocoReport, dependsOn: "testDebugUnitTest") {
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports"
+
+    classDirectories = fileTree(
+            dir: '../sdk/build/intermediates/classes/debug',
+            excludes: ['**/R.class',
+                       '**/R$*.class',
+                       '**/*$ViewInjector*.*',
+                       '**/BuildConfig.*',
+                       '**/Manifest*.*']
+    )
+
+    def coverageSourceDirs = ['../sdk/src/main/java']
+    additionalSourceDirs = files(coverageSourceDirs)
+    sourceDirectories = files(coverageSourceDirs)
+    executionData = fileTree(dir: "../sdk", includes: [
+            "jacoco/testDebugUnitTest.exec",
+            "outputs/code-coverage/connected/*.ec"
+    ])
+
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+}
