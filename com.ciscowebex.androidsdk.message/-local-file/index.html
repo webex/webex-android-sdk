@@ -1,0 +1,114 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>LocalFile - sdk</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk.message</a>&nbsp;/&nbsp;<a href="./index.html">LocalFile</a><br/>
+<br/>
+<h1>LocalFile</h1>
+<code><span class="keyword">class </span><span class="identifier">LocalFile</span></code>
+<p>A data type represents a local file.</p>
+<p><strong>Since</strong><br/>
+1.4.0</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-thumbnail/index.html">Thumbnail</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">Thumbnail</span></code>
+<p>A data type represents a thumbnail of this local file.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">LocalFile</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.message.LocalFile$<init>(java.io.File, kotlin.String, com.ciscowebex.androidsdk.message.LocalFile.Thumbnail, com.ciscowebex.androidsdk.message.MessageClient.ProgressHandler)/file">file</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/File.html"><span class="identifier">File</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.message.LocalFile$<init>(java.io.File, kotlin.String, com.ciscowebex.androidsdk.message.LocalFile.Thumbnail, com.ciscowebex.androidsdk.message.MessageClient.ProgressHandler)/mime">mime</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.message.LocalFile$<init>(java.io.File, kotlin.String, com.ciscowebex.androidsdk.message.LocalFile.Thumbnail, com.ciscowebex.androidsdk.message.MessageClient.ProgressHandler)/thumbnail">thumbnail</span><span class="symbol">:</span>&nbsp;<a href="-thumbnail/index.html"><span class="identifier">LocalFile.Thumbnail</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.message.LocalFile$<init>(java.io.File, kotlin.String, com.ciscowebex.androidsdk.message.LocalFile.Thumbnail, com.ciscowebex.androidsdk.message.MessageClient.ProgressHandler)/progressHandler">progressHandler</span><span class="symbol">:</span>&nbsp;<a href="../-message-client/-progress-handler/index.html"><span class="identifier">MessageClient.ProgressHandler</span></a><span class="symbol">?</span><span class="symbol">)</span></code>
+<p>Constructs a <a href="#">LocalFile</a> object out of a local <a href="https://developer.android.com/reference/java/io/File.html">java.io.File</a>.</p>
+<code><span class="identifier">LocalFile</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>A data type represents a local file.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-file.html">getFile</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getFile</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/io/File.html"><span class="identifier">File</span></a><span class="symbol">?</span></code>
+<p>Returns the local <a href="https://developer.android.com/reference/java/io/File.html">java.io.File</a> object to be uploaded.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-mime-type.html">getMimeType</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getMimeType</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the MIME type of this file.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-name.html">getName</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getName</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the display name of the uploaded file.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-path.html">getPath</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getPath</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the local path to the file to be uploaded..</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-progress-handler.html">getProgressHandler</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getProgressHandler</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-message-client/-progress-handler/index.html"><span class="identifier">MessageClient.ProgressHandler</span></a><span class="symbol">?</span></code>
+<p>Returns the MessageClient.ProgressHandler used when uploading this file.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-size.html">getSize</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getSize</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a></code>
+<p>Returns the size in bytes of the file.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-thumbnail.html">getThumbnail</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getThumbnail</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-thumbnail/index.html"><span class="identifier">LocalFile.Thumbnail</span></a><span class="symbol">?</span></code>
+<p>Return the thumbnail for the local file.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,278 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Webex - sdk</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk</a>&nbsp;/&nbsp;<a href="./index.html">Webex</a><br/>
+<br/>
+<h1>Webex</h1>
+<code><span class="keyword">class </span><span class="identifier">Webex</span></code>
+<p>Webex object is the entry point to use this Cisco Webex Android SDK.
+Constructs a new Webex object with an <a href="../../com.ciscowebex.androidsdk.auth/-authenticator/index.html">Authenticator</a> and Application</p>
+<h3>Parameters</h3>
+<p><a name="application"></a>
+<code>application</code> - The android application</p>
+<p><a name="authenticator"></a>
+<code>authenticator</code> - The authentication strategy for this SDK</p>
+<p><strong>Since</strong><br/>
+0.1</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-log-level/index.html">LogLevel</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">LogLevel</span></code>
+<p>The enumeration of log message level</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Webex</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$<init>(android.app.Application, com.ciscowebex.androidsdk.auth.Authenticator)/application">application</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/app/Application.html"><span class="identifier">Application</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$<init>(android.app.Application, com.ciscowebex.androidsdk.auth.Authenticator)/authenticator">authenticator</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk.auth/-authenticator/index.html"><span class="identifier">Authenticator</span></a><span class="symbol">)</span></code>
+<p>Webex object is the entry point to use this Cisco Webex Android SDK.
+Constructs a new Webex object with an <a href="../../com.ciscowebex.androidsdk.auth/-authenticator/index.html">Authenticator</a> and Application</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="authenticator.html">authenticator</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">authenticator</span><span class="symbol">: </span><a href="../../com.ciscowebex.androidsdk.auth/-authenticator/index.html"><span class="identifier">Authenticator</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="delegate.html">delegate</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">delegate</span><span class="symbol">: </span><a href="../-webex-u-c-login-delegate/index.html"><span class="identifier">WebexUCLoginDelegate</span></a><span class="symbol">?</span></code>
+<p>Register WebexDelegate instance to receive all the webex event callbacks</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="memberships.html">memberships</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">memberships</span><span class="symbol">: </span><a href="../../com.ciscowebex.androidsdk.membership/-membership-client/index.html"><span class="identifier">MembershipClient</span></a></code>
+<p>MembershipClient is a client wrapper of Cisco Webex Membership related APIs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="messages.html">messages</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">messages</span><span class="symbol">: </span><a href="../../com.ciscowebex.androidsdk.message/-message-client/index.html"><span class="identifier">MessageClient</span></a></code>
+<p>MessageClient is a client wrapper of Cisco Webex Messages related APIs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="people.html">people</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">people</span><span class="symbol">: </span><a href="../../com.ciscowebex.androidsdk.people/-person-client/index.html"><span class="identifier">PersonClient</span></a></code>
+<p>PersonClient is a client wrapper of Cisco Webex Person</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="phone.html">phone</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">phone</span><span class="symbol">: </span><a href="../../com.ciscowebex.androidsdk.phone/-phone/index.html"><span class="identifier">Phone</span></a></code>
+<p>Phone is a wrapper of the available calling related APIs</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="spaces.html">spaces</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">spaces</span><span class="symbol">: </span><a href="../../com.ciscowebex.androidsdk.space/-space-client/index.html"><span class="identifier">SpaceClient</span></a></code>
+<p>SpaceClient is a client wrapper of Cisco Webex Space related APIs such as create, update, delete etc.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="team-membership-client.html">teamMembershipClient</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">teamMembershipClient</span><span class="symbol">: </span><a href="../../com.ciscowebex.androidsdk.team/-team-membership-client/index.html"><span class="identifier">TeamMembershipClient</span></a></code>
+<p>TeamMembershipClient is a client wrapper of Cisco Webex Teams Membership related APIs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="teams.html">teams</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">teams</span><span class="symbol">: </span><a href="../../com.ciscowebex.androidsdk.team/-team-client/index.html"><span class="identifier">TeamClient</span></a></code>
+<p>TeamClient is a client wrapper of Cisco Webex Teams APIs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="webhooks.html">webhooks</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">webhooks</span><span class="symbol">: </span><a href="../../com.ciscowebex.androidsdk.webhook/-webhook-client/index.html"><span class="identifier">WebhookClient</span></a></code>
+<p>Webhooks allow the application to be notified via HTTP (or HTTPS?) when a specific event occurs in Cisco Webex, e.g. a new message is posted into a specific space.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="base64-decode.html">base64Decode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">base64Decode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$base64Decode(kotlin.String)/encodedResource">encodedResource</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Decodes the base64 encodedResource and returns the decoded string.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="base64-encode.html">base64Encode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">base64Encode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$base64Encode(com.ciscowebex.androidsdk.ResourceType, kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((kotlin.String)))/type">type</span><span class="symbol">:</span>&nbsp;<a href="../-resource-type/index.html"><span class="identifier">ResourceType</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$base64Encode(com.ciscowebex.androidsdk.ResourceType, kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((kotlin.String)))/resource">resource</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$base64Encode(com.ciscowebex.androidsdk.ResourceType, kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((kotlin.String)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Encodes the resource to base64 string</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="enable-console-logger.html">enableConsoleLogger</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">enableConsoleLogger</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$enableConsoleLogger(kotlin.Boolean)/enable">enable</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Enables console logging</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-call-id-by-notification-id.html">getCallIdByNotificationId</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getCallIdByNotificationId</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$getCallIdByNotificationId(kotlin.String, com.ciscowebex.androidsdk.phone.NotificationCallType)/notificationId">notificationId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$getCallIdByNotificationId(kotlin.String, com.ciscowebex.androidsdk.phone.NotificationCallType)/callType">callType</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk.phone/-notification-call-type/index.html"><span class="identifier">NotificationCallType</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Returns the actual call id of the call based on callType.
+For webex calls, webhooks return session Id of Locus, which should be used to get call id
+For cucm calls, pushrest server provides push id, which should be used to get call id</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="getlog-file-uri.html">getlogFileUri</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getlogFileUri</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$getlogFileUri(kotlin.Boolean)/includelastRunLog">includelastRunLog</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/net/Uri.html"><span class="identifier">Uri</span></a></code>
+<p>Returns file URI where all the logs are stored</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-u-c-server-connection-status.html">getUCServerConnectionStatus</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getUCServerConnectionStatus</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../com.ciscowebex.androidsdk.auth/-u-c-login-server-connection-status/index.html"><span class="identifier">UCLoginServerConnectionStatus</span></a></code>
+<p>Get the CUCM server connection status.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-version.html">getVersion</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getVersion</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Get current SDK version</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="initialize.html">initialize</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">initialize</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$initialize(com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/java/lang/Void.html"><span class="identifier">Void</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Initializes the WebexSDK. This method should be called before invoking any other API</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-u-c-logged-in.html">isUCLoggedIn</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isUCLoggedIn</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns <code>true</code> if user already logged on CUCM server, false otherwise</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-c-u-c-m-credential.html">setCUCMCredential</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setCUCMCredential</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$setCUCMCredential(kotlin.String, kotlin.String)/username">username</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$setCUCMCredential(kotlin.String, kotlin.String)/password">password</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Setting a CUCM credentials in required to authenticate while doing non SSO login.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-log-level.html">setLogLevel</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setLogLevel</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$setLogLevel(com.ciscowebex.androidsdk.Webex.LogLevel)/logLevel">logLevel</span><span class="symbol">:</span>&nbsp;<a href="-log-level/index.html"><span class="identifier">Webex.LogLevel</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set the log level of the logging.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-u-c-domain-server-url.html">setUCDomainServerUrl</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setUCDomainServerUrl</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$setUCDomainServerUrl(kotlin.String, kotlin.String)/ucDomain">ucDomain</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.Webex$setUCDomainServerUrl(kotlin.String, kotlin.String)/serverUrl">serverUrl</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sets the CUCM server URL and serverUrl through which CUCM call will placed</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-a-p-p_-n-a-m-e.html">APP_NAME</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">APP_NAME</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-a-p-p_-v-e-r-s-i-o-n.html">APP_VERSION</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">APP_VERSION</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

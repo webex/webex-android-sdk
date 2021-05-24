@@ -1,0 +1,168 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>CallObserver.MediaChangedEvent - sdk</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk.phone</a>&nbsp;/&nbsp;<a href="index.html">CallObserver</a>&nbsp;/&nbsp;<a href="./-media-changed-event.html">MediaChangedEvent</a><br/>
+<br/>
+<h1>MediaChangedEvent</h1>
+<code><span class="keyword">interface </span><span class="identifier">MediaChangedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-call-event/index.html"><span class="identifier">CallObserver.CallEvent</span></a></code>
+<p>Media change event</p>
+<p><strong>Since</strong><br/>
+0.1</p>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-call-event/get-call.html">getCall</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getCall</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-active-speaker-changed-event/index.html">ActiveSpeakerChangedEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ActiveSpeakerChangedEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Active Speaker has changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-camera-switched/index.html">CameraSwitched</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">CameraSwitched</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Camera FacingMode on local device has switched.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-local-sharing-view-size-changed/index.html">LocalSharingViewSizeChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">LocalSharingViewSizeChanged</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Local video rendering view size has changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-local-video-view-size-changed/index.html">LocalVideoViewSizeChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">LocalVideoViewSizeChanged</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Local video rendering view size has changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-receiving-audio/index.html">ReceivingAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ReceivingAudio</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party muted or unmuted the audio.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-receiving-sharing/index.html">ReceivingSharing</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ReceivingSharing</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party muted or unmuted the remote content sharing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-receiving-video/index.html">ReceivingVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ReceivingVideo</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party muted or unmuted the video.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-sending-audio-event/index.html">RemoteSendingAudioEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteSendingAudioEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the remote party muted or unmuted the audio.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-sending-sharing-event/index.html">RemoteSendingSharingEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteSendingSharingEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the remote party muted or unmuted the content sharing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-sending-video-event/index.html">RemoteSendingVideoEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteSendingVideoEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the remote party muted or unmuted the video.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-sharing-view-size-changed/index.html">RemoteSharingViewSizeChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteSharingViewSizeChanged</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Remote sharing rendering view size has changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-remote-video-view-size-changed/index.html">RemoteVideoViewSizeChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RemoteVideoViewSizeChanged</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>Remote video rendering view size has changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-sending-audio/index.html">SendingAudio</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SendingAudio</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party muted or unmuted the audio.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-sending-sharing-event/index.html">SendingSharingEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SendingSharingEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party started or stopped the content sharing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-sending-video/index.html">SendingVideo</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SendingVideo</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="./-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This might be triggered when the local party muted or unmuted the video.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

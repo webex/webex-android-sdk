@@ -1,0 +1,53 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>MembershipObserver.MembershipMessageSeen - sdk</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../../index.html">com.ciscowebex.androidsdk.membership</a>&nbsp;/&nbsp;<a href="../index.html">MembershipObserver</a>&nbsp;/&nbsp;<a href="./index.html">MembershipMessageSeen</a><br/>
+<br/>
+<h1>MembershipMessageSeen</h1>
+<code><span class="keyword">class </span><span class="identifier">MembershipMessageSeen</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../../com.ciscowebex.androidsdk/-webex-event/-base/index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="../-membership-event.html"><span class="identifier">MembershipObserver.MembershipEvent</span></a></code>
+<p>The event when a membership has sent a read receipt</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-last-seen-message-id.html">getLastSeenMessageId</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getLastSeenMessageId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the id of last message read by the membership.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-membership.html">getMembership</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getMembership</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../-membership/index.html"><span class="identifier">Membership</span></a><span class="symbol">?</span></code>
+<p>Returns the created membership.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../../com.ciscowebex.androidsdk/-webex-event/-base/get-actor-id.html">getActorId</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getActorId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the identifier of the user that caused the event to be sent. For example, for a messsage received event,
+the author of the message will be the actor. For a membership deleted event, the actor is the person who removed the user
+from space.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

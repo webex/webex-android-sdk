@@ -1,0 +1,87 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>WebexEvent - sdk</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk</a>&nbsp;/&nbsp;<a href="./index.html">WebexEvent</a><br/>
+<br/>
+<h1>WebexEvent</h1>
+<code><span class="keyword">interface </span><span class="identifier">WebexEvent</span></code>
+<p>Interface for all Webex events.</p>
+<p><strong>Since</strong><br/>
+2.3.0</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-base/index.html">Base</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">Base</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent</span></a></code>
+<p>Base class for all Webex events.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-actor-id.html">getActorId</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getActorId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the identifier of the user that caused the event to be sent. For example, for a messsage received event,
+the author of the message will be the actor. For a membership deleted event, the actor is the person who removed the user
+from space.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-base/index.html">Base</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">Base</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent</span></a></code>
+<p>Base class for all Webex events.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../com.ciscowebex.androidsdk.membership/-membership-observer/-membership-event.html">MembershipEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">MembershipEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent</span></a></code>
+<p>Mark interface for all membership events.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../com.ciscowebex.androidsdk.message/-message-observer/-message-event.html">MessageEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">MessageEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent</span></a></code>
+<p>Marker interface for all message events.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../com.ciscowebex.androidsdk.space/-space-observer/-space-event.html">SpaceEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">SpaceEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">WebexEvent</span></a></code>
+<p>Marker interface for all space events.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

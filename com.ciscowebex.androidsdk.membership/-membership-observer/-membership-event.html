@@ -1,0 +1,71 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>MembershipObserver.MembershipEvent - sdk</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk.membership</a>&nbsp;/&nbsp;<a href="index.html">MembershipObserver</a>&nbsp;/&nbsp;<a href="./-membership-event.html">MembershipEvent</a><br/>
+<br/>
+<h1>MembershipEvent</h1>
+<code><span class="keyword">interface </span><span class="identifier">MembershipEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-webex-event/index.html"><span class="identifier">WebexEvent</span></a></code>
+<p>Mark interface for all membership events.</p>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../com.ciscowebex.androidsdk/-webex-event/get-actor-id.html">getActorId</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getActorId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the identifier of the user that caused the event to be sent. For example, for a messsage received event,
+the author of the message will be the actor. For a membership deleted event, the actor is the person who removed the user
+from space.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-membership-created/index.html">MembershipCreated</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipCreated</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-webex-event/-base/index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="./-membership-event.html"><span class="identifier">MembershipObserver.MembershipEvent</span></a></code>
+<p>The event when a user is added to a space.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-deleted/index.html">MembershipDeleted</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipDeleted</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-webex-event/-base/index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="./-membership-event.html"><span class="identifier">MembershipObserver.MembershipEvent</span></a></code>
+<p>The event when a user is removed from a space.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-message-seen/index.html">MembershipMessageSeen</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipMessageSeen</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-webex-event/-base/index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="./-membership-event.html"><span class="identifier">MembershipObserver.MembershipEvent</span></a></code>
+<p>The event when a membership has sent a read receipt</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-membership-updated/index.html">MembershipUpdated</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MembershipUpdated</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-webex-event/-base/index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="./-membership-event.html"><span class="identifier">MembershipObserver.MembershipEvent</span></a></code>
+<p>The event when a membership's properties changed.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

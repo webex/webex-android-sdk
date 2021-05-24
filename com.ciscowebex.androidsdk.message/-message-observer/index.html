@@ -1,0 +1,89 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>MessageObserver - sdk</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk.message</a>&nbsp;/&nbsp;<a href="./index.html">MessageObserver</a><br/>
+<br/>
+<h1>MessageObserver</h1>
+<code><span class="keyword">interface </span><span class="identifier">MessageObserver</span></code>
+<p>Callback to receive the events from a <a href="../-message-client/index.html">MessageClient</a>.</p>
+<p><strong>Since</strong><br/>
+1.4.0</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-message-deleted/index.html">MessageDeleted</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MessageDeleted</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-webex-event/-base/index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="-message-event.html"><span class="identifier">MessageObserver.MessageEvent</span></a></code>
+<p>The event when a message has been deleted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-message-edited/index.html">MessageEdited</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MessageEdited</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-message-updated/index.html"><span class="identifier">MessageObserver.MessageUpdated</span></a></code>
+<p>The message has been edited. Developer could call {@link Message#update(MessageEdited)} to update original message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-message-event.html">MessageEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">MessageEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-webex-event/index.html"><span class="identifier">WebexEvent</span></a></code>
+<p>Marker interface for all message events.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-message-file-thumbnails-updated/index.html">MessageFileThumbnailsUpdated</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MessageFileThumbnailsUpdated</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-message-updated/index.html"><span class="identifier">MessageObserver.MessageUpdated</span></a></code>
+<p>The thumbnails of the attached files in message has been updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-message-received/index.html">MessageReceived</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MessageReceived</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-webex-event/-base/index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="-message-event.html"><span class="identifier">MessageObserver.MessageEvent</span></a></code>
+<p>The event when a new message has arrived.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-message-updated/index.html">MessageUpdated</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">MessageUpdated</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-webex-event/-base/index.html"><span class="identifier">WebexEvent.Base</span></a><span class="symbol">, </span><a href="-message-event.html"><span class="identifier">MessageObserver.MessageEvent</span></a></code>
+<p>The event when an existing message has been updated.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-event.html">onEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onEvent</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.message.MessageObserver$onEvent(com.ciscowebex.androidsdk.message.MessageObserver.MessageEvent)/event">event</span><span class="symbol">:</span>&nbsp;<a href="-message-event.html"><span class="identifier">MessageObserver.MessageEvent</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Invoked when there is a new <a href="-message-event.html">MessageEvent</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
