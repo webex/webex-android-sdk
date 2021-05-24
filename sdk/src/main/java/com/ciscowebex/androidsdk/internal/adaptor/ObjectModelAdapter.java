@@ -23,8 +23,27 @@
 package com.ciscowebex.androidsdk.internal.adaptor;
 
 import android.net.Uri;
-import com.ciscowebex.androidsdk.internal.model.*;
-import com.google.gson.*;
+
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.CommentModel;
+import com.ciscowebex.androidsdk.internal.model.ContentModel;
+import com.ciscowebex.androidsdk.internal.model.ConversationModel;
+import com.ciscowebex.androidsdk.internal.model.FileModel;
+import com.ciscowebex.androidsdk.internal.model.GroupMentionModel;
+import com.ciscowebex.androidsdk.internal.model.ObjectModel;
+import com.ciscowebex.androidsdk.internal.model.PersonModel;
+import com.ciscowebex.androidsdk.internal.model.SpacePropertyModel;
+import com.ciscowebex.androidsdk.internal.model.TeamModel;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
 import java.util.Date;
@@ -44,38 +63,29 @@ public class ObjectModelAdapter implements JsonDeserializer<ObjectModel>, JsonSe
 
         if (ObjectModel.Type.person.equals(objectType)) {
             return jsonDeserializationContext.deserialize(jsonElement, PersonModel.class);
-        }
-        else if (ObjectModel.Type.team.equals(objectType)) {
+        } else if (ObjectModel.Type.team.equals(objectType)) {
             return jsonDeserializationContext.deserialize(jsonElement, TeamModel.class);
-        }
-        else if (ObjectModel.Type.conversation.equals(objectType)) {
+        } else if (ObjectModel.Type.conversation.equals(objectType)) {
             return jsonDeserializationContext.deserialize(jsonElement, ConversationModel.class);
-        }
-        else if (ObjectModel.Type.comment.equals(objectType)) {
+        } else if (ObjectModel.Type.comment.equals(objectType)) {
             return jsonDeserializationContext.deserialize(jsonElement, CommentModel.class);
-        }
-        else if (ObjectModel.Type.activity.equals(objectType) || object.has("verb")) {
+        } else if (ObjectModel.Type.activity.equals(objectType) || object.has("verb")) {
             return jsonDeserializationContext.deserialize(jsonElement, ActivityModel.class);
-        }
-        else if (ObjectModel.Type.file.equals(objectType)) {
+        } else if (ObjectModel.Type.file.equals(objectType)) {
             return jsonDeserializationContext.deserialize(jsonElement, FileModel.class);
-        }
-        else if (ObjectModel.Type.content.equals(objectType)) {
+        } else if (ObjectModel.Type.content.equals(objectType)) {
             return jsonDeserializationContext.deserialize(jsonElement, ContentModel.class);
-        }
-        else if (ObjectModel.Type.spaceProperty.equals(objectType)) {
+        } else if (ObjectModel.Type.spaceProperty.equals(objectType)) {
             return jsonDeserializationContext.deserialize(jsonElement, SpacePropertyModel.class);
-        }
-        else if (ObjectModel.Type.groupMention.equals(objectType)) {
+        } else if (ObjectModel.Type.groupMention.equals(objectType)) {
             return jsonDeserializationContext.deserialize(jsonElement, GroupMentionModel.class);
-        }
-        else {
+        } else {
             ObjectModel ret = new ObjectModel(objectType);
             ret.setId(getField(object, "id"));
             ret.setDisplayName(getField(object, "displayName"));
             JsonElement urlElement = object.get("url");
             if (urlElement != null) {
-                ret.setUrl(jsonDeserializationContext.deserialize(urlElement, Uri.class));
+                ret.setUrl(jsonDeserializationContext.deserialize(urlElement, String.class));
             }
             JsonElement publishedElement = object.get("published");
             if (publishedElement != null) {
