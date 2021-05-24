@@ -1,3 +1,6 @@
+$dokka.format:html
+$dokka.linkExtension:html
+
 com.ciscowebex.androidsdk
 com.ciscowebex.androidsdk.auth
 com.ciscowebex.androidsdk.membership
