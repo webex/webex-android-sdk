@@ -1,67 +1,75 @@
 # Cisco Webex Android SDK
 
-[![Travis CI](https://travis-ci.org/webex/webex-android-sdk.svg)](https://travis-ci.org/webex/webex-android-sdk)
-[![license](https://img.shields.io/github/license/webex/webex-android-sdk.svg)](https://github.com/webex/webex-android-sdk/blob/master/LICENSE)
-
-> The Cisco Webex™ Android SDK
+> The Cisco Webex™ Android SDK Version 3.0.0
 
 The Cisco Webex Android SDK makes it easy to integrate secure and convenient Cisco Webex messaging and calling features in your Android apps.
 
-This SDK is built with **Android SDK Tools 27** and requires **Android API Level 21** or later.
+This SDK is built with **Android SDK Tools 29** and requires **Android API Level 24** or later.
+
+## New Integration
+For creating a new app integration, new client id generation, etc. visit [App Registration For Mobile SDK v3](https://github.com/webex/webex-android-sdk/wiki/App-Registration-for-Mobile-SDK-v3-)
 
 ## Table of Contents
 
-- [Install](#install)
+- [Advantages](#advantages)
+- [Notes](#notes)
+- [Integration](#integration)
 - [Usage](#usage)
-- [Migrating from Cisco Spark Android SDK](#migrating-from-cisco-spark-android-sdk)
-- [Contribute](#contribute)
+- [Multi Stream](#multi-stream)
+- [CUCM](#cucm)
+- [Migration Guide](#migration-guide)
+- [Sample App](#sample-app)
+- [API Reference](#api-reference)
 - [License](#license)
 
-## Install
+## Advantages
+* Unified feature set: Meeting, Messaging, CUCM calling.
+* Greater feature velocity and in parity with the Webex mobile app.
+* Easier for developers community: SQLite is bundled for automatic data caching.
+* Greater quality as it is built on a more robust infrastructure.
 
-Assuming you already have an Android project, e.g. _MyWebexApp_, for your Android app, here are the steps to integrate the Cisco Webex Android SDK into your project using [Gradle](https://gradle.org):
+## Notes
+* Integrations created earlier will not work with v3 because they are not entitled to the scopes required by v3. You can either raise a support request to enable these scopes for your appId or you could create a new Integration that's meant to be used for v3. This does not affect Guest Issuer JWT token-based sign-in.
+* We do not support external auth code login anymore.
+* Currently all resource ids that are exposed from the SDK are barebones GUIDs. You cannot directly use these ids to make calls to [webexapis.com](webexapis.com). You'll need to call `Webex.base64Encode(type: ResourceType, resource: String, handler: CompletionHandler<String>)` to get a base64 encoded resource. However, you're free to interchange between base64 encoded resource ids and barebones GUID while providing them as input to the SDK APIs.
+* You can add `android:extractNativeLibs="true"` inside your `<application>` tag in your Manifest file to reduce the generated apk size.
 
-1. Add the following repository to your top-level `build.gradle` file:
+## Integration
 
-    ```groovy
-    allprojects {
+### Option 1
+1. Put AAR file in libs folder of your Android project
+2. Open the project level Gradle file and add the following lines under the repositories tag, which is nested under allprojects.
+
+      ```
+      allprojects {
         repositories {
-            jcenter()
-            maven {
-                url 'https://devhub.cisco.com/artifactory/webexsdk/'
+            flatDir { dirs 'aars'} //add this line
+        }
+      }
+      ```
+3. Add the following dependency in module level Gradle file and press sync-now
+   ```
+   implementation files('libs/WebexSDK.aar')
+   ```
+### Option 2
+
+   1. Add the following repository to your top-level `build.gradle` file:
+        ```
+        allprojects {
+            repositories {
+                maven {
+                    url 'https://devhub.cisco.com/artifactory/webexsdk/'
+                }
             }
         }
-    }
-    ```
+        ```
+  2. Add the `webex-android-sdk` library as a dependency for your app in the `build.gradle` file:
 
-2. Add the `webex-android-sdk` library as a dependency for your app in the `build.gradle` file:
-
-    ```groovy
-    dependencies { 
-        compile('com.ciscowebex:androidsdk:2.8.0@aar', {
-            transitive = true
-        })
-    }
-    ```
-
-3. Enable [multidex](https://developer.android.com/studio/build/multidex.html) support for your app:
-
-    ```groovy
-    android {
-        defaultConfig {
-            multiDexEnabled true
+        ```
+        dependencies {
+            implementation 'com.ciscowebex:androidsdk:3.0.0@aar'
         }
-    }
-    ```
-    
-4. Exclude rxjava.properties in your packagingOptions :
-
-    ```groovy
-    packagingOptions {
-        exclude 'META-INF/rxjava.properties'
-    }
-    ```
-    
+        ```
 ## Usage
 
 To use the SDK, you will need Cisco Webex integration credentials. If you do not already have a Cisco Webex account, visit the [Cisco Webex for Developers portal](https://developer.webex.com/) to create your account and [register an integration](https://developer.webex.com/docs/integrations#registering-your-integration). Your app will need to authenticate users via an [OAuth](https://oauth.net/) grant flow for existing Cisco Webex users or a [JSON Web Token](https://jwt.io/) for guest users without a Cisco Webex account.
@@ -74,565 +82,508 @@ Here are some examples of how to use the Android SDK in your app.
 
 1. Create a new `Webex` instance using Webex ID authentication ([OAuth](https://oauth.net/)-based):
 
-    ```java
-    String clientId = "YOUR_CLIENT_ID";
-    String clientSecret = "YOUR_CLIENT_SECRET";
-    String scope = "spark:all";
-    String redirectUri = "https://webexdemoapp.com";
+    ```kotlin
+    val clientId: String = "YOUR_CLIENT_ID"
+    val clientSecret: String = "YOUR_CLIENT_SECRET"
+    val redirectUri: String = "https://webexdemoapp.com"
+    val email = "EMAIL_ID_OF_END_USER" // Get email id from end user
 
-    OAuthWebViewAuthenticator authenticator = new OAuthWebViewAuthenticator(clientId, clientSecret, scope, redirectUri);
-    Webex webex = new Webex(activity.getApplication(), authenticator)
-    if (!authenticator.isAuthorized()) {
-        authenticator.authorize(webView, new CompletionHandler<Void>() {
-            @Override
-            public void onComplete(Result<Void> result) {
-                if (!result.isSuccessful()) {
-                    System.out.println("User not authorized");
-                }
-            }
-        });
-    }
-    ```
+    val authenticator: OAuthWebViewAuthenticator = OAuthWebViewAuthenticator(clientId, clientSecret, redirectUri, email)
+    val webex = Webex(application, authenticator)
+    webex.enableConsoleLogger(true)
+    webex.setLogLevel(LogLevel.VERBOSE) // Highly recommended to make this end-user configurable incase you need to get detailed logs.
 
-2. Create a new `Webex` instance using Guest ID authentication ([JWT](https://jwt.io/)-based):
-
-    ```java
-    JWTAuthenticator authenticator = new JWTAuthenticator();
-    Webex webex = new Webex(activity.getApplication(), authenticator);
-    if (!authenticator.isAuthorized()) {
-        authenticator.authorize(myJwt);
-    }
-    ```
-
-3. Register the device to Webex platform:
-
-    ```java
-    webex.phone().register(new CompletionHandler<Void>() {
-        @Override
-        public void onComplete(Result<Void> result) {
-            if (result.isSuccessful()) {
-                // Device registered
-            }
-            else {
-                // Device not registered, and calls will not be sent or received
-            }
+    webex.initialize(CompletionHandler { result ->
+        if (result.error != null) {
+            //already authorised
+        } else {
+            authenticator.authorize(loginWebview, CompletionHandler { result ->
+                    if (result.error != null) {
+                        //Handle the error
+                    }else{
+                        //Authorization successful
+                    }
+                })
         }
-    });
+    })
     ```
 
-4. Create a new Cisco Webex space, add users to the space, and send a message:
+2. Create a new `Webex` instance using JWT authentication
 
-    ```java
+    ```kotlin
+    val token: String = "jwt_token"
+    val authenticator: JWTAuthenticator = JWTAuthenticator()
+    val webex = Webex(application, authenticator)
+    webex.initialize(CompletionHandler { result ->
+        if (result.error != null) {
+            //already authorised
+        } else {
+            authenticator.authorize(token, CompletionHandler { result ->
+                    if (result.error != null) {
+                        //Handle the error
+                    }else{
+                        //Authorization successful
+                    }
+                })
+        }
+    })
+    ```
+
+3. Create a new Cisco Webex space, add users to the space, and send a message:
+
+    ```kotlin
     // Create a Cisco Webex space:
-
-    webex.spaces().create("Hello World", null, new CompletionHandler<Space>() {
-        @Override
-        public void onComplete(Result<Space> result) {
-            if (result.isSuccessful()) {
-                Space space = result.getData();
-            }
-            else {
-                WebexError error = result.getError();
-            }
+    webex.spaces.create("Hello World", null, CompletionHandler<Space?> { result ->
+        if (result.isSuccessful) {
+            val space = result.data
+        } else {
+            val error= result.error
         }
-    });
-    
+    })
+
     // Add a user to a space:
-
-    webex.memberships().create(spaceId, null, "person@example.com", true, new CompletionHandler<Membership>() {
-        @Override
-        public void onComplete(Result<Membership> result) {
-            if (result.isSuccessful()) {
-                Membership membership = result.getData();
-            }
-            else {
-                WebexError error = result.getError();
-            }
+    webex.memberships.create("spaceId", null, "person@example.com", true, CompletionHandler<Membership?> { result ->
+        if (result.isSuccessful) {
+            val space = result.data
+        } else {
+            val error= result.error
         }
-    });
+    })
 
     // Send a message to a space:
-
-    webex.messages().postToSpace(spaceId, Message.Text.html("<strong>Hello</strong>", "Hello"), null, null, new CompletionHandler<Message>() {
-        @Override
-        public void onComplete(Result<Message> result) {
-            if (result.isSuccessful()) {
-                Message message = result.getData();
-            }
-            else {
-                WebexError error = result.getError();
-            }
+    webex.messages.postToSpace("spaceId", Message.Text.plain("Hello"), null, null, CompletionHandler<Message> { result ->
+        if(result != null && result.isSuccessful){
+            val message = result.data
         }
-    });
+    })
     ```
 
-5. Make an outgoing call:
+4. Make an outgoing call:
 
-    ```java
-    webex.phone().dial("person@example.com", MediaOption.audioVideo(local, remote), new CompletionHandler<Call>() {
-        @Override
-        public void onComplete(Result<Call> result) {
-            Call call = result.getData();
-            if (call != null) {
-                call.setObserver(new CallObserver() {
-                    @Override
-                    public void onRinging(Call call) {
-
-                    }
-
-                    @Override
-                    public void onConnected(Call call) {
-
-                    }
-
-                    @Override
-                    public void onDisconnected(CallDisconnectedEvent callDisconnectedEvent) {
-
-                    }
-
-                    @Override
-                    public void onMediaChanged(MediaChangedEvent mediaChangedEvent) {
-
-                    }
-                });
+    ```kotlin
+    webex.phone.dial("person@example.com", MediaOption.audioVideo(local, remote), CompletionHandler {
+        val call = it.data
+        call?.setObserver(object : CallObserver {
+            override fun onConnected(call: Call?) {
+                super.onConnected(call)
             }
-            else {
-                WebexError error = result.getError();
+
+            override fun onDisconnected(event: CallDisconnectedEvent?) {
+                super.onDisconnected(event)
             }
-        }
-    });
+
+            override fun onFailed(call: Call?) {
+                super.onFailed(call)
+            }
+        })
+    })
     ```
 
-6. Receive a call:
+5. Receive a call:
 
-    ```java
-    webex.phone().setIncomingCallListener(new Phone.IncomingCallListener() {
-        @Override
-        public void onIncomingCall(Call call) {
-            call.answer(MediaOption.audioVideo(local, remote), new CompletionHandler<Void>() {
-                @Override
-                public void onComplete(Result<Void> result) {
-                    if (result.isSuccessful()) {
-                        // success
-                    }
-                    else {
-                        WebexError error = result.getError();
-                    }
+    ```kotlin
+    webex.phone.setIncomingCallListener(object : Phone.IncomingCallListener {
+        override fun onIncomingCall(call: Call?) {
+            call?.answer(MediaOption.audioOnly(), CompletionHandler {
+                if (it.isSuccessful){
+                    // ...
                 }
-            });
+            })
+        }
+    })
+    ```
+
+6. Make a space call:
+
+    ```kotlin
+    webex.phone().dial(spaceId, MediaOption.audioVideoSharing(Pair(localView,remoteView), screenShareView), CompletionHandler { result ->
+        if (result.isSuccessful) {
+            result.data?.let { _call ->
+                // Space call connected. Set observer to listen for call events
+                call.setObserver(object : CallObserver {
+                    override fun onConnected(call: Call?) {
+                    }
+
+                    override fun onRinging(call: Call?) {
+                    }
+
+                    override fun onWaiting(call: Call?, reason: Call.WaitReason?) {
+                    }
+
+                    override fun onDisconnected(event: CallObserver.CallDisconnectedEvent?) {
+                    }
+
+                    override fun onInfoChanged(call: Call?) {
+                    }
+
+                    override fun onMediaChanged(event: CallObserver.MediaChangedEvent?) {
+                    }
+
+                    override fun onCallMembershipChanged(event: CallObserver.CallMembershipChangedEvent?) {
+                    }
+
+                    override fun onScheduleChanged(call: Call?) {
+                    }
+                })
+            }
+        } else {
+            result.error?.let { errorCode ->
+                // Error in space call
+            }
         }
     });
     ```
-   
-7. Make an space call:
 
-    ```java
-    webex.phone().dial(spaceId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
-        @Override
-        public void onComplete(Result<Call> result) {
-            Call call = result.getData();
-            if (call != null) {
-                call.setObserver(new CallObserver() {
-                    @Override
-                    public void onConnected(Call call) {
+7. Screen sharing:
 
-                    }
+    ```kotlin
+    webex.phone.dial("spaceId", MediaOption.audioVideoSharing(Pair(localView, remoteView), screenShareView), CompletionHandler {
+        if(it.isSuccessful){
+            val call = it.data
+            call?.setObserver(object :CallObserver{
+                override fun onConnected(call: Call?) {
+                    super.onConnected(call)
+                }
 
-                 	//...
+                // ...
 
-                    @Override
-                    public void onCallMembershipChanged(CallMembershipChangedEvent callMembershipChangeEvent) {
-                        CallMembership membership = callMembershipChangeEvent.getCallMembership();
-                        if (callMembershipChangeEvent instanceof MembershipJoinedEvent) {
-
-                        } else if (callMembershipChangeEvent instanceof MembershipLeftEvent) {
-
-                        } else if (callMembershipChangeEvent instanceof MembershipDeclinedEvent) {
-
-                        } else if (callMembershipChangeEvent instanceof MembershipSendingVideoEvent) {
-
-                        } else if (callMembershipChangeEvent instanceof MembershipSendingAudioEvent) {
-
-                        } else if (callMembershipChangeEvent instanceof MembershipSendingSharingEvent) {
-
-                        }
-                    }
-                });
-            }
-            else {
-                WebexError error = result.getError();
-            }
-        }
-    });
-    ```
-    
-8. Receive screen share:
-
-    ```java
-    webex.phone().dial(spaceId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
-        @Override
-        public void onComplete(Result<Call> result) {
-            Call call = result.getData();
-            if (call != null) {
-                call.setObserver(new CallObserver() {
-                    @Override
-                    public void onConnected(Call call) {
-
-                    }
-
-                 	//...
-
-                    @Override
-                    public void onMediaChanged(MediaChangedEvent mediaChangedEvent) {
-                        if (mediaChangedEvent instanceof RemoteSendingSharingEvent) {
-                            if (((RemoteSendingSharingEvent) mediaChangedEvent).isSending()) {
-                                mediaChangedEvent.getCall().setSharingRenderView(shareView);
-                            } else if (!((RemoteSendingSharingEvent) mediaChangedEvent).isSending()) {
-                                mediaChangedEvent.getCall().setSharingRenderView(null);
+                override fun onMediaChanged(event: CallObserver.MediaChangedEvent?) {
+                    event?.let { _event ->
+                        val _call = _event.getCall()
+                        when (_event) {
+                            is CallObserver.RemoteSendingSharingEvent -> {
+                                if (_event.isSending()) {
+                                    _call?.setSharingRenderView(screenShareView)
+                                } else {
+                                    _call??.setSharingRenderView(null)
+                                }
                             }
                         }
                     }
-                });
-            }
-            else {
-                WebexError error = result.getError();
-            }
+                }
+            })
+        } else {
+            val error = it.error
         }
-    });
-    
+    })
     ```
-9. Start/stop sharing screen:
+8. Start/stop sharing screen:
 
-    ```java
-    activeCall.startSharing(r -> Ln.d("startSharing result: " + r));
-    boolean isSharing = activeCall.isSendingSharing();
-    activeCall.stopSharing(r -> Ln.d("stopSharing result: " + r));
+    ```kotlin
+    call.startSharing(CompletionHandler {
+       if (it.isSuccessful){
+          // ...
+       }
+    })
+    call.stopSharing(CompletionHandler {
+       if (it.isSuccessful){
+          // ...
+       }
+    })
     ```
 
-10. Post a message
+9. Post a message
 
-    ```java
-    webex.message().post(
-                targetId,
-                Message.draft(Message.Text.markdown("**Hello**", "<strong>Hello</strong>", "Hello"))
-                .addAttachments(localFile),
-                new CompletionHandler<Message>() {
-                    @Override
-                    public void onComplete(Result<Message> result) {
-                        if (result.isSuccessful()) {
-                            // message sent success
-                    ...
-                        } else {
-                            // message sent failed
-                    ...
-                        }
+    ```kotlin
+    webex.messages.post(targetId, Message.draft(Message.Text.markdown("**Hello**", null, null)).addAttachments(localFile), CompletionHandler { result ->
+        if (result.isSuccessful) {
+            //message sent success
+        } else {
+            val error = result.error
+            //message sent failed
+        }
+    })
+    ```
+
+10. Post a threaded message
+
+    ```kotlin
+    webex.messages.post(targetId, Message.draft(Message.Text.markdown("**Hello**", null, null))
+    .addAttachments(localFile)
+    .setParent(parentMessage),
+    CompletionHandler { result ->
+        if (result.isSuccessful) {
+            //message sent success
+        } else {
+            val error = result.error
+            //message sent failed
+        }
+    })
+    ```
+
+11. Set MessageObserver to receive messaging events
+    ```kotlin
+    webex.messages.setMessageObserver(object : MessageObserver {
+        override fun onEvent(event: MessageObserver.MessageEvent) {
+            when (event) {
+                is MessageObserver.MessageReceived -> {
+                    val message = event.getMessage()
+                    if (message?.getParentId() != null) {
+                        // Threaded message
                     }
-                });
-    ```
-    
-11. Post a threaded message
-
-    ```java
-    webex.message().post(
-                targetId,
-                Message.draft(Message.Text.markdown("**Hello**", "<strong>Hello</strong>", "Hello"))
-                .addAttachments(localFile)
-                .setParent(parentMessage),
-                new CompletionHandler<Message>() {
-                    @Override
-                    public void onComplete(Result<Message> result) {
-                        if (result.isSuccessful()) {
-                            // message sent success
-                    ...
-                        } else {
-                            // message sent failed
-                    ...
-                        }
-                    }
-                });
-    ```
-
-12. Receive a message
-
-    ```java
-    webex.message().setMessageObserver(
-        new MessageObserver() {
-            void onEvent(MessageEvent event) {
-                if (event instanceof MessageReceived) {
-                    Message message = event.getMessage();
-                    // new message arrived
-                    if(message.getParentId() != null){
-                        // threaded message
-                    }
-                } else if (event instanceof MessageDeleted) {
+                }
+                is MessageObserver.MessageDeleted -> {
                     // message deleted
                 }
+                is MessageObserver.MessageFileThumbnailsUpdated -> {
+                    // thumbnails updated for files
+                }
+                is MessageObserver.MessageEdited -> {
+                    // message edited successfully. event.getMessage() returns the edited message.
+                }
             }
         }
-    );
-    ```
-13. Send Read Receipts
-
-    ```java
-    //Mark all exist messages in space as read
-    webex.message().markAsRead(spaceId);
-
-    //Mark exist messages before pointed message(include) in space as read
-    webex.message().markAsRead(spaceId, messageId);
+    })
     ```
 
-14. Multi-Stream to receive more video streams 
+12. Send Read Receipts
 
-    ```java
-    activeCall.setMultiStreamObserver(new MultiStreamObserver() {
-        @Override
-        public void onAuxStreamChanged(AuxStreamChangedEvent event) {
-            if (event instanceof MultiStreamObserver.AuxStreamOpenedEvent) {
-                if ((MultiStreamObserver.AuxStreamOpenedEvent)event.isSuccessful()) {
-                    // success to open a stream
-                    ...
-                } else {
-                    // fail to open a stream
-                    ...
-                }
-            } else if (event instanceof MultiStreamObserver.AuxStreamClosedEvent) {
-                if ((MultiStreamObserver.AuxStreamClosedEvent)event.isSuccessful()) {
-                    // success to close a stream
-                    ...
-                } else {
-                    // fail to close a stream
-                    ...
-                }
-            } else if (event instanceof MultiStreamObserver.AuxStreamSendingVideoEvent) {
-                ...
-            } else if (event instanceof MultiStreamObserver.AuxStreamPersonChangedEvent) {
-                ...
-            } else if (event instanceof MultiStreamObserver.AuxStreamSizeChangedEvent) {
-                ...
-            }
-        }
+    ```kotlin
+     //Mark all existing messages in space as read
+     webex.messages.markAsRead(spaceId)
 
-        @Override
-        public View onAuxStreamAvailable() {
-            // should return a MediaRenderView for rendering 
-            return mediaRenderView;
-        }
+     //Mark existing message before pointed message(include) in space as read
+     webex.message.markAsRead(spaceId, messageId)
 
-        @Override
-        public View onAuxStreamUnavailable() {
-	    // should return a MediaRenderView to stop rendering or return null to let SDK handle it
-            return null;
+     //Mark existing message before pointed message(include) in space as read with a completion handler
+     webex.message.markAsRead(spaceId, messageId, CompletionHandler { result ->
+        if (result.isSuccessful) {
+            // Success
+        } else {
+            // Failure
         }
-    });
+    })
     ```
-    
-15. Set MembershipObserver to receive Membership events 
 
-    ```java
-    webex.memberships().setMembershipObserver(new MembershipObserver() {
-            @Override
-            public void onEvent(MembershipEvent event) {
-                //The WebexEventPayload.
-                WebexEvent.Payload payload = event.getPayload();
-                ...
-                if (event instanceof MembershipCreated) {
+13. Get read status of a space
+
+    ```kotlin
+    webex.spaces.getWithReadStatus(spaceId, CompletionHandler { result ->
+        if (result.isSuccessful) {
+            //show the data
+        } else {
+            //handle error
+        }
+    })
+    ```
+
+14. Set MembershipObserver to receive Membership events
+
+    ```kotlin
+    webex.memberships.setMembershipObserver(object : MembershipObserver {
+        override fun onEvent(event: MembershipObserver.MembershipEvent?) {
+            when (event) {
+                is MembershipObserver.MembershipCreated -> {
                     //The event when a new membership has added to a space.
                     ...
-                } else if (event instanceof MembershipDeleted) {
-                    //The event when a membership has removed from a space.
-                    ...
-                } else if (event instanceof MembershipUpdated) {
+                }
+                is MembershipObserver.MembershipUpdated -> {
                     //The event when a membership moderator status changed
                     ...
-                }else if (event instanceof MembershipSeen){
+                }
+                is MembershipObserver.MembershipDeleted -> {
+                    //The event when a membership has been removed from a space.
+                    ...
+                }
+                is MembershipObserver.MembershipMessageSeen -> {
                     //The event when a user has sent a read receipt
                     ...
                 }
             }
-        });
+        }
+    })
     ```
-    
-16. Set SpaceObserver to receive Space events 
 
-    ```java
-    webex.spaces().setSpaceObserver(new SpaceObserver() {
-            @Override
-            public void onEvent(SpaceEvent event) {
-                //The WebexEventPayload.
-                WebexEvent.Payload payload = event.getPayload();
-                
-                if (event instanceof SpaceCreated){
+15. Set SpaceObserver to receive Space events
+
+    ```kotlin
+    webex.spaces.setSpaceObserver(object : SpaceObserver {
+        override fun onEvent(event: SpaceObserver.SpaceEvent) {
+            when (event) {
+                is SpaceObserver.SpaceCallStarted -> {
+                    //The event when a space call was started
+                    ...
+                }
+                is SpaceObserver.SpaceCallEnded -> {
+                    //The event when a space call has ended
+                    ...
+                }
+                is SpaceObserver.SpaceCreated -> {
                     //The event when a new space was created
                     ...
-                }else if (event instanceof SpaceUpdated){
+                }
+                is SpaceObserver.SpaceUpdated -> {
                     //The event when a space was changed (usually a rename)
                     ...
                 }
             }
-        });
+        }
+    })
     ```
-    
-17. Get space meeting details
 
-    ```java
+16. Get space meeting details
+
+    ```kotlin
     webex.spaces().getMeeting(spaceId, new CompletionHandler<SpaceMeeting>() {
-            @Override
-            public void onComplete(Result<SpaceMeeting> result) {
-                if (result.isSuccessful()){
-                    SpaceMeeting spaceMeeting = result.getData();
-                    ...
-                }
-            }
-        });
-    ```
-18. Get read status of a space
-
-    ```java
-    webex.spaces().getWithReadStatus(spaceId, new CompletionHandler<SpaceReadStatus>() {
-            @Override
-            public void onComplete(Result<SpaceReadStatus> result) {
-                if (result.isSuccessful()){
-                    SpaceReadStatus spaceReadStatus = result.getData();
-                    ...
-                }
-            }
-        });
-    ```
-19. Join password-protected meetings
-
-    ```java
-    mediaOption.setModerator(boolean moderator);
-
-    mediaOption.setPin(String pin);
-    ```
-20. Change the video layout during a call
-
-    ```java
-    activeCall.setVideoLayout(MediaOption.VideoLayout layout);
-    ```
-21. Specify how the remote video adjusts its content to be render in a view
-
-    ```java
-    activeCall.setRemoteVideoRenderMode(VideoRenderMode mode);
-    ```
-22. Change the max sending fps for video
-
-    ```java
-    webex.phone().setAdvancedSetting(new VideoMaxTxFPS(int value));
-    ```
-23. Enable(disable) android.hardware.camera2
-
-    ```java
-    webex.phone().setAdvancedSetting(new VideoEnableCamera2(boolean enable));
-    ```
-24. Whether the app can continue video streaming when app in background
-
-    ```java
-    webex.phone().enableBackgroundStream(boolean enable);
-    ```
-25. Get a list of spaces that have ongoing call
-
-    ```java
-    webex.spaces().listWithActiveCalls(r -> {});
-    ```
-26. Check if the message mentioned everyone in space
-
-    ```java
-    message.isAllMentioned()
-    ```
-27. Get all people mentioned in the message
-
-    ```java
-    message.getMentions()
-    ```
-28. Change the max capture fps when screen sharing
-
-    ```java
-    webex.phone().setAdvancedSetting(new ShareMaxCaptureFPS(int value));
-    ```
-29. Switch the audio play output mode during a call
-
-    ```java
-    activeCall.switchAudioOutput(AudioOutputMode audioOutputMode);
-    ```
-
-30. Enable Background Noise Removal(BNR)
-
-    ```java
-    webex.phone().enableAudioBNR(boolean enable);
-    ```
-31. Set Background Noise Removal(BNR) mode
-
-    ```java
-    webex.phone().setAudioBNRMode(Phone.AudioBRNMode mode);
-    ```
-32. Edit message
-
-    ```java
-     messageClient.edit(originalMessage, Message.Text.plain("edit"), mentions, rst -> {
-                                        if (rst.isSuccessful()) {
-                                            ...
-                                        }
-                                    });
-    ```
-33. Enable background connection
-
-    ```java
-    webex.phone().enableBackgroundConnection(boolean);
-    ```
-        
-## Migrating from Cisco Spark Android SDK
-
-The purpose of this guide is to help you to migrate from Cisco Spark Android SDK to Cisco Webex Android SDK.
-
-### Install
-
-Assuming you already have an Android project with Spark Android SDK integrated. For your Android app, here are the steps to migrate to use Webex Android SDK:
-
-1. Change the maven repository url in your top-level `build.gradle` file:
-
-    ```groovy
-    allprojects {
-        repositories {
-            jcenter()
-            maven {
-                // url 'https://devhub.cisco.com/artifactory/sparksdk/'
-                url 'https://devhub.cisco.com/artifactory/webexsdk/'
+        @Override
+        public void onComplete(Result<SpaceMeeting> result) {
+            if (result.isSuccessful()){
+                SpaceMeeting spaceMeeting = result.getData();
+                ...
             }
         }
-    }
+    });
     ```
 
-2. Update the library dependency for your app in the `build.gradle` file:
+17. Get read status of a space
 
-    ```groovy
-    dependencies { 
-        // compile('com.ciscospark:androidsdk:1.4.0@aar', {
-        //     transitive = true
-        // })
-        implementation('com.ciscowebex:androidsdk:2.7.0@aar', {
-            transitive = true
-        })
-    }
+    ```kotlin
+    webex.spaces().getWithReadStatus(spaceId, new CompletionHandler<SpaceReadStatus>() {
+        @Override
+        public void onComplete(Result<SpaceReadStatus> result) {
+            if (result.isSuccessful()){
+                SpaceReadStatus spaceReadStatus = result.getData();
+                ...
+            }
+        }
+    });
     ```
 
-### Usage
+18. Join password-protected meetings
 
-Here are API changes list from Spark Android SDK to Webex Android SDK.
+    ```kotlin
+    mediaOption.setModerator(isModerator: Boolean)
+    mediaOption.setPin(pin: String)
+    ```
 
-| Description | Spark Android SDK | Webex Android SDK |
-| :----:| :----: | :----:
-| Package name | com.ciscospark.androidsdk | com.ciscowebex.androidsdk
-| Create a new instance | Spark spark = new Spark(application, authenticator) | Webex webex = new Webex(application, authenticator)
-| Get error response | SparkError error = result.getError() | WebexError error = result.getError()
-| Rename Room to Space | spark.rooms().get(roomId, CompletionHandler< Room > handler) | webex.spaces().get(spaceId, CompletionHandler< Space > handler)
+19. Change the composite video layout during a call
 
-## Contribute
+    ```kotlin
+    activeCall.setCompositedVideoLayout(layout: MediaOption.CompositedVideoLayout)
+    ```
 
-Pull requests welcome. To suggest changes to the SDK, please fork this repository and submit a pull request with your changes. Your request will be reviewed by one of the project maintainers.
+20. Specify how the remote video adjusts its content to be rendered in a view
+
+    ```kotlin
+    activeCall.setRemoteVideoRenderMode(mode);
+    ```
+    Use a completion handler to get the result of success or failure.
+    ```
+    activeCall..setRemoteVideoRenderMode(mode, CompletionHandler {
+        it.let {
+            if (it.isSuccessful) {
+                // callback returned success
+            } else {
+                // callback returned failure
+            }
+        }
+    })
+    ```
+21. Change the max sending fps for video
+
+    ```kotlin
+    webex.phone.setAdvancedSetting(AdvancedSetting.VideoMaxTxFPS(value: Int) as AdvancedSetting<*>)
+    ```
+22. Enable(disable) android.hardware.camera2
+
+    ```kotlin
+    webex.phone.setAdvancedSetting(AdvancedSetting.VideoEnableCamera2(value: Boolean) as AdvancedSetting<*>)
+    ```
+23. Whether the app can continue video streaming when the app is in background
+
+    ```kotlin
+    webex.phone.enableBackgroundStream(enable: Boolean)
+    ```
+24. Get a list of spaces that have an ongoing call
+
+    ```kotlin
+    webex.spaces.listWithActiveCalls(CompletionHandler { result ->
+        if (result.isSuccessful) {
+            // callback returned success, result.data gives data if any
+        } else {
+            // callback returned failure
+        }
+    })
+    ```
+25. Check if the message mentioned everyone in space
+
+    ```kotlin
+    message.isAllMentioned()
+    ```
+26. Get all people mentioned in the message
+
+    ```kotlin
+    message.getMentions()
+    ```
+27. Change the max capture fps when screen sharing
+
+    ```kotlin
+    webex.phone.setAdvancedSetting(AdvancedSetting.ShareMaxCaptureFPS(value: Int) as AdvancedSetting<*>)
+    ```
+28. Switch the audio play output mode during a call
+
+    ```kotlin
+    activeCall.switchAudioOutput(mode: Call.AudioOutputMode);
+    ```
+
+29. Enable/Disable Background Noise Removal(BNR)
+
+    ```kotlin
+    webex.phone.enableAudioBNR(enable: Boolean)
+    ```
+30. Set Background Noise Removal(BNR) mode
+
+    ```kotlin
+    webex.phone.setAudioBNRMode(mode: Phone.AudioBRNMode)
+    ```
+31. Edit a message
+
+    ```kotlin
+    webex.messages.edit(originalMessage, messageText, mentions, CompletionHandler { result ->
+        if (result.isSuccessful) {
+            // message edit success
+            val editedMessage = result.data
+        } else {
+            // message edit failure
+        }
+    })
+    ```
+32. Enable/Disable background connection
+
+    ```kotlin
+    webex.phone.enableBackgroundConnection(enable: Boolean)
+    ```
+
+33. Enable/Disable console logging
+
+    ```kotlin
+    webex.enableConsoleLogger(enable: Boolean)
+    ```
+
+34. Set log level of logging
+
+    ```kotlin
+    webex.setLogLevel(logLevel: LogLevel)
+    ```
+
+
+## Multi Stream
+For multistream related API's see [Multi Stream v3](https://github.com/webex/webex-android-sdk/wiki/Multi-Stream-v3-)
+
+## CUCM
+For CUCM related API's see [CUCM Usage Guide v3](https://github.com/webex/webex-android-sdk/wiki/CUCM-Usage-Guide-v3)
+
+## Migration Guide
+The migration guide is meant to help developers port their code from SDK-v2 to SDK-v3. See [Migration Guide For v2 to v3](https://github.com/webex/webex-android-sdk/wiki/Migration-Guide-for-v2-to-v3)
+
+## Sample App
+The sample app demonstrates the common usage of SDK-v3. You can view the demo app [Source Code](https://github.com/webex/webex-android-sdk-example)
+
+## API Reference
+For a complete reference to all supported APIs, please visit [Webex Android SDK API docs](https://webex.github.io/webex-android-sdk/).
 
 ## License
 
-&copy; 2016-2021 Cisco Systems, Inc. and/or its affiliates. All Rights Reserved.
+All contents are licensed under the Cisco EULA
 
-See [LICENSE](https://github.com/webex/webex-android-sdk/blob/master/LICENSE) for details.
+See [License](LICENSE.txt) for details.
