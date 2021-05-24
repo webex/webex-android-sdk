@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
+#### 3.0.0
+- `3.0.0` Releases - [3.0.0](#300)
+
 #### 2.8.0 Releases
 - `2.8.0` Releases - [2.8.0](#280)
 
@@ -27,7 +31,7 @@ All notable changes to this project will be documented in this file.
 
 #### 2.0.0 Releases
 - `2.0.0` Releases - [2.0.0](#200)
- 
+
 #### 1.4.0 Releases
 - `1.4.0` Releases - [1.4.0](#140)
 
@@ -36,6 +40,64 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+
+---
+## [3.0.0](https://github.com/webex/webex-android-sdk/releases/tag/3.0.0)
+Released on **24 May, 2021**.
+
+**NOTE: SDK-v3 is built in Kotlin language.**
+#### Added
+- Ability to make calls via CUCM.
+- Receive push notification for incoming CUCM calls.
+- `WebexUCLoginDelegate` interface to receive webex CUCM login events.
+- `Call.startAssociatedCall(dialNumber: String, associationType: CallAssociationType, audioCall: Boolean, callback: CompletionHandler<Call>)` for CUCM calls
+- `Call.transferCall(toCallId: String)` for CUCM calls
+- `Call.mergeCalls(targetCallId: String)` for CUCM calls
+- `Call.holdCall(putOnHold: Boolean)` for CUCM calls
+- `Call.isOnHold()` for CUCM calls
+- `Call.isCUCMCall()` to check if call is CUCM
+- `Call.canShare()` to check if the call has permission to share the screen
+- `Call.getTitle()` to get the title of the call
+- `Call.muteParticipantAudio(participantId: String, doMute: Boolean)` to mute particular participant
+- `Call.muteAllParticipantAudio(doMute: Boolean)` to mute all other participants who are on call, also un-mutes the others if isMuted is `true`
+- `Call.isGroupCall()` to check if the call is Space call
+- `Phone.getCallHistory` to retrieve the collection of spaces which contains call history of One to One Spaces as well as Group type Spaces
+- `CallObserver.OnInfoChanged` - A callback whenever a call information is changed for example - a participant is added or removed from call or mute status is changed
+- `CallObserver.CallEnded` - This event is fired when the resources of the call object gets cleared after disconnection.
+- `CallSchedule.getId()` to get meeting ID of the scheduled call.
+- `CallSchedule.getMeetingLink()` to get meeting link of the scheduled call.
+- `CallSchedule.getSubject()` to get the subject of the scheduled call.
+- `NotificationCallType` enum to check if call type is Webex or CUCM
+- `CallAssociationType` enum for call transfer and merge
+- `Webex.getCallIdByNotificationId(notificationId: String, callType: NotificationCallType)` to get the actual call id of the call based on callType.
+- `Webex.spaces.filter(query: String, handler: CompletionHandler<List<Space>>)` to search the people by email id or by name.
+- `Webex.getlogFileUri(incudeLastRunLog: Boolean)` to collect logs of SDK for dev support.
+- `Webex.base64Encode(type: ResourceType, resource: String, handler: CompletionHandler<String>)` to encode UUID as Base64
+- `Webex.base64Decode(encodedResource: String): Resource` to decode Base64 to Resource
+- `Webex.initialize(handler: CompletionHandler<Void>)` to check if user is already logged in
+- `Webex.isUCLoggedIn()` for CUCM
+- `Webex.getUCServerConnectionStatus()` for CUCM
+- `Webex.setUCDomainServerUrl(ucDomain: String, serverUrl: String)` for CUCM
+- `Webex.enableConsoleLogger(enable: Boolean)` to enable/disable console logging
+- `Message.isContentDecrypted()` to check if message is decrypted
+- `getConversationId()`, `getMessageId()`, `getContentIndex()` in `RemoteFile`
+
+#### Updated
+- `OAuthWebViewAuthenticator` takes email as a constructor parameter
+- Support of completion handler in `JWTAuthenticator.authorize(String jwt, CompletionHandler handler)`
+- Support of completion handler in `MessageClient.markAsRead(String spaceId, String messageId, CompletionHandler handler)`
+- In `Message.Mention`, two new fields `start` and `end` are introduced to indicate the start and end index of mention in text message.
+- Support of completion handler in `setRemoteVideoRenderMode` in `Call`
+
+#### Removed
+- SSO Authenticator
+- Webex.runInBackground()
+- OAuthAuthenticator
+- `refreshToken` api is removed from `OAuthWebViewAuthenticator`
+- `afterAssociated` api
+- `update` api removed from `Message`
+- `Phone.register()` and `Phone.deregister()` apis are removed
 
 ---
 ## [2.8.0](https://github.com/webex/webex-android-sdk/releases/tag/2.8.0)
@@ -59,6 +121,7 @@ Released on 2021-04-30.
 - Fixed LocalLeft event occasionally triggered incorrect.
 - Fixed MediaOption.setPin() doesn't appear to work.
 
+---
 ## [2.7.0](https://github.com/webex/webex-android-sdk/releases/tag/2.7.0)
 Released on 2020-12-14.
 #### Added
