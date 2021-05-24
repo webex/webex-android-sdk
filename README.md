@@ -586,4 +586,4 @@ For a complete reference to all supported APIs, please visit [Webex Android SDK 
 
 All contents are licensed under the Cisco EULA
 
-See [License](License.txt) for details.
+See [License](LICENSE.txt) for details.
