@@ -173,6 +173,7 @@ public class DiagnosticsEventBuilder {
                     .clientType(ClientType.TEAMS_CLIENT)
                     .os(ClientInfo.Os.ANDROID)
                     .osVersion(Build.VERSION.RELEASE)
+                    .localIP(NetworkUtils.getLocalIpAddress())
                     //.subClientType(SubClientType.WEB_APP)
                     .build();
         } catch (ValidationException e) {
