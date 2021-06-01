@@ -22,12 +22,19 @@
 
 package com.ciscowebex.androidsdk.internal.media.device;
 
-import android.bluetooth.*;
+import android.bluetooth.BluetoothA2dp;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothHeadset;
+import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.media.AudioManager;
 
-import com.ciscowebex.androidsdk.internal.media.*;
+import com.ciscowebex.androidsdk.internal.media.MediaCapability;
+import com.ciscowebex.androidsdk.internal.media.WMEngine;
+import com.ciscowebex.androidsdk.internal.media.WmeSession;
 import com.ciscowebex.androidsdk.phone.Call;
+import com.ciscowebex.androidsdk.phone.Phone;
 import com.github.benoitdion.ln.Ln;
 import com.webex.wme.MediaSessionAPI;
 
@@ -86,17 +93,30 @@ public class AudioDeviceConnectionManager {
     public void requestAudioFocus() {
         WmeSession session = mediaEngine.getSession();
         boolean audioOnly = session != null && !session.getCapability().hasVideo() && !session.getCapability().hasSharing();
+        Phone.LoudSpeakerState state = session == null ? Phone.LoudSpeakerState.NONE : session.getCapability().getLoudSpeakerState();
         try {
             if (session != null && session.getCapability().hasAudio()) {
-                if (!audioManager.isWiredHeadsetOrBluetoothConnected()) {
-                    if (audioOnly) {
+                if (state == Phone.LoudSpeakerState.NONE) {
+                    if (!audioManager.isWiredHeadsetOrBluetoothConnected()) {
+                        if (audioOnly) {
+                            Ln.d("requestAudioFocus: play through earpiece");
+                            devicePreference = DevicePref.EARPIECE;
+                            playThroughEarpiece();
+                        } else {
+                            Ln.d("requestAudioFocus: play through speaker");
+                            devicePreference = DevicePref.SPEAKER;
+                            playThroughSpeakerPhone();
+                        }
+                    }
+                } else if (state == Phone.LoudSpeakerState.ON) {
+                    Ln.d("requestAudioFocus: play through speaker");
+                    devicePreference = DevicePref.SPEAKER;
+                    playThroughSpeakerPhone();
+                } else if (state == Phone.LoudSpeakerState.OFF) {
+                    if (!audioManager.isWiredHeadsetOrBluetoothConnected()) {
                         Ln.d("requestAudioFocus: play through earpiece");
                         devicePreference = DevicePref.EARPIECE;
                         playThroughEarpiece();
-                    } else {
-                        Ln.d("requestAudioFocus: play through speaker");
-                        devicePreference = DevicePref.SPEAKER;
-                        playThroughSpeakerPhone();
                     }
                 }
             }

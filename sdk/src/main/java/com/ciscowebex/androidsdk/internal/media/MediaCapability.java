@@ -91,6 +91,8 @@ public class MediaCapability {
 
     private Phone.AudioBRNMode audioBRNMode = Phone.AudioBRNMode.HP;
 
+    private Phone.LoudSpeakerState loudSpeakerState = Phone.LoudSpeakerState.NONE;
+
     public MediaCapability() {
         setAudioEnhancementModels(null);
     }
@@ -174,6 +176,14 @@ public class MediaCapability {
 
     public void setAudioBRNMode(Phone.AudioBRNMode audioBRNMode) {
         this.audioBRNMode = audioBRNMode;
+    }
+
+    public void setLoudSpeakerState(Phone.LoudSpeakerState loudSpeakerState) {
+        this.loudSpeakerState = loudSpeakerState;
+    }
+
+    public Phone.LoudSpeakerState getLoudSpeakerState() {
+        return loudSpeakerState;
     }
 
     public void setAudioPlaybackFile(String audioPlaybackFile) {

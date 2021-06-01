@@ -213,6 +213,28 @@ public interface Phone {
     }
 
     /**
+     * The state to control loud speaker using when dialing or answering a call, default is NONE.
+     *
+     * @since 2.8.1
+     */
+    enum LoudSpeakerState{
+        /**
+         * The default state, will use wired headset or Bluetooth, if it is connected.
+         * Otherwise, will use earpiece for audio calls, and speaker for video calls.
+         */
+        NONE,
+        /**
+         * Use loud speaker.
+         */
+        ON,
+        /**
+         * Not use loud speaker. In this state will use wired headset or Bluetooth, if it is connected.
+         * Otherwise, use earpiece.
+         */
+        OFF
+    }
+
+    /**
      * The interface for a listener for incoming call
      *
      * @since 0.1
@@ -607,4 +629,20 @@ public interface Phone {
      * @since 2.8.0
      */
     void enableAskingReadPhoneStatePermission(boolean enable);
+
+    /**
+     * Set the state of loud speaker, when dialing or answering a call, default is {@link LoudSpeakerState#NONE}.
+     * @see LoudSpeakerState
+     * @param state the state of loud speaker.
+     * @since 2.8.1
+     */
+    void setLoudSpeakerState(LoudSpeakerState state);
+
+    /**
+     * Return the state of loud speaker.
+     * @return the state of loud speaker.
+     * @see LoudSpeakerState
+     * @since 2.8.1
+     */
+    LoudSpeakerState getLoudSpeakerState();
 }

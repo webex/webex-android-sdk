@@ -130,6 +130,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     private boolean enableBackgroundConnection = false;
     private boolean enableAudioBNR = false;
     private AudioBRNMode audioBRNMode = AudioBRNMode.HP;
+    private LoudSpeakerState loudSpeakerState = LoudSpeakerState.NONE;
     private boolean enableAskingPhoneState = true;
 
     private String uuid = UUID.randomUUID().toString();
@@ -592,6 +593,16 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public AudioBRNMode getAudioBNRMode() {
         return audioBRNMode;
+    }
+
+    @Override
+    public void setLoudSpeakerState(LoudSpeakerState state) {
+        this.loudSpeakerState = state;
+    }
+
+    @Override
+    public LoudSpeakerState getLoudSpeakerState() {
+        return loudSpeakerState;
     }
 
     @Override
@@ -1442,6 +1453,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         capability.setAudioEnhancementModels(audioEnhancementModels);
         capability.setEnableAudioBNR(isAudioBNREnable());
         capability.setAudioBRNMode(getAudioBNRMode());
+        capability.setLoudSpeakerState(getLoudSpeakerState());
         if (device != null) {
             capability.setDeviceSettings(device.getDeviceSettings());
         }
