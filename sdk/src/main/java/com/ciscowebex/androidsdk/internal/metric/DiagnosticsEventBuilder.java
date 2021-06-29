@@ -28,6 +28,7 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.text.TextUtils;
 import com.cisco.wx2.diagnostic_events.*;
+import com.ciscowebex.androidsdk.BuildConfig;
 import com.ciscowebex.androidsdk.Webex;
 import com.ciscowebex.androidsdk.internal.Credentials;
 import com.ciscowebex.androidsdk.internal.model.GenericMetricModel;
@@ -170,11 +171,12 @@ public class DiagnosticsEventBuilder {
     private ClientInfo buildClientInfo() {
         try {
             return ClientInfo.builder()
-                    .clientType(ClientType.TEAMS_CLIENT)
+                    .clientType(ClientType.WEBEX_SDK)
+                    .clientVersion(BuildConfig.VERSION_NAME)
+                    .subClientType(SubClientType.MOBILE_APP)
                     .os(ClientInfo.Os.ANDROID)
                     .osVersion(Build.VERSION.RELEASE)
                     .localIP(NetworkUtils.getLocalIpAddress())
-                    //.subClientType(SubClientType.WEB_APP)
                     .build();
         } catch (ValidationException e) {
             Ln.e(e, "Failed to build valid clientInfo property for event");
