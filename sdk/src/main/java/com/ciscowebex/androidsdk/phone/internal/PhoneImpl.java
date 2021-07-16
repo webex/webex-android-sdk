@@ -269,7 +269,9 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
 
     @Override
     public void onTransition(boolean foreground) {
-        Ln.d("Status transition: " + foreground + " enableBackgroundStream: " + enableBackgroundStream);
+        Ln.d("Status transition: " + foreground
+                + " enableBackgroundStream: " + enableBackgroundStream
+                + " enableBackgroundConnection: " + enableBackgroundConnection);
         Queue.serial.run(() -> {
             if (mercury != null) {
                 if (foreground) {

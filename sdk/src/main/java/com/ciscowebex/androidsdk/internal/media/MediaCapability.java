@@ -278,10 +278,14 @@ public class MediaCapability {
         // For SPARK-166469
         config.SetDeviceMediaSettings("{\"audio\": {\"AECType\": 2,\"Version\": 4, \"AudioMode\": 2, \"CaptureMode\": 20, \"PlaybackMode\": 12}}");
 
-        if (isHardwareCodecEnable()) {
-            Ln.d("HW Settings: " + hardwareVideoSetting);
-            config.SetDeviceMediaSettings(hardwareVideoSetting);
-        }
+        // ===========For SPARK-219550================
+        // Confirmed from WME team, the HW setting will handle internal in WME library, so remove these codes
+//        if (isHardwareCodecEnable()) {
+//            Ln.d("HW Settings: " + hardwareVideoSetting);
+//            config.SetDeviceMediaSettings(hardwareVideoSetting);
+//        }
+        // ===========For SPARK-219550================
+
 //        config.enableTCAEC(false);
 //        config.SetShowStunTraceIP(true);
         config.EnableFixAudioProcessingArch(true);
