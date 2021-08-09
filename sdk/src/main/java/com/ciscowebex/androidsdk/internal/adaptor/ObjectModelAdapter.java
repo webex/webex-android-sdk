@@ -23,8 +23,27 @@
 package com.ciscowebex.androidsdk.internal.adaptor;
 
 import android.net.Uri;
-import com.ciscowebex.androidsdk.internal.model.*;
-import com.google.gson.*;
+
+import com.ciscowebex.androidsdk.internal.model.ActivityModel;
+import com.ciscowebex.androidsdk.internal.model.CommentModel;
+import com.ciscowebex.androidsdk.internal.model.ContentModel;
+import com.ciscowebex.androidsdk.internal.model.ConversationModel;
+import com.ciscowebex.androidsdk.internal.model.FileModel;
+import com.ciscowebex.androidsdk.internal.model.GroupMentionModel;
+import com.ciscowebex.androidsdk.internal.model.ObjectModel;
+import com.ciscowebex.androidsdk.internal.model.PersonModel;
+import com.ciscowebex.androidsdk.internal.model.SpacePropertyModel;
+import com.ciscowebex.androidsdk.internal.model.TeamModel;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
 import java.util.Date;
@@ -75,7 +94,7 @@ public class ObjectModelAdapter implements JsonDeserializer<ObjectModel>, JsonSe
             ret.setDisplayName(getField(object, "displayName"));
             JsonElement urlElement = object.get("url");
             if (urlElement != null) {
-                ret.setUrl(jsonDeserializationContext.deserialize(urlElement, Uri.class));
+                ret.setUrl(jsonDeserializationContext.deserialize(urlElement, String.class));
             }
             JsonElement publishedElement = object.get("published");
             if (publishedElement != null) {
