@@ -20,6 +20,7 @@ For creating a new app integration, new client id generation, etc. visit [App Re
 - [Migration Guide](#migration-guide)
 - [Sample App](#sample-app)
 - [API Reference](#api-reference)
+- [FedRAMP Testing Guide](#fedramp-testing-guide)
 - [License](#license)
 
 ## Advantages
@@ -30,9 +31,11 @@ For creating a new app integration, new client id generation, etc. visit [App Re
 
 ## Notes
 * Integrations created earlier will not work with v3 because they are not entitled to the scopes required by v3. You can either raise a support request to enable these scopes for your appId or you could create a new Integration that's meant to be used for v3. This does not affect Guest Issuer JWT token-based sign-in.
-* We do not support external auth code login anymore.
+* FedRAMP(
+Federal Risk and Authorization Management Program) support from 3.1 onwards.
 * Currently all resource ids that are exposed from the SDK are barebones GUIDs. You cannot directly use these ids to make calls to [webexapis.com](webexapis.com). You'll need to call `Webex.base64Encode(type: ResourceType, resource: String, handler: CompletionHandler<String>)` to get a base64 encoded resource. However, you're free to interchange between base64 encoded resource ids and barebones GUID while providing them as input to the SDK APIs.
 * You can add `android:extractNativeLibs="true"` inside your `<application>` tag in your Manifest file to reduce the generated apk size.
+* You can split the application APKs based on architecture for individual distribution. To get details of each architecture library and sample application sizes please visit [here](https://github.com/webex/webex-android-sdk/wiki/Android-SDK-v3---Library-and-Sample-application-sizes)
 
 ## Integration
 
@@ -67,7 +70,7 @@ For creating a new app integration, new client id generation, etc. visit [App Re
 
         ```
         dependencies {
-            implementation 'com.ciscowebex:androidsdk:3.0.0@aar'
+            implementation 'com.ciscowebex:androidsdk:3.1.0@aar'
         }
         ```
 ## Usage
@@ -86,9 +89,10 @@ Here are some examples of how to use the Android SDK in your app.
     val clientId: String = "YOUR_CLIENT_ID"
     val clientSecret: String = "YOUR_CLIENT_SECRET"
     val redirectUri: String = "https://webexdemoapp.com"
+    val scope: String = "spark:all"
     val email = "EMAIL_ID_OF_END_USER" // Get email id from end user
 
-    val authenticator: OAuthWebViewAuthenticator = OAuthWebViewAuthenticator(clientId, clientSecret, redirectUri, email)
+    val authenticator: OAuthWebViewAuthenticator = OAuthWebViewAuthenticator(clientId, clientSecret, scope, redirectUri, email)
     val webex = Webex(application, authenticator)
     webex.enableConsoleLogger(true)
     webex.setLogLevel(LogLevel.VERBOSE) // Highly recommended to make this end-user configurable incase you need to get detailed logs.
@@ -581,6 +585,9 @@ The sample app demonstrates the common usage of SDK-v3. You can view the demo ap
 
 ## API Reference
 For a complete reference to all supported APIs, please visit [Webex Android SDK API docs](https://webex.github.io/webex-android-sdk/).
+
+## FedRAMP Testing Guide
+For complete testing guide, please visit [FedRAMP Testing Guide](https://github.com/webex/webex-android-sdk/wiki/Android-SDK---FedRAMP-Environment)
 
 ## License
 

@@ -2,7 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 
-#### 3.0.0
+#### 3.1.0 Releases
+- `3.1.0` Releases - [3.1.0](#310)
+
+#### 3.0.0 Releases
 - `3.0.0` Releases - [3.0.0](#300)
 
 #### 2.8.0 Releases
@@ -41,6 +44,25 @@ All notable changes to this project will be documented in this file.
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
 
+
+---
+## [3.1.0](https://github.com/webex/webex-android-sdk/releases/tag/3.1.0)
+Released on **16 August, 2021**.
+
+#### Added
+- `Phone.getServiceUrl(serviceUrlType: ServiceUrlType)` - to expose service Urls.
+- OAuthAuthenticator.
+- `getAuthorizationUrl(handler: CompletionHandler<String?>)` in OAuthWebViewAuthenticator.
+- `Call.isSpaceMeeting` to check space backed meeting type.
+- `Call.isSelfCreator` to check self is the initiator of the call.
+- `Call.hasAnyoneJoined` to check anyone joined the meeting, excluding self.
+- `Call.isPmr` to check meeting is in PMR (personal meeting room).
+- `Call.isMeeting` to check the call is meeting type.
+- `Call.isScheduledMeeting` to check the call is schedule meeting type.
+- FedRAMP app configuration support.
+
+#### Updated
+- `OAuthWebViewAuthenticator` takes scope as a constructor parameter
 
 ---
 ## [3.0.0](https://github.com/webex/webex-android-sdk/releases/tag/3.0.0)
