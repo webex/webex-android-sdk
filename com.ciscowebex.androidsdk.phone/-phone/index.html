@@ -62,6 +62,15 @@
 </tr>
 <tr>
 <td>
+<p><a href="-service-url-type/index.html">ServiceUrlType</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">ServiceUrlType</span></code>
+<p>The enumeration of service url.</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="-video-stream-mode/index.html">VideoStreamMode</a></p>
 </td>
 <td>
@@ -203,6 +212,15 @@ When you use picture-in-picture mode in app should set this method to true befor
 <td>
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getIncomingCallListener</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-incoming-call-listener/index.html"><span class="identifier">Phone.IncomingCallListener</span></a><span class="symbol">?</span></code>
 <p>The listener for incoming call</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-service-url.html">getServiceUrl</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getServiceUrl</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$getServiceUrl(com.ciscowebex.androidsdk.phone.Phone.ServiceUrlType)/serviceUrlType">serviceUrlType</span><span class="symbol">:</span>&nbsp;<a href="-service-url-type/index.html"><span class="identifier">Phone.ServiceUrlType</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Return the required service url, return null if unregistered.</p>
 </td>
 </tr>
 <tr>
@@ -353,7 +371,7 @@ since the hardware codec is high depend on android devices, some devices support
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setSharingMaxRxBandwidth</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setSharingMaxRxBandwidth(kotlin.Int)/bandwidth">bandwidth</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
 <p>Set the max receiving bandwidth for content sharing in unit bps for the call.
 Only effective if set before the start of call.
-if 0, default value of 4000*1000 is used.</p>
+if 0, default value of 8000*1000 is used.</p>
 </td>
 </tr>
 <tr>
@@ -364,7 +382,7 @@ if 0, default value of 4000*1000 is used.</p>
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setVideoMaxRxBandwidth</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setVideoMaxRxBandwidth(kotlin.Int)/bandwidth">bandwidth</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
 <p>Set the max receiving bandwidth for video in unit bps for the call.
 Only effective if set before the start of call.
-if 0, default value of 2000*1000 is used.</p>
+if 0, default value of 2500*1000 is used.</p>
 </td>
 </tr>
 <tr>
@@ -375,7 +393,7 @@ if 0, default value of 2000*1000 is used.</p>
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setVideoMaxTxBandwidth</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setVideoMaxTxBandwidth(kotlin.Int)/bandwidth">bandwidth</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
 <p>Set the max sending bandwidth for video in unit bps for the call.
 Only effective if set before the start of call.
-if 0, default value of 2000*1000 is used.</p>
+if 0, default value of 2500*1000 is used.</p>
 </td>
 </tr>
 <tr>
