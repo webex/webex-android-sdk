@@ -36,6 +36,7 @@ Federal Risk and Authorization Management Program) support from 3.1 onwards.
 * Currently all resource ids that are exposed from the SDK are barebones GUIDs. You cannot directly use these ids to make calls to [webexapis.com](webexapis.com). You'll need to call `Webex.base64Encode(type: ResourceType, resource: String, handler: CompletionHandler<String>)` to get a base64 encoded resource. However, you're free to interchange between base64 encoded resource ids and barebones GUID while providing them as input to the SDK APIs.
 * You can add `android:extractNativeLibs="true"` inside your `<application>` tag in your Manifest file to reduce the generated apk size.
 * You can split the application APKs based on architecture for individual distribution. To get details of each architecture library and sample application sizes please visit [here](https://github.com/webex/webex-android-sdk/wiki/Android-SDK-v3---Library-and-Sample-application-sizes)
+* The `Webex.initialize` method should be called before invoking any other api.
 
 ## Integration
 
@@ -98,7 +99,7 @@ Here are some examples of how to use the Android SDK in your app.
     webex.setLogLevel(LogLevel.VERBOSE) // Highly recommended to make this end-user configurable incase you need to get detailed logs.
 
     webex.initialize(CompletionHandler { result ->
-        if (result.error != null) {
+        if (result.error == null) {
             //already authorised
         } else {
             authenticator.authorize(loginWebview, CompletionHandler { result ->
