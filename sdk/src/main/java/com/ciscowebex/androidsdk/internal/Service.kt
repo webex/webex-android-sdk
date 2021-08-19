@@ -27,7 +27,7 @@ import java.util.*
 
 enum class Service {
 
-    Hydra, Region, U2C, Wdm, Kms, Locus, Conv, Metrics, CalliopeDiscorey;
+    Hydra, Region, U2C, Wdm, Kms, Locus, Conv, Metrics, CalliopeDiscovery, IdBroker;
 
     fun homed(device: Device? = null): ServiceReqeust {
         return ServiceReqeust(this.baseUrl(device))
@@ -40,12 +40,13 @@ enum class Service {
     fun baseUrl(device: Device? = null): String {
         return when (this) {
             Region -> "https://ds.ciscospark.com/v1"
+            IdBroker -> "https://idbroker.webex.com/idb/oauth2/v1"
             U2C -> if (BuildConfig.INTEGRATION_TEST) "https://u2c-intb.ciscospark.com/u2c/api/v1" else "https://u2c.wbx2.com/u2c/api/v1"
             Wdm -> if (BuildConfig.INTEGRATION_TEST) "https://wdm-intb.ciscospark.com/wdm/api/v1" else "https://wdm-a.wbx2.com/wdm/api/v1"
             Hydra -> if (BuildConfig.INTEGRATION_TEST) "https://apialpha.ciscospark.com/v1" else "https://api.ciscospark.com/v1"
             Locus -> baseUrl(device, "https://locus-a.wbx2.com/locus/api/v1")
             Metrics -> baseUrl(device, "https://metrics-a.wbx2.com/metrics/api/v1")
-            CalliopeDiscorey -> baseUrl(device, "https://calliope-a.wbx2.com/calliope/api/discovery/v1")
+            CalliopeDiscovery -> baseUrl(device, "https://calliope-a.wbx2.com/calliope/api/discovery/v1")
             Kms -> {
                 val defaultValue = if (BuildConfig.INTEGRATION_TEST) "https://encryption-intb.ciscospark.com/encryption/api/v1" else "https://encryption-a.wbx2.com/encryption/api/v1"
                 baseUrl(device, defaultValue)
@@ -65,7 +66,7 @@ enum class Service {
         return when (this) {
             Kms -> "encryption"
             Conv -> "conversation"
-            CalliopeDiscorey -> "calliopeDiscovery"
+            CalliopeDiscovery -> "calliopeDiscovery"
             else -> name.toLowerCase(Locale.US)
         }
     }

@@ -87,7 +87,7 @@ public class ReachabilityService {
             Ln.e("Failure: Not register!");
             return;
         }
-        Service.CalliopeDiscorey.homed(phone.getDevice()).get("clusters")
+        Service.CalliopeDiscovery.homed(phone.getDevice()).get("clusters")
                 .auth(phone.getAuthenticator()).model(CalliopeClusterModel.class)
                 .error((CompletionHandler<CalliopeClusterModel>) error -> Ln.e("Failure: " + error))
                 .async((Closure<CalliopeClusterModel>) model -> {
