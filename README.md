@@ -120,7 +120,7 @@ Here are some examples of how to use the Android SDK in your app.
     val authenticator: JWTAuthenticator = JWTAuthenticator()
     val webex = Webex(application, authenticator)
     webex.initialize(CompletionHandler { result ->
-        if (result.error != null) {
+        if (result.error == null) {
             //already authorised
         } else {
             authenticator.authorize(token, CompletionHandler { result ->
