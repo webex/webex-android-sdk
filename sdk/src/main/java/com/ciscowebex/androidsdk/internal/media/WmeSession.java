@@ -823,9 +823,9 @@ public class WmeSession implements ScreenShareContext.OnShareStoppedListener, Me
                 if (vid == WMEngine.MAIN_VID) {
                     remoteVideoTrack.init(track);
                     if (getCapability().isHardwareCodecEnable()) {
-                        MediaHelper.requestSCR(remoteVideoTrack.getTrack(), MediaSCR.p720);
+                        MediaHelper.requestSCR(remoteVideoTrack.getTrack(), MediaSCR.p1080);
                     } else {
-                        MediaHelper.requestSCR(remoteVideoTrack.getTrack(), MediaSCR.p360);
+                        MediaHelper.requestSCR(remoteVideoTrack.getTrack(), MediaSCR.p720);
                     }
                 } else {
                     Queue.main.run(() -> {
