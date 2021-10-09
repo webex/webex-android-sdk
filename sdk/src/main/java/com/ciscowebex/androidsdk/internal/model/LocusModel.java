@@ -654,7 +654,7 @@ public class LocusModel {
 
     public boolean isInactive() {
         LocusStateModel model = getFullState();
-        return  model != null && model.getState() == LocusStateModel.State.INACTIVE;
+        return model != null && model.getState() == LocusStateModel.State.INACTIVE;
     }
 
     public boolean isSelfInLobby() {
@@ -741,7 +741,8 @@ public class LocusModel {
         return m.getSdp();
     }
 
-    public @Nullable String getMediaShareUrl() {
+    public @Nullable
+    String getMediaShareUrl() {
         if (getMediaShares() != null) {
             for (MediaShareModel mediaShare : getMediaShares()) {
                 if (MediaShareModel.SHARE_CONTENT_TYPE.equals(mediaShare.getName())) {
@@ -822,9 +823,7 @@ public class LocusModel {
         if (!Checker.isEmpty(model.participants)) {
             for (LocusParticipantModel participant : model.participants) {
                 participants.remove(participant);
-                if (!participant.isRemoved()) {
-                    participants.add(participant);
-                }
+                participants.add(participant);
             }
         }
         ret.participants = new ArrayList<>(participants);

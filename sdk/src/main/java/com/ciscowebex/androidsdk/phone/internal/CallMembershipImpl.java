@@ -95,6 +95,10 @@ public class CallMembershipImpl implements CallMembership {
         return fromLocusState(model.getState(), model.isInLobby());
     }
 
+    boolean isRemoved(){
+        return model.isRemoved();
+    }
+
     @Override
     public String getDisplayName() {
         return model.getPerson() == null ? null : model.getPerson().getDisplayName();

@@ -757,7 +757,8 @@ public class CallImpl implements Call {
         }
         Queue.main.run(() -> {
             List<CallMembershipImpl> unduplicateMemberships = new ArrayList<>();
-            LOOP:for (CallMembershipImpl membership : memberships) {
+            LOOP:
+            for (CallMembershipImpl membership : memberships) {
                 if (!membership.getAssociatedUrls().isEmpty()) {
                     for (CallMembershipImpl m : memberships) {
                         if (membership.getAssociatedUrls().contains(m.getModel().getUrl())) {
@@ -1101,7 +1102,9 @@ public class CallImpl implements Call {
                     events.add(new CallObserver.MembershipAudioMutedControlledEvent(this, membership));
                 }
             }
-            newMemberships.add(membership);
+            if (!membership.isRemoved()) {
+                newMemberships.add(membership);
+            }
         }
         this.memberships = newMemberships;
         for (AuxStreamImpl stream : streams) {
