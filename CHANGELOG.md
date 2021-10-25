@@ -1,6 +1,8 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.2.0 Releases
+- `3.2.0` Releases - [3.2.0](#320)
 
 #### 3.1.0 Releases
 - `3.1.0` Releases - [3.1.0](#310)
@@ -43,6 +45,38 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+---
+## [3.2.0](https://github.com/webex/webex-android-sdk/releases/tag/3.2.0)
+Released on **25 October, 2021**.
+
+#### Added
+- `CalendarMeetingClient.list(fromDate : Date?, toDate : Date?, handler: CompletionHandler<List<CalendarMeeting>>)` - To get calendar meetings.
+- `CalendarMeetingClient.getById(meetingId : String, handler: CompletionHandler<CalendarMeeting>)` - To get a calendar meeting by id.
+- `CalendarMeetingClient.setObserver(observer: CalendarMeetingObserver?)` - To listen to calendar events (Added, Updated, Removed)
+- Custom token authentication
+- `TokenAuthenticator.authorize(accessToken: String, expiryInSeconds: Int?, handler: CompletionHandler<Void>)` - To set a custom token
+- `TokenAuthenticator.setOnTokenExpiredListener(callback: CompletionHandler<Void>)` - Callback triggered when token has expired
+- Custom/Blur Background for calls
+- `Phone.isVirtualBackgroundSupported()` to check if virtual background is supported
+- `Phone.fetchVirtualBackgrounds(handler: CompletionHandler<List<VirtualBackground>>)` to list virtual backgrounds
+- `Phone.addVirtualBackground(image: LocalFile, handler: CompletionHandler<VirtualBackground>)` to add a virtual background
+- `Phone.removeVirtualBackground(backgroundItem: VirtualBackground, handler: CompletionHandler<Boolean>)` to remove a virtual background
+- `Phone.applyVirtualBackground(backgroundItem: VirtualBackground, mode:  VirtualBackgroundMode, handler: CompletionHandler<Boolean>)` to apply a virtual backround
+- `Phone.setMaxVirtualBackgroundItems(limit: Int)` to limit the number of custom virtual backgrounds
+- `Phone.getMaxVirtualBackgroundItems(): Int` to get the limit of number of custom virtual backgrounds
+- `CallObserver.onCpuHitThreshold()` - Callback to notify developer when CPU threshold is reached
+
+#### Resolved Bugs
+- Dial callback not received.
+- Meeting Signal after restart inconsistency.
+- Calling Screen Infinite loading - wrong meeting Id dial.
+- Re-login crash without restart of application.
+- Meeting subject incorrect .
+- Remote Video rendering issue when re-join meeting.
+- Local video stopped after ending whatsapp/hangout call.
+- Video surfaces crash on leaving meeting.
+- HW Acceleration video resolution 720p.
 
 
 ---

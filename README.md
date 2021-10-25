@@ -1,27 +1,33 @@
 # Cisco Webex Android SDK
 
-> The Cisco Webex™ Android SDK Version 3.0.0
+> The Cisco Webex™ Android SDK Version 3.2.0
 
 The Cisco Webex Android SDK makes it easy to integrate secure and convenient Cisco Webex messaging and calling features in your Android apps.
 
 This SDK is built with **Android SDK Tools 29** and requires **Android API Level 24** or later.
 
-## New Integration
-For creating a new app integration, new client id generation, etc. visit [App Registration For Mobile SDK v3](https://github.com/webex/webex-android-sdk/wiki/App-Registration-for-Mobile-SDK-v3-)
-
 ## Table of Contents
 
+- [New Integration](#new-integration)
 - [Advantages](#advantages)
 - [Notes](#notes)
 - [Integration](#integration)
+  - [Option 1](#option-1)
+  - [Option 2](#option-2)
 - [Usage](#usage)
+- [Examples](#examples)
 - [Multi Stream](#multi-stream)
 - [CUCM](#cucm)
+- [Virtual Background](#virtual-background)
+- [Calendar Meetings](#calendar-meetings)
 - [Migration Guide](#migration-guide)
 - [Sample App](#sample-app)
 - [API Reference](#api-reference)
 - [FedRAMP Testing Guide](#fedramp-testing-guide)
 - [License](#license)
+
+## New Integration
+For creating a new app integration, new client id generation, etc. visit [App Registration For Mobile SDK v3](https://github.com/webex/webex-android-sdk/wiki/App-Registration-for-Mobile-SDK-v3-)
 
 ## Advantages
 * Unified feature set: Meeting, Messaging, CUCM calling.
@@ -134,7 +140,29 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-3. Create a new Cisco Webex space, add users to the space, and send a message:
+3. Create a new `Webex` instance using access token authentication
+
+   ```kotlin
+    val token: String = "<your-access-token>"
+    val expiryInSeconds = 60      //expiry time in seconds
+    val authenticator: TokenAuthenticator = TokenAuthenticator()
+    val webex = Webex(application, authenticator)
+    webex.initialize(CompletionHandler { result ->
+        if (result.error == null) {
+            //already authorised
+        } else {
+            authenticator.authorize(token, expiryInSeconds, CompletionHandler { result ->
+                    if (result.error != null) {
+                        //Handle the error
+                    }else{
+                        //Authorization successful
+                    }
+                })
+        }
+    })
+    ```
+
+4. Create a new Cisco Webex space, add users to the space, and send a message:
 
     ```kotlin
     // Create a Cisco Webex space:
@@ -163,7 +191,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-4. Make an outgoing call:
+5. Make an outgoing call:
 
     ```kotlin
     webex.phone.dial("person@example.com", MediaOption.audioVideo(local, remote), CompletionHandler {
@@ -184,7 +212,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-5. Receive a call:
+6. Receive a call:
 
     ```kotlin
     webex.phone.setIncomingCallListener(object : Phone.IncomingCallListener {
@@ -198,7 +226,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-6. Make a space call:
+7. Make a space call:
 
     ```kotlin
     webex.phone().dial(spaceId, MediaOption.audioVideoSharing(Pair(localView,remoteView), screenShareView), CompletionHandler { result ->
@@ -239,7 +267,7 @@ Here are some examples of how to use the Android SDK in your app.
     });
     ```
 
-7. Screen sharing:
+8. Screen sharing:
 
     ```kotlin
     webex.phone.dial("spaceId", MediaOption.audioVideoSharing(Pair(localView, remoteView), screenShareView), CompletionHandler {
@@ -272,7 +300,7 @@ Here are some examples of how to use the Android SDK in your app.
         }
     })
     ```
-8. Start/stop sharing screen:
+9.  Start/stop sharing screen:
 
     ```kotlin
     call.startSharing(CompletionHandler {
@@ -287,7 +315,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-9. Post a message
+10. Post a message
 
     ```kotlin
     webex.messages.post(targetId, Message.draft(Message.Text.markdown("**Hello**", null, null)).addAttachments(localFile), CompletionHandler { result ->
@@ -300,7 +328,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-10. Post a threaded message
+11. Post a threaded message
 
     ```kotlin
     webex.messages.post(targetId, Message.draft(Message.Text.markdown("**Hello**", null, null))
@@ -316,7 +344,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-11. Set MessageObserver to receive messaging events
+12. Set MessageObserver to receive messaging events
     ```kotlin
     webex.messages.setMessageObserver(object : MessageObserver {
         override fun onEvent(event: MessageObserver.MessageEvent) {
@@ -341,7 +369,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-12. Send Read Receipts
+13. Send Read Receipts
 
     ```kotlin
      //Mark all existing messages in space as read
@@ -360,7 +388,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-13. Get read status of a space
+14. Get read status of a space
 
     ```kotlin
     webex.spaces.getWithReadStatus(spaceId, CompletionHandler { result ->
@@ -372,7 +400,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-14. Set MembershipObserver to receive Membership events
+15. Set MembershipObserver to receive Membership events
 
     ```kotlin
     webex.memberships.setMembershipObserver(object : MembershipObserver {
@@ -399,7 +427,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-15. Set SpaceObserver to receive Space events
+16. Set SpaceObserver to receive Space events
 
     ```kotlin
     webex.spaces.setSpaceObserver(object : SpaceObserver {
@@ -426,7 +454,7 @@ Here are some examples of how to use the Android SDK in your app.
     })
     ```
 
-16. Get space meeting details
+17. Get space meeting details
 
     ```kotlin
     webex.spaces().getMeeting(spaceId, new CompletionHandler<SpaceMeeting>() {
@@ -440,7 +468,7 @@ Here are some examples of how to use the Android SDK in your app.
     });
     ```
 
-17. Get read status of a space
+18. Get read status of a space
 
     ```kotlin
     webex.spaces().getWithReadStatus(spaceId, new CompletionHandler<SpaceReadStatus>() {
@@ -454,20 +482,20 @@ Here are some examples of how to use the Android SDK in your app.
     });
     ```
 
-18. Join password-protected meetings
+19. Join password-protected meetings
 
     ```kotlin
     mediaOption.setModerator(isModerator: Boolean)
     mediaOption.setPin(pin: String)
     ```
 
-19. Change the composite video layout during a call
+20. Change the composite video layout during a call
 
     ```kotlin
     activeCall.setCompositedVideoLayout(layout: MediaOption.CompositedVideoLayout)
     ```
 
-20. Specify how the remote video adjusts its content to be rendered in a view
+21. Specify how the remote video adjusts its content to be rendered in a view
 
     ```kotlin
     activeCall.setRemoteVideoRenderMode(mode);
@@ -484,22 +512,22 @@ Here are some examples of how to use the Android SDK in your app.
         }
     })
     ```
-21. Change the max sending fps for video
+22. Change the max sending fps for video
 
     ```kotlin
     webex.phone.setAdvancedSetting(AdvancedSetting.VideoMaxTxFPS(value: Int) as AdvancedSetting<*>)
     ```
-22. Enable(disable) android.hardware.camera2
+23. Enable(disable) android.hardware.camera2
 
     ```kotlin
     webex.phone.setAdvancedSetting(AdvancedSetting.VideoEnableCamera2(value: Boolean) as AdvancedSetting<*>)
     ```
-23. Whether the app can continue video streaming when the app is in background
+24. Whether the app can continue video streaming when the app is in background
 
     ```kotlin
     webex.phone.enableBackgroundStream(enable: Boolean)
     ```
-24. Get a list of spaces that have an ongoing call
+25. Get a list of spaces that have an ongoing call
 
     ```kotlin
     webex.spaces.listWithActiveCalls(CompletionHandler { result ->
@@ -510,38 +538,38 @@ Here are some examples of how to use the Android SDK in your app.
         }
     })
     ```
-25. Check if the message mentioned everyone in space
+26. Check if the message mentioned everyone in space
 
     ```kotlin
     message.isAllMentioned()
     ```
-26. Get all people mentioned in the message
+27. Get all people mentioned in the message
 
     ```kotlin
     message.getMentions()
     ```
-27. Change the max capture fps when screen sharing
+28. Change the max capture fps when screen sharing
 
     ```kotlin
     webex.phone.setAdvancedSetting(AdvancedSetting.ShareMaxCaptureFPS(value: Int) as AdvancedSetting<*>)
     ```
-28. Switch the audio play output mode during a call
+29. Switch the audio play output mode during a call
 
     ```kotlin
     activeCall.switchAudioOutput(mode: Call.AudioOutputMode);
     ```
 
-29. Enable/Disable Background Noise Removal(BNR)
+30. Enable/Disable Background Noise Removal(BNR)
 
     ```kotlin
     webex.phone.enableAudioBNR(enable: Boolean)
     ```
-30. Set Background Noise Removal(BNR) mode
+31. Set Background Noise Removal(BNR) mode
 
     ```kotlin
     webex.phone.setAudioBNRMode(mode: Phone.AudioBRNMode)
     ```
-31. Edit a message
+32. Edit a message
 
     ```kotlin
     webex.messages.edit(originalMessage, messageText, mentions, CompletionHandler { result ->
@@ -553,19 +581,19 @@ Here are some examples of how to use the Android SDK in your app.
         }
     })
     ```
-32. Enable/Disable background connection
+33. Enable/Disable background connection
 
     ```kotlin
     webex.phone.enableBackgroundConnection(enable: Boolean)
     ```
 
-33. Enable/Disable console logging
+34. Enable/Disable console logging
 
     ```kotlin
     webex.enableConsoleLogger(enable: Boolean)
     ```
 
-34. Set log level of logging
+35. Set log level of logging
 
     ```kotlin
     webex.setLogLevel(logLevel: LogLevel)
@@ -573,10 +601,16 @@ Here are some examples of how to use the Android SDK in your app.
 
 
 ## Multi Stream
-For multistream related API's see [Multi Stream v3](https://github.com/webex/webex-android-sdk/wiki/Multi-Stream-v3-)
+For multistream related APIs see [Multi Stream v3](https://github.com/webex/webex-android-sdk/wiki/Multi-Stream-v3-)
 
 ## CUCM
-For CUCM related API's see [CUCM Usage Guide v3](https://github.com/webex/webex-android-sdk/wiki/CUCM-Usage-Guide-v3)
+For CUCM related APIs see [CUCM Usage Guide v3](https://github.com/webex/webex-android-sdk/wiki/CUCM-Usage-Guide-v3)
+
+## Virtual Background
+For virtual background related APIs see [Virtual Background](https://github.com/webex/webex-android-sdk/wiki/Virtual-Background)
+
+## Calendar Meetings
+For Calendar Meetings related APIs see [Calendar Meetings](https://github.com/webex/webex-android-sdk/wiki/Calendar-Meetings-APIs)
 
 ## Migration Guide
 The migration guide is meant to help developers port their code from SDK-v2 to SDK-v3. See [Migration Guide For v2 to v3](https://github.com/webex/webex-android-sdk/wiki/Migration-Guide-for-v2-to-v3)
