@@ -78,11 +78,47 @@
 <p>The enumeration of remote video stream.</p>
 </td>
 </tr>
+<tr>
+<td>
+<p><a href="-virtual-background-mode/index.html">VirtualBackgroundMode</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">VirtualBackgroundMode</span></code>
+<p>Represents different types of modes for setting Virtual Background</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-virtual-background-type/index.html">VirtualBackgroundType</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">VirtualBackgroundType</span></code>
+<p>Represents different Virtual Background types</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3>Functions</h3>
 <table>
 <tbody>
+<tr>
+<td>
+<p><a href="add-virtual-background.html">addVirtualBackground</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">addVirtualBackground</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$addVirtualBackground(com.ciscowebex.androidsdk.message.LocalFile, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.VirtualBackground)))/image">image</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk.message/-local-file/index.html"><span class="identifier">LocalFile</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$addVirtualBackground(com.ciscowebex.androidsdk.message.LocalFile, com.ciscowebex.androidsdk.CompletionHandler((com.ciscowebex.androidsdk.phone.VirtualBackground)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="../-virtual-background/index.html"><span class="identifier">VirtualBackground</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>adds a virtual background</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="apply-virtual-background.html">applyVirtualBackground</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">applyVirtualBackground</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$applyVirtualBackground(com.ciscowebex.androidsdk.phone.VirtualBackground, com.ciscowebex.androidsdk.phone.Phone.VirtualBackgroundMode, com.ciscowebex.androidsdk.CompletionHandler((kotlin.Boolean)))/backgroundItem">backgroundItem</span><span class="symbol">:</span>&nbsp;<a href="../-virtual-background/index.html"><span class="identifier">VirtualBackground</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$applyVirtualBackground(com.ciscowebex.androidsdk.phone.VirtualBackground, com.ciscowebex.androidsdk.phone.Phone.VirtualBackgroundMode, com.ciscowebex.androidsdk.CompletionHandler((kotlin.Boolean)))/mode">mode</span><span class="symbol">:</span>&nbsp;<a href="-virtual-background-mode/index.html"><span class="identifier">Phone.VirtualBackgroundMode</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$applyVirtualBackground(com.ciscowebex.androidsdk.phone.VirtualBackground, com.ciscowebex.androidsdk.phone.Phone.VirtualBackgroundMode, com.ciscowebex.androidsdk.CompletionHandler((kotlin.Boolean)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Applies the virtual background for a video preview/call based on the <a href="-virtual-background-mode/index.html">VirtualBackgroundMode</a></p>
+</td>
+</tr>
 <tr>
 <td>
 <p><a href="cancel.html">cancel</a></p>
@@ -162,6 +198,15 @@ When you use picture-in-picture mode in app should set this method to true befor
 </tr>
 <tr>
 <td>
+<p><a href="fetch-virtual-backgrounds.html">fetchVirtualBackgrounds</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">fetchVirtualBackgrounds</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$fetchVirtualBackgrounds(com.ciscowebex.androidsdk.CompletionHandler((kotlin.collections.List((com.ciscowebex.androidsdk.phone.VirtualBackground)))))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-virtual-background/index.html"><span class="identifier">VirtualBackground</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>This returns the list of virtual backgrounds</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="get-advanced-setting.html">getAdvancedSetting</a></p>
 </td>
 <td>
@@ -212,6 +257,15 @@ When you use picture-in-picture mode in app should set this method to true befor
 <td>
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getIncomingCallListener</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-incoming-call-listener/index.html"><span class="identifier">Phone.IncomingCallListener</span></a><span class="symbol">?</span></code>
 <p>The listener for incoming call</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-max-virtual-background-items.html">getMaxVirtualBackgroundItems</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getMaxVirtualBackgroundItems</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Returns the limit of number of custom virtual backgrounds, default limit is 3</p>
 </td>
 </tr>
 <tr>
@@ -297,6 +351,24 @@ When you use picture-in-picture mode in app should set this method to true befor
 </tr>
 <tr>
 <td>
+<p><a href="is-virtual-background-supported.html">isVirtualBackgroundSupported</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">isVirtualBackgroundSupported</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if virtual background is supported</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remove-virtual-background.html">removeVirtualBackground</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">removeVirtualBackground</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$removeVirtualBackground(com.ciscowebex.androidsdk.phone.VirtualBackground, com.ciscowebex.androidsdk.CompletionHandler((kotlin.Boolean)))/backgroundItem">backgroundItem</span><span class="symbol">:</span>&nbsp;<a href="../-virtual-background/index.html"><span class="identifier">VirtualBackground</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$removeVirtualBackground(com.ciscowebex.androidsdk.phone.VirtualBackground, com.ciscowebex.androidsdk.CompletionHandler((kotlin.Boolean)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Removes the virtual background</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="request-video-codec-activation.html">requestVideoCodecActivation</a></p>
 </td>
 <td>
@@ -361,6 +433,16 @@ since the hardware codec is high depend on android devices, some devices support
 <td>
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setIncomingCallListener</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setIncomingCallListener(com.ciscowebex.androidsdk.phone.Phone.IncomingCallListener)/listener">listener</span><span class="symbol">:</span>&nbsp;<a href="-incoming-call-listener/index.html"><span class="identifier">Phone.IncomingCallListener</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
 <p>Set the listener to listen to the incoming call to this Phone.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-max-virtual-background-items.html">setMaxVirtualBackgroundItems</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setMaxVirtualBackgroundItems</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Phone$setMaxVirtualBackgroundItems(kotlin.Int)/limit">limit</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>The limit of number of custom virtual backgrounds, default limit is 3
+Note: If background is uploaded after the limit is exhausted, older background will be deleted to make space for new ones.</p>
 </td>
 </tr>
 <tr>

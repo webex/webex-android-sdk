@@ -1,0 +1,178 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>CalendarMeeting - sdk</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../index.html">com.ciscowebex.androidsdk.calendarMeeting</a>&nbsp;/&nbsp;<a href="./index.html">CalendarMeeting</a><br/>
+<br/>
+<h1>CalendarMeeting</h1>
+<code><span class="keyword">class </span><span class="identifier">CalendarMeeting</span></code>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-invitee/index.html">Invitee</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">Invitee</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">CalendarMeeting</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.calendarMeeting.CalendarMeeting$<init>(com.webex.scf.commonhead.models.Meeting)/chMeeting">chMeeting</span><span class="symbol">:</span>&nbsp;<span class="identifier">Meeting</span><span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="can-join.html">canJoin</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">canJoin</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is True when a meeting can be started (Few minutes before the start time) and value is true till a meeting ends
+When the state of this boolean changes, the user is notified by the <a href="../-calendar-meeting-observer/-calendar-meeting-updated/index.html">CalendarMeetingObserver.CalendarMeetingUpdated</a> event.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="description.html">description</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">description</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The description/agenda of the meeting.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="end-time.html">endTime</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">endTime</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/util/Date.html"><span class="identifier">Date</span></a><span class="symbol">?</span></code>
+<p>End date of the meeting.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="id.html">id</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">id</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The id of this meeting.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="invitees.html">invitees</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">invitees</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="-invitee/index.html"><span class="identifier">CalendarMeeting.Invitee</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code>
+<p>List of invitees in the meeting</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-all-day.html">isAllDay</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">isAllDay</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>True if the meeting is scheduled for the complete day</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-recurring.html">isRecurring</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">isRecurring</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>True if the meeting is a recurring meeting. Recurring meetings have same series id.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="link.html">link</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">link</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The link of the meeting.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="location.html">location</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">location</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The location of the meeting.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="organizer-id.html">organizerId</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">organizerId</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The id of the organizer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="organizer-name.html">organizerName</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">organizerName</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The name of the organizer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="series-id.html">seriesId</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">seriesId</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The series id that this meeting belongs to. Recurring meetings have same series id.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="sip-url.html">sipUrl</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">sipUrl</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The sip url of the meeting.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="start-time.html">startTime</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">startTime</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/util/Date.html"><span class="identifier">Date</span></a><span class="symbol">?</span></code>
+<p>Start date of the meeting.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="subject.html">subject</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">subject</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The title of the meeting.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

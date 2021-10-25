@@ -3,6 +3,7 @@ $dokka.linkExtension:html
 
 com.ciscowebex.androidsdk
 com.ciscowebex.androidsdk.auth
+com.ciscowebex.androidsdk.calendarMeeting
 com.ciscowebex.androidsdk.membership
 com.ciscowebex.androidsdk.message
 com.ciscowebex.androidsdk.people
