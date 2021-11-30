@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.2.1 Releases
+- `3.2.1` Releases - [3.2.1](#321)
+
 #### 3.2.0 Releases
 - `3.2.0` Releases - [3.2.0](#320)
 
@@ -45,6 +48,21 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+---
+## [3.2.1](https://github.com/webex/webex-android-sdk/releases/tag/3.2.1)
+Released on **30 November, 2021**.
+
+#### Added
+- `Call.forceSendingVideoLandscape(forceLandscape: Boolean, callback: CompletionHandler<Void>?)` to force landscape video transfer of local video view.
+- `Call.getLocusURL()` returns the locus url of the call.
+
+#### Updated
+- Fixed - Video resume issue when phone unlocks.
+- Fixed - Space title issue for first time login.
+- Fixed - setReceivingAudio() API issue when remote participant is muted.
+- Fixed - CUCM login callback issue for OAuthAuthenticator.
+- Fixed - Crash fix when switching between meetings or space call
 
 ---
 ## [3.2.0](https://github.com/webex/webex-android-sdk/releases/tag/3.2.0)
