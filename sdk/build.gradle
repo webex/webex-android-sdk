@@ -9,8 +9,8 @@ ext {
     moduleName = 'Cisco Webex Android SDK'
     moduleGroupId = 'com.ciscowebex'
     moduleArtifactId = 'androidsdk'
-    moduleVersion = '2.8.0.8-SNAPSHOT'
-    moduleVersionCode = 28008
+    moduleVersion = '2.8.0.10-SNAPSHOT'
+    moduleVersionCode = 28010
     moduleDescription = 'Cisco Webex SDK for Android'
     moduleSiteUrl = 'https://developer.webex.com/docs/sdks/android'
     moduleProjectUrl = 'https://github.com/webex/webex-android-sdk'
@@ -182,40 +182,40 @@ publishing {
             }
         }
 
-        WME(MavenPublication) {
-            groupId "com.webex"
-            artifactId "wme4android-release"
-            version moduleWMEVersion
-            artifact rootDir.absolutePath + '/deps/wme4android-release-' + moduleWMEVersion + '.aar'
-            pom.withXml {
-                asNode().appendNode('description', 'Cisco Webex Media Engine')
-                asNode().appendNode('name', 'Cisco Webex Media Engine')
-                asNode().children().last() + {
-                    resolveStrategy = DELEGATE_FIRST
-                    url moduleSiteUrl
-                    scm {
-                        url moduleGitUrl
-                        connection moduleConnectionUrl
-                        developerConnection moduleDeveloperConnectionUrl
-                    }
-                    licenses {
-                        license {
-                            name 'Commercial'
-                            url 'https://www.cisco.com/c/en/us/products/end-user-license-agreement.html'
-                        }
-                    }
-                    developers {
-                        developer {
-                            id moduleDeveloperId
-                            name moduleDeveloperName
-                            email moduleDeveloperEmail
-                            organization moduleDeveloperOrganization
-                            organizationUrl 'https://www.webex.com/products/teams/'
-                        }
-                    }
-                }
-            }
-        }
+//        WME(MavenPublication) {
+//            groupId "com.webex"
+//            artifactId "wme4android-release"
+//            version moduleWMEVersion
+//            artifact rootDir.absolutePath + '/deps/wme4android-release-' + moduleWMEVersion + '.aar'
+//            pom.withXml {
+//                asNode().appendNode('description', 'Cisco Webex Media Engine')
+//                asNode().appendNode('name', 'Cisco Webex Media Engine')
+//                asNode().children().last() + {
+//                    resolveStrategy = DELEGATE_FIRST
+//                    url moduleSiteUrl
+//                    scm {
+//                        url moduleGitUrl
+//                        connection moduleConnectionUrl
+//                        developerConnection moduleDeveloperConnectionUrl
+//                    }
+//                    licenses {
+//                        license {
+//                            name 'Commercial'
+//                            url 'https://www.cisco.com/c/en/us/products/end-user-license-agreement.html'
+//                        }
+//                    }
+//                    developers {
+//                        developer {
+//                            id moduleDeveloperId
+//                            name moduleDeveloperName
+//                            email moduleDeveloperEmail
+//                            organization moduleDeveloperOrganization
+//                            organizationUrl 'https://www.webex.com/products/teams/'
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 
     repositories {
@@ -223,8 +223,8 @@ publishing {
             name 'DevSnapshot'
             url "https://engci-maven.cisco.com/artifactory/webexsdk-SNAPSHOT/"
             credentials {
-                username repo_username
-                password repo_password
+                username "webexsdk-deployer"
+                password "hp3efy4xdsaj8m6t"
             }
         }
 
@@ -308,7 +308,7 @@ task javadoc(type: Javadoc) {
     exclude '**/BuildConfig.java'
     exclude '**/R.java'
     exclude '**/internal/**'
-    exclude '**/utils/**'
+    //exclude '**/utils/**'
     failOnError false
 }
 
