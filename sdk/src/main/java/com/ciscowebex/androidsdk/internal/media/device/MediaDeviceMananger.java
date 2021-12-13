@@ -69,9 +69,13 @@ public class MediaDeviceMananger {
                     }
                     WmeSession session = engine.getSession();
                     if (session != null && session.getState() == WmeSession.State.CONNECTED) {
-                        session.mute(WmeTrack.Type.LocalVideo);
-                        videoMutedByProximity = true;
-                        proximitySensor.disableScreen();
+                        boolean muteStatus = session.isMutedByLocal(WmeTrack.Type.LocalVideo) || session.isMutedByRemote(WmeTrack.Type.LocalVideo);
+                        Ln.d("ProximitySensor muteStatus: " + muteStatus);
+                        if (!muteStatus) {
+                            session.mute(WmeTrack.Type.LocalVideo);
+                            videoMutedByProximity = true;
+                            proximitySensor.disableScreen();
+                        }
                     }
                 } else if (event == ProximitySensor.Listener.ProximityEvent.FAR) {
                     if (speakerOnBeforeProximity) {
