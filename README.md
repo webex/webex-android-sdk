@@ -53,7 +53,7 @@ Federal Risk and Authorization Management Program) support from 3.1 onwards.
         allprojects {
             repositories {
                 maven {
-                    url 'https://devhub.cisco.com/artifactory/webexsdk/'
+                    url 'https://devhub.cisco.com/artifactory/webexsdk-SNAPSHOT/'
                 }
             }
         }
