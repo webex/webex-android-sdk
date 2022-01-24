@@ -1,6 +1,6 @@
 # Cisco Webex Android SDK
 
-> The Cisco Webex™ Android SDK Version 3.2.0
+> The Cisco Webex™ Android SDK Version 3.3.0-SNAPSHOT
 
 The Cisco Webex Android SDK makes it easy to integrate secure and convenient Cisco Webex messaging and calling features in your Android apps.
 
@@ -20,6 +20,8 @@ This SDK is built with **Android SDK Tools 29** and requires **Android API Level
 - [CUCM](#cucm)
 - [Virtual Background](#virtual-background)
 - [Calendar Meetings](#calendar-meetings)
+- [Camera](#camera)
+- [Real Time Transcription](#real-time-transcription)
 - [Migration Guide](#migration-guide)
 - [Sample App](#sample-app)
 - [API Reference](#api-reference)
@@ -46,23 +48,6 @@ Federal Risk and Authorization Management Program) support from 3.1 onwards.
 
 ## Integration
 
-### Option 1
-1. Put AAR file in libs folder of your Android project
-2. Open the project level Gradle file and add the following lines under the repositories tag, which is nested under allprojects.
-
-      ```
-      allprojects {
-        repositories {
-            flatDir { dirs 'aars'} //add this line
-        }
-      }
-      ```
-3. Add the following dependency in module level Gradle file and press sync-now
-   ```
-   implementation files('libs/WebexSDK.aar')
-   ```
-### Option 2
-
    1. Add the following repository to your top-level `build.gradle` file:
         ```
         allprojects {
@@ -77,7 +62,7 @@ Federal Risk and Authorization Management Program) support from 3.1 onwards.
 
         ```
         dependencies {
-            implementation 'com.ciscowebex:androidsdk:3.2.1@aar'
+            implementation 'com.ciscowebex:androidsdk:3.3.0-SNAPSHOT@aar'
         }
         ```
 ## Usage
@@ -611,6 +596,12 @@ For virtual background related APIs see [Virtual Background](https://github.com/
 
 ## Calendar Meetings
 For Calendar Meetings related APIs see [Calendar Meetings](https://github.com/webex/webex-android-sdk/wiki/Calendar-Meetings-APIs)
+
+## Camera
+For Camera related APIs see [Camera](https://github.com/webex/webex-android-sdk/wiki/Camera-APIs)
+
+## Real Time Transcription
+For Real time transcription related APIs see [Real Time Transcription](https://github.com/webex/webex-android-sdk/wiki/Real-Time-Transcription-APIs)
 
 ## Migration Guide
 The migration guide is meant to help developers port their code from SDK-v2 to SDK-v3. See [Migration Guide For v2 to v3](https://github.com/webex/webex-android-sdk/wiki/Migration-Guide-for-v2-to-v3)

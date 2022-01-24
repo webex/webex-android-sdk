@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.3.0-SNAPSHOT Releases
+- `3.3.0-SNAPSHOT` Releases - [3.3.0-SNAPSHOT](#330-snapshot)
+
 #### 3.2.1 Releases
 - `3.2.1` Releases - [3.2.1](#321)
 
@@ -48,6 +51,32 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+---
+## 3.3.0-SNAPSHOT
+Released on **24 January, 2022**.
+
+#### Added
+- `Call.setCameraFocusAtPoint(pointX: Float, pointY: Float): Boolean` to set the camera focus at given coordinate.
+- `Call.setCameraFlashMode(mode: FlashMode): Boolean` to set the camera flash mode.
+- `Call.getCameraFlashMode(): FlashMode` to get the camera flash mode.
+- `Call.setCameraTorchMode(mode: TorchMode): Boolean` to set the camera Torch mode.
+- `Call.getCameraTorchMode(): TorchMode` to get the camera Torch mode.
+- `Call.getCameraExposureDuration(): CameraExposureDuration` to get the exposure duration of the camera.
+- `Call.getCameraExposureISO(): CameraExposureISO` to get the exposure ISO of the camera.
+- `Call.getCameraExposureTargetBias(): CameraExposureTargetBias` to get the exposure target bias of the camera.
+- `Call.setCameraCustomExposure(duration: Double, iso: Float): Boolean` to set the camera custom exposure value using camera exposure duration and ISO.
+- `Call.setCameraAutoExposure(targetBias: Float): Boolean` to set the camera auto exposure value using camera exposure target bias.
+- `Call.setVideoZoomFactor(factor: Float): Boolean` to set the Zoom IN/OUT factor for the local camera.
+- `Call.getVideoZoomFactor(): Float` to get the local camera zoom factor.
+- `Call.takePhoto(): Boolean` to takes a snapshot of the local video view.
+- `CallObserver.onPhotoCaptured(imageData: ByteArray?)`  to notify app whenever a photo is captured.
+- `Call.getWXA(): WXA` for Webex assistant and real time transcription controls.
+- `Interface WXA` A data type to represent the WebEx Assistant.
+- `class Transcription` A data type to represent a transcription object from the WebEx Assistant.
+
+#### Updated
+- Fixed - Camera Orientation with respect to device orientation.
 
 ---
 ## [3.2.1](https://github.com/webex/webex-android-sdk/releases/tag/3.2.1)
