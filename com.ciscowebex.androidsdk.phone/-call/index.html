@@ -46,6 +46,24 @@ The application can receive an incoming call on Phone.IncomingCallListener:</p>
 </tr>
 <tr>
 <td>
+<p><a href="-flash-mode/index.html">FlashMode</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">FlashMode</span></code>
+<p>The enumeration to enable, disable and auto enable camera flash</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-torch-mode/index.html">TorchMode</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">TorchMode</span></code>
+<p>The enumeration to enable, disable and auto enable camera torch</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="-video-render-mode/index.html">VideoRenderMode</a></p>
 </td>
 <td>
@@ -140,6 +158,51 @@ You can invoke this API instead of <a href="../-multi-stream-observer/on-aux-str
 </tr>
 <tr>
 <td>
+<p><a href="get-camera-exposure-duration.html">getCameraExposureDuration</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getCameraExposureDuration</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-camera-exposure-duration/index.html"><span class="identifier">CameraExposureDuration</span></a></code>
+<p>Get the exposure duration of the camera.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-camera-exposure-i-s-o.html">getCameraExposureISO</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getCameraExposureISO</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-camera-exposure-i-s-o/index.html"><span class="identifier">CameraExposureISO</span></a></code>
+<p>Get the exposure ISO of the camera.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-camera-exposure-target-bias.html">getCameraExposureTargetBias</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getCameraExposureTargetBias</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-camera-exposure-target-bias/index.html"><span class="identifier">CameraExposureTargetBias</span></a></code>
+<p>Get the exposure target bias of the camera.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-camera-flash-mode.html">getCameraFlashMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getCameraFlashMode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-flash-mode/index.html"><span class="identifier">Call.FlashMode</span></a></code>
+<p>Get the camera flash mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-camera-torch-mode.html">getCameraTorchMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getCameraTorchMode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-torch-mode/index.html"><span class="identifier">Call.TorchMode</span></a></code>
+<p>Get the camera Torch mode.</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="get-composited-video-layout.html">getCompositedVideoLayout</a></p>
 </td>
 <td>
@@ -180,9 +243,7 @@ You can invoke this API instead of <a href="../-multi-stream-observer/on-aux-str
 <p><a href="get-locus-u-r-l.html">getLocusURL</a></p>
 </td>
 <td>
-<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getLocusURL</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
-<p>Returns the locus url of this call.</p>
-</td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getLocusURL</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code></td>
 </tr>
 <tr>
 <td>
@@ -303,6 +364,24 @@ If the call isn't a scheduled call, the method will returns null.</p>
 </td>
 <td>
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getVideoRenderViews</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">?</span><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-video-zoom-factor.html">getVideoZoomFactor</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getVideoZoomFactor</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a></code>
+<p>Get the local camera zoom factor.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-w-x-a.html">getWXA</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getWXA</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-w-x-a/index.html"><span class="identifier">WXA</span></a></code>
+<p>The Webex Assistant</p>
+</td>
 </tr>
 <tr>
 <td>
@@ -541,6 +620,51 @@ You can invoke this API instead of <a href="../-multi-stream-observer/on-aux-str
 </tr>
 <tr>
 <td>
+<p><a href="set-camera-auto-exposure.html">setCameraAutoExposure</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setCameraAutoExposure</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setCameraAutoExposure(kotlin.Float)/targetBias">targetBias</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Set the camera auto exposure value using camera exposure target bias.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-camera-custom-exposure.html">setCameraCustomExposure</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setCameraCustomExposure</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setCameraCustomExposure(kotlin.Double, kotlin.Float)/duration">duration</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html"><span class="identifier">Double</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setCameraCustomExposure(kotlin.Double, kotlin.Float)/iso">iso</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Set the camera custom exposure value using camera exposure duration and ISO.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-camera-flash-mode.html">setCameraFlashMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setCameraFlashMode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setCameraFlashMode(com.ciscowebex.androidsdk.phone.Call.FlashMode)/mode">mode</span><span class="symbol">:</span>&nbsp;<a href="-flash-mode/index.html"><span class="identifier">Call.FlashMode</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Set the camera flash mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-camera-focus-at-point.html">setCameraFocusAtPoint</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setCameraFocusAtPoint</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setCameraFocusAtPoint(kotlin.Float, kotlin.Float)/pointX">pointX</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setCameraFocusAtPoint(kotlin.Float, kotlin.Float)/pointY">pointY</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Set the camera focus at given coordinate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-camera-torch-mode.html">setCameraTorchMode</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setCameraTorchMode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setCameraTorchMode(com.ciscowebex.androidsdk.phone.Call.TorchMode)/mode">mode</span><span class="symbol">:</span>&nbsp;<a href="-torch-mode/index.html"><span class="identifier">Call.TorchMode</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Set the camera Torch mode.</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="set-composited-video-layout.html">setCompositedVideoLayout</a></p>
 </td>
 <td>
@@ -641,6 +765,15 @@ You can invoke this API instead of <a href="../-multi-stream-observer/on-aux-str
 </tr>
 <tr>
 <td>
+<p><a href="set-video-zoom-factor.html">setVideoZoomFactor</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setVideoZoomFactor</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setVideoZoomFactor(kotlin.Float)/factor">factor</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Set the Zoom IN/OUT factor for the local camera.</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="start-associated-call.html">startAssociatedCall</a></p>
 </td>
 <td>
@@ -676,6 +809,15 @@ Returns a new call id after associating a call</p>
 <td>
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">switchAudioOutput</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$switchAudioOutput(com.ciscowebex.androidsdk.phone.Call.AudioOutputMode)/audioOutputMode">audioOutputMode</span><span class="symbol">:</span>&nbsp;<a href="-audio-output-mode/index.html"><span class="identifier">Call.AudioOutputMode</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
 <p>Switch the audio play output mode during a call.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="take-photo.html">takePhoto</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">takePhoto</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Takes a snapshot of the local video view .</p>
 </td>
 </tr>
 <tr>

@@ -35,7 +35,8 @@
 </td>
 <td>
 <code><span class="keyword">fun </span><span class="identifier">authorize</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.auth.JWTAuthenticator$authorize(kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/jwt">jwt</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.auth.JWTAuthenticator$authorize(kotlin.String, com.ciscowebex.androidsdk.CompletionHandler((java.lang.Void)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html"><span class="identifier">CompletionHandler</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/java/lang/Void.html"><span class="identifier">Void</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
-<p>Sets the JWT access token on the authorization strategy, overriting any existing access token.</p>
+<p>Sets the JWT access token on the authorization strategy, overriting any existing access token.
+JWT access token should contain the <code>exp</code> field to pass validation.</p>
 </td>
 </tr>
 <tr>
