@@ -1,6 +1,6 @@
 # Cisco Webex Android SDK
 
-> The Cisco Webex™ Android SDK Version 3.3.0
+> The Cisco Webex™ Android SDK Version 3.4.0
 
 The Cisco Webex Android SDK makes it easy to integrate secure and convenient Cisco Webex messaging and calling features in your Android apps.
 
@@ -26,6 +26,7 @@ This SDK is built with **Android SDK Tools 29** and requires **Android API Level
 - [Sample App](#sample-app)
 - [API Reference](#api-reference)
 - [FedRAMP Testing Guide](#fedramp-testing-guide)
+- [Media Quality Indicator](#media-quality-indicator)
 - [License](#license)
 
 ## New Integration
@@ -79,7 +80,7 @@ Federal Risk and Authorization Management Program) support from 3.1 onwards.
 
         ```
         dependencies {
-            implementation 'com.ciscowebex:androidsdk:3.3.0@aar'
+            implementation 'com.ciscowebex:androidsdk:3.4.0@aar'
         }
         ```
 ## Usage
@@ -631,6 +632,9 @@ For a complete reference to all supported APIs, please visit [Webex Android SDK 
 
 ## FedRAMP Testing Guide
 For complete testing guide, please visit [FedRAMP Testing Guide](https://github.com/webex/webex-android-sdk/wiki/Android-SDK---FedRAMP-Environment)
+
+## Media Quality Indicator
+For Media Quality Events related APIs see [Media Quality Indicator](https://github.com/webex/webex-android-sdk/wiki/Media-Quality-Indicator)
 
 ## License
 
