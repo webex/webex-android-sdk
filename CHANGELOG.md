@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.4.0 Releases
+- `3.4.0` Releases - [3.4.0](#340)
+
 #### 3.3.0 Releases
 - `3.3.0` Releases - [3.3.0](#330)
 
@@ -51,6 +54,29 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+---
+## [3.4.0](https://github.com/webex/webex-android-sdk/releases/tag/3.4.0)
+Released on **19 April, 2022**.
+
+#### Added
+- New enum `Call.MediaQualityInfo` to denote media quality
+- New observer `CallObserver.onMediaQualityInfoChanged` to get  media quality events
+- `Text.html(html: String): Text` to send html text
+- `Text.markdown(markdown: String): Text` to send markdown text
+
+#### Updated
+- Fixed - Crash when remote user starts or stops sharing
+- Fixed - Call pipeline improvement
+- Fixed - List messages before messageId not returning messages
+- Fixed - Text object type incorrect on received messages
+- Fixed - Message sender details incorrect in integration usecase
+
+
+#### Deprecated
+- Sending multiple formats of text in the same message is not supported. Below text constuctors are deprecated
+    - `Text.markdown(markdown: String, html: String?, plain: String?): Text`
+    - `Text.html(html: String, plain: String?): Text`
 
 ---
 ## [3.3.0](https://github.com/webex/webex-android-sdk/releases/tag/3.3.0)
