@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.5.0 Releases
+- `3.5.0` Releases - [3.5.0](#350)
+
 #### 3.4.0 Releases
 - `3.4.0` Releases - [3.4.0](#340)
 
@@ -56,6 +59,29 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ---
+## [3.5.0](https://github.com/webex/webex-android-sdk/releases/tag/3.5.0)
+Released on **7 June, 2022**.
+
+#### Added
+- `MessageObserver.MessageUpdated` event to get events when some existing messages are updated. 
+- `Call.getMediaStreams(): List<MediaStream>` to get all opened media streams
+- `Call.setMediaStreamCategoryA(duplicate: Boolean, quality: MediaStreamQuality)` to add the Active Speaker stream with the specified params if it does not already exist. Otherwise, update the Active Speaker stream with the specified params.
+- `Call.setMediaStreamsCategoryB(numStreams: Int, quality: MediaStreamQuality)` to set the Category-B streams to specified parameters
+- `Call.removeMediaStreamCategoryA()` to remove the active speaker stream
+- `Call.removeMediaStreamsCategoryB()` to remove the Category-B streams
+- `CallObserver.MediaStreamAvailabilityEvent` event to know when a media stream is available or unavailable
+- `MediaStream` which represents a media stream instance
+- `MediaStreamType` enum to represent the type of media stream
+- `MediaStreamQuality` enum to represent the quality of a media stream
+- `MediaStreamChangeEventType` enum to represent the change event type of a media stream.
+- `MediaStreamChangeEventInfo` which represents media stream change event information.
+
+#### Updated
+- FIXED - VBG issues
+- FIXED - postToPerson api issue fixed for JWT users
+- Support for 1080p video resolutions
+
+---
 ## [3.4.0](https://github.com/webex/webex-android-sdk/releases/tag/3.4.0)
 Released on **19 April, 2022**.
 
@@ -108,6 +134,7 @@ Released on **15 February, 2022**.
 - Fixed - Made `exp` field as optional in Guest Issuer JWT
 - Fixed - Callback not being fired for deleting self membership from space.
 - Fixed - Fetching inter-cluster team memberships.
+- Fixed - Virtual Background Image orientation.
 - Fixed - DTMF API usage.
 
 ---
