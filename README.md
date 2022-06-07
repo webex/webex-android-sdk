@@ -1,6 +1,6 @@
 # Cisco Webex Android SDK
 
-> The Cisco Webex™ Android SDK Version 3.4.0
+> The Cisco Webex™ Android SDK Version 3.5.0
 
 The Cisco Webex Android SDK makes it easy to integrate secure and convenient Cisco Webex messaging and calling features in your Android apps.
 
@@ -16,7 +16,8 @@ This SDK is built with **Android SDK Tools 29** and requires **Android API Level
   - [Option 2](#option-2)
 - [Usage](#usage)
 - [Examples](#examples)
-- [Multi Stream](#multi-stream)
+- [Multi Stream](#multi-stream) (LEGACY)
+- [New Multi Stream](#new-multi-stream) 
 - [CUCM](#cucm)
 - [Virtual Background](#virtual-background)
 - [Calendar Meetings](#calendar-meetings)
@@ -27,6 +28,7 @@ This SDK is built with **Android SDK Tools 29** and requires **Android API Level
 - [API Reference](#api-reference)
 - [FedRAMP Testing Guide](#fedramp-testing-guide)
 - [Media Quality Indicator](#media-quality-indicator)
+- [1080p Resolution Support](#1080p-resolution-support)
 - [License](#license)
 
 ## New Integration
@@ -604,7 +606,10 @@ Here are some examples of how to use the Android SDK in your app.
 
 
 ## Multi Stream
-For multistream related APIs see [Multi Stream v3](https://github.com/webex/webex-android-sdk/wiki/Multi-Stream-v3-)
+For multistream related APIs see [Multi Stream v3](https://github.com/webex/webex-android-sdk/wiki/Multi-Stream-v3)
+
+## New Multi Stream
+For new multi stream implementation and its related API's see [New Multi Stream v3](https://github.com/webex/webex-android-sdk/wiki/New-Multi-Stream-v3)
 
 ## CUCM
 For CUCM related APIs see [CUCM Usage Guide v3](https://github.com/webex/webex-android-sdk/wiki/CUCM-Usage-Guide-v3)
@@ -635,6 +640,9 @@ For complete testing guide, please visit [FedRAMP Testing Guide](https://github.
 
 ## Media Quality Indicator
 For Media Quality Events related APIs see [Media Quality Indicator](https://github.com/webex/webex-android-sdk/wiki/Media-Quality-Indicator)
+
+## 1080p Resolution Support
+For supporting 1080p resolutions (FHD) related APIs see [1080p Resolution Support](https://github.com/webex/webex-android-sdk/wiki/1080p-Resolution-Support)
 
 ## License
 
