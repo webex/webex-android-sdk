@@ -256,6 +256,16 @@ You can invoke this API instead of <a href="../-multi-stream-observer/on-aux-str
 </tr>
 <tr>
 <td>
+<p><a href="get-media-streams.html">getMediaStreams</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getMediaStreams</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-media-stream/index.html"><span class="identifier">MediaStream</span></a><span class="symbol">&gt;</span></code>
+<p>Get the media Streams List - <a href="../-media-stream/index.html">MediaStream</a>.
+This list will return the streams which are available - the participants who joined the meeting.</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="get-meeting-id.html">getMeetingId</a></p>
 </td>
 <td>
@@ -611,6 +621,26 @@ You can invoke this API instead of <a href="../-multi-stream-observer/on-aux-str
 </tr>
 <tr>
 <td>
+<p><a href="remove-media-stream-category-a.html">removeMediaStreamCategoryA</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">removeMediaStreamCategoryA</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Remove the Active Speaker stream.
+To add the active stream back, use setMediaStreamCategoryA().</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remove-media-streams-category-b.html">removeMediaStreamsCategoryB</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">removeMediaStreamsCategoryB</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Remove all Category-B streams.
+To change the number of B streams, use setMediaStreamsCategoryB().</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="send-d-t-m-f.html">sendDTMF</a></p>
 </td>
 <td>
@@ -688,6 +718,27 @@ You can invoke this API instead of <a href="../-multi-stream-observer/on-aux-str
 </td>
 <td>
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setFacingMode</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setFacingMode(com.ciscowebex.androidsdk.phone.Phone.FacingMode)/facingMode">facingMode</span><span class="symbol">:</span>&nbsp;<a href="../-phone/-facing-mode/index.html"><span class="identifier">Phone.FacingMode</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-media-stream-category-a.html">setMediaStreamCategoryA</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setMediaStreamCategoryA</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setMediaStreamCategoryA(kotlin.Boolean, com.ciscowebex.androidsdk.phone.MediaStreamQuality)/duplicate">duplicate</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setMediaStreamCategoryA(kotlin.Boolean, com.ciscowebex.androidsdk.phone.MediaStreamQuality)/quality">quality</span><span class="symbol">:</span>&nbsp;<a href="../-media-stream-quality/index.html"><span class="identifier">MediaStreamQuality</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Add the Active Speaker stream with the specified params if it does not already exist.
+Otherwise, update the Active Speaker stream with the specified parameters.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-media-streams-category-b.html">setMediaStreamsCategoryB</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">setMediaStreamsCategoryB</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setMediaStreamsCategoryB(kotlin.Int, com.ciscowebex.androidsdk.phone.MediaStreamQuality)/numStreams">numStreams</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.Call$setMediaStreamsCategoryB(kotlin.Int, com.ciscowebex.androidsdk.phone.MediaStreamQuality)/quality">quality</span><span class="symbol">:</span>&nbsp;<a href="../-media-stream-quality/index.html"><span class="identifier">MediaStreamQuality</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set all Category-B streams to the specified params.
+If the number of existing B streams is less than <a href="set-media-streams-category-b.html#com.ciscowebex.androidsdk.phone.Call$setMediaStreamsCategoryB(kotlin.Int, com.ciscowebex.androidsdk.phone.MediaStreamQuality)/numStreams">numStreams</a>, it will add B streams as necessary.
+If the number of existing B streams is more than <a href="set-media-streams-category-b.html#com.ciscowebex.androidsdk.phone.Call$setMediaStreamsCategoryB(kotlin.Int, com.ciscowebex.androidsdk.phone.MediaStreamQuality)/numStreams">numStreams</a>, it will remove the extra B streams.</p>
+</td>
 </tr>
 <tr>
 <td>

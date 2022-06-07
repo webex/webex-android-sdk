@@ -1,0 +1,84 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>CallObserver.MediaStreamAvailabilityEvent - sdk</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">sdk</a>&nbsp;/&nbsp;<a href="../../index.html">com.ciscowebex.androidsdk.phone</a>&nbsp;/&nbsp;<a href="../index.html">CallObserver</a>&nbsp;/&nbsp;<a href="./index.html">MediaStreamAvailabilityEvent</a><br/>
+<br/>
+<h1>MediaStreamAvailabilityEvent</h1>
+<code><span class="keyword">class </span><span class="identifier">MediaStreamAvailabilityEvent</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-abstract-call-event/index.html"><span class="identifier">CallObserver.AbstractCallEvent</span></a><span class="symbol">, </span><a href="../-media-changed-event.html"><span class="identifier">CallObserver.MediaChangedEvent</span></a></code>
+<p>This will be triggered when the media stream is available or unavailable.
+Media Stream available - as the participant joins the meeting.
+Media Stream unavailable - as the participant leaves the meeting.</p>
+<p><strong>Since</strong><br/>
+3.5.0</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">MediaStreamAvailabilityEvent</span><span class="symbol">(</span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver.MediaStreamAvailabilityEvent$<init>(com.ciscowebex.androidsdk.phone.Call, kotlin.Boolean, com.ciscowebex.androidsdk.phone.MediaStream)/call">call</span><span class="symbol">:</span>&nbsp;<a href="../../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver.MediaStreamAvailabilityEvent$<init>(com.ciscowebex.androidsdk.phone.Call, kotlin.Boolean, com.ciscowebex.androidsdk.phone.MediaStream)/available">available</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="com.ciscowebex.androidsdk.phone.CallObserver.MediaStreamAvailabilityEvent$<init>(com.ciscowebex.androidsdk.phone.Call, kotlin.Boolean, com.ciscowebex.androidsdk.phone.MediaStream)/stream">stream</span><span class="symbol">:</span>&nbsp;<a href="../../-media-stream/index.html"><span class="identifier">MediaStream</span></a><span class="symbol">?</span><span class="symbol">)</span></code>
+<p>This will be triggered when the media stream is available or unavailable.
+Media Stream available - as the participant joins the meeting.
+Media Stream unavailable - as the participant leaves the meeting.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-abstract-call-event/m-call.html">mCall</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">mCall</span><span class="symbol">: </span><a href="../../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-stream.html">getStream</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getStream</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../-media-stream/index.html"><span class="identifier">MediaStream</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-available.html">isAvailable</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isAvailable</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="to-string.html">toString</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">toString</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-abstract-call-event/get-call.html">getCall</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getCall</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../-call/index.html"><span class="identifier">Call</span></a><span class="symbol">?</span></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
