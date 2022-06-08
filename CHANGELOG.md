@@ -77,8 +77,9 @@ Released on **7 June, 2022**.
 - `MediaStreamChangeEventInfo` which represents media stream change event information.
 
 #### Updated
-- FIXED - VBG issues
-- FIXED - postToPerson api issue fixed for JWT users
+- Fixed - Virtual Background showed wrong orientation when portrait images were used to add VBG
+- Fixed - Virtual background was not user specific i.e. after logout another user can see previously selected backgrounds
+- Fixed - `MessageClient.postToPerson` api issue when JWT user sends a message to a person with whom they have never interacted before.
 - Support for 1080p video resolutions
 
 ---
