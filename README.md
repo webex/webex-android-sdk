@@ -82,7 +82,7 @@ Federal Risk and Authorization Management Program) support from 3.1 onwards.
 
         ```
         dependencies {
-            implementation 'com.ciscowebex:androidsdk:3.4.0@aar'
+            implementation 'com.ciscowebex:androidsdk:3.5.0'
         }
         ```
 ## Usage
