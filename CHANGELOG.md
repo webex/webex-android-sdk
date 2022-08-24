@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.6.0 Releases
+- `3.6.0` Releases - [3.6.0](#360)
+
 #### 3.5.0 Releases
 - `3.5.0` Releases - [3.5.0](#350)
 
@@ -57,6 +60,29 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.6.0](https://github.com/webex/webex-android-sdk/releases/tag/3.6.0)
+Released on **24 August, 2022**.
+#### Added
+- `call.setMediaStreamCategoryC(participantId: String, quality: MediaStreamQuality)` to pin the participant's stream with the specified params if it does not already exist. Otherwise, update the pinned participant's stream with the specified params.
+- `call.removeMediaStreamCategoryC(participantId: String)` to remove the pinning of a participant's stream.
+- `Webex.startUCServices()` to start login process of CUCM
+- `Webex.retryUCSSOLogin()` in case UC sso login expires or requires a retry.
+- `Webex.forceRegisterPhoneServices()` to handle `RegisteredElsewhere` error.
+- New class `CallHistoryRecord`.
+- `webex.ucCancelSSOLogin()` which cancels currents SSO authentication for CUCM login.
+- New callback `showUCSSOBrowser()` to notify when user needs to show SSO Browser.
+- New callback `hideUCSSOBrowser()` to notify when user needs to hide SSO Browser.
+- New callback `onUCSSOLoginFailed(failureReason: UCSSOFailureReason)` to notify app when SSO login fails.
+- New Enum `UCSSOFailureReason` to indicate CUCM SSO Login failure reason.
+#### Updated
+- Fixed - Added Support for message with video and thumbnail
+- Fixed - Post message api was returning the message object with mentions as empty array
+- Fixed - List message api bug fixes to return correct data before a provided date or id and honouring max values
+- Fixed - CUCM login for SSO authentication
+- Fixed - CUCM call history
+- Renamed callback `showUCSSOLoginView(ssoUrl: String)` to `loadUCSSOViewInBackground(ssoUrl: String)`
+- `Phone.getCallHistory()` to return `CallHistoryRecord`s instead of `Spaces`
 
 ---
 ## [3.5.0](https://github.com/webex/webex-android-sdk/releases/tag/3.5.0)
