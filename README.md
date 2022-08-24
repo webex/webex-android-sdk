@@ -16,4 +16,4 @@ The Cisco Webex Android SDK makes it easy to integrate and secure messaging, mee
 
 All contents are licensed under the Cisco EULA
 
-See [License](LICENSE.txt) for details.
+See [License](LICENSE) for details.
