@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 #### 3.7.0 Releases
 - `3.7.0` Releases - [3.7.0](#370)
-- 
+
 #### 3.6.0 Releases
 - `3.6.0` Releases - [3.6.0](#360)
 
