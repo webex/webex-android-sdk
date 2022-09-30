@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.7.0 Releases
+- `3.7.0` Releases - [3.7.0](#370)
+
 #### 3.6.0 Releases
 - `3.6.0` Releases - [3.6.0](#360)
 
@@ -61,6 +64,43 @@ All notable changes to this project will be documented in this file.
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
 
+## [3.7.0](https://github.com/webex/webex-android-sdk/releases/tag/3.7.0)
+Released on **30 September, 2022**.
+#### Added
+- New case `forbidden` in enum `CreatePersonError`, `UpdatePersonError`
+- Three new cases `INVALID_PASSWORD`, `CAPTCHA_REQUIRED`, `INVALID_PASSWORD_WITH_CAPTCHA` to enum `ErrorCode`
+- New interface `Captcha` to represent the Captcha object.
+- New interface `Breakout` A data type to represent the breakout.
+- New interface `BreakoutSession` A data type to represent the breakout session.
+- New API `Phone.isRestrictedNetwork(): Boolean` to check whether the device is in a restricted network.
+- New API `Space.isExternallyOwned(): Boolean` to check whether space is owned by external org.
+- New API `Phone.enableStreams(enable : Boolean)` to enable or disable all media streams on active calls.
+- New API `Call.getCorrelationId(): String` to get the correlationId for that particular call.
+- New API `MediaOption.setCaptchaId(captchaId: String)` to set unique id for the captcha.
+- New API `MediaOption.getCaptchaId(): String` to get unique id for the captcha.
+- New API `MediaOption.setCaptchaCode(captchaCode: String)` to set captcha verification code to be entered by user.
+- New API `MediaOption.getCaptchaCode(): String` to get the captcha verification code.
+- New callback `Call.joinBreakoutSession(session: BreakoutSession)` to join the Breakout Session manually by passing the `BreakoutSession` if host has enabled allow join session later.
+- New callback `Call.returnToMainSession()` to return to main session.
+- New callback `CallObserver.onBreakoutError(error: BreakoutSession.BreakoutSessionError)` to notify when any breakout api returns error.
+- New callback `CallObserver.onBreakoutUpdated(breakout: Breakout)` to notify when Breakout is updated.
+- New callback `CallObserver.onBroadcastMessageReceivedFromHost(message: String)` to notify when host broadcast the message to the session.
+- New callback `CallObserver.onHostAskingReturnToMainSession()` to notify when host is asking participants to return to main meeting.
+- New callback `CallObserver.onJoinableSessionUpdated(breakoutSessions: List<BreakoutSession>)` to notify when list of join breakout session changes.
+- New callback `CallObserver.onJoinedSessionUpdated(breakoutSession: BreakoutSession)` to notify when joined Breakout session is updated.
+- New callback `CallObserver.onReturnedToMainSession()` to notify when returned to main session.
+- New callback `CallObserver.onSessionClosing()` to notify when Breakout session is closing.
+- New callback `CallObserver.onSessionEnabled()` to notify when Breakout session is enabled.
+- New callback `CallObserver.onSessionJoined(breakoutSession: BreakoutSession)` to notify when Breakout session is joined.
+- New callback `CallObserver.onSessionStarted(breakout: Breakout)` to notify when Breakout session is started.
+- New callback `Phone.refreshMeetingCaptcha(handler: CompletionHandler<Captcha>)` to refresh the Captcha object to get a new Captcha code.
+- New callback `setOnRestrictedNetworkStatusChange(handler: CompletionHandler<Boolean>)` to monitor restricted network status changes.
+
+#### Updated
+- `Roles`,`licenses` and `siteUrls` fields are added to the `Person` class.
+- Fixed - Crash while doing multiparty calls in Android SDK 3.5
+- Fixed - Grid view Auxstream video hanging when navigating to another screen and back.
+---
 ## [3.6.0](https://github.com/webex/webex-android-sdk/releases/tag/3.6.0)
 Released on **24 August, 2022**.
 #### Added
