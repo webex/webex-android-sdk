@@ -65,7 +65,7 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ## [3.7.0](https://github.com/webex/webex-android-sdk/releases/tag/3.7.0)
-Released on **3 October, 2022**.
+Released on **17 October, 2022**.
 #### Added
 - New case `forbidden` in enum `CreatePersonError`, `UpdatePersonError`
 - Three new cases `INVALID_PASSWORD`, `CAPTCHA_REQUIRED`, `INVALID_PASSWORD_WITH_CAPTCHA` to enum `ErrorCode`
