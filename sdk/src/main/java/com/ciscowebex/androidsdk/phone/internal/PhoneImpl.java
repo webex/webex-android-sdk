@@ -478,6 +478,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                 String localSdp = session.getLocalSdp();
                 incoming.getCall().setMedia(session);
                 //CallAnalyzerReporter.shared.reportJoinRequest(incoming.getCall().getCorrelationId(), incoming.getCall().getModel().getKey());
+                CallAnalyzerReporter.shared.reportCallInitiated(incoming.getCall());
                 service.join(incoming.getCall().getUrl(), incoming.getOption(), getVideoStreamMode(), incoming.getCall().getCorrelationId(), device, localSdp, reachability.getFeedback(), joinResult -> {
                     if (joinResult.getError() != null || joinResult.getData() == null) {
                         Queue.main.run(() -> incoming.getCallback().onComplete(ResultImpl.error(joinResult.getError())));
@@ -1184,6 +1185,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             Ln.d("Connecting call: " + model.getCallUrl());
             CallAnalyzerReporter.shared.reportJoinResponseSuccess(((LocusResponse.Call) response).getCorrelationId(), model.getKey());
             CallImpl call = new CallImpl(((LocusResponse.Call) response).getCorrelationId(), model, this, device, ((LocusResponse.Call) response).getSession(), Call.Direction.OUTGOING, !model.isOneOnOne());
+            CallAnalyzerReporter.shared.reportCallInitiated(call);
             if (call.isStatusIllegal()) {
                 Ln.d("The previous session did not end");
                 Queue.main.run(() -> {

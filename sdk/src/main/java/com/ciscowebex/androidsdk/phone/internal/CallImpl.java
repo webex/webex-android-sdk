@@ -120,7 +120,6 @@ public class CallImpl implements Call {
         this.group = (group ? group : !model.isOneOnOne());
         setMedia(media);
         doLocusModel(model);
-        CallAnalyzerReporter.shared.reportCallInitiated(this);
     }
 
     public LocusModel getModel() {
