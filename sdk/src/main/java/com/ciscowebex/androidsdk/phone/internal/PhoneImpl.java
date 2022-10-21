@@ -283,10 +283,8 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             }
             for (LocusModel model : models) {
                 mModels.add(model.getCallUrl());
-                Ln.d("Mercury Updating call "+model.getCallUrl());
                 doLocusEvent(model);
             }
-            Ln.d("Success: fetch call infos");
 
             List<CallImpl> mCallsToCleanUp = new ArrayList<>();
             for (CallImpl call : calls.values()) {
@@ -296,7 +294,6 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
             }
 
             for(CallImpl call:mCallsToCleanUp){
-                Ln.d("Mercury Ending dormant call "+call.getUrl());
                 call.end(new CallObserver.RemoteCancel(call));
             }
 
