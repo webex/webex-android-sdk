@@ -88,6 +88,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -246,6 +247,11 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
     @Override
     public void onConnected(@Nullable WebexError error) {
         Ln.d("Mercury connected %s", error);
+        Queue.serial.run(() -> {
+            checkActiveCalls();
+            Queue.serial.yield();
+        });
+
     }
 
     @Override
@@ -267,6 +273,33 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
         }
     }
 
+    private void checkActiveCalls(){
+        HashSet<String> mModels = new HashSet<>();
+        service.list(device, result -> {
+            List<LocusModel> models = result.getData();
+            if (models == null) {
+                Ln.d("Failure: " + result.getError());
+                return;
+            }
+            for (LocusModel model : models) {
+                mModels.add(model.getCallUrl());
+                doLocusEvent(model);
+            }
+
+            List<CallImpl> mCallsToCleanUp = new ArrayList<>();
+            for (CallImpl call : calls.values()) {
+                if(!mModels.contains(call.getUrl())){
+                    mCallsToCleanUp.add(call);
+                }
+            }
+
+            for(CallImpl call:mCallsToCleanUp){
+                call.end(new CallObserver.RemoteCancel(call));
+            }
+
+        });
+    }
+
     @Override
     public void onTransition(boolean foreground) {
         Ln.d("Status transition: " + foreground
@@ -280,6 +313,7 @@ public class PhoneImpl implements Phone, UIEventHandler.EventObserver, MercurySe
                     mercury.disconnect(false);
                 }
             }
+
             for (CallImpl call : calls.values()) {
                 MediaSession session = call.getMedia();
                 if (session != null && session.isRunning()) {
