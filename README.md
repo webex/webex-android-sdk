@@ -7,7 +7,7 @@ This branch covers the releases for **Meeting SDK**
 - It does not support CUCM Calling or Webex Calling
 - More details about all features can be found [here](https://developer.webex.com/docs/sdks/android)
 
-Storage comparison:
+### Storage comparison:
 
 ||**3.7.0-Release** |**Meeting SDK** |
 | :- | - | - |
