@@ -47,3 +47,18 @@ Below details can be used for reference (in the terms of storage), to see the im
 |arm64 apk size |<img width="965" alt="Screenshot 2022-11-28 at 8 57 01 PM" src="https://user-images.githubusercontent.com/119413473/204523366-d2e8d9e3-24c7-418c-95ad-5fa2b122fd96.png"><p>**43.5 MB** </p>|
 |arm64 installation size |<img width="107" alt="image" src="https://user-images.githubusercontent.com/119413473/204523480-e0f179e7-0b52-4e6c-90c8-cea85953f1e1.png"><p>**160 MB** </p>|
 
+## Documentation
+- [Requirements & Feature List](https://developer.webex.com/docs/sdks/android)
+- [Guides](https://github.com/webex/webex-android-sdk/wiki)
+- [API Reference](https://webex.github.io/webex-android-sdk/)
+- [Kitchen Sink Sample App](https://github.com/webex/webex-android-sdk-example)
+
+## Support
+- [Webex Developer Support ](https://developer.webex.com/support)
+- Email: devsupport@webex.com
+
+## License
+
+All contents are licensed under the Cisco EULA
+
+See [License](LICENSE) for details.
