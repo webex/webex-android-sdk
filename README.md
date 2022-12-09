@@ -36,7 +36,7 @@ This branch covers the releases for **Meeting SDK**
       ```
 3. Add the following dependency in module level Gradle file and press sync-now
    ```
-   implementation files('libs/meeting-sdk-alpha.aar')
+   implementation files('libs/WebexSDK-Meeting.aar')
    ```
 ### Storage analysis for apk
 Below details can be used for reference (in the terms of storage), to see the impact of our new **Meeting SDK** on APP. 
