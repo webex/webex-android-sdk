@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.8.0 Releases
+- `3.8.0` Releases - [3.8.0](#380)
+
 #### 3.7.0 Releases
 - `3.7.0` Releases - [3.7.0](#370)
 
@@ -64,8 +67,40 @@ All notable changes to this project will be documented in this file.
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
 
+## [3.8.0](https://github.com/webex/webex-android-sdk/releases/tag/3.8.0)
+Released on **24 January, 2023**.
+#### Added
+- New SDK variant `WebexSDK-Meeting`, a light weight meeting-only SDK(doesn’t include calling).
+- New API `setCallServiceCredential(username: String, password: String)` to  set username and password for authentication with calling service.
+- New API `onUCLoginFailed(failureReason: UCLoginFailureReason)` to notify app whenever CUCM server login or Webex Calling login fails.
+- New API `Call.isWebexCallingOrWebexForBroadworks()` to denote if this call is Webex or Broadworks call.
+- New API `Call.directTransferCall(toPhoneNumber: String, callback: CompletionHandler<DirectTransferResult>` to transfer the active call to the given number.
+- New API `Call.switchToVideoCall(callId: String, callback: CompletionHandler<SwitchToAudioVideoCallResult>)` to switch the current Webex Calling call to video call.
+- New API `Call.switchToAudioCall(callId: String, callback: CompletionHandler<SwitchToAudioVideoCallResult>)` to switch the current Webex Calling call to audio call.
+- New API `CallHistoryRecord.isMissedCall()` to denotes if call record was a missed call.
+- New API `Phone.processPushNotification(msg : String, handler: CompletionHandler<PushNotificationResult>)` to process the payload received in FCM service for Webex calling.
+- New API `Phone.setPushTokens(bundleId : String, deviceId : String, voipToken : String)` to set params required for Push notifications of Webex calling.
+- New API `Phone.getCallingType()` to get the type of Calling supported for logged in user.
+- New API `Phone.buildNotificationPayload(notification: Map<String, String>, notificationId: String)` to build the payload from FCM notification.
+- New API `Phone.connectPhoneServices(callback: CompletionHandler<PhoneConnectionResult>)` to login into phone services for CallingType.WebexCalling.
+- New API `Phone.disconnectPhoneServices(callback: CompletionHandler<PhoneConnectionResult>)` to log out from phone services for CallingType.WebexCalling.
+- New API `SpaceClient.isSpacesSyncCompleted()` to denote if space sync is completed or not.
+- New Callback `SpaceClient.setOnInitialSpacesSyncCompletedListener(handler: CompletionHandler<Void>)` to set a listener to receive completion status for initial database sync.
+- New Callback `SpaceClient.setOnSpaceSyncingStatusChangedListener(handler: CompletionHandler<Boolean>)` to set a listener to receive sync status for space changes.
+- Added new Enum `UCLoginFailureReason` to indicate the failure reason for CUCM login or WebexCalling login
+- Added new Enum `CallingType` to represent calling service type of logged-in user
+- Added new Enum `PhoneConnectionResult` to indicate the result of call connection towards phone services.
+- Added new Enum `SwitchToAudioVideoCallResult` to indicate the result of switching call, from audio to video  or vice versa.
+
+#### Updated
+- Maven arifact id changed from `androidsdk` to `webexsdk`
+- FIXED: Space load issue and app crash on first install of KitchenSink.
+
+#### Deprecated
+- Deprecated API `setCUCMCredential(username: String, password: String)` instead use `setCallServiceCredential(username: String, password: String)`
+
 ## [3.7.0](https://github.com/webex/webex-android-sdk/releases/tag/3.7.0)
-Released on **17 October, 2022**.
+Released on **30 September, 2022**.
 #### Added
 - New case `forbidden` in enum `CreatePersonError`, `UpdatePersonError`
 - Three new cases `INVALID_PASSWORD`, `CAPTCHA_REQUIRED`, `INVALID_PASSWORD_WITH_CAPTCHA` to enum `ErrorCode`
