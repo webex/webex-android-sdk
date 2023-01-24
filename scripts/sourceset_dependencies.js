@@ -1,1 +1,1 @@
-sourceset_dependencies='{":sdk:Android-SDKv8-Doc:dokkaHtml/main":[]}'
+sourceset_dependencies='{":sdk:SDK:dokkaHtml/main":[]}'
