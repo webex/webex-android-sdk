@@ -7,7 +7,7 @@ WebexCalling SDK: WxC
 
 - A new Mobile SDK Variant, for Calling-only (WebexCalling alone).
 - This SDK supports Dynamic feature module, where clients can use SDK as onDemand module.
-- Details of all features can be found here.
+- Details of all features can be found [here](https://developer.webex.com/docs/sdks/android).
 
 References for Android dynamic feature module
 
