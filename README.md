@@ -4,9 +4,11 @@ The Cisco Webex Android SDK makes it easy to integrate and secure messaging, mee
 
 ## SDK Details: 
 WebexCalling SDK: WxC
--- A new Mobile SDK Variant, for Calling-only (WebexCalling alone).
--- This SDK supports Dynamic feature module, where cleints can use SDK's files to get doenloaded on-Demand
--- Details of features can be found [here](https://developer.webex.com/docs/sdks/android)
+- A new Mobile SDK Variant, for Calling-only (WebexCalling alone).
+- This SDK supports Dynamic feature module, where cleints can use SDK as onDemand module.
+- Details of features can be found [here](https://developer.webex.com/docs/sdks/android).
+
+
 NOTE: This SDK is under developement phase
 ## Documentation
 - [Requirements & Feature List](https://developer.webex.com/docs/sdks/android)
