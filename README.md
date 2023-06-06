@@ -7,6 +7,7 @@ The Cisco Webex Android SDK makes it easy to integrate and secure messaging, mee
 - WebexCalling SDK : WebexSDK-Wxc.aar
   - This SDK supports only WebexCalling feature
   - It does not support CUCM calling.
+
 - Meeting SDK : WebexSDK-Meeting.aar
     - This SDK supports Messaging and Meeting features
     - It does not support CUCM Calling and Webex Calling
