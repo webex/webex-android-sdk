@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.9.0 Releases
+- `3.9.0` Releases - [3.9.0](#390)
+
 #### 3.8.0 Releases
 - `3.8.0` Releases - [3.8.0](#380)
 
@@ -66,6 +69,36 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.9.0](https://github.com/webex/webex-android-sdk/releases/tag/3.9.0)
+Released on **05 June, 2023**.
+### Added
+- New SDK variant Webex-Wxc released, a light weight SDK for WebexCalling.
+- New Callback added `CallObserver.onStartRinging(call:Call?, ringerType: Call.RingerType)`, when a ringer has to be started.
+- New Callback added `CallObserver.onStopRinging(call:Call?, ringerType: Call.RingerType)`, when a ringer has to be stopped.
+- New Class added `AdvancedSettings.EnablePhotoCapture` to enable capturing photo.
+- New Class added `ShareConfig` a defined data type to represent the share screen config.
+- New Enum added `Call.RingerType`  for a ringerType to denote the type of tone to be played/stopped
+- New Enum added `CallMembership.DeviceType` for device types
+- New Enum added `Call.ShareOptimizeType` to represent the OptimiseType for share screen
+- New Data added `Person.encodedId` to get base64 encoded ID of the person
+- New API added `CallMembership.getDeviceType()` to get device type joined by this CallMembership.
+- New API added `CallMembership.getPairedMemberships()` to get all memberships joined using deviceType "Room".
+- New API added `Call.isVideoEnabled()` to indicate whether video calling is enabled for the user in Control hub.
+- New API added `Call.getShareConfig()` to get the share screen optimisation type of the call.
+- New Feature added to support multiple active calls.
+- New Feature added to support end-to-end encrypted meetings
+- Metrics added to monitor SDK performance, track login flows & diagnostics events like token related errors.
+
+### Updated
+- Screen sharing now have optimisation options as part of share config in `startSharing()` API
+- Now FedRamp can be enabled through authenticators
+- Now `CallObserver.RemoteCancel` event  will be fired when host ends meeting for all or kicked by host.
+- FIXED: Webex calling failures for certificate issues
+- FIXED: `PersonClient.getMe()` api returns multiple callbacks for errors
+- FIXED: `MessagesUpdated` event getting called for internal provisional messages.
+- FIXED: `MessagesUpdated` event not getting called with decrypted content in some cases, after list message API was called.
+- FIXED: Crash when setting multiple call observers from different threads.
 
 ## [3.8.0](https://github.com/webex/webex-android-sdk/releases/tag/3.8.0)
 Released on **24 January, 2023**.
