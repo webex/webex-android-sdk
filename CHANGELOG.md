@@ -73,7 +73,7 @@ All notable changes to this project will be documented in this file.
 ## [3.9.0](https://github.com/webex/webex-android-sdk/releases/tag/3.9.0)
 Released on **05 June, 2023**.
 ### Added
-- New SDK variant Webex-Wxc released, a light weight SDK for WebexCalling.
+- New SDK variant Webex-Wxc released, a light weight SDK for WebexCalling which can be created as an Android Dynamic module.
 - New Callback added `CallObserver.onStartRinging(call:Call?, ringerType: Call.RingerType)`, when a ringer has to be started.
 - New Callback added `CallObserver.onStopRinging(call:Call?, ringerType: Call.RingerType)`, when a ringer has to be stopped.
 - New Class added `AdvancedSettings.EnablePhotoCapture` to enable capturing photo.
@@ -89,6 +89,8 @@ Released on **05 June, 2023**.
 - New Feature added to support multiple active calls.
 - New Feature added to support end-to-end encrypted meetings
 - Metrics added to monitor SDK performance, track login flows & diagnostics events like token related errors.
+- New API added `Call.enableReceivingNoiseRemoval(enable: Boolean, callback: CompletionHandler<ReceivingNoiseRemovalEnableResult>)` to enable or disable receiving noise removal functionality for incoming PSTN calls.
+- New API added `Call.getReceivingNoiseInfo()` to get the info object which contains information on Receiving noise removal state.
 
 ### Updated
 - Screen sharing now have optimisation options as part of share config in `startSharing()` API
