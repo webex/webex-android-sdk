@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.9.1 Releases
+- `3.9.1` Releases - [3.9.1](#391)
+
 #### 3.9.0 Releases
 - `3.9.0` Releases - [3.9.0](#390)
 
@@ -69,6 +72,17 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.9.1](https://github.com/webex/webex-android-sdk/releases/tag/3.9.1)
+Released on **19 June, 2023**.
+### Added
+- New API added `Call.getExternalTrackingId()` to get the external tracking id for corresponding call. Applicable only for WxC calls.
+- Supports Webex Calling NewCall notifications payload through webhook.
+
+### Updated
+- FIXED: Self video turning off in case of poor uplink event.
+- sdkFlavor value for `omnius_sdk_client` behavorial metrics updated from `calling` to `wxc`
+- Fixed: Crash in `Webex.signOut` API
 
 ## [3.9.0](https://github.com/webex/webex-android-sdk/releases/tag/3.9.0)
 Released on **05 June, 2023**.
