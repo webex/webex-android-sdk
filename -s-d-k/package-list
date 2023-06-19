@@ -662,6 +662,7 @@ $dokka.location:com.ciscowebex.androidsdk.phone/Call/getCameraTorchMode/#/Pointi
 $dokka.location:com.ciscowebex.androidsdk.phone/Call/getCompositedVideoLayout/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.phone/-call/get-composited-video-layout.html
 $dokka.location:com.ciscowebex.androidsdk.phone/Call/getCorrelationId/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.phone/-call/get-correlation-id.html
 $dokka.location:com.ciscowebex.androidsdk.phone/Call/getDirection/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.phone/-call/get-direction.html
+$dokka.location:com.ciscowebex.androidsdk.phone/Call/getExternalTrackingId/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.phone/-call/get-external-tracking-id.html
 $dokka.location:com.ciscowebex.androidsdk.phone/Call/getFacingMode/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.phone/-call/get-facing-mode.html
 $dokka.location:com.ciscowebex.androidsdk.phone/Call/getFrom/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.phone/-call/get-from.html
 $dokka.location:com.ciscowebex.androidsdk.phone/Call/getLocalVideoViewSize/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.phone/-call/get-local-video-view-size.html
