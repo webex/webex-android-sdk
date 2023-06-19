@@ -81,7 +81,6 @@ Released on **19 June, 2023**.
 
 ### Updated
 - FIXED: Self video turning off in case of poor uplink event.
-- sdkFlavor value for `omnius_sdk_client` behavorial metrics updated from `calling` to `wxc`
 - Fixed: Crash in `Webex.signOut` API
 
 ## [3.9.0](https://github.com/webex/webex-android-sdk/releases/tag/3.9.0)
