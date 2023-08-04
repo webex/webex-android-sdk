@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.9.1.3 Releases
+- `3.9.1.3` Releases - [3.9.1.3](#3913)
+
+#### 3.9.1.2 Releases
+- `3.9.1.3` Releases - [3.9.1.2](#3913)
+
 #### 3.9.1 Releases
 - `3.9.1` Releases - [3.9.1](#391)
 
@@ -72,6 +78,18 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+
+## [3.9.1.3]
+Released on **4 August, 2023**.
+### Added
+- New API added `Phone.dialPhoneNumber(dialString: String, option: MediaOption, callback: CompletionHandler<Call>)` to dial only phone numbers.
+- New API `CallHistoryRecord.isPhoneNumber()` New API `CallHistoryRecord.isPhoneNumber()` to denote if the number dialled in call record was a phone number.
+
+## [3.9.1.2]
+Released on **31 July, 2023**.
+### Updated
+- Fixed: Meeting join failure on second attempt.
 
 ## [3.9.1](https://github.com/webex/webex-android-sdk/releases/tag/3.9.1)
 Released on **19 June, 2023**.
