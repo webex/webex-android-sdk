@@ -76,7 +76,7 @@ All notable changes to this project will be documented in this file.
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
 
-## [3.9.2]
+## [3.9.2](https://github.com/webex/webex-android-sdk/releases/tag/3.9.2)
 Released on **11 August, 2023**.
 ### Added
 - New API added `Phone.dialPhoneNumber(dialString: String, option: MediaOption, callback: CompletionHandler<Call>)` to dial only phone numbers.
