@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.9.2 Releases
+- `3.9.2` Releases - [3.9.2](#392)
+
 #### 3.9.1 Releases
 - `3.9.1` Releases - [3.9.1](#391)
 
@@ -72,6 +75,16 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.9.2]
+Released on **11 August, 2023**.
+### Added
+- New API added `Phone.dialPhoneNumber(dialString: String, option: MediaOption, callback: CompletionHandler<Call>)` to dial only phone numbers.
+- New API `CallHistoryRecord.isPhoneNumber()` to denote if the number dialled in call record was a phone number.
+
+### Updated
+- Removed Camera permissions and H264 prompt for audio only flows.
+- Fixed: Call failed or meeting failure issue due to mediaTimeout.
 
 ## [3.9.1](https://github.com/webex/webex-android-sdk/releases/tag/3.9.1)
 Released on **19 June, 2023**.
@@ -212,7 +225,7 @@ Released on **24 August, 2022**.
 Released on **7 June, 2022**.
 
 #### Added
-- `MessageObserver.MessageUpdated` event to get events when some existing messages are updated. 
+- `MessageObserver.MessageUpdated` event to get events when some existing messages are updated.
 - `Call.getMediaStreams(): List<MediaStream>` to get all opened media streams
 - `Call.setMediaStreamCategoryA(duplicate: Boolean, quality: MediaStreamQuality)` to add the Active Speaker stream with the specified params if it does not already exist. Otherwise, update the Active Speaker stream with the specified params.
 - `Call.setMediaStreamsCategoryB(numStreams: Int, quality: MediaStreamQuality)` to set the Category-B streams to specified parameters
@@ -251,8 +264,8 @@ Released on **19 April, 2022**.
 
 #### Deprecated
 - Sending multiple formats of text in the same message is not supported. Below text constuctors are deprecated
-    - `Text.markdown(markdown: String, html: String?, plain: String?): Text`
-    - `Text.html(html: String, plain: String?): Text`
+  - `Text.markdown(markdown: String, html: String?, plain: String?): Text`
+  - `Text.html(html: String, plain: String?): Text`
 
 ---
 ## [3.3.0](https://github.com/webex/webex-android-sdk/releases/tag/3.3.0)
