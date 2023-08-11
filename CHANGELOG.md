@@ -85,7 +85,7 @@ Released on **11 August, 2023**.
 - Webex android Webex calling SDK (com.ciscowebex:webexsdk-wxc:3.9.2.1-SNAPSHOT) built for NDK21.
 **Note** : Unless application has a hard dependency on NDK 21, we recommend developers to use Webex android SDK 3.9.2 which is based on NDK 24.
 
-## [3.9.2]
+## [3.9.2](https://github.com/webex/webex-android-sdk/releases/tag/3.9.2)
 Released on **11 August, 2023**.
 ### Added
 - New API added `Phone.dialPhoneNumber(dialString: String, option: MediaOption, callback: CompletionHandler<Call>)` to dial only phone numbers.
