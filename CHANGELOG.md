@@ -79,7 +79,7 @@ All notable changes to this project will be documented in this file.
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
 
-## [3.10.0]
+## [3.10.0](https://github.com/webex/webex-android-sdk/releases/tag/3.10.0)
 Released on **13 October, 2023**.
 ### Added
 - New interface `VoicePushInfo` to represent the caller related information received from VoIP payload.
@@ -116,6 +116,7 @@ Released on **13 October, 2023**.
 - Fixed RemoteSendingVideo coming as true before the call gets connected in WebexCalling calls.
 - Fixed Bluetooth devices not getting auto connected during call when they are enabled
 - Fixed 1080P video transmission issue in specific devices.
+- Added completion handler in `Call.switchAudioOutputMode(audioOutputMode: AudioOutputMode, callback: CompletionHandler<Boolean>)` to return the status of the operation.
 
 ## [3.9.2](https://github.com/webex/webex-android-sdk/releases/tag/3.9.2)
 Released on **11 August, 2023**.
