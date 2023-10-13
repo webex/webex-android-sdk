@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.10.0 Releases
+- `3.10.0` Releases - [3.10.0](#3100)
+
 #### 3.9.2 Releases
 - `3.9.2` Releases - [3.9.2](#392)
 
@@ -75,6 +78,44 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.10.0]
+Released on **13 October, 2023**.
+### Added
+- New interface `VoicePushInfo` to represent the caller related information received from VoIP payload.
+- New interface `Presence` to represent the Presence info for a person.
+- New interface `PresenceHandle` to represent the contacts whose presence state are being watched.
+- New interface `ClosedCaptionsInfo` to represent the ClosedCaptionsInfo of a call.
+- New API added `Webex.parseVoIPPayload(payload: String) : VoicePushInfo` to parse and return the caller related information from the VoIP notification.
+- New API added `Webex.decryptCUCMPushMessage(payload: String): PushRESTPayload` to decrypt the payload received via PushREST for an incoming CUCM call.
+- New API added `PushRESTPayload.getDisplayName(): String` to get the display name that is present in the CUCM PushRest notification.
+- New API added `PushRESTPayload.getPushId(): String` to get the pushId that is present in the CUCM PushRest notification.
+- New API added `Phone.isH264LicenseActivated(): Boolean` to check the status of H264 license prompt acceptance.
+- New API added `PersonClient.startWatchingPresences(contactIds: List<String>, handler: CompletionHandler<Presence>): List<PresenceHandle>` to start watching the presence of the given contactIds.
+- New API added `PersonClient.stopWatchingPresences(presenceHandles: List<PresenceHandle>)` to stop watching presence status of the list of presence handle that are provided as input.
+- New API added `Call.setSpokenLanguage(language: String, callback: CompletionHandler<SpokenLanguageSelectionError>)` to set the spoken language for the call.
+- New API added `Call.setTranslationLanguage(language: String, callback: CompletionHandler<TranslationLanguageSelectionError>)` to set the translation language for the call.
+- New API added `Call.getClosedCaptionsInfo(): ClosedCaptionsInfo` to get the closed captions info object for the call.
+- New API added `Call.getClosedCaptions: List<CaptionItem>` to get the list of caption items from the beginning of this call.
+- New API added `Call.isClosedCaptionsAllowed(): Boolean` to check if closed captions is allowed for the call.
+- New API added `Call.isClosedCaptionsEnabled(): Boolean` to get the current state of the closed caption. If enabled, returns true, otherwise false.
+- New API added `Call.getCallerNumber(): String` to get the caller number of the active call.
+- New API added `Call.isTransferSupported(): Boolean` to check if the transfer is supported for the active call.
+- New API added `Call.isAddParticipantSupported(): Boolean` to check if the add participant is supported for the active call.
+- New API added `Call.getCurrentAudioOutput(): AudioOutputMode?` to get the current output audio mode like Bluetooth or Speaker etc.
+- New Enum `PresenceStatus` to represent the presence status of a person.
+- New Enum `SpokenLanguageSelectionError` to represent error for setting current spoken language.
+- New Enum `TranslationLanguageSelectionError` to represent error for setting current translation language.
+- New Callback added `CallObserver.onClosedCaptionsArrived(closedCaptions: CaptionItem)` to notify notify when a caption item object arrives for the call.
+- New Callback added `CallObserver.onClosedCaptionsInfoChanged(closedCaptionsInfo: ClosedCaptionsInfo)` to notify when closed caption info object changes, for e.g. when spoken language is changed.
+- Ability to support assisted transfer when the SDK client already has 2 active calls.
+- Subscribing for certain call events via mercury is now supported.
+- Optimised WxC Calling only sdk for runtime performance.
+
+### Updated
+- Fixed RemoteSendingVideo coming as true before the call gets connected in WebexCalling calls.
+- Fixed Bluetooth devices not getting auto connected during call when they are enabled
+- Fixed 1080P video transmission issue in specific devices.
 
 ## [3.9.2](https://github.com/webex/webex-android-sdk/releases/tag/3.9.2)
 Released on **11 August, 2023**.
