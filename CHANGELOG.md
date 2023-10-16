@@ -80,7 +80,7 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ## [3.10.0](https://github.com/webex/webex-android-sdk/releases/tag/3.10.0)
-Released on **13 October, 2023**.
+Released on **16 October, 2023**.
 ### Added
 - New interface `VoicePushInfo` to represent the caller related information received from VoIP payload.
 - New interface `Presence` to represent the Presence info for a person.
