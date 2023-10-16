@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 #### 3.10.0-SNAPSHOT
-- `3.10.0-SNAPSHOT` - [3.10.0-SNAPSHOT](#31000)
+- `3.10.0-SNAPSHOT` - [3.10.0-SNAPSHOT](#3100-SNAPSHOT)
 
 #### 3.10.0 Releases
 - `3.10.0` Releases - [3.10.0](#3100)
@@ -82,6 +82,7 @@ All notable changes to this project will be documented in this file.
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
 
+<a id="3100-SNAPSHOT"></a>
 #### [3.10.0-SNAPSHOT]
 Released on **16 October, 2023**.
 ### Added
