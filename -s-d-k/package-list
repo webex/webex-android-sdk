@@ -526,7 +526,7 @@ $dokka.location:com.ciscowebex.androidsdk.people/Presence/getContactId/#/Pointin
 $dokka.location:com.ciscowebex.androidsdk.people/Presence/getCustomStatus/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.people/-presence/get-custom-status.html
 $dokka.location:com.ciscowebex.androidsdk.people/Presence/getExpiresTime/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.people/-presence/get-expires-time.html
 $dokka.location:com.ciscowebex.androidsdk.people/Presence/getLastActiveTime/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.people/-presence/get-last-active-time.html
-$dokka.location:com.ciscowebex.androidsdk.people/Presence/getState/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.people/-presence/get-state.html
+$dokka.location:com.ciscowebex.androidsdk.people/Presence/getStatus/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.people/-presence/get-status.html
 $dokka.location:com.ciscowebex.androidsdk.people/PresenceHandle///PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.people/-presence-handle/index.html
 $dokka.location:com.ciscowebex.androidsdk.people/PresenceHandle/getContactId/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.people/-presence-handle/get-contact-id.html
 $dokka.location:com.ciscowebex.androidsdk.people/PresenceHandle/getHandle/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.people/-presence-handle/get-handle.html
