@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.10.0-SNAPSHOT
+- `3.10.0-SNAPSHOT` - [3.10.0-SNAPSHOT](#31000)
+
 #### 3.10.0 Releases
 - `3.10.0` Releases - [3.10.0](#3100)
 
@@ -79,8 +82,13 @@ All notable changes to this project will be documented in this file.
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
 
+#### [3.10.0-SNAPSHOT]
+Released on **16 October, 2023**.
+### Added
+- Webex android Webex calling SDK (com.ciscowebex:webexsdk-wxc:3.10.0-SNAPSHOT) built for NDK21. Note : Unless application has a hard dependency on NDK 21, we recommend developers to use Webex android SDK 3.10.0 which is based on NDK 24.
+
 ## [3.10.0](https://github.com/webex/webex-android-sdk/releases/tag/3.10.0)
-Released on **13 October, 2023**.
+Released on **16 October, 2023**.
 ### Added
 - New interface `VoicePushInfo` to represent the caller related information received from VoIP payload.
 - New interface `Presence` to represent the Presence info for a person.
