@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.10.1 Releases
+- `3.10.1` Releases - [3.10.1](#3101)
+
 #### 3.10.0 Releases
 - `3.10.0` Releases - [3.10.0](#3100)
 
@@ -79,6 +82,15 @@ All notable changes to this project will be documented in this file.
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
 
+## [3.10.1](https://github.com/webex/webex-android-sdk/releases/tag/3.10.1)
+Released on **12 December, 2023**.
+### Added
+- New interface `ProductCapability` which represents the product capabilities for the logged in user.
+- New API added `getProductCapability(): ProductCapability` to get the supported capability of the current user.
+### Updated
+- Fixed: Dynamic delivery related issue.
+- General improvements and bug fixes.
+
 ## [3.10.0](https://github.com/webex/webex-android-sdk/releases/tag/3.10.0)
 Released on **16 October, 2023**.
 ### Added
@@ -113,9 +125,9 @@ Released on **16 October, 2023**.
 - Optimised WxC Calling only sdk for runtime performance.
 
 ### Updated
-- Fixed RemoteSendingVideo coming as true before the call gets connected in WebexCalling calls.
-- Fixed Bluetooth devices not getting auto connected during call when they are enabled
-- Fixed 1080P video transmission issue in specific devices.
+- Fixed: RemoteSendingVideo coming as true before the call gets connected in WebexCalling calls.
+- Fixed: Bluetooth devices not getting auto connected during call when they are enabled
+- Fixed: 1080P video transmission issue in specific devices.
 - Added completion handler in `Call.switchAudioOutputMode(audioOutputMode: AudioOutputMode, callback: CompletionHandler<Boolean>)` to return the status of the operation.
 
 ## [3.9.2](https://github.com/webex/webex-android-sdk/releases/tag/3.9.2)
