@@ -88,7 +88,7 @@ Released on **12 December, 2023**.
 - New interface `ProductCapability` which represents the product capabilities for the logged in user.
 - New API added `getProductCapability(): ProductCapability` to get the supported capability of the current user.
 ### Updated
-- Fixed: Dynamic delivery related issue.
+- Fixed: Dynamic delivery related issue in Webex-Wxc variant.
 - General improvements and bug fixes.
 
 ## [3.10.0](https://github.com/webex/webex-android-sdk/releases/tag/3.10.0)
