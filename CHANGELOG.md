@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.11.0 Releases
+- `3.11.0` Releases - [3.11.0](#3110)
+
 #### 3.10.1 Releases
 - `3.10.1` Releases - [3.10.1](#3101)
 
@@ -81,6 +84,30 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.11.0](https://github.com/webex/webex-android-sdk/releases/tag/3.11.0)
+Released on **13 February, 2024**.
+### Added
+- New Annotations library for rendering annotations on screen for Android `com.cisco.webex:annotationsdk:3.11.0`
+- New Enum `ErrorCode.CANNOT_START_INSTANT_MEETING` to indicate an error condition whenever you start an instant meeting.
+- New API `getLiveAnnotationHandle(): LiveAnnotations` to get an instance of LiveAnnotations object.
+- New API `inviteParticipant(invitee: String, callback: CompletionHandler<InviteParticipantError>)` to invite a participant to a call.
+- New API `reclaimHost(hostKey: String = "", callback: CompletionHandler<ReclaimHostError>)` to reclaim the host role using host key.
+- New API `makeHost(participantId: String, callback: CompletionHandler<MakeHostError>)` to assign the host role to a participant.
+- New Interface `LiveAnnotations` which defines the methods related to live annotations feature.
+- New Interface `LiveAnnotationListener` to represent the events for live annotations.
+- New Class `LiveAnnotationRenderer` to manage the rendering of the annotations data on screen.
+- New Class `LiveAnnotationLayer` to manage the annotations layer and its properties.
+- New Class `CloseLiveAnnotationButton` to manage the close button for live annotations.
+- New Enum `InviteParticipantError` to represent the result of inviteParticipant API.
+- New Enum `LiveAnnotationErrorCode` to represent the error codes for live annotations.
+- New Enum `LiveAnnotationsPolicy` to represent the available policies for live annotations.
+- New method `CallMembership.isHost(): Boolean` which returns a boolean value indicating if participant is host or not.
+- New method `CallMembership.isCohost(): Boolean` which returns a boolean value indicating if participant is cohost or not.
+- New method `CallMembership.isSelf(): Boolean` which returns a boolean value indicating if member is self user or not.
+- New method `CallMembership.isPresenter(): Boolean` which returns a boolean value indicating if participant is sharing their screen or not.
+### Updated
+- Messaging module removed in size optimized WxC SDK.
 
 ## [3.10.1](https://github.com/webex/webex-android-sdk/releases/tag/3.10.1)
 Released on **12 December, 2023**.
