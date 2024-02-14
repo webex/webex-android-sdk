@@ -1,5 +1,32 @@
 $dokka.format:html-v1
 $dokka.linkExtension:html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.utils////PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.utils/index.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.utils//dp/kotlin.Float#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.utils/dp.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.utils//dp/kotlin.Int#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.utils/dp.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.utils//getMetricsHeightExtensionFunc/[Error type: Unresolved type for Context]#[Error type: Unresolved type for DisplayMetrics]/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.utils/get-metrics-height-extension-func.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.utils//getMetricsWidthExtensionFunc/[Error type: Unresolved type for Context]#[Error type: Unresolved type for DisplayMetrics]/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.utils/get-metrics-width-extension-func.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.utils//getScreenHeight/#[Error type: Unresolved type for Context]/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.utils/get-screen-height.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.utils//getScreenWidth/#[Error type: Unresolved type for Context]/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.utils/get-screen-width.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.utils//sp/kotlin.Float#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.utils/sp.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.utils//sp/kotlin.Int#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.utils/sp.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.views////PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.views/index.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.views/CloseLiveAnnotationButton///PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.views/-close-live-annotation-button/index.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.views/CloseLiveAnnotationButton/CloseLiveAnnotationButton/#[Error type: Unresolved type for Context]#[Error type: Unresolved type for AttributeSet]?#kotlin.Int/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.views/-close-live-annotation-button/-close-live-annotation-button.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.views/LiveAnnotationLayer///PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.views/-live-annotation-layer/index.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.views/LiveAnnotationLayer/LiveAnnotationLayer/#[Error type: Unresolved type for Context]#[Error type: Unresolved type for AttributeSet]?/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.views/-live-annotation-layer/-live-annotation-layer.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.views/LiveAnnotationLayer/getCloseButton/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.views/-live-annotation-layer/get-close-button.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer.views/LiveAnnotationLayer/setCustomCloseButton/#[Error type: Unresolved type for AppCompatButton]#[Error type: Unresolved type for LayoutParams]?/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer.views/-live-annotation-layer/set-custom-close-button.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer////PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/index.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer/LiveAnnotationRenderer.LiveAnnotationRendererCallback///PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/-live-annotation-renderer/-live-annotation-renderer-callback/index.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer/LiveAnnotationRenderer.LiveAnnotationRendererCallback/onAnnotationRenderingReady/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/-live-annotation-renderer/-live-annotation-renderer-callback/on-annotation-rendering-ready.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer/LiveAnnotationRenderer.LiveAnnotationRendererCallback/onAnnotationRenderingStopped/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/-live-annotation-renderer/-live-annotation-renderer-callback/on-annotation-rendering-stopped.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer/LiveAnnotationRenderer///PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/-live-annotation-renderer/index.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer/LiveAnnotationRenderer/LiveAnnotationRenderer/#[Error type: Unresolved type for Context]/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/-live-annotation-renderer/-live-annotation-renderer.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer/LiveAnnotationRenderer/getAnnotationLayer/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/-live-annotation-renderer/get-annotation-layer.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer/LiveAnnotationRenderer/renderData/#kotlin.String/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/-live-annotation-renderer/render-data.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer/LiveAnnotationRenderer/setAnnotationRendererCallback/#com.ciscowebex.androidsdk.annotation.renderer.LiveAnnotationRenderer.LiveAnnotationRendererCallback/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/-live-annotation-renderer/set-annotation-renderer-callback.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer/LiveAnnotationRenderer/startRendering/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/-live-annotation-renderer/start-rendering.html
+$dokka.location:com.ciscowebex.androidsdk.annotation.renderer/LiveAnnotationRenderer/stopRendering/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.annotation.renderer/-live-annotation-renderer/stop-rendering.html
 $dokka.location:com.ciscowebex.androidsdk.auth////PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.auth/index.html
 $dokka.location:com.ciscowebex.androidsdk.auth/Authenticator///PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.auth/-authenticator/index.html
 $dokka.location:com.ciscowebex.androidsdk.auth/Authenticator/deauthorize/#com.ciscowebex.androidsdk.CompletionHandler[java.lang.Void]?/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk.auth/-authenticator/deauthorize.html
@@ -1709,6 +1736,9 @@ $dokka.location:com.ciscowebex.androidsdk/WebexUCLoginDelegate/onUCServerConnect
 $dokka.location:com.ciscowebex.androidsdk/WebexUCLoginDelegate/showUCNonSSOLoginView/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex-u-c-login-delegate/show-u-c-non-s-s-o-login-view.html
 $dokka.location:com.ciscowebex.androidsdk/WebexUCLoginDelegate/showUCSSOBrowser/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex-u-c-login-delegate/show-u-c-s-s-o-browser.html
 com.ciscowebex.androidsdk
+com.ciscowebex.androidsdk.annotation.renderer
+com.ciscowebex.androidsdk.annotation.renderer.utils
+com.ciscowebex.androidsdk.annotation.renderer.views
 com.ciscowebex.androidsdk.auth
 com.ciscowebex.androidsdk.calendarMeeting
 com.ciscowebex.androidsdk.membership
