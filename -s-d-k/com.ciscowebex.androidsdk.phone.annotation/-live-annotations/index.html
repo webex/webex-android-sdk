@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>LiveAnnotations</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+const savedDarkMode = storage ? JSON.parse(storage) : false
+if(savedDarkMode === true){
+    document.getElementsByTagName("html")[0].classList.add("theme-dark")
+}</script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/jetbrains-mono.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+</head>
+<body>
+<div class="navigation-wrapper" id="navigation-wrapper">
+    <div id="leftToggler"><span class="icon-toggler"></span></div>
+    <div class="library-name">
+            <a href="../../../index.html">
+                    <span>SDK</span>
+            </a>
+    </div>
+    <div>
+    </div>
+    <div class="pull-right d-flex">
+        <button id="theme-toggle-button"><span id="theme-toggle"></span></button>
+        <div id="searchBar"></div>
+    </div>
+</div>
+<div id="container">
+    <div id="leftColumn">
+        <div id="sideMenu"></div>
+    </div>
+    <div id="main">
+<div class="main-content" id="content" pageIds="SDK::com.ciscowebex.androidsdk.phone.annotation/LiveAnnotations///PointingToDeclaration//1234961455">
+  <div class="breadcrumbs"><a href="../../../index.html">SDK</a><span class="delimiter">/</span><a href="../index.html">com.ciscowebex.androidsdk.phone.annotation</a><span class="delimiter">/</span><a href="index.html">LiveAnnotations</a></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Live</span><wbr></wbr><span><span>Annotations</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sdk:SDK:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">LiveAnnotations</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Interface defining the methods related to live annotations during a screen sharing session in a specific call. The screen sharing session involves multiple participants in a meeting, and live annotations occur on the shared screen. For the presenter, the live annotation feature should be initialized when the screen share starts. A listener should be set to allow the client to listen to callbacks related to live annotation events. Any annotations made by the requester will be drawn on the presenter's annotation layer upon approval.</p><h4 class="">Since</h4><p class="paragraph">API 3.11.0</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Functions">Functions</button></div>
+    <div class="tabs-section-body">
+      <h2 class="">Functions</h2>
+      <div class="table" data-togglable="Functions"><a data-name="1015474114%2FFunctions%2F1234961455" anchor-label="getLiveAnnotationsPolicy" id="1015474114%2FFunctions%2F1234961455" data-filterable-set=":sdk:SDK:dokkaHtml/main"></a>
+        <div class="table-row" data-filterable-current=":sdk:SDK:dokkaHtml/main" data-filterable-set=":sdk:SDK:dokkaHtml/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="get-live-annotations-policy.html"><span>get</span><wbr></wbr><span>Live</span><wbr></wbr><span>Annotations</span><wbr></wbr><span><span>Policy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1015474114%2FFunctions%2F1234961455"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sdk:SDK:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="get-live-annotations-policy.html"><span class="token function">getLiveAnnotationsPolicy</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-live-annotations-policy/index.html">LiveAnnotationsPolicy</a><span class="token operator">?</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Retrieves the current live annotations policy for the ongoing screen sharing session. The default policy is set to <a href="../-live-annotations-policy/-nobody-can-annotate/index.html">LiveAnnotationsPolicy.NobodyCanAnnotate</a>.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+<a data-name="-734999896%2FFunctions%2F1234961455" anchor-label="isLiveAnnotationStarted" id="-734999896%2FFunctions%2F1234961455" data-filterable-set=":sdk:SDK:dokkaHtml/main"></a>
+        <div class="table-row" data-filterable-current=":sdk:SDK:dokkaHtml/main" data-filterable-set=":sdk:SDK:dokkaHtml/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="is-live-annotation-started.html"><span>is</span><wbr></wbr><span>Live</span><wbr></wbr><span>Annotation</span><wbr></wbr><span><span>Started</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-734999896%2FFunctions%2F1234961455"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sdk:SDK:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="is-live-annotation-started.html"><span class="token function">isLiveAnnotationStarted</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Checks if live annotation has been started for the ongoing screen sharing session.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+<a data-name="2025347872%2FFunctions%2F1234961455" anchor-label="respondToLiveAnnotationRequest" id="2025347872%2FFunctions%2F1234961455" data-filterable-set=":sdk:SDK:dokkaHtml/main"></a>
+        <div class="table-row" data-filterable-current=":sdk:SDK:dokkaHtml/main" data-filterable-set=":sdk:SDK:dokkaHtml/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="respond-to-live-annotation-request.html"><span>respond</span><wbr></wbr><span>To</span><wbr></wbr><span>Live</span><wbr></wbr><span>Annotation</span><wbr></wbr><span><span>Request</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2025347872%2FFunctions%2F1234961455"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sdk:SDK:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="respond-to-live-annotation-request.html"><span class="token function">respondToLiveAnnotationRequest</span></a><span class="token punctuation">(</span><span class="parameters wrapped"><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;personId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;didAccept<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;completionHandler<span class="token operator">: </span><a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html">CompletionHandler</a><span class="token operator">&lt;</span><span class="token keyword"></span><a href="../-live-annotation-error-code/index.html">LiveAnnotationErrorCode</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Allows responding to a live annotation request for the ongoing screen sharing session. This method is called when a requester asks to annotate. The annotation will start only after the presenter approves the request.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+<a data-name="1860707345%2FFunctions%2F1234961455" anchor-label="setLiveAnnotationListener" id="1860707345%2FFunctions%2F1234961455" data-filterable-set=":sdk:SDK:dokkaHtml/main"></a>
+        <div class="table-row" data-filterable-current=":sdk:SDK:dokkaHtml/main" data-filterable-set=":sdk:SDK:dokkaHtml/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="set-live-annotation-listener.html"><span>set</span><wbr></wbr><span>Live</span><wbr></wbr><span>Annotation</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1860707345%2FFunctions%2F1234961455"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sdk:SDK:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="set-live-annotation-listener.html"><span class="token function">setLiveAnnotationListener</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">listener<span class="token operator">: </span><a href="../-live-annotation-listener/index.html">LiveAnnotationListener</a></span></span><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Sets a live annotation listener for the ongoing screen sharing session. This enables the presenter to listen for live annotation events and respond accordingly.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+<a data-name="814892129%2FFunctions%2F1234961455" anchor-label="setLiveAnnotationsPolicy" id="814892129%2FFunctions%2F1234961455" data-filterable-set=":sdk:SDK:dokkaHtml/main"></a>
+        <div class="table-row" data-filterable-current=":sdk:SDK:dokkaHtml/main" data-filterable-set=":sdk:SDK:dokkaHtml/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="set-live-annotations-policy.html"><span>set</span><wbr></wbr><span>Live</span><wbr></wbr><span>Annotations</span><wbr></wbr><span><span>Policy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="814892129%2FFunctions%2F1234961455"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sdk:SDK:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="set-live-annotations-policy.html"><span class="token function">setLiveAnnotationsPolicy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">policy<span class="token operator">: </span><a href="../-live-annotations-policy/index.html">LiveAnnotationsPolicy</a><span class="token punctuation">, </span></span><span class="parameter ">completionHandler<span class="token operator">: </span><a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html">CompletionHandler</a><span class="token operator">&lt;</span><span class="token keyword"></span><a href="../-live-annotation-error-code/index.html">LiveAnnotationErrorCode</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Sets the live annotations policy for the ongoing screen sharing session. The default policy is set to <a href="../-live-annotations-policy/-nobody-can-annotate/index.html">LiveAnnotationsPolicy.NobodyCanAnnotate</a>.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+<a data-name="2096419054%2FFunctions%2F1234961455" anchor-label="stopLiveAnnotations" id="2096419054%2FFunctions%2F1234961455" data-filterable-set=":sdk:SDK:dokkaHtml/main"></a>
+        <div class="table-row" data-filterable-current=":sdk:SDK:dokkaHtml/main" data-filterable-set=":sdk:SDK:dokkaHtml/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="stop-live-annotations.html"><span>stop</span><wbr></wbr><span>Live</span><wbr></wbr><span><span>Annotations</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2096419054%2FFunctions%2F1234961455"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sdk:SDK:dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="stop-live-annotations.html"><span class="token function">stopLiveAnnotations</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Stops live annotations for the ongoing screen sharing session. This method also handles the cleaning process internally, which includes removing the annotation layer.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Copyright</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+    </div>
+</div>
+</body>
+</html>
