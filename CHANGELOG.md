@@ -88,7 +88,6 @@ All notable changes to this project will be documented in this file.
 ## [3.11.0](https://github.com/webex/webex-android-sdk/releases/tag/3.11.0)
 Released on **13 February, 2024**.
 ### Added
-- New Annotations library for rendering annotations on screen for Android `com.cisco.webex:annotationsdk:3.11.0`
 - New Enum `ErrorCode.CANNOT_START_INSTANT_MEETING` to indicate an error condition whenever you start an instant meeting.
 - New API `getLiveAnnotationHandle(): LiveAnnotations` to get an instance of LiveAnnotations object.
 - New API `inviteParticipant(invitee: String, callback: CompletionHandler<InviteParticipantError>)` to invite a participant to a call.
