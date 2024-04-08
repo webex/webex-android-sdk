@@ -91,8 +91,8 @@ All notable changes to this project will be documented in this file.
 ## [3.11.1](https://github.com/webex/webex-android-sdk/releases/tag/3.11.1)
 Released on **7 April, 2024**.
 ### Updated
-- Fixed: H264 prompt is removed for video flows.
-- Fixed: Made the `webex.initialize()` method thread safe and added check to avoid multiple initializations.
+- H264 prompt is removed for video and screen share flows.
+- Made Webex class and `webex.initialize()` method thread safe and added check to avoid multiple initializations.
 - Fixed: Call Failed issue during rejoin after host ends the meeting for all and starts again.
 - Fixed: Logs not persisting after killing app and relaunching.
 
