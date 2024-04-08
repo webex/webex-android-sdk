@@ -89,7 +89,7 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ## [3.11.1](https://github.com/webex/webex-android-sdk/releases/tag/3.11.1)
-Released on **7 April, 2024**.
+Released on **8 April, 2024**.
 ### Updated
 - H264 prompt is removed for video and screen share flows.
 - Made Webex class and `webex.initialize()` method thread safe and added check to avoid multiple initializations.
