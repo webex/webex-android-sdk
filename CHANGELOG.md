@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.11.2 Releases
+- `3.11.2` Releases - [3.11.2](#3112)
+
 #### 3.11.1 Releases
 - `3.11.1` Releases - [3.11.1](#3111)
 
@@ -87,6 +90,12 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.11.2](https://github.com/webex/webex-android-sdk/releases/tag/3.11.2)
+Released on **7 May, 2024**.
+### Added
+- New interface `WebexAuthDelegate` to receive all authentication related event callbacks.
+- New callback function `onReLoginRequired()` in `WebexAuthDelegate` to notify when user is logged out and re login is required.
 
 ## [3.11.1](https://github.com/webex/webex-android-sdk/releases/tag/3.11.1)
 Released on **8 April, 2024**.
