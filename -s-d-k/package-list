@@ -1656,6 +1656,7 @@ $dokka.location:com.ciscowebex.androidsdk/Webex.LogLevel.WARNING///PointingToDec
 $dokka.location:com.ciscowebex.androidsdk/Webex.LogLevel///PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex/-log-level/index.html
 $dokka.location:com.ciscowebex.androidsdk/Webex///PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex/index.html
 $dokka.location:com.ciscowebex.androidsdk/Webex/Webex/#[Error type: Unresolved type for Application]#com.ciscowebex.androidsdk.auth.Authenticator/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex/-webex.html
+$dokka.location:com.ciscowebex.androidsdk/Webex/authDelegate/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex/auth-delegate.html
 $dokka.location:com.ciscowebex.androidsdk/Webex/authenticator/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex/authenticator.html
 $dokka.location:com.ciscowebex.androidsdk/Webex/base64Decode/#kotlin.String/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex/base64-decode.html
 $dokka.location:com.ciscowebex.androidsdk/Webex/base64Encode/#com.ciscowebex.androidsdk.ResourceType#kotlin.String#com.ciscowebex.androidsdk.CompletionHandler[kotlin.String]/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex/base64-encode.html
@@ -1685,6 +1686,8 @@ $dokka.location:com.ciscowebex.androidsdk/Webex/teamMembershipClient/#/PointingT
 $dokka.location:com.ciscowebex.androidsdk/Webex/teams/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex/teams.html
 $dokka.location:com.ciscowebex.androidsdk/Webex/ucCancelSSOLogin/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex/uc-cancel-s-s-o-login.html
 $dokka.location:com.ciscowebex.androidsdk/Webex/webhooks/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex/webhooks.html
+$dokka.location:com.ciscowebex.androidsdk/WebexAuthDelegate///PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex-auth-delegate/index.html
+$dokka.location:com.ciscowebex.androidsdk/WebexAuthDelegate/onReLoginRequired/#/PointingToDeclaration/-s-d-k/com.ciscowebex.androidsdk/-webex-auth-delegate/on-re-login-required.html
 $dokka.location:com.ciscowebex.androidsdk/WebexError.ErrorCode.CANNOT_START_INSTANT_MEETING///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-s-d-k/com.ciscowebex.androidsdk/-webex-error/-error-code/-c-a-n-n-o-t_-s-t-a-r-t_-i-n-s-t-a-n-t_-m-e-e-t-i-n-g/index.html
 $dokka.location:com.ciscowebex.androidsdk/WebexError.ErrorCode.CAPTCHA_REQUIRED///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-s-d-k/com.ciscowebex.androidsdk/-webex-error/-error-code/-c-a-p-t-c-h-a_-r-e-q-u-i-r-e-d/index.html
 $dokka.location:com.ciscowebex.androidsdk/WebexError.ErrorCode.CONFLICT_ERROR///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-s-d-k/com.ciscowebex.androidsdk/-webex-error/-error-code/-c-o-n-f-l-i-c-t_-e-r-r-o-r/index.html
