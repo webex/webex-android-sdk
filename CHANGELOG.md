@@ -97,10 +97,12 @@ All notable changes to this project will be documented in this file.
 ## [3.11.3](https://github.com/webex/webex-android-sdk/releases/tag/3.11.3)
 Released on **6 Jun, 2024**.
 ### Added
-- Descriptive error handling for the dial & dialPhoneNumber API.
-- The `Phone.processPushNotification(msg : String, handler: CompletionHandler<PushNotificationResult>)` handler to return error in case of any failure. The error object will have the error code and error description.
+- The dial & dialPhoneNumber APIs will have the error description in case of failure.
 - Access token invalidation or expiry will result in the SDK APIs returning Unauthorized error inside the completion handlers.
-- Completion handlers returning InternalError will have description on the cause of the failure.
+
+### Updated
+- The `Phone.processPushNotification(msg : String, handler: CompletionHandler<PushNotificationResult>)` handler to return error in case of any failure. The error object will have the error code and error description.
+- Completion handlers returning InternalError will have error descriptions.
 
 ## [3.11.2](https://github.com/webex/webex-android-sdk/releases/tag/3.11.2)
 Released on **7 May, 2024**.
