@@ -95,7 +95,7 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ## [3.11.3](https://github.com/webex/webex-android-sdk/releases/tag/3.11.3)
-Released on **6 Jun, 2024**.
+Released on **7 Jun, 2024**.
 ### Added
 - The dial & dialPhoneNumber APIs will have the error description in case of failure.
 - Access token invalidation or expiry will result in the SDK APIs returning Unauthorized error inside the completion handlers.
