@@ -98,7 +98,7 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ## [3.12.0](https://github.com/webex/webex-android-sdk/releases/tag/3.12.0)
-Released on **5 July, 2024**.
+Released on **8 July, 2024**.
 ### Added
 - New Enum `CompanionMode` to set the companion mode for Move Meeting.
 - New observer `CallObserver.onMoveMeetingFailed(call: Call?)` to notify when attempting to move meeting fails.
