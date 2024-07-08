@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.12.0 Releases
+- `3.12.0` Releases - [3.12.0](#3120)
+
 #### 3.11.3 Releases
 - `3.11.3` Releases - [3.11.3](#3113)
 
@@ -93,6 +96,16 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.12.0](https://github.com/webex/webex-android-sdk/releases/tag/3.12.0)
+Released on **8 July, 2024**.
+### Added
+- New Enum `CompanionMode` to set the companion mode for Move Meeting.
+- New observer `CallObserver.onMoveMeetingFailed(call: Call?)` to notify when attempting to move meeting fails.
+- New API `CalendarMeeting.isMoveMeetingSupported` to check if move meeting feature is supported.
+### Updated
+- `isOngoingMeeting` and `eventId` fields are added to the CalendarMeeting class.
+- MediaOption class is updated to include `getCompanionMode` and `setCompanionMode` APIs
 
 ## [3.11.3](https://github.com/webex/webex-android-sdk/releases/tag/3.11.3)
 Released on **7 Jun, 2024**.
