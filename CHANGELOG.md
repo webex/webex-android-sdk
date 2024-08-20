@@ -106,8 +106,8 @@ Released on **21 Aug, 2024**.
 - New Enum `RecordAudioDumpResult` to represent error while doing audio dump related operations.
 - New API added `Call.isRecordingAudioDump` to check if the audio dump is being recorded for ongoing meeting/call.
 - New API added `Call.canStartRecordingAudioDump(callback: CompletionHandler<AudioDumpResult>)` to check if the audio dump can be recorded for ongoing meeting/call.
-- New API added `Call.startAudioDump(context: Context, callback: CompletionHandler<AudioDumpResult>)` to start recording the audio dump for ongoing meeting/call.
-- New API added `stopAudioDump(callback: CompletionHandler<AudioDumpResult>)` to stop recording the audio dump.
+- New API added `Call.startRecordingAudioDump(context: Context, callback: CompletionHandler<AudioDumpResult>)` to start recording the audio dump for ongoing meeting/call.
+- New API added `Call.stopRecordingAudioDump(callback: CompletionHandler<AudioDumpResult>)` to stop recording the audio dump.
 ### Updated
 - Fixed: Bug related to deleting virtual background which is set for preview.
 - Fixed: Mic issue when meeting is in phone earpiece mode.
