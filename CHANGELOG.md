@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.14.0 Releases
+- `3.14.0` Releases - [3.14.0](#3140)
+
 #### 3.13.0 Releases
 - `3.13.0` Releases - [3.13.0](#3130)
 
@@ -99,6 +102,20 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.14.0](https://github.com/webex/webex-android-sdk/releases/tag/3.14.0)
+Released on **6 November, 2024**
+### Added
+- New Enum `SpeechEnhancementResult` to represent the result of speech enhancement operation.
+- New API added `Phone.useLegacyReceiverNoiseRemoval(useLegacy: Boolean)` to enable legacy receiver side noise removal. This will disable the new receiver side speech enhancement.
+- New API added `Phone.isReceiverSpeechEnhancementEnabled(): Boolean` to check if receiver side speech enhancement is enabled by default.
+- New API added `Phone.enableSpeechEnhancement(enable: Boolean, callback: CompletionHandler<SpeechEnhancementResult>)` to enable or disable speech enhancement for all calls.
+- New API added `Call.isReceiverSpeechEnhancementEnabled(): Boolean` to check if speech enhancement is enabled for the call.
+- New API added `Call.enableSpeechEnhancement(enable: Boolean, callback: CompletionHandler<SpeechEnhancementResult>)` to enable or disable speech enhancement for the call.
+- New error message `NonExistentCallPull` to represent the error when trying to pull a non-existent call by dialing *11.
+- New error messages `InternalError`, `UserNotFound`, `UserPending`, `UserVerificationFailed`, `UserNeedsReactivation` when user logs in via OAuth flow.
+### Fixed
+- Fixed: Issue with Move meeting from SDK to other clients.
 
 ## [3.13.0](https://github.com/webex/webex-android-sdk/releases/tag/3.13.0)
 Released on **21 August, 2024**.
