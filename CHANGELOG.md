@@ -104,7 +104,7 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ## [3.14.0](https://github.com/webex/webex-android-sdk/releases/tag/3.14.0)
-Released on **6 November, 2024**
+Released on **13 November, 2024**
 ### Added
 - New Enum `SpeechEnhancementResult` to represent the result of speech enhancement operation.
 - New API added `Phone.useLegacyReceiverNoiseRemoval(useLegacy: Boolean)` to enable legacy receiver side noise removal. This will disable the new receiver side speech enhancement.
@@ -116,6 +116,7 @@ Released on **6 November, 2024**
 - New error messages `InternalError`, `UserNotFound`, `UserPending`, `UserVerificationFailed`, `UserNeedsReactivation` when user logs in via OAuth flow.
 ### Fixed
 - Fixed: Issue with Move meeting from SDK to other clients.
+- Fixed: Issue with the audio connection when the user is on multiple calls.
 
 ## [3.13.0](https://github.com/webex/webex-android-sdk/releases/tag/3.13.0)
 Released on **21 August, 2024**.
