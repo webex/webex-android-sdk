@@ -116,7 +116,6 @@ Released on **13 November, 2024**
 - New error messages `InternalError`, `UserNotFound`, `UserPending`, `UserVerificationFailed`, `UserNeedsReactivation` when user logs in via OAuth flow.
 ### Fixed
 - Fixed: Issue with Move meeting from SDK to other clients.
-- Fixed: Issue with the audio connection when the user is on multiple calls.
 
 ## [3.13.0](https://github.com/webex/webex-android-sdk/releases/tag/3.13.0)
 Released on **21 August, 2024**.
