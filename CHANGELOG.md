@@ -1,14 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
-
-#### 3.14.0 Releases
-- `3.14.0` Releases - [3.14.0](#3140)
-
-#### 3.13.0 Releases
-- `3.13.0` Releases - [3.13.0](#3130)
-
-#### 3.12.0 Releases
-- `3.12.0` Releases - [3.12.0](#3120)
+#### 3.11.4 Releases
+- `3.11.4` Releases - [3.11.4](#3114)
 
 #### 3.11.3 Releases
 - `3.11.3` Releases - [3.11.3](#3113)
@@ -103,45 +96,14 @@ All notable changes to this project will be documented in this file.
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
 
-## [3.14.0](https://github.com/webex/webex-android-sdk/releases/tag/3.14.0)
-Released on **13 November, 2024**
-### Added
-- New Enum `SpeechEnhancementResult` to represent the result of speech enhancement operation.
-- New API added `Phone.useLegacyReceiverNoiseRemoval(useLegacy: Boolean)` to enable legacy receiver side noise removal. This will disable the new receiver side speech enhancement.
-- New API added `Phone.isReceiverSpeechEnhancementEnabled(): Boolean` to check if receiver side speech enhancement is enabled by default.
-- New API added `Phone.enableSpeechEnhancement(enable: Boolean, callback: CompletionHandler<SpeechEnhancementResult>)` to enable or disable speech enhancement for all calls.
-- New API added `Call.isReceiverSpeechEnhancementEnabled(): Boolean` to check if speech enhancement is enabled for the call.
-- New API added `Call.enableSpeechEnhancement(enable: Boolean, callback: CompletionHandler<SpeechEnhancementResult>)` to enable or disable speech enhancement for the call.
-- New error message `NonExistentCallPull` to represent the error when trying to pull a non-existent call by dialing *11.
-- New error messages `InternalError`, `UserNotFound`, `UserPending`, `UserVerificationFailed`, `UserNeedsReactivation` when user logs in via OAuth flow.
+# [3.11.4](https://github.com/webex/webex-ios-sdk/releases/tag/3.11.4)
+Released on **18 Dec, 2024**.
 ### Fixed
-- Fixed: Issue with Move meeting from SDK to other clients.
-
-## [3.13.0](https://github.com/webex/webex-android-sdk/releases/tag/3.13.0)
-Released on **21 August, 2024**.
-### Added
-- New Enum `RecordAudioDumpResult` to represent error while doing audio dump related operations.
-- New API added `Call.isRecordingAudioDump()` to check if the audio dump is being recorded for ongoing meeting/call.
-- New API added `Call.canStartRecordingAudioDump(callback: CompletionHandler<RecordAudioDumpResult>)` to check if the audio dump can be recorded for ongoing meeting/call.
-- New API added `Call.startRecordingAudioDump(context: Context, callback: CompletionHandler<RecordAudioDumpResult>)` to start recording the audio dump for ongoing meeting/call.
-- New API added `Call.stopRecordingAudioDump(callback: CompletionHandler<RecordAudioDumpResult>)` to stop recording the audio dump.
-### Updated
-- Fixed: Bug related to deleting virtual background which is set for preview.
-- Fixed: Mic issue when meeting is in phone earpiece mode.
-- Fixed: Security fix for WME.
-
-## [3.12.0](https://github.com/webex/webex-android-sdk/releases/tag/3.12.0)
-Released on **8 July, 2024**.
-### Added
-- New Enum `CompanionMode` to set the companion mode for Move Meeting.
-- New observer `CallObserver.onMoveMeetingFailed(call: Call?)` to notify when attempting to move meeting fails.
-- New API `CalendarMeeting.isMoveMeetingSupported` to check if move meeting feature is supported.
-### Updated
-- `isOngoingMeeting` and `eventId` fields are added to the CalendarMeeting class.
-- MediaOption class is updated to include `getCompanionMode` and `setCompanionMode` APIs
+- Fixed the issue where `onIncomingCall` was triggered before processPushNotification.
+- Resolved delays in `onCallDisconnect` events by properly handling Mercury events during app transitions.
 
 ## [3.11.3](https://github.com/webex/webex-android-sdk/releases/tag/3.11.3)
-Released on **7 Jun, 2024**.
+Released on **6 Jun, 2024**.
 ### Added
 - The dial & dialPhoneNumber APIs will have the error description in case of failure.
 - Access token invalidation or expiry will result in the SDK APIs returning Unauthorized error inside the completion handlers.
