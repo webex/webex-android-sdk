@@ -107,7 +107,7 @@ All notable changes to this project will be documented in this file.
 - `0.2.0` Releases - [0.2.0](#020)
 
 ## [3.15.0](https://github.com/webex/webex-android-sdk/releases/tag/3.15.0)
-Released on **14 February, 2025**
+Released on **21 February, 2025**
 ### Added
 - New SDK variant “Webex-Message” released, a light weight SDK for Messaging.
 
