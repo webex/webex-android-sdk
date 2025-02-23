@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>startSharing</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/jetbrains-mono.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+<div class="navigation-wrapper" id="navigation-wrapper">
+    <div id="leftToggler"><span class="icon-toggler"></span></div>
+    <div class="library-name">
+            <a href="../../../index.html">
+                    <span>dokkaDocs</span>
+            </a>
+    </div>
+    <div>
+    </div>
+    <div class="pull-right d-flex">
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":dokkaDocs:dokkaHtml/release">androidJvm</button>
+        </div>
+        <button id="theme-toggle-button"><span id="theme-toggle"></span></button>
+        <div id="searchBar"></div>
+    </div>
+</div>
+<div id="container">
+    <div id="leftColumn">
+        <div id="sideMenu"></div>
+    </div>
+    <div id="main">
+<div class="main-content" data-page-type="member" id="content" pageIds="dokkaDocs::com.ciscowebex.androidsdk.phone/Call/startSharing/#com.ciscowebex.androidsdk.CompletionHandler[java.lang.Void]#com.ciscowebex.androidsdk.phone.ShareConfig?/PointingToDeclaration//1667020177">
+  <div class="breadcrumbs"><a href="../../../index.html">dokkaDocs</a><span class="delimiter">/</span><a href="../index.html">com.ciscowebex.androidsdk.phone</a><span class="delimiter">/</span><a href="index.html">Call</a><span class="delimiter">/</span><span class="current">startSharing</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>start</span><wbr></wbr><span><span>Sharing</span></span></h1>
+  </div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="start-sharing.html"><span class="token function">startSharing</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">callback<span class="token operator">: </span><a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html">CompletionHandler</a><span class="token operator">&lt;</span><span class="token keyword"></span><a href="https://developer.android.com/reference/kotlin/java/lang/Void.html">Void</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">shareConfig<span class="token operator">: </span><a href="../-share-config/index.html">ShareConfig</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><p class="paragraph">Start content sharing.</p><p class="paragraph">Invalid if targetSdkVersion is 29 or higher, please use <a href="start-sharing.html">Call.startSharing</a></p><span class="kdoc-tag"><h4 class="">Since</h4><p class="paragraph">1.4</p></span><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>callback</span></span></u></div></span></div><div><div class="title"><p class="paragraph">A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise null</p></div></div></div></div><div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>share</span><wbr></wbr><span><span>Config</span></span></u></div></span></div><div><div class="title"><p class="paragraph">is optional. If not set, optimization will be Default and audio won't be shared</p></div></div></div></div></div><hr><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="start-sharing.html"><span class="token function">startSharing</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">notification<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/app/Notification.html">Notification</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">notificationId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">callback<span class="token operator">: </span><a href="../../com.ciscowebex.androidsdk/-completion-handler/index.html">CompletionHandler</a><span class="token operator">&lt;</span><span class="token keyword"></span><a href="https://developer.android.com/reference/kotlin/java/lang/Void.html">Void</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">shareConfig<span class="token operator">: </span><a href="../-share-config/index.html">ShareConfig</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><p class="paragraph">Start content sharing. The notification and it's id are only work for targetSdkVersion is 29 or higher.</p><span class="kdoc-tag"><h4 class="">Since</h4><p class="paragraph">2.8.0</p></span><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>notification</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The foreground notification when sharing, take effect if targetSdkVersion is 29 or higher.</p></div></div></div></div><div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>notification</span><wbr></wbr><span><span>Id</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The id of this notification, take effect if targetSdkVersion is 29 or higher, must a positive number.</p></div></div></div></div><div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>callback</span></span></u></div></span></div><div><div class="title"><p class="paragraph">A closure to be executed when completed, with error if the invocation is illegal or failed, otherwise null</p></div></div></div></div><div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>share</span><wbr></wbr><span><span>Config</span></span></u></div></span></div><div><div class="title"><p class="paragraph">is optional. If not set, optimization will be Default and audio won't be shared.</p></div></div></div></div></div><h4 class="">See also</h4><div class="table"><div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div></div></span></div><div><div class="title"><p class="paragraph">[](https://developer.android.com/reference/android/media/projection/MediaProjectionManager.getMediaProjection</p></div></div></div></div></div></div></div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+    </div>
+</div>
+</body>
+</html>
