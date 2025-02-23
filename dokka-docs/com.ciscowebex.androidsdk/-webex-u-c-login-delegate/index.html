@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>WebexUCLoginDelegate</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/jetbrains-mono.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+<div class="navigation-wrapper" id="navigation-wrapper">
+    <div id="leftToggler"><span class="icon-toggler"></span></div>
+    <div class="library-name">
+            <a href="../../../index.html">
+                    <span>dokkaDocs</span>
+            </a>
+    </div>
+    <div>
+    </div>
+    <div class="pull-right d-flex">
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":dokkaDocs:dokkaHtml/release">androidJvm</button>
+        </div>
+        <button id="theme-toggle-button"><span id="theme-toggle"></span></button>
+        <div id="searchBar"></div>
+    </div>
+</div>
+<div id="container">
+    <div id="leftColumn">
+        <div id="sideMenu"></div>
+    </div>
+    <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="dokkaDocs::com.ciscowebex.androidsdk/WebexUCLoginDelegate///PointingToDeclaration//1667020177">
+  <div class="breadcrumbs"><a href="../../../index.html">dokkaDocs</a><span class="delimiter">/</span><a href="../index.html">com.ciscowebex.androidsdk</a><span class="delimiter">/</span><span class="current">WebexUCLoginDelegate</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Webex</span><wbr></wbr><span>UCLogin</span><wbr></wbr><span><span>Delegate</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">WebexUCLoginDelegate</a></div><p class="paragraph">An interface for all the Call service login related event callbacks.</p><span class="kdoc-tag"><h4 class="">Since</h4><p class="paragraph">3.0.0</p></span></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="577280591%2FFunctions%2F1667020177" anchor-label="hideUCSSOBrowser" id="577280591%2FFunctions%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="hide-u-c-s-s-o-browser.html"><span>hide</span><wbr></wbr><span><span>UCSSOBrowser</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="577280591%2FFunctions%2F1667020177"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="hide-u-c-s-s-o-browser.html"><span class="token function">hideUCSSOBrowser</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">This callback is triggered when application needs to hide the webview that was loaded in <a href="load-u-c-s-s-o-view-in-background.html">loadUCSSOViewInBackground</a></p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1155628811%2FFunctions%2F1667020177" anchor-label="loadUCSSOViewInBackground" id="-1155628811%2FFunctions%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="load-u-c-s-s-o-view-in-background.html"><span>load</span><wbr></wbr><span>UCSSOView</span><wbr></wbr><span>In</span><wbr></wbr><span><span>Background</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1155628811%2FFunctions%2F1667020177"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="load-u-c-s-s-o-view-in-background.html"><span class="token function">loadUCSSOViewInBackground</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">ssoUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">This callback is triggered when SSO authentication of CUCM domain/server is required. Given ssoUrl needs to be loaded in WebView to start authentication process This callback is applicable for <a href="../../com.ciscowebex.androidsdk.phone/-phone/-calling-type/-c-u-c-m/index.html">com.ciscowebex.androidsdk.phone.Phone.CallingType.CUCM</a> only</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-867251804%2FFunctions%2F1667020177" anchor-label="onUCLoggedIn" id="-867251804%2FFunctions%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="on-u-c-logged-in.html"><span>on</span><wbr></wbr><span>UCLogged</span><wbr></wbr><span><span>In</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-867251804%2FFunctions%2F1667020177"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="on-u-c-logged-in.html"><span class="token function">onUCLoggedIn</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">This callback is notified on successful login into calling service</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-473122643%2FFunctions%2F1667020177" anchor-label="onUCLoginFailed" id="-473122643%2FFunctions%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="on-u-c-login-failed.html"><span>on</span><wbr></wbr><span>UCLogin</span><wbr></wbr><span><span>Failed</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-473122643%2FFunctions%2F1667020177"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="on-u-c-login-failed.html"><span class="token function"><strike>onUCLoginFailed</strike></span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="on-u-c-login-failed.html"><span class="token function">onUCLoginFailed</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">failureReason<span class="token operator">: </span><a href="../../com.ciscowebex.androidsdk.auth/-u-c-login-failure-reason/index.html">UCLoginFailureReason</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">This will notify app whenever CUCM server login or Webex Calling login fails</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1972152552%2FFunctions%2F1667020177" anchor-label="onUCServerConnectionStateChanged" id="-1972152552%2FFunctions%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="on-u-c-server-connection-state-changed.html"><span>on</span><wbr></wbr><span>UCServer</span><wbr></wbr><span>Connection</span><wbr></wbr><span>State</span><wbr></wbr><span><span>Changed</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1972152552%2FFunctions%2F1667020177"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="on-u-c-server-connection-state-changed.html"><span class="token function">onUCServerConnectionStateChanged</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">status<span class="token operator">: </span><a href="../../com.ciscowebex.androidsdk.auth/-u-c-login-server-connection-status/index.html">UCLoginServerConnectionStatus</a><span class="token punctuation">, </span></span><span class="parameter ">failureReason<span class="token operator">: </span><a href="../../com.ciscowebex.androidsdk.auth/-phone-service-registration-failure-reason/index.html">PhoneServiceRegistrationFailureReason</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">This callback is triggered when calling service connection status changes</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="364711371%2FFunctions%2F1667020177" anchor-label="onUCSSOLoginFailed" id="364711371%2FFunctions%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="on-u-c-s-s-o-login-failed.html"><span>on</span><wbr></wbr><span>UCSSOLogin</span><wbr></wbr><span><span>Failed</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="364711371%2FFunctions%2F1667020177"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="on-u-c-s-s-o-login-failed.html"><span class="token function">onUCSSOLoginFailed</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">failureReason<span class="token operator">: </span><a href="../../com.ciscowebex.androidsdk.auth/-u-c-s-s-o-failure-reason/index.html">UCSSOFailureReason</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">This callback is triggered when SSO login fails</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="201754049%2FFunctions%2F1667020177" anchor-label="showUCNonSSOLoginView" id="201754049%2FFunctions%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="show-u-c-non-s-s-o-login-view.html"><span>show</span><wbr></wbr><span>UCNon</span><wbr></wbr><span>SSOLogin</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="201754049%2FFunctions%2F1667020177"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="show-u-c-non-s-s-o-login-view.html"><span class="token function">showUCNonSSOLoginView</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">This callback is triggered when server url/domain, username and password is required for authentication. On this application needs to display the option to enter required details.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1359357300%2FFunctions%2F1667020177" anchor-label="showUCSSOBrowser" id="1359357300%2FFunctions%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="show-u-c-s-s-o-browser.html"><span>show</span><wbr></wbr><span><span>UCSSOBrowser</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1359357300%2FFunctions%2F1667020177"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="show-u-c-s-s-o-browser.html"><span class="token function">showUCSSOBrowser</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">This callback is triggered when application needs to show the webview that was loaded in <a href="load-u-c-s-s-o-view-in-background.html">loadUCSSOViewInBackground</a></p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+    </div>
+</div>
+</body>
+</html>
