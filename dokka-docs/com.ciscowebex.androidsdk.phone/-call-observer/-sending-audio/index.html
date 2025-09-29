@@ -58,24 +58,24 @@
   <div class="breadcrumbs"><a href="../../../../index.html">dokkaDocs</a><span class="delimiter">/</span><a href="../../index.html">com.ciscowebex.androidsdk.phone</a><span class="delimiter">/</span><a href="../index.html">CallObserver</a><span class="delimiter">/</span><span class="current">SendingAudio</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Sending</span><wbr></wbr><span><span>Audio</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">SendingAudio</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">call<span class="token operator">: </span><a href="../../-call/index.html">Call</a><span class="token punctuation">, </span></span><span class="parameter ">sending<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span> : <a href="../-abstract-call-event/index.html">CallObserver.AbstractCallEvent</a>, <a href="../-media-changed-event/index.html">CallObserver.MediaChangedEvent</a></div><p class="paragraph">This might be triggered when the local party muted or unmuted the audio.</p><span class="kdoc-tag"><h4 class="">Since</h4><p class="paragraph">0.1</p></span></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">SendingAudio</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">call<span class="token operator">: </span><a href="../../-call/index.html">Call</a><span class="token punctuation">, </span></span><span class="parameter ">sending<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>result<span class="token operator">: </span><a href="../../-call/-sending-audio-change-result/index.html">Call.SendingAudioChangeResult</a><span class="token operator"> = </span>SendingAudioChangeResult.Success</span></span><span class="token punctuation">)</span> : <a href="../-abstract-call-event/index.html">CallObserver.AbstractCallEvent</a>, <a href="../-media-changed-event/index.html">CallObserver.MediaChangedEvent</a></div><p class="paragraph">This might be triggered when the local party muted or unmuted the audio.</p><span class="kdoc-tag"><h4 class="">Since</h4><p class="paragraph">0.1</p></span></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="">Constructors</h2>
-        <div class="table"><a data-name="-1984637829%2FConstructors%2F1667020177" anchor-label="SendingAudio" id="-1984637829%2FConstructors%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
+        <div class="table"><a data-name="1421433781%2FConstructors%2F1667020177" anchor-label="SendingAudio" id="1421433781%2FConstructors%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
           <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-sending-audio.html"><span>Sending</span><wbr></wbr><span><span>Audio</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1984637829%2FConstructors%2F1667020177"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1421433781%2FConstructors%2F1667020177"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">call<span class="token operator">: </span><a href="../../-call/index.html">Call</a><span class="token punctuation">, </span></span><span class="parameter ">sending<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">call<span class="token operator">: </span><a href="../../-call/index.html">Call</a><span class="token punctuation">, </span></span><span class="parameter ">sending<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter ">result<span class="token operator">: </span><a href="../../-call/-sending-audio-change-result/index.html">Call.SendingAudioChangeResult</a><span class="token operator"> = </span>SendingAudioChangeResult.Success</span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -95,6 +95,21 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">protected </span><span class="token keyword"></span><span class="token keyword">var </span><a href="../-abstract-call-event/m-call.html">mCall</a><span class="token operator">: </span><a href="../../-call/index.html">Call</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1986443734%2FProperties%2F1667020177" anchor-label="result" id="1986443734%2FProperties%2F1667020177" data-filterable-set=":dokkaDocs:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":dokkaDocs:dokkaHtml/release" data-filterable-set=":dokkaDocs:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="result.html"><span><span>result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1986443734%2FProperties%2F1667020177"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaDocs:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="result.html">result</a><span class="token operator">: </span><a href="../../-call/-sending-audio-change-result/index.html">Call.SendingAudioChangeResult</a></div></div></div>
                 </div>
               </div>
             </div>
