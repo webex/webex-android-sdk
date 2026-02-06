@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.16.2 Releases
+- `3.16.2` Releases - [3.16.2](#3162)
+
 #### 3.16.1 Releases
 - `3.16.1` Releases - [3.16.1](#3161)
 
@@ -111,6 +114,11 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.16.2](https://github.com/webex/webex-android-sdk/releases/tag/3.16.2)
+Released on **6 February, 2026**.
+### Updated
+- Fixed issue loading certain libraries when using SDK with dynamic modules.
 
 ## [3.16.1](https://github.com/webex/webex-android-sdk/releases/tag/3.16.1)
 Released on **15 December, 2025**.
