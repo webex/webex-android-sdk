@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 #### 3.16.3 Releases
 - `3.16.3` Releases - [3.16.3](#3163)
-- 
+
 #### 3.16.2 Releases
 - `3.16.2` Releases - [3.16.2](#3162)
 
