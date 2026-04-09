@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.16.3 Releases
+- `3.16.3` Releases - [3.16.3](#3163)
+- 
 #### 3.16.2 Releases
 - `3.16.2` Releases - [3.16.2](#3162)
 
@@ -114,6 +117,19 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.16.3](https://github.com/webex/webex-android-sdk/releases/tag/3.16.3)
+Released on **9 April, 2026**.
+### Added
+- New API `Webex.uploadDiagnosticLogs(handler: CompletionHandler<UploadDiagnosticLogsResponse>)` to upload SDK diagnostic logs and return a response containing the upload result and `feedbackId`.
+- New API `Webex.enableCrashReporting(enable: Boolean)` to enable or disable automatic SDK crash diagnostics upload for supported SDK-attributed crashes.
+- New class `UploadDiagnosticLogsResponse` to wrap the diagnostics upload result and `feedbackId`.
+- New enum `UploadDiagnosticLogsResult` to describe the final outcome of a diagnostics upload request.
+### Updated
+- Fixed an issue where the self `lastSeenDate` value was not updated correctly when a new message or space was marked as read from a parallel active session for the same user.
+- Fixed an issue where the hold-state change notification was triggered twice when resuming a call that was on hold.
+- Allow toggling the audio mute status even when a call is on hold.
+- Network reliability improvements for incoming call handling to prevent calls from being missed when the app is launched from a killed state via a push notification.
 
 ## [3.16.2](https://github.com/webex/webex-android-sdk/releases/tag/3.16.2)
 Released on **6 February, 2026**.
