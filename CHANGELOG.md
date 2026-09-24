@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+#### 3.17.0 Releases
+- `3.17.0` Releases - [3.17.0](#3170)
+
 #### 3.16.3 Releases
 - `3.16.3` Releases - [3.16.3](#3163)
 
@@ -117,6 +120,16 @@ All notable changes to this project will be documented in this file.
 
 #### 0.2.0 Releases
 - `0.2.0` Releases - [0.2.0](#020)
+
+## [3.17.0](https://github.com/webex/webex-android-sdk/releases/tag/3.17.0)
+Released on **24 September, 2026**.
+### Updated
+- Updated OpenSSL libraries used by the SDK.
+- Updated the Maven repository URL from `devhub.cisco.com` to `arti.anon.devhub-cloud.cisco.com`.
+### Fixed
+- Improved hyperlink handling in message content.
+- Improved SDK initialization when used with dynamic feature modules.
+- Fixed an issue that could cause a crash when adding a virtual background.
 
 ## [3.16.3](https://github.com/webex/webex-android-sdk/releases/tag/3.16.3)
 Released on **9 April, 2026**.
